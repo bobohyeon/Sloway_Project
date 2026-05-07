@@ -1,0 +1,60 @@
+#백엔드
+# 빌드 결과물
+/build/
+/out/
+*.class
+*.jar
+*.war
+
+# Gradle
+.gradle/
+gradle-wrapper.jar
+
+# Maven
+target/
+
+# IDE
+.idea/
+*.iml
+.eclipse/
+.settings/
+.classpath
+.project
+*.suo
+*.user
+
+# 환경변수·보안 (중요!)
+application-local.properties
+application-private.properties
+*.env
+.env
+
+# 로그
+*.log
+logs/
+
+# OS
+.DS_Store
+Thumbs.db
+
+
+#프론트엔드
+# 의존성
+node_modules/
+
+# 빌드 결과물
+/dist/
+/build/
+
+# 환경변수 (중요!)
+.env
+.env.local
+.env.development.local
+.env.production.local
+
+# 캐시
+.cache/
+.parcel-cache/
+
+# IDE
+.vscode/
