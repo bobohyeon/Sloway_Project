@@ -1,39 +1,6 @@
 import styled from 'styled-components';
 import { Card, Badge } from '../../../pay_shared/components';
 
-export function BookingSummaryCard({ booking }) {
-  return (
-    <Card padded>
-      <Wrap>
-        <Image>{booking.emoji}</Image>
-        <Body>
-          <Badge variant="sage" size="sm">
-            {booking.type}
-          </Badge>
-          <Name>{booking.name}</Name>
-          <Loc>📍 {booking.loc}</Loc>
-          <InfoList>
-            <InfoRow>
-              <span>일정</span>
-              <strong>{booking.dates}</strong>
-            </InfoRow>
-            <InfoRow>
-              <span>인원</span>
-              <strong>{booking.guests}</strong>
-            </InfoRow>
-            <InfoRow>
-              <span>기간</span>
-              <strong>
-                {booking.nights}박 {booking.nights + 1}일
-              </strong>
-            </InfoRow>
-          </InfoList>
-        </Body>
-      </Wrap>
-    </Card>
-  );
-}
-
 const Wrap = styled.div`
   display: flex;
   gap: var(--space-5);
@@ -95,3 +62,36 @@ const InfoRow = styled.div`
     font-weight: 500;
   }
 `;
+
+export function BookingSummaryCard({ booking }) {
+  return (
+    <Card padded>
+      <Wrap>
+        <Image>{booking.emoji}</Image>
+        <Body>
+          <Badge variant="sage" size="sm">
+            {booking.type}
+          </Badge>
+          <Name>{booking.name}</Name>
+          <Loc>📍 {booking.loc}</Loc>
+          <InfoList>
+            <InfoRow>
+              <span>일정</span>
+              <strong>{booking.dates}</strong>
+            </InfoRow>
+            <InfoRow>
+              <span>인원</span>
+              <strong>{booking.guests}</strong>
+            </InfoRow>
+            <InfoRow>
+              <span>기간</span>
+              <strong>
+                {booking.nights}박 {booking.nights + 1}일
+              </strong>
+            </InfoRow>
+          </InfoList>
+        </Body>
+      </Wrap>
+    </Card>
+  );
+}
