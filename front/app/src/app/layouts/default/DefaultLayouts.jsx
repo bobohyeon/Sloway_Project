@@ -30,15 +30,24 @@ const NavArea = styled.nav`
   background-color: #a8b89f;
   color: #fff;
   flex-shrink: 0;
+  height: 85.3vh;
   overflow-y: auto;
+
+  &::-webkit-scrollbar {
+    width: 3px;
+  }
+  &::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.3);
+    border-radius: 10px;
+  }
 `;
 
 const MainArea = styled.main`
   flex: 1;
-  padding: 20px;
+  height: 85.3vh;
+
   background-color: #f4efe6;
   color: #333;
-  overflow-y: auto;
 `;
 
 const FooterArea = styled.footer`
