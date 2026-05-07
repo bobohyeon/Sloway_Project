@@ -22,13 +22,13 @@ import AdminSignupPage from './features/auth/pages/admin/AdminSignupPage';
 // ── 공간 (호스트) ─────────────────────────────────────────
 import SpaceListPage from './features/place/host/list/pages/SpaceListPage';
 import InsertStationPage from './features/place/host/insert/pages/InsertStationPage';
-import StationDetailPage from './features/place/host/detail/pages/StationDetailPage';
 import ImageUpdatePage from './features/place/host/update/pages/ImageUpdatePage';
-import SpaceApprovalPage from './features/place/host/approval/pages/SpaceApprovalPage';
 
 // ── 공간 탐색 (일반회원) ──────────────────────────────────
 import DetailPage from './features/searchPlace/placeDetail/pages/common/DetailPage';
 import RecentPlacePage from './features/searchPlace/recentPlace/pages/RecentPlacePage';
+import StationDetailPage from './features/place/pages/host/detail/StationDetailPage';
+import SpaceApprovalPage from './features/approval/pages/admin/SpaceApprovalPage';
 
 // ── 임시 플레이스홀더 ─────────────────────────────────────
 // 아직 페이지 파일이 없는 라우트. 담당자가 페이지 생성 후 import로 교체

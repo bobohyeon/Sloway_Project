@@ -1,7 +1,10 @@
 import React, { useState, useMemo } from 'react';
-import SpaceApprovalLayout from './SpaceApprovalLayout';
-import ApprovalTable from './../../components/admin/ApprovalTable';
+// 1. 레이아웃: 두 단계 올라가서 layouts/admin으로 이동
+import SpaceApprovalLayout from '../../layouts/admin/SpaceApprovalLayOut';
+
+// 2. 컴포넌트: 두 단계 올라가서 components/admin으로 이동
 import ApprovalStats from '../../components/admin/ApprovalStats';
+import ApprovalTable from '../../components/admin/ApprovalTable';
 
 function SpaceApprovalPage() {
   const [currentTab, setCurrentTab] = useState('검수 대기');
