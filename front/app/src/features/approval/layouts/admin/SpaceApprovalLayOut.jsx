@@ -3,9 +3,9 @@ import styled from 'styled-components';
 
 // --- Styled Components (레이아웃 스타일) ---
 const PageContainer = styled.div`
-  padding: 40px;
+  padding: 20px;
   background-color: #f9faf8;
-  min-height: 100vh;
+  height: 95.2%;
 `;
 
 const Header = styled.div`
@@ -52,13 +52,13 @@ const Tab = styled.div`
       content: '';
       position: absolute;
       bottom: 0; left: 0; width: 100%; height: 2px;
-      background-color: #768966;
+      background-color: #a8b89f;
     }
   `}
 
   span {
     margin-left: 4px;
-    background: ${(props) => (props.$active ? '#768966' : '#eee')};
+    background: ${(props) => (props.$active ? '#a8b89f' : '#eee')};
     color: ${(props) => (props.$active ? 'white' : '#aaa')};
     padding: 2px 6px;
     border-radius: 10px;
