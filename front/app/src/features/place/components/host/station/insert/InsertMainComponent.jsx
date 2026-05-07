@@ -1,5 +1,5 @@
-import React from "react";
-import styled from "styled-components";
+import React from 'react';
+import styled from 'styled-components';
 
 const FormCard = styled.div`
   background: white;
@@ -8,6 +8,7 @@ const FormCard = styled.div`
   padding: 40px;
   width: 100%;
   box-sizing: border-box;
+  height: 100%;
 `;
 
 const SectionTitle = styled.h2`
@@ -17,7 +18,7 @@ const SectionTitle = styled.h2`
   gap: 10px;
   margin-bottom: 30px;
   &:before {
-    content: "🌿";
+    content: '🌿';
   }
 `;
 
@@ -100,7 +101,7 @@ function InsertMainComponent({
   const getCoords = (address) => {
     // 1. kakao 객체가 있는지 먼저 확인
     if (!window.kakao || !window.kakao.maps || !window.kakao.maps.services) {
-      console.error("카카오 지도 SDK가 로드되지 않았습니다.");
+      console.error('카카오 지도 SDK가 로드되지 않았습니다.');
       return;
     }
 
@@ -114,7 +115,7 @@ function InsertMainComponent({
           longitude: result[0].x,
         }));
       } else {
-        console.error("좌표 변환 실패:", status);
+        console.error('좌표 변환 실패:', status);
       }
     });
   };
@@ -123,17 +124,17 @@ function InsertMainComponent({
     new window.daum.Postcode({
       oncomplete: function (data) {
         let fullAddress = data.address;
-        let extraAddress = "";
+        let extraAddress = '';
 
-        if (data.addressType === "R") {
-          if (data.bname !== "") extraAddress += data.bname;
-          if (data.buildingName !== "") {
+        if (data.addressType === 'R') {
+          if (data.bname !== '') extraAddress += data.bname;
+          if (data.buildingName !== '') {
             extraAddress +=
-              extraAddress !== ""
+              extraAddress !== ''
                 ? `, ${data.buildingName}`
                 : data.buildingName;
           }
-          fullAddress += extraAddress !== "" ? ` (${extraAddress})` : "";
+          fullAddress += extraAddress !== '' ? ` (${extraAddress})` : '';
         }
 
         // 주소 업데이트
@@ -146,7 +147,7 @@ function InsertMainComponent({
         getCoords(fullAddress);
 
         // 상세주소 포커스
-        document.getElementsByName("detailAddress")[0].focus();
+        document.getElementsByName('detailAddress')[0].focus();
       },
     }).open();
   };
@@ -188,8 +189,8 @@ function InsertMainComponent({
           placeholder="상세 주소를 입력해 주세요 (동, 호수 등)"
           onChange={handleChange}
         />
-        <div style={{ marginTop: "10px", fontSize: "12px", color: "#999" }}>
-          위도: {formData.latitude || "0"} / 경도: {formData.longitude || "0"}
+        <div style={{ marginTop: '10px', fontSize: '12px', color: '#999' }}>
+          위도: {formData.latitude || '0'} / 경도: {formData.longitude || '0'}
         </div>
       </FormGroup>
 

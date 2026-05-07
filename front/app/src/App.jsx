@@ -20,9 +20,9 @@ import AdminLoginPage from './features/auth/pages/admin/AdminLoginPage';
 import AdminSignupPage from './features/auth/pages/admin/AdminSignupPage';
 
 // ── 공간 (호스트) ─────────────────────────────────────────
-import SpaceListPage from './features/place/host/list/pages/SpaceListPage';
-import InsertStationPage from './features/place/host/insert/pages/InsertStationPage';
+import SpaceListPage from './features/place/pages/host/list/SpaceListPage';
 import ImageUpdatePage from './features/place/host/update/pages/ImageUpdatePage';
+import InsertStationPage from './features/place/pages/host/station/insert/InsertStationPage';
 
 // ── 공간 탐색 (일반회원) ──────────────────────────────────
 import DetailPage from './features/searchPlace/placeDetail/pages/common/DetailPage';

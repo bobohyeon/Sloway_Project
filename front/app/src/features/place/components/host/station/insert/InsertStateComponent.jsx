@@ -1,15 +1,15 @@
-import React from "react";
-import styled from "styled-components";
+import React from 'react';
+import styled from 'styled-components';
 
 const Stepper = styled.div`
   display: flex;
   justify-content: space-between;
   align-items: center;
   background: white;
-  padding: 20px 40px;
+  padding: 15px 30px;
   border-radius: 12px;
   border: 1px solid #e0e0e0;
-  margin-bottom: 30px;
+  margin-bottom: 20px;
   width: 100%;
   box-sizing: border-box;
 `;
@@ -19,15 +19,15 @@ const Step = styled.div`
   display: flex;
   align-items: center;
   gap: 8px;
-  color: ${(props) => (props.$active ? "#d46a4f" : "#aaa")};
-  font-weight: ${(props) => (props.$active ? "600" : "400")};
+  color: ${(props) => (props.$active ? '#d46a4f' : '#aaa')};
+  font-weight: ${(props) => (props.$active ? '600' : '400')};
   font-size: 14px;
 
   span {
     width: 24px;
     height: 24px;
     border-radius: 50%;
-    background-color: ${(props) => (props.$active ? "#d46a4f" : "#eee")};
+    background-color: ${(props) => (props.$active ? '#d46a4f' : '#eee')};
     color: white;
     display: flex;
     align-items: center;
