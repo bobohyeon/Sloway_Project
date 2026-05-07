@@ -32,6 +32,8 @@ import SpaceApprovalPage from './features/approval/pages/admin/SpaceApprovalPage
 
 // ── 결제 (일반회원) ────────────────────────────────────
 import BookingPaymentPage from './features/pay/pages/user/BookingPayment';
+import PaymentComplete from './features/pay/pages/user/PaymentComplete';
+import PaymentFail from './features/pay/pages/user/PaymentFail';
 
 // ── 임시 플레이스홀더 ─────────────────────────────────────
 // 아직 페이지 파일이 없는 라우트. 담당자가 페이지 생성 후 import로 교체
@@ -118,6 +120,8 @@ function App() {
           element={<Todo label="결제 수단" />}
         />
         <Route path="/user/payment/checkout" element={<BookingPaymentPage />} />
+        <Route path="/user/payment/complete" element={<PaymentComplete />} />
+        <Route path="/user/payment/fail" element={<PaymentFail />} />
         <Route path="/user/payment/:id" element={<Todo label="결제 상세" />} />
         <Route path="/user/point" element={<Todo label="포인트 이력" />} />
         <Route path="/user/coupon" element={<Todo label="쿠폰함" />} />

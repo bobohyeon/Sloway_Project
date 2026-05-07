@@ -1,3 +1,4 @@
+import { Fragment } from 'react';
 import styled, { css } from 'styled-components';
 
 export function PaymentSteps({ current = 2 }) {
@@ -10,21 +11,15 @@ export function PaymentSteps({ current = 2 }) {
   return (
     <Wrap>
       {steps.map((step, i) => (
-        <>
-          <Step
-            key={step.num}
-            $done={current > step.num}
-            $active={current === step.num}
-          >
+        <Fragment key={step.num}>
+          <Step>
             <Dot $done={current > step.num} $active={current === step.num}>
               {current > step.num ? '✓' : step.num}
             </Dot>
             <Label $active={current === step.num}>{step.label}</Label>
           </Step>
-          {i < steps.length - 1 && (
-            <Line $done={current > step.num} key={`line-${step.num}`} />
-          )}
-        </>
+          {i < steps.length - 1 && <Line $done={current > step.num} />}
+        </Fragment>
       ))}
     </Wrap>
   );

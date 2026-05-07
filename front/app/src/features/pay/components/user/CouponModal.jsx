@@ -1,46 +1,5 @@
 import styled, { css } from 'styled-components';
 
-export function CouponModal({ coupons, selectedId, onSelect, onClose }) {
-  return (
-    <Backdrop onClick={onClose}>
-      <Modal onClick={(e) => e.stopPropagation()}>
-        <Head>
-          <h3>쿠폰 선택</h3>
-          <CloseBtn onClick={onClose}>×</CloseBtn>
-        </Head>
-        <Body>
-          {coupons.map((c) => (
-            <CouponItem
-              key={c.id}
-              $disabled={!c.available}
-              $selected={selectedId === c.id}
-              onClick={() => c.available && onSelect(c)}
-            >
-              <Discount>
-                {c.type === 'percent'
-                  ? `${c.discount}%`
-                  : `${c.discount.toLocaleString()}원`}
-              </Discount>
-              <Info>
-                <Name>{c.name}</Name>
-                <Meta>
-                  {c.minAmount > 0 && (
-                    <span>최소 {c.minAmount.toLocaleString()}원 결제 시</span>
-                  )}
-                  {c.minAmount > 0 && <span> · </span>}
-                  <span>적용 · {c.scope}</span>
-                </Meta>
-                <Expires>D-{c.expiresIn} · 곧 만료</Expires>
-              </Info>
-              {!c.available && <Unavailable>사용 조건 불충족</Unavailable>}
-            </CouponItem>
-          ))}
-        </Body>
-      </Modal>
-    </Backdrop>
-  );
-}
-
 const Backdrop = styled.div`
   position: fixed;
   inset: 0;
@@ -174,3 +133,44 @@ const Unavailable = styled.div`
   color: var(--gray-400);
   font-style: italic;
 `;
+
+export function CouponModal({ coupons, selectedId, onSelect, onClose }) {
+  return (
+    <Backdrop onClick={onClose}>
+      <Modal onClick={(e) => e.stopPropagation()}>
+        <Head>
+          <h3>쿠폰 선택</h3>
+          <CloseBtn onClick={onClose}>×</CloseBtn>
+        </Head>
+        <Body>
+          {coupons.map((c) => (
+            <CouponItem
+              key={c.id}
+              $disabled={!c.available}
+              $selected={selectedId === c.id}
+              onClick={() => c.available && onSelect(c)}
+            >
+              <Discount>
+                {c.type === 'percent'
+                  ? `${c.discount}%`
+                  : `${c.discount.toLocaleString()}원`}
+              </Discount>
+              <Info>
+                <Name>{c.name}</Name>
+                <Meta>
+                  {c.minAmount > 0 && (
+                    <span>최소 {c.minAmount.toLocaleString()}원 결제 시</span>
+                  )}
+                  {c.minAmount > 0 && <span> · </span>}
+                  <span>적용 · {c.scope}</span>
+                </Meta>
+                <Expires>D-{c.expiresIn} · 곧 만료</Expires>
+              </Info>
+              {!c.available && <Unavailable>사용 조건 불충족</Unavailable>}
+            </CouponItem>
+          ))}
+        </Body>
+      </Modal>
+    </Backdrop>
+  );
+}
