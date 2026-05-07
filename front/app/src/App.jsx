@@ -30,6 +30,9 @@ import RecentPlacePage from './features/searchPlace/recentPlace/pages/RecentPlac
 import StationDetailPage from './features/place/pages/host/detail/StationDetailPage';
 import SpaceApprovalPage from './features/approval/pages/admin/SpaceApprovalPage';
 
+// ── 결제 (일반회원) ────────────────────────────────────
+import BookingPaymentPage from './features/pay/pages/user/BookingPayment';
+
 // ── 임시 플레이스홀더 ─────────────────────────────────────
 // 아직 페이지 파일이 없는 라우트. 담당자가 페이지 생성 후 import로 교체
 const Todo = ({ label }) => (
@@ -114,6 +117,7 @@ function App() {
           path="/user/payment/method"
           element={<Todo label="결제 수단" />}
         />
+        <Route path="/user/payment/checkout" element={<BookingPaymentPage />} />
         <Route path="/user/payment/:id" element={<Todo label="결제 상세" />} />
         <Route path="/user/point" element={<Todo label="포인트 이력" />} />
         <Route path="/user/coupon" element={<Todo label="쿠폰함" />} />

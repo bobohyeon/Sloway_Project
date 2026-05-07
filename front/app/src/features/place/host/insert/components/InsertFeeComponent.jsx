@@ -1,5 +1,5 @@
-import React from "react";
-import styled from "styled-components";
+import React from 'react';
+import styled from 'styled-components';
 
 const FormCard = styled.div`
   background: white;
@@ -101,7 +101,7 @@ const DateGrid = styled.div`
   border-bottom: 1px solid #eee;
   align-items: end;
 
-  input[type="date"] {
+  input[type='date'] {
     width: 100%;
     padding: 9px;
     border: 1px solid #ddd;
@@ -175,7 +175,7 @@ const RefundItem = styled.div`
     display: block;
     margin-top: 5px;
     font-weight: 700;
-    color: ${(props) => (props.highlight ? "#d46a4f" : "#666")};
+    color: ${(props) => (props.highlight ? '#d46a4f' : '#666')};
   }
 `;
 
@@ -216,14 +216,14 @@ function InsertFeeComponent({
 }) {
   // 요일 매핑 리스트
   const dayList = [
-    { key: "monPrice", label: "월" },
-    { key: "tuePrice", label: "화" },
-    { key: "wedPrice", label: "수" },
-    { key: "thuPrice", label: "목" },
-    { key: "friPrice", label: "금" },
-    { key: "satPrice", label: "토" },
-    { key: "sunPrice", label: "일" },
-    { key: "holidayPrice", label: "공휴일" },
+    { key: 'monPrice', label: '월' },
+    { key: 'tuePrice', label: '화' },
+    { key: 'wedPrice', label: '수' },
+    { key: 'thuPrice', label: '목' },
+    { key: 'friPrice', label: '금' },
+    { key: 'satPrice', label: '토' },
+    { key: 'sunPrice', label: '일' },
+    { key: 'holidayPrice', label: '공휴일' },
   ];
 
   // 예외 기간 추가 함수
@@ -233,16 +233,16 @@ function InsertFeeComponent({
       exceptionPeriods: [
         ...formData.exceptionPeriods,
         {
-          startDate: "",
-          endDate: "",
-          monPrice: "",
-          tuePrice: "",
-          wedPrice: "",
-          thuPrice: "",
-          friPrice: "",
-          satPrice: "",
-          sunPrice: "",
-          holidayPrice: "",
+          startDate: '',
+          endDate: '',
+          monPrice: '',
+          tuePrice: '',
+          wedPrice: '',
+          thuPrice: '',
+          friPrice: '',
+          satPrice: '',
+          sunPrice: '',
+          holidayPrice: '',
         },
       ],
     });
@@ -271,8 +271,8 @@ function InsertFeeComponent({
         {dayList.map((day) => (
           <FormGroup key={day.key}>
             <label>
-              {day.label === "공휴일" ? day.label : `${day.label}요일`} 요금{" "}
-              {day.label === "금" || day.label === "토" ? <span>*</span> : ""}
+              {day.label === '공휴일' ? day.label : `${day.label}요일`} 요금{' '}
+              {day.label === '금' || day.label === '토' ? <span>*</span> : ''}
             </label>
             <PriceInputWrapper>
               <span className="icon">₩</span>
@@ -280,7 +280,7 @@ function InsertFeeComponent({
                 type="text"
                 name={day.key}
                 placeholder="150,000"
-                value={formData[day.key] || ""}
+                value={formData[day.key] || ''}
                 onChange={handleChange}
               />
             </PriceInputWrapper>
@@ -291,9 +291,9 @@ function InsertFeeComponent({
       {/* 2. 예외 기간 설정 */}
       <div
         style={{
-          marginTop: "50px",
-          borderTop: "1px dashed #ddd",
-          paddingTop: "30px",
+          marginTop: '50px',
+          borderTop: '1px dashed #ddd',
+          paddingTop: '30px',
         }}
       >
         <SubTitle>🔥 특정 기간 예외 요금 (성수기·연말)</SubTitle>
@@ -307,7 +307,7 @@ function InsertFeeComponent({
                   type="date"
                   value={item.startDate}
                   onChange={(e) =>
-                    handleExceptionChange(index, "startDate", e.target.value)
+                    handleExceptionChange(index, 'startDate', e.target.value)
                   }
                 />
               </FormGroup>
@@ -317,7 +317,7 @@ function InsertFeeComponent({
                   type="date"
                   value={item.endDate}
                   onChange={(e) =>
-                    handleExceptionChange(index, "endDate", e.target.value)
+                    handleExceptionChange(index, 'endDate', e.target.value)
                   }
                 />
               </FormGroup>
@@ -330,7 +330,7 @@ function InsertFeeComponent({
             </DateGrid>
 
             <p
-              style={{ fontSize: "12px", color: "#888", marginBottom: "15px" }}
+              style={{ fontSize: '12px', color: '#888', marginBottom: '15px' }}
             >
               * 해당 기간 내 적용할 요일별 금액을 입력하세요.
             </p>
@@ -344,7 +344,7 @@ function InsertFeeComponent({
                     <input
                       type="text"
                       placeholder="200,000"
-                      value={item[day.key] || ""}
+                      value={item[day.key] || ''}
                       onChange={(e) =>
                         handleExceptionChange(index, day.key, e.target.value)
                       }
