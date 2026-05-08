@@ -1,5 +1,5 @@
-import React, { useState } from "react";
-import styled from "styled-components";
+import React, { useState } from 'react';
+import styled from 'styled-components';
 
 const FormCard = styled.div`
   background: white;
@@ -124,12 +124,12 @@ const PrevButton = styled.button`
 const SubmitButton = styled.button`
   flex: 5;
   padding: 18px;
-  background-color: ${(props) => (props.disabled ? "#ccc" : "#768966")};
+  background-color: ${(props) => (props.disabled ? '#ccc' : '#768966')};
   color: white;
   border: none;
   border-radius: 8px;
   font-weight: 600;
-  cursor: ${(props) => (props.disabled ? "not-allowed" : "pointer")};
+  cursor: ${(props) => (props.disabled ? 'not-allowed' : 'pointer')};
   transition: background 0.2s;
 `;
 
@@ -146,40 +146,40 @@ function InsertCheckComponent({ formData, prev, onSubmit }) {
       <SectionTitle>공개 설정 및 등록</SectionTitle>
 
       <SummaryBox>
-        <h3 style={{ fontSize: "15px", marginBottom: "20px" }}>
+        <h3 style={{ fontSize: '15px', marginBottom: '20px' }}>
           등록 내용 요약
         </h3>
 
+        {/* ✅ 마스터 공간 번호와 이름을 한 번에 표시 */}
         <SummaryItem>
-          <div className="label">공간 유형</div>
-          <div className="tag">🏠 숙소</div>
+          <div className="label">공간</div>
+          <div className="value">
+            {formData.placeNo
+              ? `[No.${formData.placeNo}] ${formData.placeTitle}`
+              : '(선택된 공간 없음)'}
+          </div>
         </SummaryItem>
 
         <SummaryItem>
-          <div className="label">공간명</div>
-          <div className="value">{formData.title || "(입력한 이름)"}</div>
-        </SummaryItem>
-
-        <SummaryItem>
-          <div className="label">주소</div>
-          <div className="value">{formData.address || "(입력한 주소)"}</div>
+          <div className="label">숙소명</div>
+          <div className="value">{formData.title || '(입력한 이름)'}</div>
         </SummaryItem>
 
         <SummaryItem>
           <div className="label">편의시설</div>
           <div className="value">
-            {formData.facilities.length > 0
-              ? formData.facilities.join(", ")
-              : "(선택한 편의시설 없음)"}
+            {formData.facilities && formData.facilities.length > 0
+              ? formData.facilities.join(', ')
+              : '(선택한 편의시설 없음)'}
           </div>
         </SummaryItem>
 
         <SummaryItem>
-          <div className="label">대표 요금</div>
+          <div className="label">대표 요금(월)</div>
           <div className="value">
-            {formData.basePrice
-              ? `${Number(formData.basePrice).toLocaleString()}원`
-              : "(입력한 요금)"}
+            {formData.monPrice
+              ? `${Number(formData.monPrice).toLocaleString()}원`
+              : '(입력한 요금)'}
           </div>
         </SummaryItem>
       </SummaryBox>

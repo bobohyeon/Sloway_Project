@@ -1,5 +1,5 @@
-import React, { useRef, useState } from "react";
-import styled from "styled-components";
+import React, { useRef, useState } from 'react';
+import styled from 'styled-components';
 
 const FormCard = styled.div`
   background: white;
@@ -31,7 +31,7 @@ const ImageGrid = styled.div`
 
 const ImageBox = styled.div`
   aspect-ratio: 4 / 3;
-  border: 2px dashed ${(props) => (props.isMain ? "#d46a4f" : "#e0e0e0")};
+  border: 2px dashed ${(props) => (props.isMain ? '#d46a4f' : '#e0e0e0')};
   border-radius: 12px;
   display: flex;
   flex-direction: column;
@@ -40,7 +40,7 @@ const ImageBox = styled.div`
   cursor: grab; /* 드래그 가능 표시 */
   overflow: hidden;
   position: relative;
-  background-color: ${(props) => (props.isMain ? "#fff9f7" : "#fff")};
+  background-color: ${(props) => (props.isMain ? '#fff9f7' : '#fff')};
   transition:
     transform 0.2s,
     box-shadow 0.2s;
@@ -136,17 +136,17 @@ function InsertImageComponent({ formData, setFormData, prev, next }) {
   // 이미지 업로드 로직 (JPG/JPEG 제한 포함)
   const handleImageUpload = (e) => {
     const files = Array.from(e.target.files);
-    const allowedExtensions = ["jpg", "jpeg"];
+    const allowedExtensions = ['jpg', 'jpeg'];
     const filteredFiles = files.filter((file) => {
-      const extension = file.name.split(".").pop().toLowerCase();
+      const extension = file.name.split('.').pop().toLowerCase();
       return allowedExtensions.includes(extension);
     });
 
     if (filteredFiles.length !== files.length)
-      alert("JPG, JPEG 파일만 업로드 가능합니다.");
+      alert('JPG, JPEG 파일만 업로드 가능합니다.');
     if (filteredFiles.length === 0) return;
     if (formData.images.length + filteredFiles.length > 10) {
-      alert("최대 10장까지 가능합니다.");
+      alert('최대 10장까지 가능합니다.');
       return;
     }
 
@@ -159,7 +159,7 @@ function InsertImageComponent({ formData, setFormData, prev, next }) {
       ...prev,
       images: [...prev.images, ...newImages],
     }));
-    e.target.value = "";
+    e.target.value = '';
   };
 
   // --- 드래그 앤 드롭 핸들러 ---
@@ -204,7 +204,7 @@ function InsertImageComponent({ formData, setFormData, prev, next }) {
         type="file"
         multiple
         accept=".jpg, .jpeg"
-        style={{ display: "none" }}
+        style={{ display: 'none' }}
         ref={fileInputRef}
         onChange={handleImageUpload}
       />
@@ -219,7 +219,7 @@ function InsertImageComponent({ formData, setFormData, prev, next }) {
             onDragEnter={() => onDragEnter(index)}
             onDragEnd={onDragEnd}
             onDragOver={(e) => e.preventDefault()} // 드롭 허용
-            className={draggedIndex === index ? "dragging" : ""}
+            className={draggedIndex === index ? 'dragging' : ''}
           >
             <img src={img.preview} alt={`upload-${index}`} />
             <RemoveButton
@@ -233,13 +233,13 @@ function InsertImageComponent({ formData, setFormData, prev, next }) {
             {index === 0 && (
               <div
                 style={{
-                  position: "absolute",
-                  bottom: "10px",
-                  background: "#d46a4f",
-                  color: "white",
-                  padding: "2px 8px",
-                  borderRadius: "4px",
-                  fontSize: "10px",
+                  position: 'absolute',
+                  bottom: '10px',
+                  background: '#d46a4f',
+                  color: 'white',
+                  padding: '2px 8px',
+                  borderRadius: '4px',
+                  fontSize: '10px',
                   zIndex: 5,
                 }}
               >
@@ -255,10 +255,10 @@ function InsertImageComponent({ formData, setFormData, prev, next }) {
             onClick={() => fileInputRef.current.click()}
           >
             <LabelWrap>
-              <span style={{ fontSize: "24px" }}>+</span>
-              <div style={{ marginTop: "5px" }}>
+              <span style={{ fontSize: '24px' }}>+</span>
+              <div style={{ marginTop: '5px' }}>
                 {formData.images.length === 0
-                  ? "대표 이미지 등록"
+                  ? '대표 이미지 등록'
                   : formData.images.length + 1}
               </div>
             </LabelWrap>
@@ -270,7 +270,7 @@ function InsertImageComponent({ formData, setFormData, prev, next }) {
 
       <ButtonGroup>
         <PrevButton onClick={prev}>이전</PrevButton>
-        <NextButton onClick={next}>다음 · 공개 설정</NextButton>
+        <NextButton onClick={next}>다음</NextButton>
       </ButtonGroup>
     </FormCard>
   );

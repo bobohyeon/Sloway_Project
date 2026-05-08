@@ -53,12 +53,13 @@ const STATUS_COLOR = { S: '#5a7a42', E: '#A8B89F', C: '#e24b4a', R: '#e24b4a' };
 // ─── Styled Components ─────────────────────────────────────
 const Page = styled.div`
   padding: 32px;
+  width: 100%;
   max-width: 860px;
+  margin: 0 auto; // ← 가운데 정렬
   display: flex;
   flex-direction: column;
   gap: 24px;
 `;
-
 // 프로필 카드
 const ProfileCard = styled.div`
   background: #fff;

@@ -2,8 +2,8 @@ import React from 'react';
 import styled from 'styled-components';
 
 const PageWrapper = styled.div`
-  background-color: #f8f9f6;
-  height: 92vh;
+  background-color: #f4efe6;
+  height: 96vh;
   padding: 30px 20px;
   display: flex;
   flex-direction: column;
@@ -27,38 +27,12 @@ const Header = styled.div`
   flex-shrink: 0;
 `;
 
-const TabContainer = styled.div`
-  display: flex;
-  gap: 30px;
-  border-bottom: 1px solid #eee;
-  margin-bottom: 25px;
-  flex-shrink: 0; /* 탭 고정 */
-`;
-
-const Tab = styled.div`
-  padding: 12px 5px;
-  font-size: 15px;
-  cursor: pointer;
-  color: ${(props) => (props.$active ? '#333' : '#aaa')};
-  font-weight: ${(props) => (props.$active ? 'bold' : 'normal')};
-  border-bottom: ${(props) => (props.$active ? '2px solid #768966' : 'none')};
-  display: flex;
-  align-items: center;
-  gap: 6px;
-
-  span {
-    background: ${(props) => (props.$active ? '#768966' : '#eee')};
-    color: ${(props) => (props.$active ? 'white' : '#999')};
-    padding: 2px 8px;
-    border-radius: 10px;
-    font-size: 11px;
-  }
-`;
-
 const ScrollArea = styled.div`
   flex: 1;
   overflow-y: auto;
   padding-right: 8px;
+  min-height: 500px;
+  max-height: 550px;
 
   /* 3px 스크롤바 디자인 */
   &::-webkit-scrollbar {
@@ -73,15 +47,7 @@ const ScrollArea = styled.div`
   }
 `;
 
-function SpaceListLayout({
-  activeTab,
-  setActiveTab,
-  counts,
-  summarySection,
-  listSection,
-}) {
-  const tabs = ['전체', '숙소', '워크앤스테이', '코워킹오피스'];
-
+function SpaceListLayout({ summarySection, listSection }) {
   return (
     <PageWrapper>
       <Container>
@@ -93,19 +59,6 @@ function SpaceListLayout({
         </Header>
 
         {summarySection}
-
-        {/* 탭 영역을 Layout으로 이동 */}
-        <TabContainer>
-          {tabs.map((tabName) => (
-            <Tab
-              key={tabName}
-              $active={activeTab === tabName}
-              onClick={() => setActiveTab(tabName)}
-            >
-              {tabName} <span>{counts[tabName] || 0}</span>
-            </Tab>
-          ))}
-        </TabContainer>
 
         {/* 오직 리스트만 스크롤되는 영역 */}
         <ScrollArea>{listSection}</ScrollArea>

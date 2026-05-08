@@ -1,53 +1,84 @@
-import React from 'react';
+import { useState } from 'react';
 import styled from 'styled-components';
-import RecentCardList from '../components/user/recentCardList';
+import {
+  PageTitle,
+  PageSub,
+  COLOR,
+} from '../../../rsvn/components/user/RsvnStyled';
+import RecentCard from '../components/user/RecentCard';
 
-// --- Styled Components ---
-const PageContainer = styled.div`
-  background-color: #f4efe6; /* 요청하신 배경색 */
-  min-height: 100vh;
-  padding: 40px;
-  font-family: 'Pretendard', sans-serif; /* 기본 폰트 가정 */
-`;
-
-const LayoutWrapper = styled.div`
-  display: flex;
-  gap: 40px;
-  max-width: 1200px;
-  margin: 0 auto;
-`;
-
-const SidebarPlaceholder = styled.aside`
-  width: 200px;
-  /* 임시 사이드바 스타일 (나중에 교체) */
-`;
-
-const MainContent = styled.main`
-  flex: 1;
-`;
-
-const HeaderSection = styled.div`
-  margin-bottom: 24px;
-`;
-
-const PageTitle = styled.h2`
-  font-size: 28px;
-  font-weight: 700;
-  color: #333;
-  margin-bottom: 12px;
-`;
-
-const PageSubtitle = styled.p`
-  font-size: 14px;
-  color: #777;
-  margin-bottom: 20px;
-`;
-
-const Divider = styled.hr`
-  border: none;
-  border-top: 1px solid #ddd;
-  margin-bottom: 20px;
-`;
+const DUMMY = [
+  {
+    id: 1,
+    type: '워크앤스테이',
+    timeAgo: '방금 전',
+    title: '청평 숲속 파인뷰 스테이',
+    location: '경기 가평',
+    rating: 4.9,
+    price: 185000,
+    icon: '🌲',
+  },
+  {
+    id: 2,
+    type: '코워킹오피스',
+    timeAgo: '5분 전',
+    title: '강릉 바다향 커먼워크',
+    location: '강원 강릉',
+    rating: 4.8,
+    price: 28000,
+    icon: '🌊',
+  },
+  {
+    id: 3,
+    type: '숙소',
+    timeAgo: '2시간 전',
+    title: '제주 돌담집 리트릿',
+    location: '제주 서귀포',
+    rating: 4.9,
+    price: 220000,
+    icon: '🌴',
+  },
+  {
+    id: 4,
+    type: '워크앤스테이',
+    timeAgo: '어제',
+    title: '남해 올리브 팜스테이',
+    location: '경남 남해',
+    rating: 4.92,
+    price: 165000,
+    icon: '✉️',
+  },
+  {
+    id: 5,
+    type: '숙소',
+    timeAgo: '3일 전',
+    title: '양양 파도소리 빌라',
+    location: '강원 양양',
+    rating: 4.95,
+    price: 240000,
+    icon: '🌅',
+  },
+  {
+    id: 6,
+    type: '코워킹오피스',
+    timeAgo: '5일 전',
+    title: '성수 브릭라운지',
+    location: '서울 성수',
+    rating: 4.88,
+    price: 25000,
+    icon: '🧱',
+  },
+  {
+    id: 7,
+    type: '워크앤스테이',
+    timeAgo: '1주 전',
+    title: '속초 설악 글램스테이',
+    location: '강원 속초',
+    rating: 4.87,
+    price: 210000,
+    icon: '⛰️',
+  },
+];
 
 const ListHeader = styled.div`
   display: flex;
@@ -57,52 +88,76 @@ const ListHeader = styled.div`
 `;
 
 const TotalCount = styled.span`
-  font-size: 14px;
+  font-size: 13px;
   font-weight: 600;
   color: #555;
 `;
 
-const ClearAllButton = styled.button`
+const ClearBtn = styled.button`
+  font-size: 13px;
+  color: ${COLOR.sage};
+  text-decoration: underline;
   background: none;
   border: none;
-  font-size: 13px;
-  color: #a8b89f; /* 요청하신 포인트 색상 적용 */
-  text-decoration: underline;
   cursor: pointer;
-  padding: 0;
-
   &:hover {
-    color: #8a9a82;
+    color: #6a7a61;
   }
 `;
 
-// --- Component ---
+const CardList = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+`;
+
+const EmptyBox = styled.div`
+  text-align: center;
+  padding: 60px 0;
+  color: ${COLOR.gray400};
+  font-size: 14px;
+`;
+
 function RecentPlacePage() {
+  const [items, setItems] = useState(DUMMY);
+
+  const handleDelete = (id) => {
+    setItems((prev) => prev.filter((item) => item.id !== id));
+  };
+
+  const handleClearAll = () => {
+    setItems([]);
+  };
+
   return (
-    <PageContainer>
-      {/* <h1>헤더공간</h1> (추후 공용 컴포넌트로 교체) */}
-      <LayoutWrapper>
-        <SidebarPlaceholder>{/* <h1>사이드바공간</h1> */}</SidebarPlaceholder>
+    <div>
+      <PageTitle>최근 본 공간</PageTitle>
+      <PageSub>
+        최근 조회한 공간 {items.length}개 · 최대 10개까지 표시됩니다
+      </PageSub>
 
-        <MainContent>
-          <HeaderSection>
-            <PageTitle>최근 본 공간</PageTitle>
-            <PageSubtitle>
-              최근 조회한 공간 7개 · 최대 10개까지 표시됩니다
-            </PageSubtitle>
-            <Divider />
-          </HeaderSection>
-
+      {items.length > 0 ? (
+        <>
           <ListHeader>
-            <TotalCount>총 7개</TotalCount>
-            <ClearAllButton>전체 지우기</ClearAllButton>
+            <TotalCount>총 {items.length}개</TotalCount>
+            <ClearBtn onClick={handleClearAll}>전체 지우기</ClearBtn>
           </ListHeader>
-
-          {/* 리스트 영역 */}
-          <RecentCardList />
-        </MainContent>
-      </LayoutWrapper>
-    </PageContainer>
+          <CardList>
+            {items.map((item) => (
+              <RecentCard key={item.id} item={item} onDelete={handleDelete} />
+            ))}
+          </CardList>
+        </>
+      ) : (
+        <EmptyBox>
+          <div style={{ fontSize: 32, marginBottom: 12 }}>🕐</div>
+          <div>최근 본 공간이 없어요</div>
+          <div style={{ fontSize: 12, marginTop: 6 }}>
+            공간 상세 페이지를 방문하면 여기에 표시돼요
+          </div>
+        </EmptyBox>
+      )}
+    </div>
   );
 }
 

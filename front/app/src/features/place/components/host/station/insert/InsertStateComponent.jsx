@@ -19,7 +19,7 @@ const Step = styled.div`
   display: flex;
   align-items: center;
   gap: 8px;
-  color: ${(props) => (props.$active ? '#d46a4f' : '#aaa')};
+  color: ${(props) => (props.$active ? '#768966' : '#eee')};
   font-weight: ${(props) => (props.$active ? '600' : '400')};
   font-size: 14px;
 
@@ -27,7 +27,7 @@ const Step = styled.div`
     width: 24px;
     height: 24px;
     border-radius: 50%;
-    background-color: ${(props) => (props.$active ? '#d46a4f' : '#eee')};
+    background-color: ${(props) => (props.$active ? '#768966' : '#eee')};
     color: white;
     display: flex;
     align-items: center;
