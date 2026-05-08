@@ -1,5 +1,6 @@
 import React from 'react';
 import styled from 'styled-components';
+import { useNavigate } from 'react-router-dom';
 
 const PageWrapper = styled.div`
   background-color: #f8f9f6;
@@ -48,13 +49,14 @@ const BackButton = styled.div`
   }
 `;
 
-function InsertStationLayout({ stateSection, currentStepSection }) {
+function InsertSpaceLayout({ stateSection, currentStepSection }) {
+  const navigate = useNavigate();
   return (
     <PageWrapper>
       <Container>
         <Header>
-          <h1>숙소 등록</h1>
-          <p>휴식 중심의 숙박 공간을 등록합니다</p>
+          <h1>공간 등록</h1>
+          <p>공간을 등록합니다</p>
         </Header>
 
         <BackButton onClick={() => navigate(`/host/space/list`)}>
@@ -78,4 +80,4 @@ function InsertStationLayout({ stateSection, currentStepSection }) {
   );
 }
 
-export default InsertStationLayout;
+export default InsertSpaceLayout;
