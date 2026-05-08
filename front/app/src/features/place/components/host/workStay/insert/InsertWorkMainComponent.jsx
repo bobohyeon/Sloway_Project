@@ -1,6 +1,6 @@
 import React from 'react';
-import { FaLeaf } from 'react-icons/fa';
 import styled from 'styled-components';
+import { FaBriefcase } from 'react-icons/fa';
 
 const FormCard = styled.div`
   background: white;
@@ -74,17 +74,18 @@ const SubmitButton = styled.button`
   }
 `;
 
-function InsertCoworkingMainComponent({
+function InsertWorkMainComponent({
   formData,
-  setFormData, // 이름과 번호를 동시 저장하기 위해 필요
+  setFormData, // 부모의 상태를 직접 수정하기 위해 추가
   handleChange,
   setStep,
   currentStep,
   masterPlaces = [
-    { no: 10, title: '성수 브릭스 타워' },
-    { no: 11, title: '강남 워크플렉스' },
+    { no: 1, title: '제주 돌담 호텔' },
+    { no: 2, title: '서귀포 펜션 마스터' },
   ],
 }) {
+  // 공간 선택 시 No와 Title을 동시에 저장하는 커스텀 핸들러
   const handlePlaceSelect = (e) => {
     const selectedNo = e.target.value;
     const selectedTitle = e.target.options[e.target.selectedIndex].text;
@@ -92,15 +93,15 @@ function InsertCoworkingMainComponent({
     setFormData((prev) => ({
       ...prev,
       placeNo: selectedNo,
-      placeTitle: selectedTitle,
+      placeTitle: selectedTitle, // 확인 페이지에서 보여줄 이름 저장
     }));
   };
 
   return (
     <FormCard>
       <SectionTitle>
-        <FaLeaf />
-        오피스 기본 정보 (단계: {currentStep})
+        <FaBriefcase />
+        워크앤스테이 기본 정보
       </SectionTitle>
 
       <FormGroup>
@@ -110,10 +111,10 @@ function InsertCoworkingMainComponent({
         <select
           name="placeNo"
           value={formData.placeNo || ''}
-          onChange={handlePlaceSelect}
+          onChange={handlePlaceSelect} // 커스텀 핸들러 사용
         >
           <option value="" disabled>
-            오피스가 위치한 공간을 선택하세요
+            등록할 워크앤스테이가 속한 공간을 선택하세요
           </option>
           {masterPlaces.map((place) => (
             <option key={place.no} value={place.no}>
@@ -123,29 +124,27 @@ function InsertCoworkingMainComponent({
         </select>
       </FormGroup>
 
-      {/* 2. 상세 오피스명 */}
       <FormGroup>
         <label>
-          오피스 구역/명칭<span>*</span>
+          워크앤스테이명<span>*</span>
         </label>
         <input
           name="title"
           value={formData.title}
-          placeholder="예: 4층 오픈데스크 A구역 / 프라이빗 룸 402호"
+          placeholder="예: 디럭스 더블룸 / 숲속 독채"
           onChange={handleChange}
         />
       </FormGroup>
 
-      {/* 3. 오피스 설명 */}
       <FormGroup>
         <label>
-          공간 설명<span>*</span>
+          워크앤스테이 설명<span>*</span>
         </label>
         <textarea
           name="content"
           rows="5"
           value={formData.content}
-          placeholder="해당 오피스 구역의 특징(집중하기 좋은 환경 등)을 소개해 주세요"
+          placeholder="공간을 소개해 주세요"
           onChange={handleChange}
         />
       </FormGroup>
@@ -157,4 +156,4 @@ function InsertCoworkingMainComponent({
   );
 }
 
-export default InsertCoworkingMainComponent;
+export default InsertWorkMainComponent;

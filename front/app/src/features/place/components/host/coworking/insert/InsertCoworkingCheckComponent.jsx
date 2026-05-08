@@ -151,11 +151,6 @@ function InsertCoworkingCheckComponent({ formData, prev, onSubmit }) {
         </h3>
 
         <SummaryItem>
-          <div className="label">공간 유형</div>
-          <div className="tag">🏠 숙소</div>
-        </SummaryItem>
-
-        <SummaryItem>
           <div className="label">공간명</div>
           <div className="value">{formData.title || '(입력한 이름)'}</div>
         </SummaryItem>

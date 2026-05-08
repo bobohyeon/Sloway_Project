@@ -1,11 +1,11 @@
 import React, { useState } from 'react';
 import InsertStateComponent from '../../../../components/host/station/insert/InsertStateComponent';
 import InsertCoworkingLayout from '../../../../layouts/host/coworking/insert/InsertCoworkingLayout';
-import InsertCoworkingImageComponent from '../../../../components/host/coworking/insert/InsertCoworkingImageComponent';
 import InsertCoworkingCheckComponent from '../../../../components/host/coworking/insert/InsertCoworkingCheckComponent';
-import InsertFeeComponent from '../../../../components/host/station/insert/InsertFeeComponent';
-import InsertDetailComponent from '../../../../components/host/station/insert/InsertDetailComponent';
-import InsertMainComponent from '../../../../components/host/station/insert/InsertMainComponent';
+import InsertCoworkingMainComponent from '../../../../components/host/coworking/insert/InsertCoworkingMainComponent';
+import InsertCoworkingDetailComponent from './../../../../components/host/coworking/insert/InsertCoworkingDetailComponent';
+import InsertCoworkingFeeComponent from './../../../../components/host/coworking/insert/InsertCoworkingFeeComponent';
+import InsertImageComponent from '../../../../components/host/station/insert/InsertImageComponent';
 
 function InsertCoworkingPage() {
   const [step, setStep] = useState(1);
@@ -59,7 +59,7 @@ function InsertCoworkingPage() {
     switch (step) {
       case 1:
         return (
-          <InsertMainComponent
+          <InsertCoworkingMainComponent
             formData={formData}
             setFormData={setFormData}
             handleChange={handleChange}
@@ -69,7 +69,7 @@ function InsertCoworkingPage() {
         );
       case 2:
         return (
-          <InsertDetailComponent
+          <InsertCoworkingDetailComponent
             formData={formData}
             handleChange={handleChange}
             handleCheckChange={handleCheckChange}
@@ -79,7 +79,7 @@ function InsertCoworkingPage() {
         );
       case 3:
         return (
-          <InsertFeeComponent
+          <InsertCoworkingFeeComponent
             formData={formData}
             setFormData={setFormData}
             handleChange={handleChange}
@@ -89,7 +89,7 @@ function InsertCoworkingPage() {
         );
       case 4:
         return (
-          <InsertCoworkingImageComponent
+          <InsertImageComponent
             formData={formData}
             setFormData={setFormData}
             prev={() => setStep(3)}

@@ -45,13 +45,18 @@ const SummaryItem = styled.div`
     text-align: right;
   }
   .tag {
-    background: #eee;
+    background: #768966;
+    color: white;
     padding: 4px 10px;
     border-radius: 4px;
     font-size: 12px;
     display: flex;
     align-items: center;
     gap: 4px;
+  }
+  .tag.office {
+    background: #bccab0;
+    color: #333;
   }
 `;
 
@@ -133,7 +138,7 @@ const SubmitButton = styled.button`
   transition: background 0.2s;
 `;
 
-function InsertCheckComponent({ formData, prev, onSubmit }) {
+function InsertWorkCheckComponent({ formData, prev, onSubmit }) {
   const [agreed, setAgreed] = useState({
     info: false,
     terms: false,
@@ -143,44 +148,47 @@ function InsertCheckComponent({ formData, prev, onSubmit }) {
 
   return (
     <FormCard>
-      <SectionTitle>공개 설정 및 등록</SectionTitle>
+      <SectionTitle>공개 설정 및 등록 확인</SectionTitle>
 
+      {/* 워크스테이 요약 */}
       <SummaryBox>
-        <h3 style={{ fontSize: '15px', marginBottom: '20px' }}>
-          등록 내용 요약
+        <h3
+          style={{ fontSize: '15px', marginBottom: '20px', color: '#768966' }}
+        >
+          🏠 워크스테이 요약
         </h3>
-
-        {/* ✅ 마스터 공간 번호와 이름을 한 번에 표시 */}
         <SummaryItem>
-          <div className="label">공간</div>
+          <div className="label">워크스테이명</div>
+          <div className="value">{formData.title || '(미입력)'}</div>
+        </SummaryItem>
+        <SummaryItem>
+          <div className="label">마스터 공간</div>
           <div className="value">
             {formData.placeNo
               ? `[No.${formData.placeNo}] ${formData.placeTitle}`
-              : '(선택된 공간 없음)'}
+              : '선택 안됨'}
           </div>
         </SummaryItem>
-
-        <SummaryItem>
-          <div className="label">숙소명</div>
-          <div className="value">{formData.title || '(입력한 이름)'}</div>
-        </SummaryItem>
-
-        <SummaryItem>
-          <div className="label">편의시설</div>
-          <div className="value">
-            {formData.facilities && formData.facilities.length > 0
-              ? formData.facilities.join(', ')
-              : '(선택한 편의시설 없음)'}
-          </div>
-        </SummaryItem>
-
         <SummaryItem>
           <div className="label">대표 요금(월)</div>
           <div className="value">
             {formData.monPrice
               ? `${Number(formData.monPrice).toLocaleString()}원`
-              : '(입력한 요금)'}
+              : '0원'}
           </div>
+        </SummaryItem>
+      </SummaryBox>
+
+      {/* 오피스 요약 */}
+      <SummaryBox style={{ backgroundColor: '#f9f9f9' }}>
+        <h3
+          style={{ fontSize: '15px', marginBottom: '20px', color: '#768966' }}
+        >
+          💻 오피스 정보 (무료 제공)
+        </h3>
+        <SummaryItem>
+          <div className="label">수용 인원</div>
+          <div className="value">{formData.office?.peopleCnt || 0}명</div>
         </SummaryItem>
       </SummaryBox>
 
@@ -189,31 +197,26 @@ function InsertCheckComponent({ formData, prev, onSubmit }) {
           <input
             type="checkbox"
             checked={agreed.info}
-            onChange={() =>
-              setAgreed((prev) => ({ ...prev, info: !prev.info }))
-            }
+            onChange={() => setAgreed((p) => ({ ...p, info: !p.info }))}
           />
-          <span>*</span> 등록한 내용이 실제 운영 상황과 일치합니다
+          <span>*</span> 정보가 실제와 일치합니다.
         </label>
         <label>
           <input
             type="checkbox"
             checked={agreed.terms}
-            onChange={() =>
-              setAgreed((prev) => ({ ...prev, terms: !prev.terms }))
-            }
+            onChange={() => setAgreed((p) => ({ ...p, terms: !p.terms }))}
           />
-          <span>*</span> 호스트 이용약관 및 운영 정책에 동의합니다
+          <span>*</span> 이용약관에 동의합니다.
         </label>
       </AgreementSection>
 
       <InfoBanner>
         <div className="icon">⏱️</div>
         <div className="text">
-          <h4>관리자 검수 후 공개됩니다</h4>
+          <h4>관리자 검수 프로세스</h4>
           <p>
-            등록 신청 후 영업일 기준 1~3일 내 검수 결과를 알림으로 안내드립니다.
-            승인 후 자동으로 공개되며, 이후 자유롭게 수정하실 수 있어요.
+            평일 기준 1~3일 내에 승인이 완료되며, 승인 즉시 서비스에 노출됩니다.
           </p>
         </div>
       </InfoBanner>
@@ -228,4 +231,4 @@ function InsertCheckComponent({ formData, prev, onSubmit }) {
   );
 }
 
-export default InsertCheckComponent;
+export default InsertWorkCheckComponent;
