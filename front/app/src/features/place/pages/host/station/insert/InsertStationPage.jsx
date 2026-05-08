@@ -11,18 +11,20 @@ function InsertStationPage() {
   const [step, setStep] = useState(1);
 
   const [formData, setFormData] = useState({
+    // 1단계: 마스터 공간 선택 및 기본 정보
+    placeNo: '',
     title: '',
-    address: '',
-    detailAddress: '',
     content: '',
-    latitude: null,
-    longitude: null,
+
+    // 2단계: 공간 상세
     maxPeople: '',
     basePeople: '',
     rooms: '',
     checkIn: '',
     checkOut: '',
     facilities: [],
+
+    // 3단계: 요금
     monPrice: '',
     tuePrice: '',
     wedPrice: '',
@@ -32,6 +34,8 @@ function InsertStationPage() {
     sunPrice: '',
     holidayPrice: '',
     exceptionPeriods: [],
+
+    // 4단계: 이미지
     images: [],
   });
 

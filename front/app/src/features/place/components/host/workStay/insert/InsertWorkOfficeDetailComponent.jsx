@@ -18,7 +18,6 @@ const SectionTitle = styled.h2`
 
 const InputGrid = styled.div`
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
   gap: 20px;
   margin-bottom: 25px;
 `;
@@ -100,7 +99,7 @@ const NextButton = styled.button`
   cursor: pointer;
 `;
 
-function InsertDetailComponent({
+function InsertWorkOfficeDetailComponent({
   formData,
   handleChange,
   handleCheckChange,
@@ -129,57 +128,16 @@ function InsertDetailComponent({
       <InputGrid>
         <FormGroup>
           <label>
-            최대 인원 <span>*</span>
+            수용 인원 <span>*</span>
           </label>
           <input
-            name="maxPeople"
-            placeholder="4명"
-            value={formData.maxPeople}
-            onChange={handleChange}
-          />
-        </FormGroup>
-        <FormGroup>
-          <label>기준 인원</label>
-          <input
-            name="basePeople"
-            placeholder="2명"
-            value={formData.basePeople}
-            onChange={handleChange}
-          />
-        </FormGroup>
-        <FormGroup>
-          <label>침실 수</label>
-          <input
-            name="rooms"
-            placeholder="2개"
-            value={formData.rooms}
+            name="peopleCnt"
+            placeholder="ex ) 40"
+            value={formData.peopleCnt}
             onChange={handleChange}
           />
         </FormGroup>
       </InputGrid>
-
-      <div
-        style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}
-      >
-        <FormGroup>
-          <label>체크인 시각</label>
-          <input
-            name="checkIn"
-            placeholder="오후 3:00"
-            value={formData.checkIn}
-            onChange={handleChange}
-          />
-        </FormGroup>
-        <FormGroup>
-          <label>체크아웃 시각</label>
-          <input
-            name="checkOut"
-            placeholder="오전 11:00"
-            value={formData.checkOut}
-            onChange={handleChange}
-          />
-        </FormGroup>
-      </div>
 
       <FormGroup style={{ marginTop: '20px' }}>
         <label>편의시설 (제공 항목을 모두 선택해주세요)</label>
@@ -205,4 +163,4 @@ function InsertDetailComponent({
   );
 }
 
-export default InsertDetailComponent;
+export default InsertWorkOfficeDetailComponent;

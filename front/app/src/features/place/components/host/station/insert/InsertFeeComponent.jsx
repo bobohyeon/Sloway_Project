@@ -385,7 +385,7 @@ function InsertFeeComponent({
           이전
         </PrevButton>
         <NextButton type="button" onClick={next}>
-          다음 · 이미지 등록
+          다음
         </NextButton>
       </ButtonGroup>
     </FormCard>
