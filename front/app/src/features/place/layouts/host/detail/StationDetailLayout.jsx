@@ -7,7 +7,7 @@ import RecentBookings from './../../../components/host/detail/RecentBookings';
 
 // --- 스타일 정의 ---
 const PageWrapper = styled.div`
-  background-color: #f8f9f6;
+  background-color: #f4efe6;
   min-height: 100vh;
   padding: 40px 20px;
   display: flex;

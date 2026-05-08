@@ -3,7 +3,7 @@ import styled from 'styled-components';
 import { useNavigate } from 'react-router-dom';
 
 const PageWrapper = styled.div`
-  background-color: #f8f9f6;
+  background-color: #f4efe6;
   height: 100%;
   padding: 30px 20px;
   display: flex;
