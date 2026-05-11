@@ -1,9 +1,10 @@
+import { createPortal } from 'react-dom'
 import styled from 'styled-components'
 
 export function Modal({ open, onClose, title, children, footer, maxWidth = '480px' }) {
   if (!open) return null
 
-  return (
+  return createPortal(
     <Backdrop onClick={onClose}>
       <ModalWrap $maxWidth={maxWidth} onClick={(e) => e.stopPropagation()}>
         {title && (
@@ -15,14 +16,15 @@ export function Modal({ open, onClose, title, children, footer, maxWidth = '480p
         <Body>{children}</Body>
         {footer && <Footer>{footer}</Footer>}
       </ModalWrap>
-    </Backdrop>
+    </Backdrop>,
+    document.body
   )
 }
 
 const Backdrop = styled.div`
   position: fixed;
   inset: 0;
-  background: rgba(26, 26, 26, 0.5);
+  background: transparent;
   z-index: 1000;
   display: flex;
   align-items: center;
@@ -41,6 +43,7 @@ const ModalWrap = styled.div`
   flex-direction: column;
   overflow: hidden;
   animation: fadeInUp 240ms ease-out;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.18), 0 6px 16px rgba(0, 0, 0, 0.1);
 `
 
 const Head = styled.div`

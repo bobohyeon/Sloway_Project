@@ -1,9 +1,10 @@
+import { createPortal } from 'react-dom';
 import styled, { css } from 'styled-components';
 
 const Backdrop = styled.div`
   position: fixed;
   inset: 0;
-  background: rgba(26, 26, 26, 0.5);
+  background: transparent;
   z-index: 1000;
   display: flex;
   align-items: center;
@@ -21,6 +22,7 @@ const Modal = styled.div`
   display: flex;
   flex-direction: column;
   overflow: hidden;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.18), 0 6px 16px rgba(0, 0, 0, 0.1);
 `;
 
 const Head = styled.div`
@@ -135,7 +137,7 @@ const Unavailable = styled.div`
 `;
 
 export function CouponModal({ coupons, selectedId, onSelect, onClose }) {
-  return (
+  return createPortal(
     <Backdrop onClick={onClose}>
       <Modal onClick={(e) => e.stopPropagation()}>
         <Head>
@@ -171,6 +173,7 @@ export function CouponModal({ coupons, selectedId, onSelect, onClose }) {
           ))}
         </Body>
       </Modal>
-    </Backdrop>
+    </Backdrop>,
+    document.body
   );
 }
