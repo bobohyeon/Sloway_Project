@@ -4,6 +4,7 @@ import DetailSummaryCards from '../../../components/host/detail/DetailSummaryCar
 import DetailBasicInfo from './../../../components/host/detail/DetailBasicInfo';
 import DetailFacilities from '../../../components/host/detail/DetailFacilities';
 import RecentBookings from './../../../components/host/detail/RecentBookings';
+import DetailHeader from './../../../components/host/detail/DetailHeader';
 
 // --- 스타일 정의 ---
 const PageWrapper = styled.div`
@@ -92,29 +93,6 @@ function StationDetailLayout({ data, onBack }) {
               </p>
             </div>
           </ProfileInfo>
-          <div style={{ textAlign: 'right' }}>
-            <button
-              style={{
-                border: 'none',
-                background: 'none',
-                cursor: 'pointer',
-                display: 'block',
-                marginBottom: '10px',
-              }}
-            >
-              👁️ 회원 보기
-            </button>
-            <button
-              style={{
-                border: 'none',
-                background: 'none',
-                cursor: 'pointer',
-                color: '#4a6fa5',
-              }}
-            >
-              ⏸️ 일시 중지
-            </button>
-          </div>
         </Banner>
 
         {/* 수치 요약 카드 */}

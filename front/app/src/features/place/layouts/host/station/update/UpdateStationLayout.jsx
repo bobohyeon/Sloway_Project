@@ -49,15 +49,15 @@ const BackButton = styled.div`
   }
 `;
 
-function InsertWorkLayout({ stateSection, currentStepSection }) {
+function UpdateStationLayout({ stateSection, currentStepSection }) {
   const navigate = useNavigate();
 
   return (
     <PageWrapper>
       <Container>
         <Header>
-          <h1>워크앤스테이 등록</h1>
-          <p>휴식과 업무 중심의 공간을 등록합니다</p>
+          <h1>숙소 등록</h1>
+          <p>휴식 중심의 숙박 공간을 등록합니다</p>
         </Header>
 
         <BackButton onClick={() => navigate(`/host/space/list`)}>
@@ -81,4 +81,4 @@ function InsertWorkLayout({ stateSection, currentStepSection }) {
   );
 }
 
-export default InsertWorkLayout;
+export default UpdateStationLayout;

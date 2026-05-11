@@ -61,8 +61,10 @@ function StationDetailPage() {
   };
 
   const handleBack = () => {
-    // navigate('/stations'); // 목록 페이지로 이동 로직
-    console.log('목록으로 돌아가기');
+    navigate('/host/space/list'); // 목록 페이지로 이동 로직
+  };
+  const imageUpdate = () => {
+    navigate(``);
   };
 
   return <StationDetailLayout data={spaceData} onBack={handleBack} />;

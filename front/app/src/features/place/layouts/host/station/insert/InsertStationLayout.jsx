@@ -1,4 +1,5 @@
 import React from 'react';
+import { useNavigate } from 'react-router-dom';
 import styled from 'styled-components';
 
 const PageWrapper = styled.div`
@@ -49,6 +50,8 @@ const BackButton = styled.div`
 `;
 
 function InsertStationLayout({ stateSection, currentStepSection }) {
+  const navigate = useNavigate();
+
   return (
     <PageWrapper>
       <Container>
