@@ -30,39 +30,7 @@ const Header = styled.div`
   }
 `;
 
-const TabBar = styled.div`
-  display: flex;
-  gap: 30px;
-  margin-bottom: 25px;
-  border-bottom: 1px solid #eee;
-`;
-
-const TabItem = styled.div`
-  padding: 10px 5px;
-  font-size: 16px;
-  font-weight: ${(props) => (props.$active ? '700' : '400')};
-  color: ${(props) => (props.$active ? '#768966' : '#999')};
-  border-bottom: ${(props) =>
-    props.$active ? '3px solid #768966' : '3px solid transparent'};
-  cursor: pointer;
-  transition: all 0.2s;
-
-  span {
-    font-size: 13px;
-    margin-left: 4px;
-    opacity: 0.7;
-  }
-`;
-
-function SpaceDetailLayout({
-  title,
-  description,
-  tabs,
-  activeTab,
-  onTabChange,
-  children,
-  summarySection,
-}) {
+function SpaceDetailLayout({ title, description, children, summarySection }) {
   return (
     <PageWrapper>
       <Container>
@@ -72,18 +40,6 @@ function SpaceDetailLayout({
         </Header>
 
         {summarySection}
-
-        <TabBar>
-          {tabs.map((tab) => (
-            <TabItem
-              key={tab.key}
-              $active={activeTab === tab.key}
-              onClick={() => onTabChange(tab.key)}
-            >
-              {tab.label} <span>{tab.count}</span>
-            </TabItem>
-          ))}
-        </TabBar>
 
         {children}
       </Container>
