@@ -83,7 +83,7 @@ export default function PaymentDetail() {
       </ReceiptCard>
 
       <Actions>
-        <Button variant="secondary" onClick={() => alert('환불 신청 페이지 (U18)로 이동')}>
+        <Button variant="secondary" onClick={() => nav('/user/reservation/cancel')}>
           환불 신청
         </Button>
         <Button variant="secondary" onClick={() => nav('/user/reservation')}>

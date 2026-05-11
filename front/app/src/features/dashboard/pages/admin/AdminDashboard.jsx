@@ -22,7 +22,7 @@ const ALERTS = [
     title: '신규 공간 승인 대기',
     description: '호스트가 등록한 공간을 검토해주세요',
     count: 5,
-    path: '/admin/space/pending',
+    path: '/admin/space/review',
   },
   {
     id: 3,
@@ -30,7 +30,7 @@ const ALERTS = [
     title: '신고된 리뷰',
     description: '리뷰 신고가 접수됐어요. 검토 후 처리해주세요',
     count: 1,
-    path: '/admin/review/reported',
+    path: '/admin/review/report',
   },
 ]
 
@@ -63,7 +63,7 @@ const QUICK_ACTIONS = [
     icon: '👥',
     title: '회원 관리',
     description: '회원 조회 및 권한 설정',
-    path: '/admin/member',
+    path: '/admin/members',
   },
   {
     id: 2,
@@ -71,7 +71,7 @@ const QUICK_ACTIONS = [
     title: '공간 승인',
     description: '신규 등록 공간 검토',
     count: 5,
-    path: '/admin/space/pending',
+    path: '/admin/space/review',
   },
   {
     id: 3,
@@ -87,14 +87,14 @@ const QUICK_ACTIONS = [
     title: '신고 처리',
     description: '리뷰·게시글 신고 처리',
     count: 1,
-    path: '/admin/report',
+    path: '/admin/review/report',
   },
   {
     id: 5,
     icon: '📑',
     title: '수수료 정책',
     description: '카테고리별 수수료 관리',
-    path: '/admin/commission',
+    path: '/admin/settlement/fee',
   },
   {
     id: 6,
