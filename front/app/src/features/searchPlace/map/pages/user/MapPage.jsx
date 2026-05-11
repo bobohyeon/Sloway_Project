@@ -16,7 +16,7 @@ const SPACES = [
   },
   {
     id: 2,
-    type: '코워킹오피스',
+    type: '오피스',
     title: '강릉 바다향 커먼워크',
     score: 4.8,
     price: 28000,
@@ -47,7 +47,7 @@ const SPACES = [
   },
   {
     id: 5,
-    type: '코워킹오피스',
+    type: '오피스',
     title: '성수 브릭라운지',
     score: 4.88,
     price: 25000,
@@ -326,7 +326,7 @@ function MapPage() {
     const space = SPACES.find((s) => s.id === id);
     if (!space) return;
     const path =
-      space.type === '코워킹오피스'
+      space.type === '오피스'
         ? `/coworking-offices/${id}`
         : space.type === '워크앤스테이'
           ? `/workstays/${id}`
