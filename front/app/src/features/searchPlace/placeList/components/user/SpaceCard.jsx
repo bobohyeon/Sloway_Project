@@ -156,7 +156,7 @@ function SpaceCard({ item }) {
 
   const handleClick = () => {
     const path =
-      item.type === '코워킹오피스'
+      item.type === '오피스'
         ? `/user/spaces/office/${item.id}`
         : item.type === '워크앤스테이'
           ? `/user/spaces/workstay/${item.id}`
