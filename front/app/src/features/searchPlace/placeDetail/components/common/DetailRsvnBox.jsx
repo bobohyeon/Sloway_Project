@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import styled from 'styled-components';
+import { COLOR } from '../../../../rsvn/components/user/RsvnStyled';
 
 const Box = styled.div`
   background: #fff;
@@ -11,13 +12,15 @@ const Box = styled.div`
 `;
 
 const PriceRow = styled.div`
-  margin-bottom: 20px;
+  margin-bottom: 16px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid #f2ede4;
 `;
 
 const Price = styled.span`
   font-family: 'DM Serif Display', serif;
-  font-size: 26px;
-  color: #0d2418;
+  font-size: 28px;
+  color: ${COLOR.black};
 `;
 
 const PriceUnit = styled.span`
@@ -26,109 +29,37 @@ const PriceUnit = styled.span`
   margin-left: 4px;
 `;
 
-const DateGrid = styled.div`
+const InfoRow = styled.div`
   display: flex;
-  align-items: flex-end;
-  gap: 8px;
-  margin-bottom: 16px;
-`;
-
-const DateItem = styled.div`
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-`;
-
-const Arrow = styled.span`
-  color: #8a8a8a;
-  font-size: 14px;
-  padding-bottom: 10px;
-  flex-shrink: 0;
-`;
-
-const Label = styled.label`
-  font-size: 11px;
-  color: #8a8a8a;
-  letter-spacing: 0.04em;
-`;
-
-const DateInput = styled.input`
-  box-sizing: border-box;
-  width: 100%;
-  padding: 10px 12px;
-  border: 1px solid #e8dfd0;
-  border-radius: 8px;
-  font-size: 13px;
-  font-family: 'Noto Sans KR', sans-serif;
-  color: #1a1a1a;
-  background: #faf7f2;
-  outline: none;
-  transition: border-color 0.2s;
-
-  &:focus {
-    border-color: #52796f;
-    background: #fff;
-  }
-`;
-
-const GuestRow = styled.div`
-  display: flex;
-  align-items: center;
   justify-content: space-between;
-  margin-bottom: 20px;
-  padding: 12px;
-  border: 1px solid #e8dfd0;
-  border-radius: 8px;
-`;
-
-const GuestCtrl = styled.div`
-  display: flex;
   align-items: center;
-  gap: 12px;
+  padding: 12px 0;
+  border-bottom: 1px solid #f2ede4;
+  font-size: 14px;
 `;
 
-const GuestBtn = styled.button`
-  width: 28px;
-  height: 28px;
-  border-radius: 50%;
-  border: 1px solid #e8dfd0;
-  background: #fff;
-  font-size: 16px;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: #4a4a4a;
-  transition: all 0.2s;
-
-  &:hover {
-    border-color: #52796f;
-    color: #2d6a4f;
-  }
+const InfoLabel = styled.span`
+  color: #666;
 `;
 
-const GuestCount = styled.span`
-  font-size: 13px;
-  color: #1a1a1a;
-  min-width: 60px;
-  text-align: center;
+const InfoValue = styled.span`
+  font-weight: 600;
+  color: ${COLOR.black};
 `;
 
 const RsvnBtn = styled.button`
   width: 100%;
-  padding: 14px;
-  background: #2d6a4f;
+  padding: 15px;
+  background: ${COLOR.green};
   color: #fff;
   border: none;
   border-radius: 10px;
-  font-size: 15px;
-  font-weight: 600;
+  font-size: 16px;
+  font-weight: 700;
   font-family: 'Noto Sans KR', sans-serif;
   cursor: pointer;
+  margin: 16px 0 10px;
   transition: background 0.2s;
-  margin-bottom: 10px;
-
   &:hover {
     background: #1a3a2a;
   }
@@ -144,126 +75,105 @@ const WishBtn = styled.button`
   font-size: 13px;
   font-family: 'Noto Sans KR', sans-serif;
   cursor: pointer;
+  margin-bottom: 16px;
   transition: all 0.2s;
-  margin-bottom: 20px;
-
   &:hover {
-    border-color: #84a98c;
-    color: #2d6a4f;
+    border-color: ${COLOR.sage};
+    color: ${COLOR.green};
   }
 `;
 
-const Calc = styled.div`
+const CalcBox = styled.div`
   border-top: 1px solid #f2ede4;
-  padding-top: 16px;
-  margin-bottom: 16px;
+  padding-top: 14px;
+  margin-bottom: 12px;
 `;
 
 const CalcRow = styled.div`
   display: flex;
   justify-content: space-between;
-  font-size: ${({ $total }) => ($total ? '15px' : '13px')};
-  font-weight: ${({ $total }) => ($total ? 700 : 400)};
-  color: ${({ $total }) => ($total ? '#1A1A1A' : '#4A4A4A')};
-  margin-bottom: 10px;
+  font-size: 13px;
+  color: #555;
+  margin-bottom: 8px;
 `;
 
-const CalcDivider = styled.div`
-  height: 1px;
-  background: #f2ede4;
-  margin: 12px 0;
+const CalcTotal = styled.div`
+  display: flex;
+  justify-content: space-between;
+  font-size: 15px;
+  font-weight: 700;
+  color: ${COLOR.black};
+  border-top: 1px solid #f2ede4;
+  padding-top: 12px;
+  margin-top: 4px;
 `;
 
 const CancelPolicy = styled.p`
-  font-size: 11px;
+  font-size: 12px;
   color: #8a8a8a;
   text-align: center;
   text-decoration: underline;
   cursor: pointer;
 `;
 
-function DetailRsvnBox({ space = {} }) {
-  const [checkIn, setCheckIn] = useState('');
-  const [checkOut, setCheckOut] = useState('');
-  const [guests, setGuests] = useState(2);
-
+// spaceType: 'stay' | 'workstay' | 'office'
+// rsvnInfo: 날짜/인원 등 예약 정보
+function DetailRsvnBox({
+  spaceType = 'stay',
+  rsvnInfo = {},
+  price = 0,
+  priceUnit = '원/박',
+  serviceFee = 12000,
+  cancelPolicy = '무료 취소 · 이용 7일 전까지',
+}) {
   const {
-    pricePerNight = 0,
-    serviceFee = 0,
-    cancelPolicy = '무료 취소 · 이용 7일 전까지',
-  } = space;
+    checkIn = '5월 8일',
+    checkOut = '5월 10일',
+    guests = '성인 2명',
+    nights = 2,
+  } = rsvnInfo;
 
-  const nights =
-    checkIn && checkOut
-      ? Math.ceil(
-          (new Date(checkOut) - new Date(checkIn)) / (1000 * 60 * 60 * 24)
-        )
-      : 0;
-
-  const totalPrice = pricePerNight * nights;
-  const grandTotal = totalPrice + serviceFee;
+  const totalBase = price * nights;
+  const grandTotal = totalBase + serviceFee;
 
   return (
     <Box>
       <PriceRow>
-        <Price>{pricePerNight.toLocaleString()}</Price>
-        <PriceUnit>원/박</PriceUnit>
+        <Price>{price.toLocaleString()}</Price>
+        <PriceUnit>{priceUnit}</PriceUnit>
       </PriceRow>
 
-      <DateGrid>
-        <DateItem>
-          <Label>날짜</Label>
-          <DateInput
-            type="date"
-            value={checkIn}
-            onChange={(e) => setCheckIn(e.target.value)}
-          />
-        </DateItem>
-        <Arrow>→</Arrow>
-        <DateItem>
-          <Label>&nbsp;</Label>
-          <DateInput
-            type="date"
-            value={checkOut}
-            onChange={(e) => setCheckOut(e.target.value)}
-          />
-        </DateItem>
-      </DateGrid>
-
-      <GuestRow>
-        <Label>인원</Label>
-        <GuestCtrl>
-          <GuestBtn onClick={() => setGuests((g) => Math.max(1, g - 1))}>
-            −
-          </GuestBtn>
-          <GuestCount>성인 {guests}명</GuestCount>
-          <GuestBtn onClick={() => setGuests((g) => g + 1)}>+</GuestBtn>
-        </GuestCtrl>
-      </GuestRow>
+      <InfoRow>
+        <InfoLabel>날짜</InfoLabel>
+        <InfoValue>
+          {checkIn} → {checkOut}
+        </InfoValue>
+      </InfoRow>
+      <InfoRow>
+        <InfoLabel>인원</InfoLabel>
+        <InfoValue>{guests}</InfoValue>
+      </InfoRow>
 
       <RsvnBtn>예약하기</RsvnBtn>
       <WishBtn>찜하기</WishBtn>
 
-      {nights > 0 && (
-        <Calc>
+      {price > 0 && nights > 0 && (
+        <CalcBox>
           <CalcRow>
             <span>
-              {pricePerNight.toLocaleString()}원 × {nights}박
+              {price.toLocaleString()}원 × {nights}박
             </span>
-            <span>{totalPrice.toLocaleString()}원</span>
+            <span>{totalBase.toLocaleString()}원</span>
           </CalcRow>
-          {serviceFee > 0 && (
-            <CalcRow>
-              <span>서비스 수수료</span>
-              <span>{serviceFee.toLocaleString()}원</span>
-            </CalcRow>
-          )}
-          <CalcDivider />
-          <CalcRow $total>
+          <CalcRow>
+            <span>서비스 수수료</span>
+            <span>{serviceFee.toLocaleString()}원</span>
+          </CalcRow>
+          <CalcTotal>
             <span>합계</span>
             <span>{grandTotal.toLocaleString()}원</span>
-          </CalcRow>
-        </Calc>
+          </CalcTotal>
+        </CalcBox>
       )}
 
       <CancelPolicy>{cancelPolicy}</CancelPolicy>
