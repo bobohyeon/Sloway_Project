@@ -8,9 +8,9 @@ import { Outlet } from 'react-router-dom';
 const LayoutContainer = styled.div`
   display: flex;
   flex-direction: column;
-  height: 100vh; /* min-height 대신 height로 고정 */
+  height: 100vh;
   width: 100%;
-  overflow: hidden; /* 전체 페이지 바깥 스크롤 방지 */
+  overflow: hidden;
 `;
 
 const HeaderArea = styled.header`
@@ -24,7 +24,7 @@ const BodyArea = styled.div`
   flex: 1;
   display: flex;
   flex-direction: row;
-  overflow: hidden; /* 중요: 바디 영역 안에서만 스크롤이 일어나도록 제한 */
+  overflow: hidden;
 `;
 
 const NavArea = styled.nav`
@@ -34,7 +34,7 @@ const NavArea = styled.nav`
   flex-shrink: 0;
   display: flex;
   flex-direction: column;
-  overflow-y: auto; /* 네비게이션 자체 스크롤이 필요한 경우 */
+  overflow-y: auto;
 
   &::-webkit-scrollbar {
     width: 5px;
@@ -52,11 +52,13 @@ const MainArea = styled.main`
   position: relative;
   display: flex;
   flex-direction: column;
+  align-items: center; /* ✅ 추가: 자식 페이지를 가로 가운데 정렬 */
 
   overflow: hidden;
 
   & > * {
     flex: 1;
+    width: 100%; /* ✅ 추가: align-items:center로 줄어들지 않게 보장 */
     overflow-y: auto;
 
     &::-webkit-scrollbar {
