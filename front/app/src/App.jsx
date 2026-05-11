@@ -1,4 +1,4 @@
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { Routes, Route, Navigate } from 'react-router-dom';
 
 // ── Layouts ──────────────────────────────────────────────
 import DefaultLayouts from './app/layouts/default/DefaultLayouts';
@@ -36,21 +36,36 @@ import SpaceUpdatePage from './features/place/pages/host/update/space/SpaceUpdat
 import SpaceDetailPage from './features/place/pages/host/detail/SpaceDetailPage';
 import InsertStationPage from './features/place/pages/host/station/insert/InsertStationPage';
 import StationDetailPage from './features/place/pages/host/detail/StationDetailPage';
+import UpdateStationPage from './features/place/pages/host/station/update/UpdateStationPage';
+import UpdateWorkPage from './features/place/pages/host/workStay/update/UpdateWorkPage';
+import UpdateCoworkingPage from './features/place/pages/host/coworking/update/UpdateCoworkingPage';
 
 // ── 공간 탐색 (일반회원) ──────────────────────────────────
-import DetailPage from './features/searchPlace/placeDetail/pages/common/DetailPage';
 import RecentPlacePage from './features/searchPlace/recentPlace/pages/RecentPlacePage';
+import SearchResultPage from './features/searchPlace/placeList/pages/user/SearchResultPage';
+import MapPage from './features/searchPlace/map/pages/user/MapPage';
+import StayDetailPage from './features/searchPlace/placeDetail/pages/common/StayDetailPage';
+import WorkstayDetailPage from './features/searchPlace/placeDetail/pages/common/WorkstayDetailPage';
+import OfficeDetailPage from './features/searchPlace/placeDetail/pages/common/OfficeDetailPage';
+
+// ── 메인 ─────────────────────────────────────────────────
+import MainPage from './features/main/pages/MainPage';
+
+// ── 공간 검수 (관리자) ────────────────────────────────────
 import SpaceApprovalPage from './features/approval/pages/admin/SpaceApprovalPage';
 
 // ── 예약 (일반회원) ───────────────────────────────────────
+import RsvnListPage from './features/rsvn/pages/user/RsvnListPage';
+import RsvnDetailPage from './features/rsvn/pages/user/RsvnDetailPage';
 import RsvnCalendarPage from './features/rsvn/pages/user/RsvnCalendarPage';
 import RefundListPage from './features/rsvn/pages/user/RefundListPage';
-import RsvnDetailPage from './features/rsvn/pages/user/RsvnDetailPage';
 
 // ── 예약 (호스트) ─────────────────────────────────────────
 import HostRsvnListPage from './features/rsvn/pages/host/HostRsvnListPage';
 import HostRsvnDetailPage from './features/rsvn/pages/host/HostRsvnDetailPage';
 import HostRsvnCalendarPage from './features/rsvn/pages/host/HostRsvnCalendarPage';
+import BlackoutPage from './features/rsvn/pages/host/BlackoutPage';
+import BlackoutAddPage from './features/rsvn/blackout/pages/host/BlackoutAddPage';
 
 // ── 예약 (관리자) ─────────────────────────────────────────
 import AdminRsvnListPage from './features/rsvn/pages/admin/AdminRsvnListPage';
@@ -60,6 +75,7 @@ import AdminRsvnDetailPage from './features/rsvn/pages/admin/AdminRsvnDetailPage
 import MyReviewPage from './features/review/pages/user/MyReviewPage';
 import ReviewWritePage from './features/review/pages/user/ReviewWritePage';
 import ReviewReportPage from './features/review/pages/user/ReviewReportPage';
+import ReviewDetailPage from './features/review/pages/common/ReviewDetailPage';
 
 // ── 리뷰 (호스트) ─────────────────────────────────────────
 import HostReviewPage from './features/review/pages/host/HostReviewPage';
@@ -75,10 +91,16 @@ import PaymentFail from './features/pay/pages/user/PaymentFail';
 import PaymentHistory from './features/pay/pages/user/PaymentHistory';
 import PaymentDetail from './features/pay/pages/user/PaymentDetail';
 import PaymentMethods from './features/pay/pages/user/PaymentMethods';
+import CashReceipt from './features/pay/pages/user/CashReceipt';
+import PointHistory from './features/point/pages/user/PointHistory';
 
 // ── 환불 (일반회원) ────────────────────────────────────────
 import BookingCancel from './features/refund/pages/user/BookingCancel';
 import RefundComplete from './features/refund/pages/user/RefundComplete';
+
+// ── 환불 (관리자) ─────────────────────────────────────────
+import RefundList from './features/refund/pages/admin/RefundList';
+import RefundDetail from './features/refund/pages/admin/RefundDetail';
 
 // ── 정산 (호스트) ──────────────────────────────────────────
 import SettlementDashboard from './features/settlement/pages/host/SettlementDashboard';
@@ -87,12 +109,26 @@ import CommissionPolicy from './features/settlement/pages/host/CommissionPolicy'
 import TaxInvoice from './features/settlement/pages/host/TaxInvoice';
 import SettlementDetail from './features/settlement/pages/host/SettlementDetail';
 import SettlementHistory from './features/settlement/pages/host/SettlementHistory';
-import RsvnListPage from './features/rsvn/pages/user/RsvnListPage';
-import BlackoutAddPage from './features/rsvn/blackout/pages/host/BlackoutAddPage';
-import BlackoutPage from './features/rsvn/pages/host/BlackoutPage';
+
+// ── 대시보드 ──────────────────────────────────────────────
+import AdminDashboard from './features/dashboard/pages/admin/AdminDashboard';
+import HostDashboard from './features/dashboard/pages/host/HostDashboard';
+
+// ── 통계 ──────────────────────────────────────────────────
+import RevenueStats from './features/stats/pages/admin/RevenueStats';
+import BookingStats from './features/stats/pages/admin/BookingStats';
+import MemberStats from './features/stats/pages/admin/MemberStats';
+import SpaceStats from './features/stats/pages/admin/SpaceStats';
+import SalesStats from './features/stats/pages/host/SalesStats';
+
+// ── 쿠폰 ──────────────────────────────────────────────────
+import EventList from './features/coupon/pages/user/EventList';
+import MyCoupons from './features/coupon/pages/user/MyCoupons';
+
+// ── 찜 ────────────────────────────────────────────────────
+// import WishListPage from './features/wishList/pages/user/WishListPage';
 
 // ── 임시 플레이스홀더 ─────────────────────────────────────
-// 아직 페이지 파일이 없는 라우트. 담당자가 페이지 생성 후 import로 교체
 const Todo = ({ label }) => (
   <div style={{ padding: 40, fontSize: 18, color: '#888' }}>
     🚧 {label} — 구현 예정
@@ -103,10 +139,24 @@ function App() {
   return (
     <Routes>
       {/* ════════════════════════════════════════════
+          메인 (헤더 별도, 사이드바 없음)
+          ════════════════════════════════════════════ */}
+      <Route path="/" element={<MainPage />} />
+
+      {/* ════════════════════════════════════════════
+          공간 탐색 (헤더 필요, 사이드바 없음)
+          ════════════════════════════════════════════ */}
+      <Route path="/spaces/search" element={<SearchResultPage />} />
+      <Route path="/spaces/search/map" element={<MapPage />} />
+      <Route path="/accommodations/:id" element={<StayDetailPage />} />
+      <Route path="/workstays/:id" element={<WorkstayDetailPage />} />
+      <Route path="/coworking-offices/:id" element={<OfficeDetailPage />} />
+      <Route path="/review/:id" element={<ReviewDetailPage />} />
+
+      {/* ════════════════════════════════════════════
           인증 레이아웃 (헤더·사이드바 없음)
           ════════════════════════════════════════════ */}
       <Route element={<AuthLayout />}>
-        {/* 일반회원 인증 */}
         <Route path="/login" element={<LoginPage />} />
         <Route path="/signup" element={<SignupPage />} />
         <Route path="/find-account" element={<FindAccountPage />} />
@@ -118,7 +168,7 @@ function App() {
       </Route>
 
       {/* ════════════════════════════════════════════
-          호스트 인증 레이아웃 (좌측 호스트 안내 패널)
+          호스트 인증 레이아웃
           ════════════════════════════════════════════ */}
       <Route element={<HostAuthLayout />}>
         <Route path="/host/login" element={<HostLoginPage />} />
@@ -126,7 +176,7 @@ function App() {
       </Route>
 
       {/* ════════════════════════════════════════════
-          관리자 인증 레이아웃 (어두운 배경)
+          관리자 인증 레이아웃
           ════════════════════════════════════════════ */}
       <Route element={<AdminAuthLayout />}>
         <Route path="/admin/login" element={<AdminLoginPage />} />
@@ -135,16 +185,12 @@ function App() {
 
       {/* ════════════════════════════════════════════
           공통 레이아웃 (헤더 + 사이드 Nav + 푸터)
-          path prefix로 Nav가 역할별 자동 전환됨
-          /admin → AdminNav  /host → HostNav  /user → UserNav
           ════════════════════════════════════════════ */}
       <Route element={<DefaultLayouts />}>
-        {/* ── 루트 리다이렉트 ──────────────────── */}
+        {/* 루트 리다이렉트 */}
         <Route index element={<Navigate to="/user/mypage" replace />} />
 
-        {/* ════════════════════════════════
-            USER — 일반회원
-            ════════════════════════════════ */}
+        {/* ══ USER ══ */}
 
         {/* 내 정보 */}
         <Route path="/user/mypage" element={<MyPage />} />
@@ -153,7 +199,7 @@ function App() {
         <Route path="/user/password" element={<Todo label="비밀번호 변경" />} />
         <Route path="/user/withdraw" element={<Todo label="회원 탈퇴" />} />
 
-        {/* 호스트 신청 (일반회원 → 호스트 전환) */}
+        {/* 호스트 신청 */}
         <Route path="/user/host/apply" element={<Todo label="호스트 신청" />} />
         <Route
           path="/user/host/status"
@@ -170,14 +216,20 @@ function App() {
         <Route path="/user/reservation/:id" element={<RsvnDetailPage />} />
 
         {/* 결제·지갑 */}
+        <Route path="/user/payment/receipt" element={<CashReceipt />} />
         <Route path="/user/payment" element={<PaymentHistory />} />
         <Route path="/user/payment/method" element={<PaymentMethods />} />
         <Route path="/user/payment/checkout" element={<BookingPaymentPage />} />
         <Route path="/user/payment/complete" element={<PaymentComplete />} />
         <Route path="/user/payment/fail" element={<PaymentFail />} />
         <Route path="/user/payment/:id" element={<PaymentDetail />} />
-        <Route path="/user/point" element={<Todo label="포인트 이력" />} />
-        <Route path="/user/coupon" element={<Todo label="쿠폰함" />} />
+        <Route path="/user/point" element={<PointHistory />} />
+        <Route path="/event" element={<EventList />} />
+        <Route path="/user/coupon" element={<MyCoupons />} />
+
+        {/* 환불 */}
+        <Route path="/user/refund/request" element={<BookingCancel />} />
+        <Route path="/user/refund/complete" element={<RefundComplete />} />
 
         {/* 활동 */}
         <Route path="/user/wishlist" element={<Todo label="찜 목록" />} />
@@ -197,19 +249,7 @@ function App() {
           element={<Todo label="알림 설정" />}
         />
 
-        {/* 공간 탐색 */}
-        <Route
-          path="/spaces/search"
-          element={<Todo label="공간 검색 결과" />}
-        />
-        <Route path="/spaces/search/map" element={<Todo label="지도 검색" />} />
-        <Route path="/accommodations/:id" element={<DetailPage />} />
-        <Route path="/coworking-offices/:id" element={<DetailPage />} />
-
-        {/* 환불 */}
-        <Route path="/user/refund/complete" element={<RefundComplete />} />
-
-        {/* 공지·FAQ (공통) */}
+        {/* 공지·FAQ */}
         <Route path="/notices" element={<Todo label="공지사항 목록" />} />
         <Route path="/notices/:id" element={<Todo label="공지사항 상세" />} />
         <Route path="/faqs" element={<Todo label="FAQ 목록" />} />
@@ -218,15 +258,10 @@ function App() {
         {/* 챗봇 */}
         <Route path="/chatbot" element={<Todo label="AI 챗봇" />} />
 
-        {/* ════════════════════════════════
-            HOST — 호스트
-            ════════════════════════════════ */}
+        {/* ══ HOST ══ */}
 
         {/* 운영 */}
-        <Route
-          path="/host/dashboard"
-          element={<Todo label="호스트 대시보드" />}
-        />
+        <Route path="/host/dashboard" element={<HostDashboard />} />
         <Route
           path="/host/profile"
           element={<Todo label="호스트 정보 관리" />}
@@ -236,10 +271,8 @@ function App() {
           element={<Todo label="사업자등록증 인증" />}
         />
 
-        {/* 공간 목록 */}
+        {/* 공간 관리 */}
         <Route path="/host/space/list" element={<SpaceListPage />} />
-
-        {/* 공간 등록·상세·수정 */}
         <Route path="/host/space" element={<InsertSpacePage />} />
         <Route path="/host/space/:id" element={<SpaceDetailPage />} />
         <Route path="/host/space/:id/edit" element={<SpaceUpdatePage />} />
@@ -248,19 +281,13 @@ function App() {
         {/* 숙소 */}
         <Route path="/host/lodging" element={<InsertStationPage />} />
         <Route path="/host/lodging/:id" element={<StationDetailPage />} />
-        <Route
-          path="/host/lodging/:id/edit"
-          element={<Todo label="숙소 수정" />}
-        />
+        <Route path="/host/lodging/:id/edit" element={<UpdateStationPage />} />
         <Route path="/host/lodging/:id/images" element={<ImageUpdatePage />} />
 
         {/* 워크앤스테이 */}
         <Route path="/host/workstay" element={<InsertWorkPage />} />
         <Route path="/host/workstay/:id" element={<StationDetailPage />} />
-        <Route
-          path="/host/workstay/:id/edit"
-          element={<Todo label="워크앤스테이 수정" />}
-        />
+        <Route path="/host/workstay/:id/edit" element={<UpdateWorkPage />} />
         <Route path="/host/workstay/:id/images" element={<ImageUpdatePage />} />
 
         {/* 코워킹오피스 */}
@@ -268,7 +295,7 @@ function App() {
         <Route path="/host/coworking/:id" element={<StationDetailPage />} />
         <Route
           path="/host/coworking/:id/edit"
-          element={<Todo label="코워킹오피스 수정" />}
+          element={<UpdateCoworkingPage />}
         />
         <Route
           path="/host/coworking/:id/images"
@@ -282,6 +309,10 @@ function App() {
         {/* 예약 관리 */}
         <Route path="/host/reservation/list" element={<HostRsvnListPage />} />
         <Route
+          path="/host/reservation/list/:id"
+          element={<HostRsvnDetailPage />}
+        />
+        <Route
           path="/host/reservation/calendar"
           element={<HostRsvnCalendarPage />}
         />
@@ -289,10 +320,6 @@ function App() {
         <Route
           path="/host/reservation/block/add"
           element={<BlackoutAddPage />}
-        />
-        <Route
-          path="/host/reservation/list/:id"
-          element={<HostRsvnDetailPage />}
         />
 
         {/* 정산·통계 */}
@@ -314,7 +341,7 @@ function App() {
         />
         <Route path="/host/settlement/fee" element={<CommissionPolicy />} />
         <Route path="/host/settlement/tax" element={<TaxInvoice />} />
-        <Route path="/host/stats/sales" element={<Todo label="매출 통계" />} />
+        <Route path="/host/stats/sales" element={<SalesStats />} />
 
         {/* 소통 */}
         <Route path="/host/review" element={<HostReviewPage />} />
@@ -327,15 +354,10 @@ function App() {
           element={<Todo label="알림 설정" />}
         />
 
-        {/* ════════════════════════════════
-            ADMIN — 관리자
-            ════════════════════════════════ */}
+        {/* ══ ADMIN ══ */}
 
         {/* 대시보드 */}
-        <Route
-          path="/admin/dashboard"
-          element={<Todo label="관리자 대시보드" />}
-        />
+        <Route path="/admin/dashboard" element={<AdminDashboard />} />
 
         {/* 회원 관리 */}
         <Route path="/admin/members" element={<Todo label="회원 목록" />} />
@@ -381,8 +403,8 @@ function App() {
           element={<Todo label="전체 결제 내역" />}
         />
         <Route path="/admin/payment/:id" element={<Todo label="결제 상세" />} />
-        <Route path="/admin/refund" element={<Todo label="환불 목록" />} />
-        <Route path="/admin/refund/:id" element={<Todo label="환불 상세" />} />
+        <Route path="/admin/refund" element={<RefundList />} />
+        <Route path="/admin/refund/:id" element={<RefundDetail />} />
 
         {/* 정산·수수료 */}
         <Route
@@ -403,6 +425,10 @@ function App() {
           path="/admin/stats/sales"
           element={<Todo label="플랫폼 매출 통계" />}
         />
+        <Route path="/admin/stats/revenue" element={<RevenueStats />} />
+        <Route path="/admin/stats/booking" element={<BookingStats />} />
+        <Route path="/admin/stats/member" element={<MemberStats />} />
+        <Route path="/admin/stats/space" element={<SpaceStats />} />
 
         {/* 운영 */}
         <Route path="/admin/inquiry" element={<Todo label="문의 관리" />} />
@@ -413,7 +439,7 @@ function App() {
         <Route path="/admin/faq/:id" element={<Todo label="FAQ 상세" />} />
       </Route>
 
-      {/* ── 404 ──────────────────────────────── */}
+      {/* 404 */}
       <Route
         path="*"
         element={

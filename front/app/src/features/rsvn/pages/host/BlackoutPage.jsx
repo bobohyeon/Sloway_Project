@@ -176,7 +176,7 @@ function BlackoutPage() {
             예약을 받지 않을 날짜·시간을 관리하세요
           </PageSub>
         </div>
-        <BtnPrimary onClick={() => navigate('/host/blackout/add')}>
+        <BtnPrimary onClick={() => navigate('/host/reservation/block/add')}>
           + 이용 불가 추가
         </BtnPrimary>
       </div>
