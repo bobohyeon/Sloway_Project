@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import styled, { keyframes } from 'styled-components';
 import { COLOR } from '../../rsvn/components/user/RsvnStyled';
+import MainHeader from '../layouts/MainHeader';
 
 const RECOMMENDED = [
   {
@@ -18,7 +19,7 @@ const RECOMMENDED = [
   },
   {
     id: 2,
-    type: '코워킹오피스',
+    type: '오피스',
     title: '강릉 바다향 커먼워크',
     location: '강원 강릉',
     score: 4.8,
@@ -59,7 +60,7 @@ const TOP_SPACES = [
   },
   {
     rank: '03',
-    type: '코워킹오피스',
+    type: '오피스',
     title: '성수 브릭라운지',
     score: 4.88,
     icon: '🧱',
@@ -545,7 +546,7 @@ function MainPage() {
 
   const goDetail = (type, id) => {
     const path =
-      type === '코워킹오피스'
+      type === '오피스'
         ? `/coworking-offices/${id}`
         : type === '워크앤스테이'
           ? `/workstays/${id}`
@@ -557,6 +558,8 @@ function MainPage() {
     <div
       style={{ fontFamily: "'Noto Sans KR', sans-serif", background: '#fff' }}
     >
+      <MainHeader />
+
       {/* ── 히어로 ── */}
       <Hero>
         <HeroBadge>🌿 천천히, 머물면서 일하기</HeroBadge>
@@ -568,7 +571,7 @@ function MainPage() {
         <HeroSub>
           자연과 가까운 곳에서 일하고, 쉬고, 연결되세요.
           <br />
-          Sloway는 워크앤스테이·코워킹오피스·숙소를 한 곳에서 예약합니다.
+          Sloway는 워크앤스테이·오피스·숙소를 한 곳에서 예약합니다.
         </HeroSub>
 
         <SearchBox>
@@ -604,9 +607,9 @@ function MainPage() {
             },
             {
               icon: '💻',
-              title: '코워킹오피스',
+              title: '오피스',
               desc: '집중이 필요한 업무 공간',
-              type: '코워킹오피스',
+              type: '오피스',
             },
             {
               icon: '🛌',
