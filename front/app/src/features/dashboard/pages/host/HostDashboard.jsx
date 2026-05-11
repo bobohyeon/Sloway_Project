@@ -19,7 +19,7 @@ const ALERTS = [
     title: '신규 예약',
     description: '확인이 필요한 신규 예약이 있어요',
     count: 2,
-    path: '/host/reservation?filter=new',
+    path: '/host/reservation/list',
   },
   {
     id: 2,
@@ -27,7 +27,7 @@ const ALERTS = [
     title: '새 문의',
     description: '게스트가 보낸 문의에 답변해주세요',
     count: 1,
-    path: '/host/message',
+    path: '/host/chat',
   },
 ]
 
@@ -167,7 +167,7 @@ const QUICK_ACTIONS = [
     icon: '➕',
     title: '공간 등록',
     description: '새로운 공간을 등록해보세요',
-    path: '/host/space/register',
+    path: '/host/space',
   },
   {
     id: 2,
@@ -175,7 +175,7 @@ const QUICK_ACTIONS = [
     title: '예약 관리',
     description: '예약 현황 및 일정 관리',
     count: 2,
-    path: '/host/reservation',
+    path: '/host/reservation/list',
   },
   {
     id: 3,
@@ -183,7 +183,7 @@ const QUICK_ACTIONS = [
     title: '메시지',
     description: '게스트 문의 답변',
     count: 1,
-    path: '/host/message',
+    path: '/host/chat',
   },
   {
     id: 4,
@@ -194,10 +194,17 @@ const QUICK_ACTIONS = [
   },
   {
     id: 5,
+    icon: '📊',
+    title: '매출 통계',
+    description: '상세 매출 분석과 트렌드',
+    path: '/host/stats/sales',
+  },
+  {
+    id: 6,
     icon: '🏠',
     title: '내 공간 관리',
     description: '공간 정보 수정 및 상태 변경',
-    path: '/host/space',
+    path: '/host/space/list',
   },
 ]
 
@@ -224,13 +231,13 @@ export default function HostDashboard() {
       <TwoColumnGrid>
         <TodayCheckInList
           items={TODAY_CHECKINS}
-          onSeeAll={() => nav('/host/reservation')}
-          onClickItem={(item) => nav(`/host/reservation/${item.id}`)}
+          onSeeAll={() => nav('/host/reservation/list')}
+          onClickItem={(item) => nav(`/host/reservation/list/${item.id}`)}
         />
         <RecentReviewList
           reviews={RECENT_REVIEWS}
           onSeeAll={() => nav('/host/review')}
-          onClickReview={(review) => nav(`/host/review/${review.id}`)}
+          onClickReview={() => nav('/host/review')}
         />
       </TwoColumnGrid>
 
