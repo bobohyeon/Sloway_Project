@@ -49,9 +49,8 @@ const BackButton = styled.div`
   }
 `;
 
-function InsertWorkLayout({ stateSection, currentStepSection }) {
+function UpdateWorkLayout({ stateSection, currentStepSection }) {
   const navigate = useNavigate();
-
   return (
     <PageWrapper>
       <Container>
@@ -81,4 +80,4 @@ function InsertWorkLayout({ stateSection, currentStepSection }) {
   );
 }
 
-export default InsertWorkLayout;
+export default UpdateWorkLayout;

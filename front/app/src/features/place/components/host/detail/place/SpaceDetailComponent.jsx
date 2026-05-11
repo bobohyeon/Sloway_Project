@@ -81,52 +81,75 @@ const ActionButton = styled.button`
   }
 `;
 
-function SpaceDetailComponent({ data }) {
+function SpaceDetailComponent({ data, onCardClick }) {
   const navigate = useNavigate();
+
+  // 유형별 경로 접두사를 반환하는 헬퍼 함수
+  const getPathByType = (type) => {
+    switch (type) {
+      case 'STATION':
+        return 'lodging';
+      case 'WORK_STAY':
+        return 'workstay';
+      case 'OFFICE':
+        return 'coworking';
+      default:
+        return 'space';
+    }
+  };
 
   return (
     <>
-      {data.map((space) => (
-        <SpaceCard
-          key={space.id}
-          onClick={() => navigate(`/host/space/${space.id}`)}
-        >
-          <IconBox>
-            {space.type === 'STATION'
-              ? '🏠'
-              : space.type === 'OFFICE'
-                ? '🏢'
-                : '🌿'}
-          </IconBox>
-          <InfoArea $type={space.type}>
-            <span className="type-tag">{space.type}</span>
-            <h3>{space.title}</h3>
-            <p>
-              📍 {space.location} | ⭐ {space.rating}
-            </p>
-          </InfoArea>
-          <ButtonGroup>
-            <ActionButton
-              onClick={(e) => {
-                e.stopPropagation();
-                navigate(`/host/space/${space.id}/images`);
-              }}
-            >
-              이미지 관리
-            </ActionButton>
-            <ActionButton
-              className="primary"
-              onClick={(e) => {
-                e.stopPropagation();
-                navigate(`/host/space/${space.id}/edit`);
-              }}
-            >
-              공간 정보 수정
-            </ActionButton>
-          </ButtonGroup>
-        </SpaceCard>
-      ))}
+      {data.map((space) => {
+        const typePath = getPathByType(space.type);
+
+        return (
+          <SpaceCard
+            key={space.id}
+            onClick={() => onCardClick(space.id, space.type)}
+          >
+            <IconBox>
+              {space.type === 'STATION'
+                ? '🏠'
+                : space.type === 'OFFICE'
+                  ? '🏢'
+                  : '🌿'}
+            </IconBox>
+
+            <InfoArea $type={space.type}>
+              <span className="type-tag">{space.type}</span>
+              <h3>{space.title}</h3>
+              <p>
+                📍 {space.location} | ⭐ {space.rating}
+              </p>
+            </InfoArea>
+
+            <ButtonGroup>
+              <ActionButton
+                onClick={(e) => {
+                  e.stopPropagation(); // 카드 클릭 이벤트 전파 방지
+                  // 예: /host/lodging/1/images
+                  navigate(`/host/${typePath}/${space.id}/images`);
+                }}
+              >
+                이미지 관리
+              </ActionButton>
+              <ActionButton
+                className="primary"
+                onClick={(e) => {
+                  e.stopPropagation(); // 카드 클릭 이벤트 전파 방지
+                  // 예: /host/lodging/1/edit
+                  navigate(`/host/${typePath}/${space.id}/edit`);
+                }}
+              >
+                공간 정보 수정
+              </ActionButton>
+            </ButtonGroup>
+          </SpaceCard>
+        );
+      })}
     </>
   );
 }
+
 export default SpaceDetailComponent;

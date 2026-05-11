@@ -79,6 +79,23 @@ function SpaceDetailPage() {
   const filteredData =
     activeTab === 'ALL' ? spaces : spaces.filter((s) => s.type === activeTab);
 
+  const navigate = useNavigate();
+
+  const handleCardClick = (id, type) => {
+    switch (type) {
+      case 'STATION':
+        navigate(`/host/lodging/${id}`); // 숙소 관리 경로
+        break;
+      case 'WORK_STAY':
+        navigate(`/host/workstay/${id}`); // 워크앤스테이 관리 경로
+        break;
+      case 'OFFICE':
+        navigate(`/host/coworking/${id}`); // 오피스 관리 경로
+        break;
+      default:
+        console.warn('Unknown space type:', type);
+    }
+  };
   return (
     <SpaceDetailLayout
       title="내 공간 목록"
@@ -87,7 +104,7 @@ function SpaceDetailPage() {
       activeTab={activeTab}
       onTabChange={setActiveTab}
     >
-      <SpaceDetailComponent data={filteredData} />
+      <SpaceDetailComponent data={filteredData} onCardClick={handleCardClick} />
     </SpaceDetailLayout>
   );
 }
