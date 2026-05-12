@@ -1,103 +1,109 @@
 import React from 'react';
+import { useNavigate } from 'react-router-dom';
 import styled from 'styled-components';
 import { FaHeart } from 'react-icons/fa';
 
+// --- 스타일 컴포넌트 (참고용) ---
 const Grid = styled.div`
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
-  gap: 25px;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 20px;
+  padding: 20px;
 `;
 
 const Card = styled.div`
-  background: white;
-  border-radius: 20px;
-  overflow: hidden;
   border: 1px solid #eee;
-  transition: transform 0.2s;
+  border-radius: 12px;
+  overflow: hidden;
   cursor: pointer;
-  position: relative;
-
+  transition: transform 0.2s;
   &:hover {
-    transform: translateY(-5px);
-    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.05);
+    transform: translateY(-4px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
   }
 `;
 
 const ImageBox = styled.div`
-  width: 100%;
-  height: 200px;
-  background: #f1f4ee;
+  position: relative;
+  height: 180px;
+  background: #f5f5f5;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 60px;
-  position: relative;
+  font-size: 3rem;
 `;
 
 const HeartBadge = styled.div`
   position: absolute;
-  top: 15px;
-  right: 15px;
+  top: 12px;
+  right: 12px;
+  color: #ff4d4f;
   background: white;
-  width: 35px;
-  height: 35px;
+  width: 20px;
+  height: 20px;
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
-  color: #d46a4f;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+  z-index: 2;
 `;
 
 const Content = styled.div`
-  padding: 18px;
-
+  padding: 16px;
   .type-tag {
-    font-size: 11px;
-    color: #888;
-    margin-bottom: 8px;
+    font-size: 0.8rem;
+    color: #666;
+    margin-bottom: 4px;
   }
   .title {
-    font-size: 17px;
-    font-weight: 700;
+    font-weight: bold;
+    font-size: 1.1rem;
     margin-bottom: 8px;
-    color: #333;
   }
   .info {
-    font-size: 13px;
-    color: #999;
+    font-size: 0.9rem;
+    color: #444;
     margin-bottom: 12px;
   }
   .price-row {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    border-top: 1px solid #f5f5f5;
-    padding-top: 12px;
-
     .rating {
-      color: #768966;
-      font-weight: 700;
-      font-size: 14px;
+      font-weight: 500;
     }
     .price {
-      font-size: 16px;
-      font-weight: 800;
-      color: #333;
+      font-weight: bold;
+      font-size: 1.1rem;
     }
     .unit {
-      font-size: 12px;
-      color: #999;
-      font-weight: 400;
+      font-size: 0.8rem;
+      color: #888;
+      margin-left: 2px;
     }
   }
 `;
+const WishCardComponent = ({ data, onToggleWish }) => {
+  const navigate = useNavigate();
 
-function WishCardComponent({ data, onToggleWish }) {
+  // 1. 유형별 경로 매핑 (DB의 type 값과 URL 경로를 연결)
+  const pathMap = {
+    WORK_STAY: 'workstays',
+    OFFICE: 'coworking-offices',
+    ACCOMMODATION: 'accommodations',
+  };
+
+  const handleCardClick = (item) => {
+    // 매핑된 경로가 있으면 해당 경로로, 없으면 기본값(예: accommodations) 설정
+    const basePath = pathMap[item.type] || 'accommodations';
+    navigate(`/${basePath}/${item.id}`);
+  };
+
   return (
     <Grid>
       {data.map((item) => (
-        <Card key={item.id}>
+        <Card key={item.id} onClick={() => handleCardClick(item)}>
           <ImageBox>
             {item.icon}
             <HeartBadge
@@ -109,6 +115,7 @@ function WishCardComponent({ data, onToggleWish }) {
               <FaHeart />
             </HeartBadge>
           </ImageBox>
+
           <Content>
             <div className="type-tag">
               {item.typeLabel} · 찜한 날 {item.wishDate}
@@ -120,7 +127,7 @@ function WishCardComponent({ data, onToggleWish }) {
               <span className="price">
                 {item.price.toLocaleString()}원
                 <span className="unit">
-                  /{item.type === 'OFFICE' ? '4h' : '박'}
+                  {item.type === 'OFFICE' ? '1h' : '박'}
                 </span>
               </span>
             </div>
@@ -129,6 +136,6 @@ function WishCardComponent({ data, onToggleWish }) {
       ))}
     </Grid>
   );
-}
+};
 
 export default WishCardComponent;

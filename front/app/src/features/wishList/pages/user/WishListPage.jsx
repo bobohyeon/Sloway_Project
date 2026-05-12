@@ -76,9 +76,7 @@ function WishListPage() {
     activeTab === 'ALL' ? wishes : wishes.filter((i) => i.type === activeTab);
 
   const handleToggleWish = (id) => {
-    if (window.confirm('찜 목록에서 삭제하시겠습니까?')) {
-      setWishes(wishes.filter((w) => w.id !== id));
-    }
+    setWishes(wishes.filter((w) => w.id !== id));
   };
 
   return (
