@@ -1,5 +1,6 @@
 import { useState } from 'react';
-import styled from 'styled-components';
+import { useNavigate } from 'react-router-dom';
+import styled, { keyframes } from 'styled-components';
 import {
   PageTitle,
   PageSub,
@@ -7,78 +8,21 @@ import {
 } from '../../../rsvn/components/user/RsvnStyled';
 import RecentCard from '../components/user/RecentCard';
 
-const DUMMY = [
-  {
-    id: 1,
-    type: '워크앤스테이',
-    timeAgo: '방금 전',
-    title: '청평 숲속 파인뷰 스테이',
-    location: '경기 가평',
-    rating: 4.9,
-    price: 185000,
-    icon: '🌲',
-  },
-  {
-    id: 2,
-    type: '코워킹오피스',
-    timeAgo: '5분 전',
-    title: '강릉 바다향 커먼워크',
-    location: '강원 강릉',
-    rating: 4.8,
-    price: 28000,
-    icon: '🌊',
-  },
-  {
-    id: 3,
-    type: '숙소',
-    timeAgo: '2시간 전',
-    title: '제주 돌담집 리트릿',
-    location: '제주 서귀포',
-    rating: 4.9,
-    price: 220000,
-    icon: '🌴',
-  },
-  {
-    id: 4,
-    type: '워크앤스테이',
-    timeAgo: '어제',
-    title: '남해 올리브 팜스테이',
-    location: '경남 남해',
-    rating: 4.92,
-    price: 165000,
-    icon: '✉️',
-  },
-  {
-    id: 5,
-    type: '숙소',
-    timeAgo: '3일 전',
-    title: '양양 파도소리 빌라',
-    location: '강원 양양',
-    rating: 4.95,
-    price: 240000,
-    icon: '🌅',
-  },
-  {
-    id: 6,
-    type: '코워킹오피스',
-    timeAgo: '5일 전',
-    title: '성수 브릭라운지',
-    location: '서울 성수',
-    rating: 4.88,
-    price: 25000,
-    icon: '🧱',
-  },
-  {
-    id: 7,
-    type: '워크앤스테이',
-    timeAgo: '1주 전',
-    title: '속초 설악 글램스테이',
-    location: '강원 속초',
-    rating: 4.87,
-    price: 210000,
-    icon: '⛰️',
-  },
-];
+const fadeInUp = keyframes`
+  from { opacity: 0; transform: translateY(10px); }
+  to   { opacity: 1; transform: translateY(0); }
+`;
+
+const Page = styled.div`
+  max-width: 960px;
+  margin: 0 auto;
+  padding: 32px 24px;
+  animation: ${fadeInUp} 480ms ease-out both;
+`;
+
+const Header = styled.div`
+  margin-bottom: 24px;
+`;
 
 const ListHeader = styled.div`
   display: flex;
@@ -118,23 +62,107 @@ const EmptyBox = styled.div`
   font-size: 14px;
 `;
 
+// spaceType → 라우트 경로 매핑
+const SPACE_PATH = {
+  워크앤스테이: 'workstays',
+  오피스: 'coworking-offices',
+  숙소: 'accommodations',
+};
+
+const DUMMY = [
+  {
+    id: 1,
+    type: '워크앤스테이',
+    timeAgo: '방금 전',
+    title: '청평 숲속 파인뷰 스테이',
+    location: '경기 가평',
+    rating: 4.9,
+    price: 185000,
+    icon: '🌲',
+  },
+  {
+    id: 2,
+    type: '오피스',
+    timeAgo: '5분 전',
+    title: '강릉 바다향 커먼워크',
+    location: '강원 강릉',
+    rating: 4.8,
+    price: 28000,
+    icon: '🌊',
+  },
+  {
+    id: 3,
+    type: '숙소',
+    timeAgo: '2시간 전',
+    title: '제주 돌담집 리트릿',
+    location: '제주 서귀포',
+    rating: 4.9,
+    price: 220000,
+    icon: '🌴',
+  },
+  {
+    id: 4,
+    type: '워크앤스테이',
+    timeAgo: '어제',
+    title: '남해 올리브 팜스테이',
+    location: '경남 남해',
+    rating: 4.92,
+    price: 165000,
+    icon: '✉️',
+  },
+  {
+    id: 5,
+    type: '숙소',
+    timeAgo: '3일 전',
+    title: '양양 파도소리 빌라',
+    location: '강원 양양',
+    rating: 4.95,
+    price: 240000,
+    icon: '🌅',
+  },
+  {
+    id: 6,
+    type: '오피스',
+    timeAgo: '5일 전',
+    title: '성수 브릭라운지',
+    location: '서울 성수',
+    rating: 4.88,
+    price: 25000,
+    icon: '🧱',
+  },
+  {
+    id: 7,
+    type: '워크앤스테이',
+    timeAgo: '1주 전',
+    title: '속초 설악 글램스테이',
+    location: '강원 속초',
+    rating: 4.87,
+    price: 210000,
+    icon: '⛰️',
+  },
+];
+
 function RecentPlacePage() {
+  const navigate = useNavigate();
   const [items, setItems] = useState(DUMMY);
 
-  const handleDelete = (id) => {
-    setItems((prev) => prev.filter((item) => item.id !== id));
-  };
+  const handleDelete = (id) =>
+    setItems((prev) => prev.filter((i) => i.id !== id));
+  const handleClearAll = () => setItems([]);
 
-  const handleClearAll = () => {
-    setItems([]);
+  const handleCardClick = (item) => {
+    const path = SPACE_PATH[item.type] || 'workstays';
+    navigate(`/${path}/${item.id}`);
   };
 
   return (
-    <div>
-      <PageTitle>최근 본 공간</PageTitle>
-      <PageSub>
-        최근 조회한 공간 {items.length}개 · 최대 10개까지 표시됩니다
-      </PageSub>
+    <Page>
+      <Header>
+        <PageTitle>최근 본 공간</PageTitle>
+        <PageSub>
+          최근 조회한 공간 {items.length}개 · 최대 10개까지 표시됩니다
+        </PageSub>
+      </Header>
 
       {items.length > 0 ? (
         <>
@@ -144,7 +172,12 @@ function RecentPlacePage() {
           </ListHeader>
           <CardList>
             {items.map((item) => (
-              <RecentCard key={item.id} item={item} onDelete={handleDelete} />
+              <RecentCard
+                key={item.id}
+                item={item}
+                onDelete={handleDelete}
+                onClick={handleCardClick}
+              />
             ))}
           </CardList>
         </>
@@ -157,7 +190,7 @@ function RecentPlacePage() {
           </div>
         </EmptyBox>
       )}
-    </div>
+    </Page>
   );
 }
 
