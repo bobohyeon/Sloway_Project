@@ -66,7 +66,7 @@ const hostMenuGroups = [
         str: '워크앤스테이 등록',
         icon: <FaBriefcase />,
       },
-      { url: '/host/coworking', str: '코워킹오피스 등록', icon: <FaLeaf /> },
+      { url: '/host/coworking', str: '오피스 등록', icon: <FaLeaf /> },
     ],
   },
   {

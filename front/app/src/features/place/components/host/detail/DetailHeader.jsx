@@ -32,11 +32,6 @@ function DetailHeader() {
   const { id } = useParams();
   const { pathname } = useLocation();
 
-  /**
-   * URL 구조가 /host/lodging/:id 이므로
-   * pathname.split('/') 결과는 ["", "host", "lodging", "101"] 입니다.
-   * 여기서 index 2번이 바로 우리가 원하는 유형(lodging, workstay 등)입니다.
-   */
   const currentPathType = pathname.split('/')[2];
 
   return (

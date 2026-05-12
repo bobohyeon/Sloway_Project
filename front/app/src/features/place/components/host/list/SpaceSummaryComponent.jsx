@@ -41,7 +41,6 @@ function SpaceSummaryComponent({ spaces = [] }) {
     (space) => space.status === '검수 대기'
   ).length;
 
-  // 4. 이번 달 예약 (이 수치는 보통 별도의 API 데이터이므로 임시로 합산하거나 props로 받음)
   const totalBookings = spaces.reduce(
     (acc, cur) => acc + Number(cur.monthlyBookings || 0),
     0
