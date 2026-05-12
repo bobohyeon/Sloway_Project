@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import styled from 'styled-components';
+import styled, { keyframes } from 'styled-components';
 import {
   TabBar,
   TabBtn,
@@ -18,29 +18,21 @@ import {
 } from '../../../rsvn/components/user/RsvnStyled';
 import RsvnStatusBadge from '../../../rsvn/components/user/RsvnStatusBadge';
 
-const TABS = [
-  { label: '작성 가능', count: 2 },
-  { label: '작성 완료', count: 3 },
-];
+const fadeInUp = keyframes`
+  from { opacity: 0; transform: translateY(10px); }
+  to   { opacity: 1; transform: translateY(0); }
+`;
 
-const DUMMY_AVAILABLE = [
-  {
-    id: 1,
-    type: '워크앤스테이',
-    dday: 'D-25',
-    title: '청평 숲속 파인뷰 스테이',
-    date: '이용일 · 2026.04.18',
-    icon: '🌲',
-  },
-  {
-    id: 2,
-    type: '코워킹오피스',
-    dday: 'D-9',
-    title: '강릉 바다향 커먼워크',
-    date: '이용일 · 2026.04.02',
-    icon: '🌊',
-  },
-];
+const Page = styled.div`
+  max-width: 960px;
+  margin: 0 auto;
+  padding: 32px 24px;
+  animation: ${fadeInUp} 480ms ease-out both;
+`;
+
+const Header = styled.div`
+  margin-bottom: 24px;
+`;
 
 const NoticeBanner = styled.div`
   background: #fffbf0;
@@ -82,14 +74,80 @@ const WriteBtn = styled.button`
   }
 `;
 
+const Stars = styled.span`
+  color: #c97d4c;
+  font-size: 13px;
+`;
+
+// 작성 가능 더미
+const DUMMY_AVAILABLE = [
+  {
+    id: 1,
+    type: '워크앤스테이',
+    dday: 'D-25',
+    title: '청평 숲속 파인뷰 스테이',
+    date: '이용일 · 2026.04.18',
+    icon: '🌲',
+  },
+  {
+    id: 2,
+    type: '오피스',
+    dday: 'D-9',
+    title: '강릉 바다향 커먼워크',
+    date: '이용일 · 2026.04.02',
+    icon: '🌊',
+  },
+];
+
+// 작성 완료 더미
+const DUMMY_DONE = [
+  {
+    id: 3,
+    type: '숙소',
+    title: '제주 돌담집 리트릿',
+    date: '이용일 · 2026.03.15',
+    icon: '🌴',
+    score: 5,
+    text: '조용하고 몰입감 있어요. 다음에 또 오고 싶어요!',
+    helpful: 24,
+  },
+  {
+    id: 4,
+    type: '워크앤스테이',
+    title: '남해 올리브 팜스테이',
+    date: '이용일 · 2026.02.20',
+    icon: '✉️',
+    score: 4,
+    text: '전체적으로 좋았는데 주말에 사람이 좀 많아요.',
+    helpful: 7,
+  },
+  {
+    id: 5,
+    type: '오피스',
+    title: '성수 브릭라운지',
+    date: '이용일 · 2026.01.10',
+    icon: '🧱',
+    score: 5,
+    text: '와이파이 빠르고 의자도 편해서 하루종일 작업했어요.',
+    helpful: 15,
+  },
+];
+
 function MyReviewPage() {
   const [activeTab, setActiveTab] = useState(0);
   const navigate = useNavigate();
 
+  const TABS = [
+    { label: '작성 가능', count: DUMMY_AVAILABLE.length },
+    { label: '작성 완료', count: DUMMY_DONE.length },
+  ];
+
   return (
-    <div>
-      <PageTitle>내 리뷰</PageTitle>
-      <PageSub>이용한 공간에 리뷰를 작성하고 관리하세요</PageSub>
+    <Page>
+      <Header>
+        <PageTitle>내 리뷰</PageTitle>
+        <PageSub>이용한 공간에 리뷰를 작성하고 관리하세요</PageSub>
+      </Header>
 
       <TabBar>
         {TABS.map((tab, idx) => (
@@ -104,31 +162,79 @@ function MyReviewPage() {
         ))}
       </TabBar>
 
-      <NoticeBanner>
-        💡 리뷰는 이용 완료 후 30일 이내에 작성 가능해요
-      </NoticeBanner>
+      {activeTab === 0 && (
+        <>
+          <NoticeBanner>
+            💡 리뷰는 이용 완료 후 30일 이내에 작성 가능해요
+          </NoticeBanner>
+          {DUMMY_AVAILABLE.map((item) => (
+            <Card key={item.id} style={{ cursor: 'default' }}>
+              <CardRow>
+                <Thumb>{item.icon}</Thumb>
+                <CardBody>
+                  <TagRow>
+                    <RsvnStatusBadge type="type" label={item.type} />
+                    <WriteBadge>{item.dday}</WriteBadge>
+                  </TagRow>
+                  <CardTitle>{item.title}</CardTitle>
+                  <CardMeta>
+                    <span>{item.date}</span>
+                  </CardMeta>
+                </CardBody>
+                <WriteBtn onClick={() => navigate('/user/review/write')}>
+                  ⭐ 리뷰 작성
+                </WriteBtn>
+              </CardRow>
+            </Card>
+          ))}
+        </>
+      )}
 
-      {DUMMY_AVAILABLE.map((item) => (
-        <Card key={item.id} style={{ cursor: 'default' }}>
-          <CardRow>
-            <Thumb>{item.icon}</Thumb>
-            <CardBody>
-              <TagRow>
-                <RsvnStatusBadge type="type" label={item.type} />
-                <WriteBadge>{item.dday}</WriteBadge>
-              </TagRow>
-              <CardTitle>{item.title}</CardTitle>
-              <CardMeta>
-                <span>{item.date}</span>
-              </CardMeta>
-            </CardBody>
-            <WriteBtn onClick={() => navigate('/user/review/write')}>
-              ⭐ 리뷰 작성
-            </WriteBtn>
-          </CardRow>
-        </Card>
-      ))}
-    </div>
+      {activeTab === 1 && (
+        <>
+          {DUMMY_DONE.map((item) => (
+            <Card key={item.id} onClick={() => navigate(`/review/${item.id}`)}>
+              <CardRow>
+                <Thumb>{item.icon}</Thumb>
+                <CardBody>
+                  <TagRow>
+                    <RsvnStatusBadge type="type" label={item.type} />
+                    <Stars>{'★'.repeat(item.score)}</Stars>
+                    <span
+                      style={{
+                        fontSize: 12,
+                        fontWeight: 600,
+                        color: '#C97D4C',
+                      }}
+                    >
+                      {item.score}.0
+                    </span>
+                  </TagRow>
+                  <CardTitle>{item.title}</CardTitle>
+                  <CardMeta>
+                    <span>{item.date}</span>
+                    <span>·</span>
+                    <span>👍 도움돼요 {item.helpful}</span>
+                  </CardMeta>
+                  <div
+                    style={{
+                      fontSize: 13,
+                      color: '#555',
+                      marginTop: 6,
+                      overflow: 'hidden',
+                      whiteSpace: 'nowrap',
+                      textOverflow: 'ellipsis',
+                    }}
+                  >
+                    {item.text}
+                  </div>
+                </CardBody>
+              </CardRow>
+            </Card>
+          ))}
+        </>
+      )}
+    </Page>
   );
 }
 

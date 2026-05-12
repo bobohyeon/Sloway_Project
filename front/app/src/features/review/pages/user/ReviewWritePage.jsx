@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import styled from 'styled-components';
+import styled, { keyframes } from 'styled-components';
 import RsvnStatusBadge from '../../../rsvn/components/user/RsvnStatusBadge';
 import {
   PageTitle,
@@ -17,6 +17,18 @@ import {
   Req,
   Textarea,
 } from '../../components/user/ReviewStyled';
+
+const fadeInUp = keyframes`
+  from { opacity: 0; transform: translateY(10px); }
+  to   { opacity: 1; transform: translateY(0); }
+`;
+
+const Page = styled.div`
+  max-width: 960px;
+  margin: 0 auto;
+  padding: 32px 24px;
+  animation: ${fadeInUp} 480ms ease-out both;
+`;
 
 const SCORE_ITEMS = [
   { icon: '🌟', label: '종합 만족도', desc: '전반적인 만족도는 어떠셨나요?' },
@@ -86,9 +98,6 @@ const PhotoSlot = styled.div`
   gap: 4px;
   cursor: pointer;
   position: relative;
-  font-size: ${({ $filled }) => ($filled ? 28 : 20)}px;
-  color: ${COLOR.gray400};
-  font-size: 11px;
   &:hover {
     border-color: ${COLOR.sage};
   }
@@ -132,12 +141,6 @@ const AgreeBox = styled.div`
   margin-bottom: 20px;
 `;
 
-const BottomBtns = styled.div`
-  display: flex;
-  justify-content: flex-end;
-  gap: 10px;
-`;
-
 const CharCount = styled.div`
   text-align: right;
   font-size: 11px;
@@ -145,11 +148,18 @@ const CharCount = styled.div`
   margin-top: 4px;
 `;
 
+const BottomBtns = styled.div`
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+`;
+
 function ReviewWritePage() {
   const navigate = useNavigate();
   const [scores, setScores] = useState([4, 5, 3, 4]);
   const [text, setText] = useState('');
   const [photos, setPhotos] = useState([true, true]);
+  const [agreed, setAgreed] = useState(false);
 
   const setScore = (idx, val) => {
     const next = [...scores];
@@ -157,12 +167,18 @@ function ReviewWritePage() {
     setScores(next);
   };
 
+  const handleSubmit = () => {
+    alert('구현예정 💕💕');
+    navigate('/user/review');
+  };
+
   return (
-    <div>
+    <Page>
       <PageTitle>리뷰 작성</PageTitle>
       <PageSub>솔직한 후기로 다른 회원에게 도움을 주세요</PageSub>
       <BackLink onClick={() => navigate('/user/review')}>← 내 리뷰</BackLink>
 
+      {/* 공간 정보 */}
       <FormBox>
         <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
           <div
@@ -191,6 +207,7 @@ function ReviewWritePage() {
         </div>
       </FormBox>
 
+      {/* 평점 */}
       <FormBox>
         <FormLabel>
           평점 <Req>*</Req>
@@ -228,6 +245,7 @@ function ReviewWritePage() {
         ))}
       </FormBox>
 
+      {/* 사진 */}
       <FormBox>
         <FormLabel>
           사진 첨부{' '}
@@ -243,7 +261,7 @@ function ReviewWritePage() {
             <PhotoSlot key={i} $filled>
               <span style={{ fontSize: 28 }}>📷</span>
               <RemoveBtn
-                onClick={() => setPhotos((p) => p.filter((__, j) => j !== i))}
+                onClick={() => setPhotos((p) => p.filter((_, j) => j !== i))}
               >
                 ✕
               </RemoveBtn>
@@ -265,6 +283,7 @@ function ReviewWritePage() {
         </PhotoGrid>
       </FormBox>
 
+      {/* 리뷰 내용 */}
       <FormBox>
         <FormLabel>
           리뷰 내용 <Req>*</Req>
@@ -276,9 +295,9 @@ function ReviewWritePage() {
           rows={5}
           value={text}
           onChange={(e) => setText(e.target.value)}
-          placeholder="어떤 점이 좋았나요? 어떤 점이 아쉬웠나요? 다른 회원에게 추천하고 싶은 포인트는?"
+          placeholder="어떤 점이 좋았나요? 어떤 점이 아쉬웠나요?"
         />
-        {text.length < 10 && text.length > 0 && (
+        {text.length > 0 && text.length < 10 && (
           <div style={{ fontSize: 11, color: COLOR.orange, marginTop: 4 }}>
             최소 10자 더 필요해요
           </div>
@@ -294,7 +313,12 @@ function ReviewWritePage() {
       </CautionBox>
 
       <AgreeBox>
-        <input type="checkbox" id="agree" />
+        <input
+          type="checkbox"
+          id="agree"
+          checked={agreed}
+          onChange={(e) => setAgreed(e.target.checked)}
+        />
         <label htmlFor="agree">
           * 위 내용을 확인했으며, 허위 리뷰 작성 시 제재를 받을 수 있음에
           동의합니다
@@ -303,9 +327,9 @@ function ReviewWritePage() {
 
       <BottomBtns>
         <BtnOutline onClick={() => navigate('/user/review')}>취소</BtnOutline>
-        <BtnPrimary>리뷰 등록</BtnPrimary>
+        <BtnPrimary onClick={handleSubmit}>리뷰 등록</BtnPrimary>
       </BottomBtns>
-    </div>
+    </Page>
   );
 }
 
