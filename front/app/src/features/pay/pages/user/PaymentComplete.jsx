@@ -1,6 +1,8 @@
 import { useNavigate } from 'react-router-dom'
 import styled from 'styled-components'
 
+import PageLayout from '../../../../app/layouts/page/PageLayout'
+
 import { Button } from '../../../pay_shared/components'
 import { ResultHeader } from '../../components/user/ResultHeader'
 import { ReservationInfoCard } from '../../components/user/ReservationInfoCard'
@@ -26,8 +28,7 @@ export default function PaymentComplete() {
   const nav = useNavigate()
 
   return (
-    <PageWrapper>
-      <Container>
+    <PageLayout maxWidth={800}>
       <ResultHeader
         variant="success"
         title="결제가 완료됐어요"
@@ -54,28 +55,9 @@ export default function PaymentComplete() {
       <BackLink onClick={() => nav('/')}>
         ← 메인으로 돌아가기
       </BackLink>
-    </Container>
-    </PageWrapper>
+    </PageLayout>
   )
 }
-
-const PageWrapper = styled.div`
-  background-color: var(--cream);
-  min-height: 100%;
-  padding: var(--space-6) var(--space-5);
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-`
-
-const Container = styled.div`
-  width: 100%;
-  max-width: 800px;
-  display: flex;
-  flex-direction: column;
-  animation: fadeInUp 480ms ease-out both;
-`
-
 const Content = styled.div`
   display: flex;
   flex-direction: column;

@@ -2,6 +2,8 @@ import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import styled from 'styled-components'
 
+import PageLayout from '../../../../app/layouts/page/PageLayout'
+
 import { Card, Button, Modal } from '../../../pay_shared/components'
 import { PaymentMethodCard } from '../../components/user/PaymentMethodCard'
 import { AddMethodCard } from '../../components/user/AddMethodCard'
@@ -66,13 +68,13 @@ export default function PaymentMethods() {
   }
 
   return (
-    <PageWrapper>
-      <Container>
-      <Header>
-        <BackLink onClick={() => nav('/user/payment')}>← 결제 내역으로</BackLink>
-        <Title>결제 수단 관리</Title>
-        <Description>자주 쓰는 결제 수단을 등록해두면 결제가 더 빨라져요</Description>
-      </Header>
+    <PageLayout
+      title="결제 수단 관리"
+      description="자주 쓰는 결제 수단을 등록해두면 결제가 더 빨라져요"
+      backTo="/user/payment"
+      backLabel="결제 내역으로"
+      maxWidth={800}
+    >
 
       <NoticeBox>
         <NoticeIcon>💡</NoticeIcon>
@@ -165,56 +167,9 @@ export default function PaymentMethods() {
           <DeleteSub>삭제 후에는 다시 등록해야 사용할 수 있어요.</DeleteSub>
         </DeleteConfirm>
       </Modal>
-    </Container>
-    </PageWrapper>
+    </PageLayout>
   )
 }
-
-const PageWrapper = styled.div`
-  background-color: var(--cream);
-  min-height: 100%;
-  padding: var(--space-6) var(--space-5);
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-`
-
-const Container = styled.div`
-  width: 100%;
-  max-width: 800px;
-  display: flex;
-  flex-direction: column;
-  animation: fadeInUp 480ms ease-out both;
-`
-
-const Header = styled.div`
-  margin-bottom: var(--space-5);
-`
-
-const BackLink = styled.button`
-  font-size: 0.85rem;
-  color: var(--gray-600);
-  margin-bottom: var(--space-3);
-
-  &:hover {
-    color: var(--gray-800);
-  }
-`
-
-const Title = styled.h1`
-  font-family: var(--font-display);
-  font-size: 1.8rem;
-  font-weight: 500;
-  color: var(--gray-800);
-  letter-spacing: -0.02em;
-  margin-bottom: 6px;
-`
-
-const Description = styled.p`
-  font-size: 0.9rem;
-  color: var(--gray-600);
-`
-
 const NoticeBox = styled(Card)`
   display: flex;
   gap: var(--space-3);

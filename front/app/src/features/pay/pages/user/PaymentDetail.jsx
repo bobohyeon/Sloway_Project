@@ -1,6 +1,8 @@
 import { useNavigate, useParams } from 'react-router-dom'
 import styled from 'styled-components'
 
+import PageLayout from '../../../../app/layouts/page/PageLayout'
+
 import { Card, Button, Badge } from '../../../pay_shared/components'
 import { ReceiptHeader } from '../../components/user/ReceiptHeader'
 import { PaymentDetailCard } from '../../components/user/PaymentDetailCard'
@@ -172,9 +174,11 @@ export default function PaymentDetail() {
   const isFailed = payment.status === 'failed'
 
   return (
-    <PageWrapper>
-      <Container>
-      <BackLink onClick={() => nav('/user/payment')}>← 결제 내역</BackLink>
+    <PageLayout
+      backTo="/user/payment"
+      backLabel="결제 내역"
+      maxWidth={800}
+    >
 
       <ReceiptCard padded>
         <ReceiptHeader status={payment.status} paymentId={payment.id} />
@@ -226,41 +230,9 @@ export default function PaymentDetail() {
           🖨️ 영수증 출력
         </Button>
       </Actions>
-    </Container>
-    </PageWrapper>
+    </PageLayout>
   )
 }
-
-const PageWrapper = styled.div`
-  background-color: var(--cream);
-  min-height: 100%;
-  padding: var(--space-6) var(--space-5);
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-`
-
-const Container = styled.div`
-  width: 100%;
-  max-width: 800px;
-  display: flex;
-  flex-direction: column;
-  animation: fadeInUp 480ms ease-out both;
-`
-
-const BackLink = styled.button`
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  font-size: 0.85rem;
-  color: var(--gray-600);
-  margin-bottom: var(--space-5);
-
-  &:hover {
-    color: var(--gray-800);
-  }
-`
-
 const ReceiptCard = styled(Card)`
   background: var(--white);
   margin-bottom: var(--space-5);

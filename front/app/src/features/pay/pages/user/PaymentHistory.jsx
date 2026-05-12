@@ -1,10 +1,17 @@
-import { useState } from 'react'
-import { useNavigate } from 'react-router-dom'
-import styled from 'styled-components'
+import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import styled from 'styled-components';
 
-import { StatCard, EmptyState, Pagination, Button } from '../../../pay_shared/components'
-import { PaymentListItem } from '../../components/user/PaymentListItem'
-import { PaymentFilterBar } from '../../components/user/PaymentFilterBar'
+import PageLayout from '../../../../app/layouts/page/PageLayout';
+
+import {
+  StatCard,
+  EmptyState,
+  Pagination,
+  Button,
+} from '../../../pay_shared/components';
+import { PaymentListItem } from '../../components/user/PaymentListItem';
+import { PaymentFilterBar } from '../../components/user/PaymentFilterBar';
 
 const PAYMENTS = [
   {
@@ -67,41 +74,50 @@ const PAYMENTS = [
     paidAt: '2026.01.10 12:00',
     status: 'failed',
   },
-]
+];
 
 export default function PaymentHistory() {
-  const nav = useNavigate()
-  const [tab, setTab] = useState('all')
-  const [period, setPeriod] = useState('month')
-  const [page, setPage] = useState(1)
+  const nav = useNavigate();
+  const [tab, setTab] = useState('all');
+  const [period, setPeriod] = useState('month');
+  const [page, setPage] = useState(1);
 
-  const filtered = PAYMENTS.filter((p) => tab === 'all' || p.status === tab)
+  const filtered = PAYMENTS.filter((p) => tab === 'all' || p.status === tab);
 
-  const totalCompleted = PAYMENTS.filter((p) => p.status === 'completed').reduce(
-    (s, p) => s + p.amount,
-    0
-  )
+  const totalCompleted = PAYMENTS.filter(
+    (p) => p.status === 'completed'
+  ).reduce((s, p) => s + p.amount, 0);
   const totalRefunded = PAYMENTS.filter((p) => p.status === 'refunded').reduce(
     (s, p) => s + p.amount,
     0
-  )
-  const realPaid = totalCompleted - totalRefunded
+  );
+  const realPaid = totalCompleted - totalRefunded;
 
   const tabs = [
     { value: 'all', label: '전체', count: PAYMENTS.length },
-    { value: 'completed', label: '결제 완료', count: PAYMENTS.filter((p) => p.status === 'completed').length },
-    { value: 'refunded', label: '환불', count: PAYMENTS.filter((p) => p.status === 'refunded').length },
-    { value: 'failed', label: '결제 실패', count: PAYMENTS.filter((p) => p.status === 'failed').length },
-  ]
+    {
+      value: 'completed',
+      label: '결제 완료',
+      count: PAYMENTS.filter((p) => p.status === 'completed').length,
+    },
+    {
+      value: 'refunded',
+      label: '환불',
+      count: PAYMENTS.filter((p) => p.status === 'refunded').length,
+    },
+    {
+      value: 'failed',
+      label: '결제 실패',
+      count: PAYMENTS.filter((p) => p.status === 'failed').length,
+    },
+  ];
 
   return (
-    <PageWrapper>
-      <Container>
-      <Header>
-        <Title>결제 내역</Title>
-        <Description>지금까지의 모든 결제 내역을 확인하실 수 있어요</Description>
-      </Header>
-
+    <PageLayout
+      title="결제 내역"
+      description="지금까지의 모든 결제 내역을 확인하실 수 있어요"
+      maxWidth={1200}
+    >
       <StatGrid>
         <StatCard label="총 결제" value={PAYMENTS.length} unit="건" icon="💳" />
         <StatCard
@@ -111,8 +127,18 @@ export default function PaymentHistory() {
           icon="✓"
           highlight
         />
-        <StatCard label="환불 금액" value={totalRefunded.toLocaleString()} unit="원" icon="↩️" />
-        <StatCard label="실결제" value={realPaid.toLocaleString()} unit="원" icon="🌱" />
+        <StatCard
+          label="환불 금액"
+          value={totalRefunded.toLocaleString()}
+          unit="원"
+          icon="↩️"
+        />
+        <StatCard
+          label="실결제"
+          value={realPaid.toLocaleString()}
+          unit="원"
+          icon="🌱"
+        />
       </StatGrid>
 
       <PaymentFilterBar
@@ -148,46 +174,9 @@ export default function PaymentHistory() {
       )}
 
       <Pagination currentPage={page} totalPages={2} onChange={setPage} />
-    </Container>
-    </PageWrapper>
-  )
+    </PageLayout>
+  );
 }
-
-const PageWrapper = styled.div`
-  background-color: var(--cream);
-  min-height: 100%;
-  padding: var(--space-6) var(--space-5);
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-`
-
-const Container = styled.div`
-  width: 100%;
-  max-width: 1200px;
-  display: flex;
-  flex-direction: column;
-  animation: fadeInUp 480ms ease-out both;
-`
-
-const Header = styled.div`
-  margin-bottom: var(--space-6);
-`
-
-const Title = styled.h1`
-  font-family: var(--font-display);
-  font-size: 1.8rem;
-  font-weight: 500;
-  color: var(--gray-800);
-  letter-spacing: -0.02em;
-  margin-bottom: 6px;
-`
-
-const Description = styled.p`
-  font-size: 0.9rem;
-  color: var(--gray-600);
-`
-
 const StatGrid = styled.div`
   display: grid;
   grid-template-columns: repeat(4, 1fr);
@@ -197,10 +186,10 @@ const StatGrid = styled.div`
   @media (max-width: 720px) {
     grid-template-columns: repeat(2, 1fr);
   }
-`
+`;
 
 const List = styled.div`
   display: flex;
   flex-direction: column;
   gap: var(--space-3);
-`
+`;

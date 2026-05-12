@@ -2,6 +2,8 @@ import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import styled from 'styled-components'
 
+import PageLayout from '../../../../app/layouts/page/PageLayout'
+
 import { AdminKPICard } from '../../../dashboard/components/admin/AdminKPICard'
 import { DonutChart } from '../../../dashboard/components/admin/DonutChart'
 import { DailyTransactionChart } from '../../../dashboard/components/admin/DailyTransactionChart'
@@ -72,13 +74,11 @@ export default function MemberStats() {
   const [period, setPeriod] = useState('30days')
 
   return (
-    <Page>
-      <BackLink onClick={() => nav('/admin/dashboard')}>← 관리자 대시보드</BackLink>
-
-      <Header>
-        <Title>회원 통계</Title>
-        <Description>회원 구성과 가입 트렌드를 분석하세요</Description>
-      </Header>
+    <PageLayout
+      title="회원 통계"
+      description="회원 구성과 가입 트렌드를 분석하세요"
+      maxWidth={1200}
+    >
 
       <StatsPeriodFilter
         selectedPeriod={period}
@@ -157,16 +157,9 @@ export default function MemberStats() {
           <StatsDistribution title="활성도 분포" items={ACTIVITY_DIST} />
         </Card>
       </DonutGrid>
-    </Page>
+    </PageLayout>
   )
 }
-
-const Page = styled.div`
-  width: 100%;
-  padding: var(--space-6) var(--space-5);
-  animation: fadeInUp 480ms ease-out both;
-`
-
 const BackLink = styled.button`
   font-size: 0.85rem;
   color: var(--gray-600);
@@ -176,32 +169,13 @@ const BackLink = styled.button`
     color: var(--gray-800);
   }
 `
-
-const Header = styled.div`
-  margin-bottom: var(--space-5);
-`
-
-const Title = styled.h1`
-  font-family: var(--font-display);
-  font-size: 1.8rem;
-  font-weight: 500;
-  color: var(--gray-800);
-  letter-spacing: -0.02em;
-  margin-bottom: 4px;
-`
-
-const Description = styled.p`
-  font-size: 0.9rem;
-  color: var(--gray-600);
-`
-
 const KPIGrid = styled.div`
   display: grid;
   grid-template-columns: repeat(4, 1fr);
   gap: var(--space-3);
   margin-bottom: var(--space-5);
 
-  @media (max-width: 960px) {
+  @media (max-width: 1200px) {
     grid-template-columns: repeat(2, 1fr);
   }
 
@@ -216,7 +190,7 @@ const DonutGrid = styled.div`
   gap: var(--space-4);
   margin-top: var(--space-5);
 
-  @media (max-width: 960px) {
+  @media (max-width: 1200px) {
     grid-template-columns: 1fr;
   }
 `

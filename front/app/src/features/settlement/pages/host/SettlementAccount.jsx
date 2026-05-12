@@ -2,6 +2,8 @@ import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import styled from 'styled-components'
 
+import PageLayout from '../../../../app/layouts/page/PageLayout'
+
 import { Button, Card } from '../../../pay_shared/components'
 import { AccountCard } from '../../components/host/AccountCard'
 import { AccountVerifyModal } from '../../components/host/AccountVerifyModal'
@@ -23,14 +25,11 @@ export default function SettlementAccount() {
   const [modalOpen, setModalOpen] = useState(false)
 
   return (
-    <PageWrapper>
-      <Container>
-      <BackLink onClick={() => nav('/host/settlement/dashboard')}>← 정산 대시보드</BackLink>
-
-      <Header>
-        <Title>정산 계좌 관리</Title>
-        <Description>정산 받을 계좌를 등록·변경할 수 있어요</Description>
-      </Header>
+    <PageLayout
+      title="정산 계좌 관리"
+      description="정산 받을 계좌를 등록·변경할 수 있어요"
+      maxWidth={800}
+    >
 
       <NoticeBox>
         <NoticeIcon>🔒</NoticeIcon>
@@ -84,28 +83,9 @@ export default function SettlementAccount() {
         }}
         isReVerify={!!account}
       />
-    </Container>
-    </PageWrapper>
+    </PageLayout>
   )
 }
-
-const PageWrapper = styled.div`
-  background-color: var(--cream);
-  min-height: 100%;
-  padding: var(--space-6) var(--space-5);
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-`
-
-const Container = styled.div`
-  width: 100%;
-  max-width: 800px;
-  display: flex;
-  flex-direction: column;
-  animation: fadeInUp 480ms ease-out both;
-`
-
 const BackLink = styled.button`
   font-size: 0.85rem;
   color: var(--gray-600);
@@ -115,25 +95,6 @@ const BackLink = styled.button`
     color: var(--gray-800);
   }
 `
-
-const Header = styled.div`
-  margin-bottom: var(--space-5);
-`
-
-const Title = styled.h1`
-  font-family: var(--font-display);
-  font-size: 1.8rem;
-  font-weight: 500;
-  color: var(--gray-800);
-  letter-spacing: -0.02em;
-  margin-bottom: 4px;
-`
-
-const Description = styled.p`
-  font-size: 0.9rem;
-  color: var(--gray-600);
-`
-
 const NoticeBox = styled(Card)`
   display: flex;
   gap: var(--space-3);
