@@ -1,8 +1,15 @@
-import { useState, useMemo } from 'react'
-import { useNavigate } from 'react-router-dom'
-import styled from 'styled-components'
+import { useState, useMemo } from 'react';
+import { useNavigate } from 'react-router-dom';
+import styled from 'styled-components';
 
-import { Tabs, StatCard, EmptyState, Pagination, Button, Badge } from '../../../pay_shared/components'
+import {
+  Tabs,
+  StatCard,
+  EmptyState,
+  Pagination,
+  Button,
+  Badge,
+} from '../../../pay_shared/components';
 
 const SETTLEMENTS = [
   {
@@ -28,9 +35,9 @@ const SETTLEMENTS = [
     settlementId: 'STL-202606-00891',
     hostName: '강릉 워크 호스트',
     hostId: 'host_002',
-    spaceName: '강릉 바다향 코워킹',
+    spaceName: '강릉 바다향 오피스',
     spaceEmoji: '🌊',
-    category: '코워킹오피스',
+    category: '오피스',
     bookingCount: 14,
     salesAmount: 1960000,
     feeAmount: 196000,
@@ -85,7 +92,7 @@ const SETTLEMENTS = [
     hostId: 'host_004',
     spaceName: '성수 브릭라운지',
     spaceEmoji: '🧱',
-    category: '코워킹오피스',
+    category: '오피스',
     bookingCount: 22,
     salesAmount: 980000,
     feeAmount: 98000,
@@ -96,40 +103,40 @@ const SETTLEMENTS = [
     completedAt: '2026.05.05 09:30',
     status: 'completed',
   },
-]
+];
 
 const TABS = [
   { label: '전체', value: 'all', count: 5 },
   { label: '지급 예정', value: 'scheduled', count: 2 },
   { label: '보류', value: 'pending', count: 1 },
   { label: '완료', value: 'completed', count: 2 },
-]
+];
 
 export default function AdminSettlementList() {
-  const nav = useNavigate()
-  const [tab, setTab] = useState('all')
-  const [keyword, setKeyword] = useState('')
+  const nav = useNavigate();
+  const [tab, setTab] = useState('all');
+  const [keyword, setKeyword] = useState('');
 
   const filtered = useMemo(() => {
-    let list = SETTLEMENTS
-    if (tab !== 'all') list = list.filter((s) => s.status === tab)
+    let list = SETTLEMENTS;
+    if (tab !== 'all') list = list.filter((s) => s.status === tab);
     if (keyword) {
       list = list.filter(
         (s) =>
           s.hostName.includes(keyword) ||
           s.spaceName.includes(keyword) ||
           s.settlementId.includes(keyword)
-      )
+      );
     }
-    return list
-  }, [tab, keyword])
+    return list;
+  }, [tab, keyword]);
 
-  const scheduled = SETTLEMENTS.filter((s) => s.status === 'scheduled')
-  const pending = SETTLEMENTS.filter((s) => s.status === 'pending')
-  const completed = SETTLEMENTS.filter((s) => s.status === 'completed')
+  const scheduled = SETTLEMENTS.filter((s) => s.status === 'scheduled');
+  const pending = SETTLEMENTS.filter((s) => s.status === 'pending');
+  const completed = SETTLEMENTS.filter((s) => s.status === 'completed');
 
-  const totalScheduled = scheduled.reduce((sum, s) => sum + s.payoutAmount, 0)
-  const totalCompleted = completed.reduce((sum, s) => sum + s.payoutAmount, 0)
+  const totalScheduled = scheduled.reduce((sum, s) => sum + s.payoutAmount, 0);
+  const totalCompleted = completed.reduce((sum, s) => sum + s.payoutAmount, 0);
 
   return (
     <Page>
@@ -174,7 +181,7 @@ export default function AdminSettlementList() {
         </Button>
       </FilterRow>
 
-      <Tabs tabs={TABS} value={tab} onChange={setTab} />
+      <Tabs items={TABS} value={tab} onChange={setTab} />
 
       {filtered.length === 0 ? (
         <EmptyState
@@ -219,13 +226,27 @@ export default function AdminSettlementList() {
                     <FeeAmount>-{s.feeAmount.toLocaleString()}원</FeeAmount>
                   </Td>
                   <Td align="right">
-                    <PayoutAmount>{s.payoutAmount.toLocaleString()}원</PayoutAmount>
+                    <PayoutAmount>
+                      {s.payoutAmount.toLocaleString()}원
+                    </PayoutAmount>
                   </Td>
                   <Td>{s.scheduledAt}</Td>
                   <Td align="center">
-                    {s.status === 'scheduled' && <Badge variant="info" size="sm">⏰ 예정</Badge>}
-                    {s.status === 'pending' && <Badge variant="warning" size="sm">⚠️ 보류</Badge>}
-                    {s.status === 'completed' && <Badge variant="success" size="sm">✓ 완료</Badge>}
+                    {s.status === 'scheduled' && (
+                      <Badge variant="info" size="sm">
+                        ⏰ 예정
+                      </Badge>
+                    )}
+                    {s.status === 'pending' && (
+                      <Badge variant="warning" size="sm">
+                        ⚠️ 보류
+                      </Badge>
+                    )}
+                    {s.status === 'completed' && (
+                      <Badge variant="success" size="sm">
+                        ✓ 완료
+                      </Badge>
+                    )}
                   </Td>
                   <Td align="center">
                     <Button
@@ -245,7 +266,7 @@ export default function AdminSettlementList() {
 
       <Pagination current={1} total={1} onChange={() => {}} />
     </Page>
-  )
+  );
 }
 
 const Page = styled.div`
@@ -254,11 +275,11 @@ const Page = styled.div`
   margin: 0 auto;
   padding: var(--space-6) var(--space-5);
   animation: fadeInUp 480ms ease-out both;
-`
+`;
 
 const Header = styled.div`
   margin-bottom: var(--space-5);
-`
+`;
 
 const Title = styled.h1`
   font-family: var(--font-display);
@@ -267,12 +288,12 @@ const Title = styled.h1`
   color: var(--gray-800);
   letter-spacing: -0.02em;
   margin-bottom: 4px;
-`
+`;
 
 const Description = styled.p`
   font-size: 0.9rem;
   color: var(--gray-600);
-`
+`;
 
 const StatGrid = styled.div`
   display: grid;
@@ -283,14 +304,14 @@ const StatGrid = styled.div`
   @media (max-width: 720px) {
     grid-template-columns: 1fr;
   }
-`
+`;
 
 const FilterRow = styled.div`
   display: flex;
   gap: var(--space-3);
   margin-bottom: var(--space-4);
   align-items: center;
-`
+`;
 
 const SearchBox = styled.div`
   flex: 1;
@@ -305,11 +326,11 @@ const SearchBox = styled.div`
   &:focus-within {
     border-color: var(--sage);
   }
-`
+`;
 
 const SearchIcon = styled.span`
   color: var(--gray-400);
-`
+`;
 
 const SearchInput = styled.input`
   flex: 1;
@@ -321,7 +342,7 @@ const SearchInput = styled.input`
   &::placeholder {
     color: var(--gray-400);
   }
-`
+`;
 
 const TableWrap = styled.div`
   background: var(--white);
@@ -329,12 +350,12 @@ const TableWrap = styled.div`
   border-radius: var(--radius-lg);
   overflow: hidden;
   margin: var(--space-4) 0;
-`
+`;
 
 const Table = styled.table`
   width: 100%;
   border-collapse: collapse;
-`
+`;
 
 const Th = styled.th`
   padding: var(--space-3) var(--space-4);
@@ -345,7 +366,7 @@ const Th = styled.th`
   border-bottom: 1px solid var(--gray-200);
   text-align: ${(p) => p.align || 'left'};
   white-space: nowrap;
-`
+`;
 
 const Tr = styled.tr`
   background: ${(p) => (p.$alert ? 'rgba(220, 38, 38, 0.04)' : 'transparent')};
@@ -354,7 +375,7 @@ const Tr = styled.tr`
   &:hover {
     background: var(--gray-100);
   }
-`
+`;
 
 const Td = styled.td`
   padding: var(--space-3) var(--space-4);
@@ -362,19 +383,19 @@ const Td = styled.td`
   color: var(--gray-800);
   text-align: ${(p) => p.align || 'left'};
   vertical-align: middle;
-`
+`;
 
 const SettlementId = styled.span`
   font-family: var(--font-mono);
   font-size: 0.75rem;
   color: var(--gray-600);
-`
+`;
 
 const HostInfo = styled.div`
   display: flex;
   align-items: center;
   gap: var(--space-2);
-`
+`;
 
 const SpaceEmoji = styled.div`
   width: 36px;
@@ -386,30 +407,30 @@ const SpaceEmoji = styled.div`
   justify-content: center;
   font-size: 1.1rem;
   flex-shrink: 0;
-`
+`;
 
 const HostDetails = styled.div`
   display: flex;
   flex-direction: column;
   gap: 2px;
-`
+`;
 
 const HostName = styled.div`
   font-weight: 500;
   color: var(--gray-800);
-`
+`;
 
 const SpaceName = styled.div`
   font-size: 0.75rem;
   color: var(--gray-600);
-`
+`;
 
 const FeeAmount = styled.span`
   color: #c44b3c;
   font-weight: 500;
-`
+`;
 
 const PayoutAmount = styled.span`
   color: var(--sage);
   font-weight: 600;
-`
+`;
