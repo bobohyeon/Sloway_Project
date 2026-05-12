@@ -120,6 +120,10 @@ import BookingStats from './features/stats/pages/admin/BookingStats';
 import MemberStats from './features/stats/pages/admin/MemberStats';
 import SpaceStats from './features/stats/pages/admin/SpaceStats';
 import SalesStats from './features/stats/pages/host/SalesStats';
+import AdminSettlementList from './features/settlement/pages/admin/AdminSettlementList';
+import AdminSettlementDetail from './features/settlement/pages/admin/AdminSettlementDetail';
+import AdminCommissionPolicy from './features/settlement/pages/admin/AdminCommissionPolicy';
+import StatsOverview from './features/stats/pages/admin/StatsOverview';
 
 // ── 쿠폰 ──────────────────────────────────────────────────
 import EventList from './features/coupon/pages/user/EventList';
@@ -189,23 +193,19 @@ function App() {
       <Route element={<DefaultLayouts />}>
         {/* 루트 리다이렉트 */}
         <Route index element={<Navigate to="/user/mypage" replace />} />
-
         {/* ══ USER ══ */}
-
         {/* 내 정보 */}
         <Route path="/user/mypage" element={<MyPage />} />
         <Route path="/user/profile" element={<ProfilePage />} />
         <Route path="/user/profile/edit" element={<ProfileEditPage />} />
         <Route path="/user/password" element={<Todo label="비밀번호 변경" />} />
         <Route path="/user/withdraw" element={<Todo label="회원 탈퇴" />} />
-
         {/* 호스트 신청 */}
         <Route path="/user/host/apply" element={<Todo label="호스트 신청" />} />
         <Route
           path="/user/host/status"
           element={<Todo label="호스트 신청 현황" />}
         />
-
         {/* 예약 */}
         <Route path="/user/reservation" element={<RsvnListPage />} />
         <Route
@@ -214,7 +214,6 @@ function App() {
         />
         <Route path="/user/reservation/cancel" element={<RefundListPage />} />
         <Route path="/user/reservation/:id" element={<RsvnDetailPage />} />
-
         {/* 결제·지갑 */}
         <Route path="/user/payment/receipt" element={<CashReceipt />} />
         <Route path="/user/payment" element={<PaymentHistory />} />
@@ -226,11 +225,9 @@ function App() {
         <Route path="/user/point" element={<PointHistory />} />
         <Route path="/event" element={<EventList />} />
         <Route path="/user/coupon" element={<MyCoupons />} />
-
         {/* 환불 */}
         <Route path="/user/refund/request" element={<BookingCancel />} />
         <Route path="/user/refund/complete" element={<RefundComplete />} />
-
         {/* 활동 */}
         <Route path="/user/wishlist" element={<Todo label="찜 목록" />} />
         <Route path="/user/recent" element={<RecentPlacePage />} />
@@ -239,7 +236,6 @@ function App() {
         <Route path="/user/review/report" element={<ReviewReportPage />} />
         <Route path="/user/inquiry" element={<Todo label="내 문의 목록" />} />
         <Route path="/user/inquiry/:id" element={<Todo label="문의 상세" />} />
-
         {/* 소통 */}
         <Route path="/user/chat" element={<Todo label="1:1 채팅 목록" />} />
         <Route path="/user/chat/:roomId" element={<Todo label="채팅 상세" />} />
@@ -248,18 +244,14 @@ function App() {
           path="/user/notification/setting"
           element={<Todo label="알림 설정" />}
         />
-
         {/* 공지·FAQ */}
         <Route path="/notices" element={<Todo label="공지사항 목록" />} />
         <Route path="/notices/:id" element={<Todo label="공지사항 상세" />} />
         <Route path="/faqs" element={<Todo label="FAQ 목록" />} />
         <Route path="/faqs/:id" element={<Todo label="FAQ 상세" />} />
-
         {/* 챗봇 */}
         <Route path="/chatbot" element={<Todo label="AI 챗봇" />} />
-
         {/* ══ HOST ══ */}
-
         {/* 운영 */}
         <Route path="/host/dashboard" element={<HostDashboard />} />
         <Route
@@ -270,26 +262,22 @@ function App() {
           path="/host/license"
           element={<Todo label="사업자등록증 인증" />}
         />
-
         {/* 공간 관리 */}
         <Route path="/host/space/list" element={<SpaceListPage />} />
         <Route path="/host/space" element={<InsertSpacePage />} />
         <Route path="/host/space/:id" element={<SpaceDetailPage />} />
         <Route path="/host/space/:id/edit" element={<SpaceUpdatePage />} />
         <Route path="/host/space/:id/images" element={<ImageUpdatePage />} />
-
         {/* 숙소 */}
         <Route path="/host/lodging" element={<InsertStationPage />} />
         <Route path="/host/lodging/:id" element={<StationDetailPage />} />
         <Route path="/host/lodging/:id/edit" element={<UpdateStationPage />} />
         <Route path="/host/lodging/:id/images" element={<ImageUpdatePage />} />
-
         {/* 워크앤스테이 */}
         <Route path="/host/workstay" element={<InsertWorkPage />} />
         <Route path="/host/workstay/:id" element={<StationDetailPage />} />
         <Route path="/host/workstay/:id/edit" element={<UpdateWorkPage />} />
         <Route path="/host/workstay/:id/images" element={<ImageUpdatePage />} />
-
         {/* 코워킹오피스 */}
         <Route path="/host/coworking" element={<InsertCoworkingPage />} />
         <Route path="/host/coworking/:id" element={<StationDetailPage />} />
@@ -305,7 +293,6 @@ function App() {
           path="/host/coworking/:id/pricing"
           element={<Todo label="코워킹오피스 요금 설정" />}
         />
-
         {/* 예약 관리 */}
         <Route path="/host/reservation/list" element={<HostRsvnListPage />} />
         <Route
@@ -321,7 +308,6 @@ function App() {
           path="/host/reservation/block/add"
           element={<BlackoutAddPage />}
         />
-
         {/* 정산·통계 */}
         <Route
           path="/host/settlement/dashboard"
@@ -342,7 +328,6 @@ function App() {
         <Route path="/host/settlement/fee" element={<CommissionPolicy />} />
         <Route path="/host/settlement/tax" element={<TaxInvoice />} />
         <Route path="/host/stats/sales" element={<SalesStats />} />
-
         {/* 소통 */}
         <Route path="/host/review" element={<HostReviewPage />} />
         <Route path="/host/chat" element={<Todo label="호스트 1:1 채팅" />} />
@@ -353,16 +338,12 @@ function App() {
           path="/host/notification/setting"
           element={<Todo label="알림 설정" />}
         />
-
         {/* ══ ADMIN ══ */}
-
         {/* 대시보드 */}
         <Route path="/admin/dashboard" element={<AdminDashboard />} />
-
         {/* 회원 관리 */}
         <Route path="/admin/members" element={<Todo label="회원 목록" />} />
         <Route path="/admin/members/:id" element={<Todo label="회원 상세" />} />
-
         {/* 호스트 관리 */}
         <Route
           path="/admin/host/apply"
@@ -377,14 +358,12 @@ function App() {
           path="/admin/host/list/:id"
           element={<Todo label="호스트 상세" />}
         />
-
         {/* 공간 검수 */}
         <Route path="/admin/space/review" element={<SpaceApprovalPage />} />
         <Route
           path="/admin/space/review/:id"
           element={<Todo label="공간 상세 검수" />}
         />
-
         {/* 예약·리뷰 */}
         <Route path="/admin/reservation" element={<AdminRsvnListPage />} />
         <Route
@@ -396,7 +375,6 @@ function App() {
           path="/admin/review/report/:id"
           element={<AdminReviewReportPage />}
         />
-
         {/* 결제·환불 */}
         <Route
           path="/admin/payment"
@@ -405,31 +383,25 @@ function App() {
         <Route path="/admin/payment/:id" element={<Todo label="결제 상세" />} />
         <Route path="/admin/refund" element={<RefundList />} />
         <Route path="/admin/refund/:id" element={<RefundDetail />} />
-
         {/* 정산·수수료 */}
         <Route
           path="/admin/settlement/host"
-          element={<Todo label="호스트 정산 목록" />}
+          element={<AdminSettlementList />}
         />
         <Route
           path="/admin/settlement/host/:id"
-          element={<Todo label="정산 상세" />}
+          element={<AdminSettlementDetail />}
         />
         <Route
           path="/admin/settlement/fee"
-          element={<Todo label="수수료 정책 관리" />}
+          element={<AdminCommissionPolicy />}
         />
-
         {/* 통계 */}
-        <Route
-          path="/admin/stats/sales"
-          element={<Todo label="플랫폼 매출 통계" />}
-        />
+        <Route path="/admin/stats/sales" element={<StatsOverview />} />
         <Route path="/admin/stats/revenue" element={<RevenueStats />} />
         <Route path="/admin/stats/booking" element={<BookingStats />} />
         <Route path="/admin/stats/member" element={<MemberStats />} />
         <Route path="/admin/stats/space" element={<SpaceStats />} />
-
         {/* 운영 */}
         <Route path="/admin/inquiry" element={<Todo label="문의 관리" />} />
         <Route path="/admin/inquiry/:id" element={<Todo label="문의 상세" />} />
