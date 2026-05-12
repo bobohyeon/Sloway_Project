@@ -1,20 +1,13 @@
-import { useState, useMemo } from 'react';
-import { useNavigate } from 'react-router-dom';
-import styled from 'styled-components';
+import { useState, useMemo } from 'react'
+import { useNavigate } from 'react-router-dom'
+import styled from 'styled-components'
 
-import {
-  Tabs,
-  StatCard,
-  EmptyState,
-  Pagination,
-  Button,
-  Badge,
-} from '../../../pay_shared/components';
+import { Tabs, StatCard, EmptyState, Pagination, Button, Badge } from '../../../pay_shared/components'
 
 const SETTLEMENTS = [
   {
     id: 1,
-    settlementId: 'STL-202606-00892',
+    settlementId: 'STL-20260513-00892',
     hostName: '청평 숲속 호스트',
     hostId: 'host_001',
     spaceName: '청평 숲속 파인뷰 스테이',
@@ -26,31 +19,31 @@ const SETTLEMENTS = [
     payoutAmount: 4856250,
     bankName: '국민은행',
     maskedAccount: '1234-****-****',
-    scheduledAt: '2026.06.05',
+    scheduledAt: '2026.05.13',
     completedAt: null,
     status: 'scheduled',
   },
   {
     id: 2,
-    settlementId: 'STL-202606-00891',
+    settlementId: 'STL-20260513-00891',
     hostName: '강릉 워크 호스트',
     hostId: 'host_002',
-    spaceName: '강릉 바다향 오피스',
+    spaceName: '강릉 바다향 코워킹',
     spaceEmoji: '🌊',
-    category: '오피스',
+    category: '코워킹오피스',
     bookingCount: 14,
     salesAmount: 1960000,
     feeAmount: 196000,
     payoutAmount: 1764000,
     bankName: '신한은행',
     maskedAccount: '5678-****-****',
-    scheduledAt: '2026.06.05',
+    scheduledAt: '2026.05.13',
     completedAt: null,
     status: 'scheduled',
   },
   {
     id: 3,
-    settlementId: 'STL-202606-00890',
+    settlementId: 'STL-20260513-00890',
     hostName: '남해 올리브 호스트',
     hostId: 'host_003',
     spaceName: '남해 올리브 팜스테이',
@@ -62,14 +55,14 @@ const SETTLEMENTS = [
     payoutAmount: 3430000,
     bankName: '카카오뱅크',
     maskedAccount: '9012-****-****',
-    scheduledAt: '2026.06.05',
+    scheduledAt: '2026.05.13',
     completedAt: null,
     status: 'pending',
     alertMessage: '계좌 인증 미완료 - 호스트 확인 필요',
   },
   {
     id: 4,
-    settlementId: 'STL-202604-00847',
+    settlementId: 'STL-20260509-00847',
     hostName: '청평 숲속 호스트',
     hostId: 'host_001',
     spaceName: '청평 숲속 파인뷰 스테이',
@@ -81,65 +74,66 @@ const SETTLEMENTS = [
     payoutAmount: 3657500,
     bankName: '국민은행',
     maskedAccount: '1234-****-****',
-    scheduledAt: '2026.05.05',
-    completedAt: '2026.05.05 09:30',
+    scheduledAt: '2026.05.09',
+    completedAt: '2026.05.09 09:30',
     status: 'completed',
   },
   {
     id: 5,
-    settlementId: 'STL-202604-00845',
+    settlementId: 'STL-20260509-00845',
     hostName: '성수 브릭 호스트',
     hostId: 'host_004',
     spaceName: '성수 브릭라운지',
     spaceEmoji: '🧱',
-    category: '오피스',
+    category: '코워킹오피스',
     bookingCount: 22,
     salesAmount: 980000,
     feeAmount: 98000,
     payoutAmount: 882000,
     bankName: '하나은행',
     maskedAccount: '3456-****-****',
-    scheduledAt: '2026.05.05',
-    completedAt: '2026.05.05 09:30',
+    scheduledAt: '2026.05.09',
+    completedAt: '2026.05.09 09:30',
     status: 'completed',
   },
-];
+]
 
 const TABS = [
   { label: '전체', value: 'all', count: 5 },
   { label: '지급 예정', value: 'scheduled', count: 2 },
   { label: '보류', value: 'pending', count: 1 },
   { label: '완료', value: 'completed', count: 2 },
-];
+]
 
 export default function AdminSettlementList() {
-  const nav = useNavigate();
-  const [tab, setTab] = useState('all');
-  const [keyword, setKeyword] = useState('');
+  const nav = useNavigate()
+  const [tab, setTab] = useState('all')
+  const [keyword, setKeyword] = useState('')
 
   const filtered = useMemo(() => {
-    let list = SETTLEMENTS;
-    if (tab !== 'all') list = list.filter((s) => s.status === tab);
+    let list = SETTLEMENTS
+    if (tab !== 'all') list = list.filter((s) => s.status === tab)
     if (keyword) {
       list = list.filter(
         (s) =>
           s.hostName.includes(keyword) ||
           s.spaceName.includes(keyword) ||
           s.settlementId.includes(keyword)
-      );
+      )
     }
-    return list;
-  }, [tab, keyword]);
+    return list
+  }, [tab, keyword])
 
-  const scheduled = SETTLEMENTS.filter((s) => s.status === 'scheduled');
-  const pending = SETTLEMENTS.filter((s) => s.status === 'pending');
-  const completed = SETTLEMENTS.filter((s) => s.status === 'completed');
+  const scheduled = SETTLEMENTS.filter((s) => s.status === 'scheduled')
+  const pending = SETTLEMENTS.filter((s) => s.status === 'pending')
+  const completed = SETTLEMENTS.filter((s) => s.status === 'completed')
 
-  const totalScheduled = scheduled.reduce((sum, s) => sum + s.payoutAmount, 0);
-  const totalCompleted = completed.reduce((sum, s) => sum + s.payoutAmount, 0);
+  const totalScheduled = scheduled.reduce((sum, s) => sum + s.payoutAmount, 0)
+  const totalCompleted = completed.reduce((sum, s) => sum + s.payoutAmount, 0)
 
   return (
-    <Page>
+    <PageWrapper>
+      <Container>
       <Header>
         <Title>호스트 정산 관리</Title>
         <Description>호스트 정산 상태를 확인하고 지급을 처리하세요</Description>
@@ -153,7 +147,7 @@ export default function AdminSettlementList() {
           subText={`${scheduled.length}건 대기 중`}
         />
         <StatCard
-          label="이번 달 지급 완료"
+          label="이번 주기 지급 완료"
           value={(totalCompleted / 10000).toLocaleString()}
           unit="만원"
           subText={`${completed.length}건 완료`}
@@ -226,27 +220,13 @@ export default function AdminSettlementList() {
                     <FeeAmount>-{s.feeAmount.toLocaleString()}원</FeeAmount>
                   </Td>
                   <Td align="right">
-                    <PayoutAmount>
-                      {s.payoutAmount.toLocaleString()}원
-                    </PayoutAmount>
+                    <PayoutAmount>{s.payoutAmount.toLocaleString()}원</PayoutAmount>
                   </Td>
                   <Td>{s.scheduledAt}</Td>
                   <Td align="center">
-                    {s.status === 'scheduled' && (
-                      <Badge variant="info" size="sm">
-                        ⏰ 예정
-                      </Badge>
-                    )}
-                    {s.status === 'pending' && (
-                      <Badge variant="warning" size="sm">
-                        ⚠️ 보류
-                      </Badge>
-                    )}
-                    {s.status === 'completed' && (
-                      <Badge variant="success" size="sm">
-                        ✓ 완료
-                      </Badge>
-                    )}
+                    {s.status === 'scheduled' && <Badge variant="info" size="sm">⏰ 예정</Badge>}
+                    {s.status === 'pending' && <Badge variant="warning" size="sm">⚠️ 보류</Badge>}
+                    {s.status === 'completed' && <Badge variant="success" size="sm">✓ 완료</Badge>}
                   </Td>
                   <Td align="center">
                     <Button
@@ -265,21 +245,31 @@ export default function AdminSettlementList() {
       )}
 
       <Pagination current={1} total={1} onChange={() => {}} />
-    </Page>
-  );
+    </Container>
+    </PageWrapper>
+  )
 }
 
-const Page = styled.div`
+const PageWrapper = styled.div`
+  background-color: var(--cream);
+  min-height: 100%;
+  padding: var(--space-6) var(--space-5);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+`
+
+const Container = styled.div`
   width: 100%;
   max-width: 1200px;
-  margin: 0 auto;
-  padding: var(--space-6) var(--space-5);
+  display: flex;
+  flex-direction: column;
   animation: fadeInUp 480ms ease-out both;
-`;
+`
 
 const Header = styled.div`
   margin-bottom: var(--space-5);
-`;
+`
 
 const Title = styled.h1`
   font-family: var(--font-display);
@@ -288,12 +278,12 @@ const Title = styled.h1`
   color: var(--gray-800);
   letter-spacing: -0.02em;
   margin-bottom: 4px;
-`;
+`
 
 const Description = styled.p`
   font-size: 0.9rem;
   color: var(--gray-600);
-`;
+`
 
 const StatGrid = styled.div`
   display: grid;
@@ -304,14 +294,14 @@ const StatGrid = styled.div`
   @media (max-width: 720px) {
     grid-template-columns: 1fr;
   }
-`;
+`
 
 const FilterRow = styled.div`
   display: flex;
   gap: var(--space-3);
   margin-bottom: var(--space-4);
   align-items: center;
-`;
+`
 
 const SearchBox = styled.div`
   flex: 1;
@@ -326,11 +316,11 @@ const SearchBox = styled.div`
   &:focus-within {
     border-color: var(--sage);
   }
-`;
+`
 
 const SearchIcon = styled.span`
   color: var(--gray-400);
-`;
+`
 
 const SearchInput = styled.input`
   flex: 1;
@@ -342,7 +332,7 @@ const SearchInput = styled.input`
   &::placeholder {
     color: var(--gray-400);
   }
-`;
+`
 
 const TableWrap = styled.div`
   background: var(--white);
@@ -350,12 +340,12 @@ const TableWrap = styled.div`
   border-radius: var(--radius-lg);
   overflow: hidden;
   margin: var(--space-4) 0;
-`;
+`
 
 const Table = styled.table`
   width: 100%;
   border-collapse: collapse;
-`;
+`
 
 const Th = styled.th`
   padding: var(--space-3) var(--space-4);
@@ -366,7 +356,7 @@ const Th = styled.th`
   border-bottom: 1px solid var(--gray-200);
   text-align: ${(p) => p.align || 'left'};
   white-space: nowrap;
-`;
+`
 
 const Tr = styled.tr`
   background: ${(p) => (p.$alert ? 'rgba(220, 38, 38, 0.04)' : 'transparent')};
@@ -375,7 +365,7 @@ const Tr = styled.tr`
   &:hover {
     background: var(--gray-100);
   }
-`;
+`
 
 const Td = styled.td`
   padding: var(--space-3) var(--space-4);
@@ -383,19 +373,19 @@ const Td = styled.td`
   color: var(--gray-800);
   text-align: ${(p) => p.align || 'left'};
   vertical-align: middle;
-`;
+`
 
 const SettlementId = styled.span`
   font-family: var(--font-mono);
   font-size: 0.75rem;
   color: var(--gray-600);
-`;
+`
 
 const HostInfo = styled.div`
   display: flex;
   align-items: center;
   gap: var(--space-2);
-`;
+`
 
 const SpaceEmoji = styled.div`
   width: 36px;
@@ -407,30 +397,30 @@ const SpaceEmoji = styled.div`
   justify-content: center;
   font-size: 1.1rem;
   flex-shrink: 0;
-`;
+`
 
 const HostDetails = styled.div`
   display: flex;
   flex-direction: column;
   gap: 2px;
-`;
+`
 
 const HostName = styled.div`
   font-weight: 500;
   color: var(--gray-800);
-`;
+`
 
 const SpaceName = styled.div`
   font-size: 0.75rem;
   color: var(--gray-600);
-`;
+`
 
 const FeeAmount = styled.span`
   color: #c44b3c;
   font-weight: 500;
-`;
+`
 
 const PayoutAmount = styled.span`
   color: var(--sage);
   font-weight: 600;
-`;
+`

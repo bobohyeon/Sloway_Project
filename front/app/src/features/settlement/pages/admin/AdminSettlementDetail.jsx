@@ -9,7 +9,7 @@ import { SettlementBookingsList } from '../../components/host/SettlementBookings
 const SETTLEMENTS = [
   {
     id: 1,
-    settlementId: 'STL-202606-00892',
+    settlementId: 'STL-20260513-00892',
     status: 'scheduled',
     hostName: '청평 숲속 호스트',
     hostEmail: 'cheongpyeong@example.com',
@@ -22,10 +22,10 @@ const SETTLEMENTS = [
     bankName: '국민은행',
     accountHolder: '김청평',
     maskedAccount: '1234-****-****',
-    scheduledAt: '2026.06.05',
+    scheduledAt: '2026.05.13',
     completedAt: null,
-    periodStart: '2026.05.01',
-    periodEnd: '2026.05.31',
+    periodStart: '2026.05.09',
+    periodEnd: '2026.05.12',
     feeRate: 12.5,
     feeAmount: 693750,
     totalSales: 5550000,
@@ -44,7 +44,7 @@ const SETTLEMENTS = [
   },
   {
     id: 3,
-    settlementId: 'STL-202606-00890',
+    settlementId: 'STL-20260513-00890',
     status: 'pending',
     hostName: '남해 올리브 호스트',
     hostEmail: 'namhae@example.com',
@@ -57,10 +57,10 @@ const SETTLEMENTS = [
     bankName: '카카오뱅크',
     accountHolder: '이남해',
     maskedAccount: '9012-****-****',
-    scheduledAt: '2026.06.05',
+    scheduledAt: '2026.05.13',
     completedAt: null,
-    periodStart: '2026.05.01',
-    periodEnd: '2026.05.31',
+    periodStart: '2026.05.09',
+    periodEnd: '2026.05.12',
     feeRate: 12.5,
     feeAmount: 490000,
     totalSales: 3920000,
@@ -73,7 +73,7 @@ const SETTLEMENTS = [
   },
   {
     id: 4,
-    settlementId: 'STL-202604-00847',
+    settlementId: 'STL-20260509-00847',
     status: 'completed',
     hostName: '청평 숲속 호스트',
     hostEmail: 'cheongpyeong@example.com',
@@ -86,10 +86,10 @@ const SETTLEMENTS = [
     bankName: '국민은행',
     accountHolder: '김청평',
     maskedAccount: '1234-****-****',
-    scheduledAt: '2026.05.05',
-    completedAt: '2026.05.05 09:30',
-    periodStart: '2026.04.01',
-    periodEnd: '2026.04.30',
+    scheduledAt: '2026.05.09',
+    completedAt: '2026.05.09 09:30',
+    periodStart: '2026.05.05',
+    periodEnd: '2026.05.08',
     feeRate: 12.5,
     feeAmount: 522500,
     totalSales: 4180000,
@@ -118,7 +118,8 @@ export default function AdminSettlementDetail() {
   }
 
   return (
-    <Page>
+    <PageWrapper>
+      <Container>
       <BackLink onClick={() => nav('/admin/settlement/host')}>← 호스트 정산 관리</BackLink>
 
       <Header>
@@ -249,7 +250,12 @@ export default function AdminSettlementDetail() {
       </Section>
 
       <Section title="포함된 예약 내역">
-        <SettlementBookingsList bookings={settlement.bookings} />
+        <SettlementBookingsList
+          bookings={settlement.bookings}
+          totalSales={settlement.totalSales}
+          feeRate={settlement.feeRate}
+          feeAmount={settlement.feeAmount}
+        />
       </Section>
 
       <Actions>
@@ -335,15 +341,25 @@ export default function AdminSettlementDetail() {
           </ModalNotice>
         </ModalContent>
       </Modal>
-    </Page>
+    </Container>
+    </PageWrapper>
   )
 }
 
-const Page = styled.div`
+const PageWrapper = styled.div`
+  background-color: var(--cream);
+  min-height: 100%;
+  padding: var(--space-6) var(--space-5);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+`
+
+const Container = styled.div`
   width: 100%;
   max-width: 1200px;
-  margin: 0 auto;
-  padding: var(--space-6) var(--space-5);
+  display: flex;
+  flex-direction: column;
   animation: fadeInUp 480ms ease-out both;
 `
 

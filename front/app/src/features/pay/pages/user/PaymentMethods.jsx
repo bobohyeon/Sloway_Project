@@ -66,7 +66,8 @@ export default function PaymentMethods() {
   }
 
   return (
-    <Page>
+    <PageWrapper>
+      <Container>
       <Header>
         <BackLink onClick={() => nav('/user/payment')}>← 결제 내역으로</BackLink>
         <Title>결제 수단 관리</Title>
@@ -164,14 +165,25 @@ export default function PaymentMethods() {
           <DeleteSub>삭제 후에는 다시 등록해야 사용할 수 있어요.</DeleteSub>
         </DeleteConfirm>
       </Modal>
-    </Page>
+    </Container>
+    </PageWrapper>
   )
 }
 
-const Page = styled.div`
-  max-width: 720px;
-  margin: 0 auto;
+const PageWrapper = styled.div`
+  background-color: var(--cream);
+  min-height: 100%;
   padding: var(--space-6) var(--space-5);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+`
+
+const Container = styled.div`
+  width: 100%;
+  max-width: 800px;
+  display: flex;
+  flex-direction: column;
   animation: fadeInUp 480ms ease-out both;
 `
 

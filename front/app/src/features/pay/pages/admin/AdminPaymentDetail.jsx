@@ -1,7 +1,7 @@
-import { useNavigate, useParams } from 'react-router-dom';
-import styled from 'styled-components';
+import { useNavigate, useParams } from 'react-router-dom'
+import styled from 'styled-components'
 
-import { Card, Button, Badge, Section } from '../../../pay_shared/components';
+import { Card, Button, Badge, Section } from '../../../pay_shared/components'
 
 const PAYMENTS = [
   {
@@ -79,9 +79,9 @@ const PAYMENTS = [
     userEmail: 'yuna.jung@example.com',
     userPhone: '010-****-3456',
     userJoinDate: '2026.02.10',
-    spaceName: '강릉 바다향 오피스',
+    spaceName: '강릉 바다향 코워킹',
     spaceEmoji: '🌊',
-    category: '오피스',
+    category: '코워킹오피스',
     location: '강원 강릉',
     hostName: '강릉 워크 호스트',
     checkInDate: '2026.05.12 (월) 10:00 ~ 18:00 · 8시간',
@@ -102,19 +102,20 @@ const PAYMENTS = [
     commission: 0,
     payoutToHost: 0,
   },
-];
+]
 
 export default function AdminPaymentDetail() {
-  const nav = useNavigate();
-  const { id } = useParams();
+  const nav = useNavigate()
+  const { id } = useParams()
 
-  const payment = PAYMENTS.find((p) => p.id === id) || PAYMENTS[0];
-  const isCompleted = payment.status === 'completed';
-  const isRefunded = payment.status === 'refunded';
-  const isFailed = payment.status === 'failed';
+  const payment = PAYMENTS.find((p) => p.id === id) || PAYMENTS[0]
+  const isCompleted = payment.status === 'completed'
+  const isRefunded = payment.status === 'refunded'
+  const isFailed = payment.status === 'failed'
 
   return (
-    <Page>
+    <PageWrapper>
+      <Container>
       <BackLink onClick={() => nav('/admin/payment')}>← 결제 내역</BackLink>
 
       <Header>
@@ -128,8 +129,7 @@ export default function AdminPaymentDetail() {
           <BannerContent>
             <BannerTitle>환불 완료</BannerTitle>
             <BannerDesc>
-              {payment.refundedAt}에 환불 처리되었습니다 (
-              {payment.refundAmount?.toLocaleString()}원)
+              {payment.refundedAt}에 환불 처리되었습니다 ({payment.refundAmount?.toLocaleString()}원)
             </BannerDesc>
           </BannerContent>
         </InfoBanner>
@@ -148,21 +148,9 @@ export default function AdminPaymentDetail() {
       <DetailCard padded>
         <CardHeader>
           <HeaderLeft>
-            {isCompleted && (
-              <Badge variant="success" size="md">
-                ✓ 결제 완료
-              </Badge>
-            )}
-            {isRefunded && (
-              <Badge variant="info" size="md">
-                ↻ 환불됨
-              </Badge>
-            )}
-            {isFailed && (
-              <Badge variant="danger" size="md">
-                ✗ 결제 실패
-              </Badge>
-            )}
+            {isCompleted && <Badge variant="success" size="md">✓ 결제 완료</Badge>}
+            {isRefunded && <Badge variant="info" size="md">↻ 환불됨</Badge>}
+            {isFailed && <Badge variant="danger" size="md">✗ 결제 실패</Badge>}
             <PaymentId>{payment.id}</PaymentId>
           </HeaderLeft>
           <PaymentAmount $refunded={isRefunded} $failed={isFailed}>
@@ -277,9 +265,7 @@ export default function AdminPaymentDetail() {
           <Divider />
           <BreakdownRow>
             <BreakdownLabel $bold>총 결제 금액</BreakdownLabel>
-            <BreakdownValueSage>
-              {payment.total.toLocaleString()}원
-            </BreakdownValueSage>
+            <BreakdownValueSage>{payment.total.toLocaleString()}원</BreakdownValueSage>
           </BreakdownRow>
         </BreakdownCard>
       </Section>
@@ -289,28 +275,20 @@ export default function AdminPaymentDetail() {
           <BreakdownCard padded>
             <BreakdownRow>
               <BreakdownLabel>결제 금액</BreakdownLabel>
-              <BreakdownValue>
-                {payment.total.toLocaleString()}원
-              </BreakdownValue>
+              <BreakdownValue>{payment.total.toLocaleString()}원</BreakdownValue>
             </BreakdownRow>
             <BreakdownRow>
               <BreakdownLabel>플랫폼 수수료</BreakdownLabel>
-              <BreakdownValueRed>
-                -{payment.commission.toLocaleString()}원
-              </BreakdownValueRed>
+              <BreakdownValueRed>-{payment.commission.toLocaleString()}원</BreakdownValueRed>
             </BreakdownRow>
             <BreakdownRow>
               <BreakdownLabel>적립 포인트</BreakdownLabel>
-              <BreakdownValue>
-                {payment.earnedPoints.toLocaleString()}P
-              </BreakdownValue>
+              <BreakdownValue>{payment.earnedPoints.toLocaleString()}P</BreakdownValue>
             </BreakdownRow>
             <Divider />
             <BreakdownRow>
               <BreakdownLabel $bold>호스트 지급 예정</BreakdownLabel>
-              <BreakdownValueSage>
-                {payment.payoutToHost.toLocaleString()}원
-              </BreakdownValueSage>
+              <BreakdownValueSage>{payment.payoutToHost.toLocaleString()}원</BreakdownValueSage>
             </BreakdownRow>
           </BreakdownCard>
         </Section>
@@ -325,29 +303,31 @@ export default function AdminPaymentDetail() {
             환불 관리로 이동
           </Button>
         )}
-        {isFailed && (
-          <Button
-            variant="secondary"
-            onClick={() => alert('PG사 재시도 요청 전송됨')}
-          >
-            🔄 PG사 재시도
-          </Button>
-        )}
         <Button variant="primary" onClick={() => window.print()}>
           🖨️ 출력
         </Button>
       </Actions>
-    </Page>
-  );
+    </Container>
+    </PageWrapper>
+  )
 }
 
-const Page = styled.div`
+const PageWrapper = styled.div`
+  background-color: var(--cream);
+  min-height: 100%;
+  padding: var(--space-6) var(--space-5);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+`
+
+const Container = styled.div`
   width: 100%;
   max-width: 1200px;
-  margin: 0 auto;
-  padding: var(--space-6) var(--space-5);
+  display: flex;
+  flex-direction: column;
   animation: fadeInUp 480ms ease-out both;
-`;
+`
 
 const BackLink = styled.button`
   font-size: 0.85rem;
@@ -357,11 +337,11 @@ const BackLink = styled.button`
   &:hover {
     color: var(--gray-800);
   }
-`;
+`
 
 const Header = styled.div`
   margin-bottom: var(--space-5);
-`;
+`
 
 const Title = styled.h1`
   font-family: var(--font-display);
@@ -370,12 +350,12 @@ const Title = styled.h1`
   color: var(--gray-800);
   letter-spacing: -0.02em;
   margin-bottom: 4px;
-`;
+`
 
 const Description = styled.p`
   font-size: 0.9rem;
   color: var(--gray-600);
-`;
+`
 
 const InfoBanner = styled.div`
   display: flex;
@@ -388,36 +368,34 @@ const InfoBanner = styled.div`
       : 'rgba(168, 184, 159, 0.08)'};
   border: 1px solid
     ${(p) =>
-      p.$variant === 'danger'
-        ? 'rgba(220, 38, 38, 0.2)'
-        : 'rgba(168, 184, 159, 0.3)'};
+      p.$variant === 'danger' ? 'rgba(220, 38, 38, 0.2)' : 'rgba(168, 184, 159, 0.3)'};
   border-radius: var(--radius-lg);
   margin-bottom: var(--space-4);
-`;
+`
 
 const BannerIcon = styled.div`
   font-size: 1.3rem;
   flex-shrink: 0;
-`;
+`
 
 const BannerContent = styled.div`
   flex: 1;
-`;
+`
 
 const BannerTitle = styled.div`
   font-weight: 500;
   color: var(--gray-800);
   margin-bottom: 2px;
-`;
+`
 
 const BannerDesc = styled.div`
   font-size: 0.85rem;
   color: var(--gray-600);
-`;
+`
 
 const DetailCard = styled(Card)`
   margin-bottom: var(--space-5);
-`;
+`
 
 const CardHeader = styled.div`
   display: flex;
@@ -426,31 +404,31 @@ const CardHeader = styled.div`
   margin-bottom: var(--space-5);
   padding-bottom: var(--space-4);
   border-bottom: 1px solid var(--gray-200);
-`;
+`
 
 const HeaderLeft = styled.div`
   display: flex;
   align-items: center;
   gap: var(--space-3);
-`;
+`
 
 const PaymentId = styled.div`
   font-family: var(--font-mono);
   font-size: 0.85rem;
   color: var(--gray-600);
-`;
+`
 
 const PaymentAmount = styled.div`
   font-family: var(--font-display);
   font-size: 1.6rem;
   font-weight: 500;
   color: ${(p) => {
-    if (p.$refunded) return 'var(--gray-400)';
-    if (p.$failed) return '#c44b3c';
-    return 'var(--sage)';
+    if (p.$refunded) return 'var(--gray-400)'
+    if (p.$failed) return '#c44b3c'
+    return 'var(--sage)'
   }};
   text-decoration: ${(p) => (p.$refunded ? 'line-through' : 'none')};
-`;
+`
 
 const DetailGrid = styled.div`
   display: grid;
@@ -460,13 +438,13 @@ const DetailGrid = styled.div`
   @media (max-width: 720px) {
     grid-template-columns: 1fr;
   }
-`;
+`
 
 const DetailGroup = styled.div`
   display: flex;
   flex-direction: column;
   gap: var(--space-2);
-`;
+`
 
 const GroupTitle = styled.div`
   font-size: 0.78rem;
@@ -475,74 +453,74 @@ const GroupTitle = styled.div`
   text-transform: uppercase;
   letter-spacing: 0.05em;
   margin-bottom: var(--space-2);
-`;
+`
 
 const DetailRow = styled.div`
   display: flex;
   justify-content: space-between;
   align-items: center;
   padding: var(--space-2) 0;
-`;
+`
 
 const Label = styled.span`
   font-size: 0.85rem;
   color: var(--gray-600);
-`;
+`
 
 const Value = styled.span`
   font-size: 0.9rem;
   color: var(--gray-800);
   font-weight: 500;
-`;
+`
 
 const MonoText = styled.span`
   font-family: var(--font-mono);
   font-size: 0.8rem;
-`;
+`
 
-const BreakdownCard = styled(Card)``;
+const BreakdownCard = styled(Card)``
 
 const BreakdownRow = styled.div`
   display: flex;
   justify-content: space-between;
   align-items: center;
   padding: var(--space-2) 0;
-`;
+`
 
 const BreakdownLabel = styled.span`
   font-size: ${(p) => (p.$bold ? '1rem' : '0.9rem')};
   color: var(--gray-700);
   font-weight: ${(p) => (p.$bold ? 600 : 400)};
-`;
+`
 
 const BreakdownValue = styled.span`
   font-size: 0.95rem;
   color: ${(p) => (p.$discount ? 'var(--sage)' : 'var(--gray-800)')};
   font-weight: ${(p) => (p.$discount ? 500 : 400)};
-`;
+`
 
 const BreakdownValueRed = styled.span`
   font-size: 0.95rem;
   color: #c44b3c;
   font-weight: 500;
-`;
+`
 
 const BreakdownValueSage = styled.span`
   font-family: var(--font-display);
   font-size: 1.3rem;
   font-weight: 600;
   color: var(--sage);
-`;
+`
 
 const Divider = styled.div`
   height: 1px;
   background: var(--gray-200);
   margin: var(--space-3) 0;
-`;
+`
 
 const Actions = styled.div`
   display: flex;
   justify-content: flex-end;
   gap: var(--space-3);
   margin-top: var(--space-6);
-`;
+`

@@ -1,8 +1,8 @@
-import { useNavigate } from 'react-router-dom';
-import styled from 'styled-components';
+import { useNavigate } from 'react-router-dom'
+import styled from 'styled-components'
 
-import { Card, Section } from '../../../pay_shared/components';
-import { CommissionPolicyTable } from '../../components/host/CommissionPolicyTable';
+import { Card, Section } from '../../../pay_shared/components'
+import { CommissionPolicyTable } from '../../components/host/CommissionPolicyTable'
 
 const POLICIES = [
   {
@@ -24,19 +24,19 @@ const POLICIES = [
   {
     id: 3,
     icon: '💼',
-    category: '오피스',
+    category: '코워킹오피스',
     description: '시간제·일일 사용 수수료',
     rate: 10.0,
     effectiveFrom: '2026.01.01',
   },
-];
+]
 
 const HISTORY = [
   {
     id: 1,
     title: '2026년 정책 적용',
     date: '2026.01.01',
-    description: '신규 카테고리(워크앤스테이) 추가 및 오피스 수수료 인하',
+    description: '신규 카테고리(워크앤스테이) 추가 및 코워킹오피스 수수료 인하',
   },
   {
     id: 2,
@@ -44,22 +44,19 @@ const HISTORY = [
     date: '2025.01.01',
     description: '숙소 수수료율 13% → 12.5%로 인하',
   },
-];
+]
 
 export default function CommissionPolicy() {
-  const nav = useNavigate();
+  const nav = useNavigate()
 
   return (
-    <Page>
-      <BackLink onClick={() => nav('/host/settlement/dashboard')}>
-        ← 정산 대시보드
-      </BackLink>
+    <PageWrapper>
+      <Container>
+      <BackLink onClick={() => nav('/host/settlement/dashboard')}>← 정산 대시보드</BackLink>
 
       <Header>
         <Title>수수료 정책</Title>
-        <Description>
-          현재 적용 중인 플랫폼 수수료 정책을 확인하세요
-        </Description>
+        <Description>현재 적용 중인 플랫폼 수수료 정책을 확인하세요</Description>
       </Header>
 
       <SummaryCard padded>
@@ -67,8 +64,8 @@ export default function CommissionPolicy() {
         <SummaryContent>
           <SummaryTitle>플랫폼 수수료란?</SummaryTitle>
           <SummaryText>
-            예약이 완료된 매출에서 차감되는 플랫폼 운영 수수료입니다. 결제 처리,
-            정산 자동화, 마케팅 노출 등 다양한 서비스에 사용돼요.
+            예약이 완료된 매출에서 차감되는 플랫폼 운영 수수료입니다. 결제 처리, 정산 자동화,
+            마케팅 노출 등 다양한 서비스에 사용돼요.
           </SummaryText>
         </SummaryContent>
       </SummaryCard>
@@ -119,16 +116,27 @@ export default function CommissionPolicy() {
           </NoticeList>
         </NoticeContent>
       </NoticeBox>
-    </Page>
-  );
+    </Container>
+    </PageWrapper>
+  )
 }
 
-const Page = styled.div`
+const PageWrapper = styled.div`
+  background-color: var(--cream);
+  min-height: 100%;
+  padding: var(--space-6) var(--space-5);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+`
+
+const Container = styled.div`
   width: 100%;
   max-width: 800px;
-  padding: var(--space-6) var(--space-5);
+  display: flex;
+  flex-direction: column;
   animation: fadeInUp 480ms ease-out both;
-`;
+`
 
 const BackLink = styled.button`
   font-size: 0.85rem;
@@ -138,11 +146,11 @@ const BackLink = styled.button`
   &:hover {
     color: var(--gray-800);
   }
-`;
+`
 
 const Header = styled.div`
   margin-bottom: var(--space-5);
-`;
+`
 
 const Title = styled.h1`
   font-family: var(--font-display);
@@ -151,73 +159,73 @@ const Title = styled.h1`
   color: var(--gray-800);
   letter-spacing: -0.02em;
   margin-bottom: 4px;
-`;
+`
 
 const Description = styled.p`
   font-size: 0.9rem;
   color: var(--gray-600);
-`;
+`
 
 const SummaryCard = styled(Card)`
   display: flex;
   gap: var(--space-3);
   background: var(--cream);
   margin-bottom: var(--space-5);
-`;
+`
 
 const SummaryIcon = styled.div`
   font-size: 1.8rem;
   flex-shrink: 0;
-`;
+`
 
 const SummaryContent = styled.div`
   flex: 1;
-`;
+`
 
 const SummaryTitle = styled.div`
   font-size: 0.95rem;
   font-weight: 600;
   color: var(--gray-800);
   margin-bottom: 6px;
-`;
+`
 
 const SummaryText = styled.div`
   font-size: 0.85rem;
   color: var(--gray-600);
   line-height: 1.6;
-`;
+`
 
-const ExampleCard = styled(Card)``;
+const ExampleCard = styled(Card)``
 
 const ExampleRow = styled.div`
   display: flex;
   justify-content: space-between;
   align-items: center;
   padding: 6px 0;
-`;
+`
 
 const ExampleLabel = styled.span`
   font-size: 0.88rem;
   color: var(--gray-600);
-`;
+`
 
 const ExampleValue = styled.strong`
   font-size: 0.95rem;
   font-weight: 500;
   color: ${(props) => (props.$negative ? '#b85a4e' : 'var(--gray-800)')};
-`;
+`
 
 const ExampleDivider = styled.hr`
   border: none;
   border-top: 2px solid var(--gray-200);
   margin: var(--space-2) 0;
-`;
+`
 
 const FinalLabel = styled.span`
   font-size: 0.95rem;
   color: var(--gray-800);
   font-weight: 600;
-`;
+`
 
 const FinalValue = styled.strong`
   font-family: var(--font-display);
@@ -225,12 +233,12 @@ const FinalValue = styled.strong`
   font-weight: 600;
   color: var(--sage);
   letter-spacing: -0.02em;
-`;
+`
 
 const HistoryList = styled.div`
   position: relative;
   padding-left: var(--space-3);
-`;
+`
 
 const HistoryItem = styled.div`
   display: flex;
@@ -251,7 +259,7 @@ const HistoryItem = styled.div`
   &:last-child {
     padding-bottom: 0;
   }
-`;
+`
 
 const HistoryDot = styled.div`
   width: 12px;
@@ -261,31 +269,31 @@ const HistoryDot = styled.div`
   flex-shrink: 0;
   margin-top: 4px;
   z-index: 1;
-`;
+`
 
 const HistoryContent = styled.div`
   flex: 1;
-`;
+`
 
 const HistoryTitle = styled.div`
   font-size: 0.92rem;
   font-weight: 600;
   color: var(--gray-800);
   margin-bottom: 2px;
-`;
+`
 
 const HistoryMeta = styled.div`
   font-family: var(--font-mono);
   font-size: 0.75rem;
   color: var(--gray-400);
   margin-bottom: 4px;
-`;
+`
 
 const HistoryDesc = styled.div`
   font-size: 0.82rem;
   color: var(--gray-600);
   line-height: 1.5;
-`;
+`
 
 const NoticeBox = styled.div`
   display: flex;
@@ -294,23 +302,23 @@ const NoticeBox = styled.div`
   background: var(--gray-100);
   border-radius: var(--radius-md);
   margin-top: var(--space-6);
-`;
+`
 
 const NoticeIcon = styled.div`
   font-size: 1.3rem;
   flex-shrink: 0;
-`;
+`
 
 const NoticeContent = styled.div`
   flex: 1;
-`;
+`
 
 const NoticeTitle = styled.div`
   font-size: 0.92rem;
   font-weight: 600;
   color: var(--gray-800);
   margin-bottom: 6px;
-`;
+`
 
 const NoticeList = styled.ul`
   list-style: disc;
@@ -323,4 +331,4 @@ const NoticeList = styled.ul`
     list-style: disc;
     margin-bottom: 4px;
   }
-`;
+`

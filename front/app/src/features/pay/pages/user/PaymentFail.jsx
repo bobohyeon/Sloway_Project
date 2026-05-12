@@ -7,10 +7,20 @@ import { ErrorReasonCard } from '../../components/user/ErrorReasonCard';
 import { SolutionGuide } from '../../components/user/SolutionGuide';
 import { CustomerCenterBox } from '../../components/user/CustomerCenterBox';
 
-const Page = styled.div`
-  max-width: 720px;
-  margin: 0 auto;
-  padding: var(--space-12) var(--space-6);
+const PageWrapper = styled.div`
+  background-color: var(--cream);
+  min-height: 100%;
+  padding: var(--space-6) var(--space-5);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+`
+
+const Container = styled.div`
+  width: 100%;
+  max-width: 800px;
+  display: flex;
+  flex-direction: column;
   animation: fadeInUp 480ms ease-out both;
 `;
 
@@ -55,7 +65,8 @@ export default function PaymentFail() {
   const nav = useNavigate();
 
   return (
-    <Page>
+    <PageWrapper>
+      <Container>
       <ResultHeader
         variant="fail"
         title="결제를 완료하지 못했어요"
@@ -82,6 +93,7 @@ export default function PaymentFail() {
       </Actions>
 
       <CustomerCenterBox />
-    </Page>
+    </Container>
+    </PageWrapper>
   );
 }
