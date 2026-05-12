@@ -1,11 +1,11 @@
-import { useState } from 'react'
-import { useNavigate } from 'react-router-dom'
-import styled from 'styled-components'
+import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import styled from 'styled-components';
 
-import { AdminKPICard } from '../../../dashboard/components/admin/AdminKPICard'
-import { DailyTransactionChart } from '../../../dashboard/components/admin/DailyTransactionChart'
-import { DonutChart } from '../../../dashboard/components/admin/DonutChart'
-import { StatsPeriodFilter } from '../../components/admin/StatsPeriodFilter'
+import { AdminKPICard } from '../../../dashboard/components/admin/AdminKPICard';
+import { DailyTransactionChart } from '../../../dashboard/components/admin/DailyTransactionChart';
+import { DonutChart } from '../../../dashboard/components/admin/DonutChart';
+import { StatsPeriodFilter } from '../../components/admin/StatsPeriodFilter';
 
 const DAILY_DATA = [
   { date: '2026-04-12', revenue: 12000000, bookings: 42 },
@@ -17,24 +17,24 @@ const DAILY_DATA = [
   { date: '2026-05-06', revenue: 28000000, bookings: 84 },
   { date: '2026-05-07', revenue: 36000000, bookings: 112 },
   { date: '2026-05-08', revenue: 42000000, bookings: 134 },
-]
+];
 
 const CATEGORY_REVENUE = [
   { label: '워크앤스테이', value: 42500000, color: '#7A8B71' },
-  { label: '코워킹오피스', value: 28200000, color: '#A8B89F' },
+  { label: '오피스', value: 28200000, color: '#A8B89F' },
   { label: '숙소', value: 18300000, color: '#C5D1BD' },
-]
+];
 
 const PAYMENT_METHODS = [
   { label: '카카오페이', value: 41500000, color: '#FEE500' },
   { label: '신용카드', value: 28800000, color: '#7A8B71' },
   { label: '네이버페이', value: 12400000, color: '#03C75A' },
   { label: '토스페이', value: 6300000, color: '#0064FF' },
-]
+];
 
 export default function StatsOverview() {
-  const nav = useNavigate()
-  const [period, setPeriod] = useState('30days')
+  const nav = useNavigate();
+  const [period, setPeriod] = useState('30days');
 
   return (
     <Page>
@@ -148,7 +148,7 @@ export default function StatsOverview() {
         </DetailCard>
       </DetailGrid>
     </Page>
-  )
+  );
 }
 
 const Page = styled.div`
@@ -157,11 +157,11 @@ const Page = styled.div`
   margin: 0 auto;
   padding: var(--space-6) var(--space-5);
   animation: fadeInUp 480ms ease-out both;
-`
+`;
 
 const Header = styled.div`
   margin-bottom: var(--space-5);
-`
+`;
 
 const Title = styled.h1`
   font-family: var(--font-display);
@@ -170,12 +170,12 @@ const Title = styled.h1`
   color: var(--gray-800);
   letter-spacing: -0.02em;
   margin-bottom: 4px;
-`
+`;
 
 const Description = styled.p`
   font-size: 0.9rem;
   color: var(--gray-600);
-`
+`;
 
 const KPIGrid = styled.div`
   display: grid;
@@ -189,14 +189,14 @@ const KPIGrid = styled.div`
   @media (max-width: 480px) {
     grid-template-columns: 1fr;
   }
-`
+`;
 
 const SectionTitle = styled.h2`
   font-size: 1.1rem;
   font-weight: 500;
   color: var(--gray-800);
   margin: var(--space-6) 0 var(--space-3);
-`
+`;
 
 const DonutGrid = styled.div`
   display: grid;
@@ -206,7 +206,7 @@ const DonutGrid = styled.div`
   @media (max-width: 960px) {
     grid-template-columns: 1fr;
   }
-`
+`;
 
 const DetailGrid = styled.div`
   display: grid;
@@ -216,7 +216,7 @@ const DetailGrid = styled.div`
   @media (max-width: 720px) {
     grid-template-columns: 1fr;
   }
-`
+`;
 
 const DetailCard = styled.button`
   display: flex;
@@ -234,7 +234,7 @@ const DetailCard = styled.button`
     border-color: var(--sage);
     transform: translateY(-2px);
   }
-`
+`;
 
 const DetailIcon = styled.div`
   width: 44px;
@@ -246,24 +246,24 @@ const DetailIcon = styled.div`
   justify-content: center;
   font-size: 1.4rem;
   flex-shrink: 0;
-`
+`;
 
 const DetailInfo = styled.div`
   flex: 1;
   min-width: 0;
-`
+`;
 
 const DetailTitle = styled.div`
   font-size: 0.92rem;
   font-weight: 500;
   color: var(--gray-800);
   margin-bottom: 2px;
-`
+`;
 
 const DetailDesc = styled.div`
   font-size: 0.75rem;
   color: var(--gray-600);
-`
+`;
 
 const Arrow = styled.span`
   color: var(--gray-400);
@@ -274,4 +274,4 @@ const Arrow = styled.span`
     transform: translateX(4px);
     color: var(--sage);
   }
-`
+`;

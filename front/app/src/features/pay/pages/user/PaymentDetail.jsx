@@ -1,10 +1,10 @@
-import { useNavigate, useParams } from 'react-router-dom'
-import styled from 'styled-components'
+import { useNavigate, useParams } from 'react-router-dom';
+import styled from 'styled-components';
 
-import { Card, Button, Badge } from '../../../pay_shared/components'
-import { ReceiptHeader } from '../../components/user/ReceiptHeader'
-import { PaymentDetailCard } from '../../components/user/PaymentDetailCard'
-import { PriceBreakdown } from '../../components/user/PriceBreakdown'
+import { Card, Button, Badge } from '../../../pay_shared/components';
+import { ReceiptHeader } from '../../components/user/ReceiptHeader';
+import { PaymentDetailCard } from '../../components/user/PaymentDetailCard';
+import { PriceBreakdown } from '../../components/user/PriceBreakdown';
 
 const PAYMENTS = [
   {
@@ -48,15 +48,13 @@ const PAYMENTS = [
     installments: '일시불',
     space: {
       name: '성수 브릭라운지',
-      type: '코워킹오피스',
+      type: '오피스',
       loc: '서울 성수',
       emoji: '🧱',
       dates: '4월 26일 (금) 14:00 ~ 18:00 · 4시간',
       guests: '성인 1명',
     },
-    priceItems: [
-      { label: '7,000원 × 4시간', amount: 28000 },
-    ],
+    priceItems: [{ label: '7,000원 × 4시간', amount: 28000 }],
     total: 28000,
     earnPoints: 280,
   },
@@ -73,15 +71,13 @@ const PAYMENTS = [
     installments: '일시불',
     space: {
       name: '강릉 바다향 커먼워크',
-      type: '코워킹오피스',
+      type: '오피스',
       loc: '강원 강릉',
       emoji: '🌊',
       dates: '4월 5일 (토) 10:00 ~ 14:00 · 4시간',
       guests: '성인 1명',
     },
-    priceItems: [
-      { label: '7,000원 × 4시간', amount: 28000 },
-    ],
+    priceItems: [{ label: '7,000원 × 4시간', amount: 28000 }],
     total: 28000,
     earnPoints: 280,
   },
@@ -104,9 +100,7 @@ const PAYMENTS = [
       dates: '4월 1일 (수) ~ 4월 3일 (금) · 2박',
       guests: '성인 2명',
     },
-    priceItems: [
-      { label: '165,000원 × 2박', amount: 330000 },
-    ],
+    priceItems: [{ label: '165,000원 × 2박', amount: 330000 }],
     total: 330000,
     earnPoints: 0,
   },
@@ -123,15 +117,13 @@ const PAYMENTS = [
     installments: '일시불',
     space: {
       name: '성수 브릭라운지',
-      type: '코워킹오피스',
+      type: '오피스',
       loc: '서울 성수',
       emoji: '🧱',
       dates: '2월 20일 (목) 13:00 ~ 17:00 · 4시간',
       guests: '성인 1명',
     },
-    priceItems: [
-      { label: '7,000원 × 4시간', amount: 28000 },
-    ],
+    priceItems: [{ label: '7,000원 × 4시간', amount: 28000 }],
     total: 28000,
     earnPoints: 0,
   },
@@ -154,22 +146,20 @@ const PAYMENTS = [
       dates: '1월 18일 (토) ~ 1월 20일 (월) · 2박',
       guests: '성인 2명',
     },
-    priceItems: [
-      { label: '120,000원 × 2박', amount: 240000 },
-    ],
+    priceItems: [{ label: '120,000원 × 2박', amount: 240000 }],
     total: 240000,
     earnPoints: 0,
   },
-]
+];
 
 export default function PaymentDetail() {
-  const nav = useNavigate()
-  const { id } = useParams()
+  const nav = useNavigate();
+  const { id } = useParams();
 
   // ID로 결제 찾기 (없으면 첫 번째)
-  const payment = PAYMENTS.find((p) => p.id === id) || PAYMENTS[0]
-  const isRefunded = payment.status === 'refunded'
-  const isFailed = payment.status === 'failed'
+  const payment = PAYMENTS.find((p) => p.id === id) || PAYMENTS[0];
+  const isRefunded = payment.status === 'refunded';
+  const isFailed = payment.status === 'failed';
 
   return (
     <Page>
@@ -183,7 +173,9 @@ export default function PaymentDetail() {
           <SpaceRow>
             <Image>{payment.space.emoji}</Image>
             <SpaceInfo>
-              <Badge variant="sage" size="sm">{payment.space.type}</Badge>
+              <Badge variant="sage" size="sm">
+                {payment.space.type}
+              </Badge>
               <SpaceName>{payment.space.name}</SpaceName>
               <Loc>📍 {payment.space.loc}</Loc>
               <BookingId>예약번호: {payment.bookingId}</BookingId>
@@ -204,17 +196,27 @@ export default function PaymentDetail() {
 
         <PaymentDetailCard payment={payment} />
 
-        <PriceBreakdown items={payment.priceItems} total={payment.total} earnPoints={payment.earnPoints} />
+        <PriceBreakdown
+          items={payment.priceItems}
+          total={payment.total}
+          earnPoints={payment.earnPoints}
+        />
 
         <Notice>
           <span>🔒</span>
-          <span>본 영수증은 Sloway에서 발행한 결제 증빙 자료입니다. PG 암호화 연동으로 안전하게 처리되었습니다.</span>
+          <span>
+            본 영수증은 Sloway에서 발행한 결제 증빙 자료입니다. PG 암호화
+            연동으로 안전하게 처리되었습니다.
+          </span>
         </Notice>
       </ReceiptCard>
 
       <Actions>
         {!isRefunded && !isFailed && (
-          <Button variant="secondary" onClick={() => nav('/user/refund/request')}>
+          <Button
+            variant="secondary"
+            onClick={() => nav('/user/refund/request')}
+          >
             환불 신청
           </Button>
         )}
@@ -226,7 +228,7 @@ export default function PaymentDetail() {
         </Button>
       </Actions>
     </Page>
-  )
+  );
 }
 
 const Page = styled.div`
@@ -234,7 +236,7 @@ const Page = styled.div`
   margin: 0 auto;
   padding: var(--space-6) var(--space-5);
   animation: fadeInUp 480ms ease-out both;
-`
+`;
 
 const BackLink = styled.button`
   display: inline-flex;
@@ -247,31 +249,31 @@ const BackLink = styled.button`
   &:hover {
     color: var(--gray-800);
   }
-`
+`;
 
 const ReceiptCard = styled(Card)`
   background: var(--white);
   margin-bottom: var(--space-5);
-`
+`;
 
 const SectionWrap = styled.div`
   padding: var(--space-5) 0;
   border-bottom: 1px dashed var(--gray-200);
-`
+`;
 
 const SectionTitle = styled.h4`
   font-size: 0.92rem;
   font-weight: 600;
   color: var(--gray-800);
   margin-bottom: var(--space-3);
-`
+`;
 
 const SpaceRow = styled.div`
   display: flex;
   gap: var(--space-4);
   align-items: center;
   margin-bottom: var(--space-4);
-`
+`;
 
 const Image = styled.div`
   width: 64px;
@@ -283,12 +285,12 @@ const Image = styled.div`
   justify-content: center;
   font-size: 2rem;
   flex-shrink: 0;
-`
+`;
 
 const SpaceInfo = styled.div`
   flex: 1;
   min-width: 0;
-`
+`;
 
 const SpaceName = styled.div`
   font-family: var(--font-display);
@@ -296,19 +298,19 @@ const SpaceName = styled.div`
   font-weight: 500;
   color: var(--gray-800);
   margin: 6px 0 4px;
-`
+`;
 
 const Loc = styled.div`
   font-size: 0.82rem;
   color: var(--gray-600);
   margin-bottom: 2px;
-`
+`;
 
 const BookingId = styled.div`
   font-family: var(--font-mono);
   font-size: 0.72rem;
   color: var(--gray-400);
-`
+`;
 
 const ScheduleRow = styled.div`
   display: grid;
@@ -320,21 +322,21 @@ const ScheduleRow = styled.div`
   @media (max-width: 480px) {
     grid-template-columns: 1fr;
   }
-`
+`;
 
-const ScheduleItem = styled.div``
+const ScheduleItem = styled.div``;
 
 const Label = styled.div`
   font-size: 0.75rem;
   color: var(--gray-400);
   margin-bottom: 2px;
-`
+`;
 
 const Value = styled.div`
   font-size: 0.88rem;
   color: var(--gray-800);
   font-weight: 500;
-`
+`;
 
 const Notice = styled.div`
   margin-top: var(--space-4);
@@ -347,7 +349,7 @@ const Notice = styled.div`
   gap: 8px;
   align-items: flex-start;
   line-height: 1.5;
-`
+`;
 
 const Actions = styled.div`
   display: flex;
@@ -357,4 +359,4 @@ const Actions = styled.div`
   @media (max-width: 640px) {
     flex-direction: column;
   }
-`
+`;

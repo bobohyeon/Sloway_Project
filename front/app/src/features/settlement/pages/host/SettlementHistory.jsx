@@ -1,11 +1,11 @@
-import { useState } from 'react'
-import { useNavigate } from 'react-router-dom'
-import styled from 'styled-components'
+import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import styled from 'styled-components';
 
-import { Pagination, EmptyState, Button } from '../../../pay_shared/components'
-import { SettlementStatCard } from '../../components/host/SettlementStatCard'
-import { SettlementCard } from '../../components/host/SettlementCard'
-import { SettlementFilterBar } from '../../components/host/SettlementFilterBar'
+import { Pagination, EmptyState, Button } from '../../../pay_shared/components';
+import { SettlementStatCard } from '../../components/host/SettlementStatCard';
+import { SettlementCard } from '../../components/host/SettlementCard';
+import { SettlementFilterBar } from '../../components/host/SettlementFilterBar';
 
 const SETTLEMENTS = [
   {
@@ -50,7 +50,7 @@ const SETTLEMENTS = [
   {
     id: 4,
     settlementDate: '2026.02.05',
-    spaceName: '강릉 바다향 코워킹',
+    spaceName: '강릉 바다향 오피스',
     spaceEmoji: '🌊',
     spaceId: 2,
     bookingCount: 14,
@@ -73,37 +73,35 @@ const SETTLEMENTS = [
     payoutAmount: 3430000,
     status: 'completed',
   },
-]
+];
 
 const SPACES = [
   { id: 1, name: '청평 숲속 파인뷰 스테이' },
-  { id: 2, name: '강릉 바다향 코워킹' },
-]
+  { id: 2, name: '강릉 바다향 오피스' },
+];
 
 export default function SettlementHistory() {
-  const nav = useNavigate()
-  const [tab, setTab] = useState('all')
-  const [period, setPeriod] = useState('6months')
-  const [space, setSpace] = useState('all')
-  const [page, setPage] = useState(1)
+  const nav = useNavigate();
+  const [tab, setTab] = useState('all');
+  const [period, setPeriod] = useState('6months');
+  const [space, setSpace] = useState('all');
+  const [page, setPage] = useState(1);
 
   const filtered = SETTLEMENTS.filter((s) => {
-    if (tab !== 'all' && s.status !== tab) return false
-    if (space !== 'all' && String(s.spaceId) !== space) return false
-    return true
-  })
+    if (tab !== 'all' && s.status !== tab) return false;
+    if (space !== 'all' && String(s.spaceId) !== space) return false;
+    return true;
+  });
 
-  const totalPayout = SETTLEMENTS.filter((s) => s.status === 'completed').reduce(
-    (sum, s) => sum + s.payoutAmount,
-    0
-  )
+  const totalPayout = SETTLEMENTS.filter(
+    (s) => s.status === 'completed'
+  ).reduce((sum, s) => sum + s.payoutAmount, 0);
   const monthPayout = SETTLEMENTS.filter(
     (s) => s.status === 'completed' && s.settlementDate.startsWith('2026.04')
-  ).reduce((sum, s) => sum + s.payoutAmount, 0)
-  const expectedPayout = SETTLEMENTS.filter((s) => s.status === 'scheduled').reduce(
-    (sum, s) => sum + s.payoutAmount,
-    0
-  )
+  ).reduce((sum, s) => sum + s.payoutAmount, 0);
+  const expectedPayout = SETTLEMENTS.filter(
+    (s) => s.status === 'scheduled'
+  ).reduce((sum, s) => sum + s.payoutAmount, 0);
 
   const tabs = [
     { value: 'all', label: '전체', count: SETTLEMENTS.length },
@@ -117,15 +115,19 @@ export default function SettlementHistory() {
       label: '예정',
       count: SETTLEMENTS.filter((s) => s.status === 'scheduled').length,
     },
-  ]
+  ];
 
   return (
     <Page>
-      <BackLink onClick={() => nav('/host/settlement/dashboard')}>← 정산 대시보드</BackLink>
+      <BackLink onClick={() => nav('/host/settlement/dashboard')}>
+        ← 정산 대시보드
+      </BackLink>
 
       <Header>
         <Title>정산 내역</Title>
-        <Description>모든 정산 내역을 확인하고 정산서를 다운로드하세요</Description>
+        <Description>
+          모든 정산 내역을 확인하고 정산서를 다운로드하세요
+        </Description>
       </Header>
 
       <StatGrid>
@@ -170,9 +172,9 @@ export default function SettlementHistory() {
             <Button
               variant="secondary"
               onClick={() => {
-                setTab('all')
-                setSpace('all')
-                setPeriod('6months')
+                setTab('all');
+                setSpace('all');
+                setPeriod('6months');
               }}
             >
               필터 초기화
@@ -186,7 +188,9 @@ export default function SettlementHistory() {
               key={s.id}
               settlement={s}
               onClick={(item) => nav(`/host/settlement/history/${item.id}`)}
-              onDownload={(item) => alert(`정산서 다운로드: ${item.settlementDate}`)}
+              onDownload={(item) =>
+                alert(`정산서 다운로드: ${item.settlementDate}`)
+              }
             />
           ))}
         </List>
@@ -194,14 +198,14 @@ export default function SettlementHistory() {
 
       <Pagination currentPage={page} totalPages={2} onChange={setPage} />
     </Page>
-  )
+  );
 }
 
 const Page = styled.div`
   width: 100%;
   padding: var(--space-6) var(--space-5);
   animation: fadeInUp 480ms ease-out both;
-`
+`;
 
 const BackLink = styled.button`
   font-size: 0.85rem;
@@ -211,11 +215,11 @@ const BackLink = styled.button`
   &:hover {
     color: var(--gray-800);
   }
-`
+`;
 
 const Header = styled.div`
   margin-bottom: var(--space-6);
-`
+`;
 
 const Title = styled.h1`
   font-family: var(--font-display);
@@ -224,12 +228,12 @@ const Title = styled.h1`
   color: var(--gray-800);
   letter-spacing: -0.02em;
   margin-bottom: 4px;
-`
+`;
 
 const Description = styled.p`
   font-size: 0.9rem;
   color: var(--gray-600);
-`
+`;
 
 const StatGrid = styled.div`
   display: grid;
@@ -240,10 +244,10 @@ const StatGrid = styled.div`
   @media (max-width: 720px) {
     grid-template-columns: 1fr;
   }
-`
+`;
 
 const List = styled.div`
   display: flex;
   flex-direction: column;
   gap: var(--space-3);
-`
+`;

@@ -1,9 +1,9 @@
-import { useState } from 'react'
-import { useNavigate } from 'react-router-dom'
-import styled from 'styled-components'
+import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import styled from 'styled-components';
 
-import { Card, Button, Section, Badge } from '../../../pay_shared/components'
-import { Modal } from '../../../pay_shared/components/Modal'
+import { Card, Button, Section, Badge } from '../../../pay_shared/components';
+import { Modal } from '../../../pay_shared/components/Modal';
 
 const INITIAL_POLICIES = [
   {
@@ -27,23 +27,23 @@ const INITIAL_POLICIES = [
   {
     id: 3,
     icon: '💼',
-    category: '코워킹오피스',
+    category: '오피스',
     description: '시간제·일일 사용 수수료',
     rate: 10.0,
     effectiveFrom: '2026.01.01',
     appliedSpaces: 119,
   },
-]
+];
 
 const HISTORY = [
   {
     id: 1,
     title: '2026년 정책 적용',
     date: '2026.01.01',
-    description: '신규 카테고리(워크앤스테이) 추가 및 코워킹오피스 수수료 인하',
+    description: '신규 카테고리(워크앤스테이) 추가 및 오피스 수수료 인하',
     changes: [
       { category: '워크앤스테이', from: '신규', to: 12.5 },
-      { category: '코워킹오피스', from: 12.0, to: 10.0 },
+      { category: '오피스', from: 12.0, to: 10.0 },
     ],
     updatedBy: '관리자',
   },
@@ -55,43 +55,47 @@ const HISTORY = [
     changes: [{ category: '숙소', from: 13.0, to: 12.5 }],
     updatedBy: '관리자',
   },
-]
+];
 
 export default function AdminCommissionPolicy() {
-  const nav = useNavigate()
-  const [policies, setPolicies] = useState(INITIAL_POLICIES)
-  const [editModalOpen, setEditModalOpen] = useState(false)
-  const [editTarget, setEditTarget] = useState(null)
-  const [newRate, setNewRate] = useState('')
-  const [effectiveDate, setEffectiveDate] = useState('')
-  const [reason, setReason] = useState('')
+  const nav = useNavigate();
+  const [policies, setPolicies] = useState(INITIAL_POLICIES);
+  const [editModalOpen, setEditModalOpen] = useState(false);
+  const [editTarget, setEditTarget] = useState(null);
+  const [newRate, setNewRate] = useState('');
+  const [effectiveDate, setEffectiveDate] = useState('');
+  const [reason, setReason] = useState('');
 
   const openEditModal = (policy) => {
-    setEditTarget(policy)
-    setNewRate(String(policy.rate))
-    setEffectiveDate('')
-    setReason('')
-    setEditModalOpen(true)
-  }
+    setEditTarget(policy);
+    setNewRate(String(policy.rate));
+    setEffectiveDate('');
+    setReason('');
+    setEditModalOpen(true);
+  };
 
   const handleSave = () => {
-    const rate = parseFloat(newRate)
+    const rate = parseFloat(newRate);
     if (isNaN(rate) || rate < 0 || rate > 50) {
-      alert('수수료율은 0 ~ 50% 사이여야 합니다')
-      return
+      alert('수수료율은 0 ~ 50% 사이여야 합니다');
+      return;
     }
     if (!effectiveDate) {
-      alert('적용 시작일을 선택해주세요')
-      return
+      alert('적용 시작일을 선택해주세요');
+      return;
     }
     setPolicies((prev) =>
       prev.map((p) =>
-        p.id === editTarget.id ? { ...p, rate, effectiveFrom: effectiveDate } : p
+        p.id === editTarget.id
+          ? { ...p, rate, effectiveFrom: effectiveDate }
+          : p
       )
-    )
-    alert(`${editTarget.category} 수수료가 ${rate}%로 변경됩니다 (${effectiveDate}부터 적용)`)
-    setEditModalOpen(false)
-  }
+    );
+    alert(
+      `${editTarget.category} 수수료가 ${rate}%로 변경됩니다 (${effectiveDate}부터 적용)`
+    );
+    setEditModalOpen(false);
+  };
 
   return (
     <Page>
@@ -105,7 +109,9 @@ export default function AdminCommissionPolicy() {
         <NoticeContent>
           <NoticeTitle>수수료 정책 변경 시 주의사항</NoticeTitle>
           <NoticeList>
-            <li>변경된 수수료는 적용 시작일 이후 발생하는 예약부터 적용됩니다</li>
+            <li>
+              변경된 수수료는 적용 시작일 이후 발생하는 예약부터 적용됩니다
+            </li>
             <li>기존 예약 및 진행 중인 정산에는 영향을 주지 않습니다</li>
             <li>모든 호스트에게 이메일로 알림이 발송됩니다</li>
           </NoticeList>
@@ -145,7 +151,11 @@ export default function AdminCommissionPolicy() {
                   </Td>
                   <Td align="right">{p.appliedSpaces}개</Td>
                   <Td align="center">
-                    <Button variant="secondary" size="sm" onClick={() => openEditModal(p)}>
+                    <Button
+                      variant="secondary"
+                      size="sm"
+                      onClick={() => openEditModal(p)}
+                    >
                       수정
                     </Button>
                   </Td>
@@ -162,7 +172,9 @@ export default function AdminCommissionPolicy() {
             <HistoryCard key={h.id} padded>
               <HistoryHeader>
                 <HistoryDate>{h.date}</HistoryDate>
-                <Badge variant="sage" size="sm">{h.updatedBy}</Badge>
+                <Badge variant="sage" size="sm">
+                  {h.updatedBy}
+                </Badge>
               </HistoryHeader>
               <HistoryTitle>{h.title}</HistoryTitle>
               <HistoryDesc>{h.description}</HistoryDesc>
@@ -172,9 +184,13 @@ export default function AdminCommissionPolicy() {
                     <ChangeCategory>{c.category}</ChangeCategory>
                     <ChangeArrow>
                       {c.from === '신규' ? (
-                        <span>신규 추가 → <strong>{c.to}%</strong></span>
+                        <span>
+                          신규 추가 → <strong>{c.to}%</strong>
+                        </span>
                       ) : (
-                        <span>{c.from}% → <strong>{c.to}%</strong></span>
+                        <span>
+                          {c.from}% → <strong>{c.to}%</strong>
+                        </span>
                       )}
                     </ChangeArrow>
                   </ChangeItem>
@@ -188,7 +204,9 @@ export default function AdminCommissionPolicy() {
       <Modal
         open={editModalOpen}
         onClose={() => setEditModalOpen(false)}
-        title={editTarget ? `${editTarget.category} 수수료 변경` : '수수료 변경'}
+        title={
+          editTarget ? `${editTarget.category} 수수료 변경` : '수수료 변경'
+        }
         footer={
           <ModalFooter>
             <Button variant="secondary" onClick={() => setEditModalOpen(false)}>
@@ -246,7 +264,8 @@ export default function AdminCommissionPolicy() {
             </Field>
 
             <ModalNotice>
-              ⚠️ 이 변경은 <strong>{editTarget.appliedSpaces}개 공간</strong>에 영향을 줍니다.
+              ⚠️ 이 변경은 <strong>{editTarget.appliedSpaces}개 공간</strong>에
+              영향을 줍니다.
               <br />
               적용 시작일 이후 예약부터 새 수수료가 적용됩니다.
             </ModalNotice>
@@ -254,7 +273,7 @@ export default function AdminCommissionPolicy() {
         )}
       </Modal>
     </Page>
-  )
+  );
 }
 
 const Page = styled.div`
@@ -263,11 +282,11 @@ const Page = styled.div`
   margin: 0 auto;
   padding: var(--space-6) var(--space-5);
   animation: fadeInUp 480ms ease-out both;
-`
+`;
 
 const Header = styled.div`
   margin-bottom: var(--space-5);
-`
+`;
 
 const Title = styled.h1`
   font-family: var(--font-display);
@@ -276,12 +295,12 @@ const Title = styled.h1`
   color: var(--gray-800);
   letter-spacing: -0.02em;
   margin-bottom: 4px;
-`
+`;
 
 const Description = styled.p`
   font-size: 0.9rem;
   color: var(--gray-600);
-`
+`;
 
 const NoticeBanner = styled.div`
   display: flex;
@@ -291,22 +310,22 @@ const NoticeBanner = styled.div`
   border: 1px solid rgba(168, 184, 159, 0.3);
   border-radius: var(--radius-lg);
   margin-bottom: var(--space-5);
-`
+`;
 
 const NoticeIcon = styled.div`
   font-size: 1.4rem;
   flex-shrink: 0;
-`
+`;
 
 const NoticeContent = styled.div`
   flex: 1;
-`
+`;
 
 const NoticeTitle = styled.div`
   font-weight: 500;
   color: var(--gray-800);
   margin-bottom: var(--space-2);
-`
+`;
 
 const NoticeList = styled.ul`
   list-style: disc;
@@ -318,19 +337,19 @@ const NoticeList = styled.ul`
     margin-bottom: 4px;
     line-height: 1.5;
   }
-`
+`;
 
 const TableWrap = styled.div`
   background: var(--white);
   border: 1px solid var(--gray-200);
   border-radius: var(--radius-lg);
   overflow: hidden;
-`
+`;
 
 const Table = styled.table`
   width: 100%;
   border-collapse: collapse;
-`
+`;
 
 const Th = styled.th`
   padding: var(--space-3) var(--space-4);
@@ -341,7 +360,7 @@ const Th = styled.th`
   border-bottom: 1px solid var(--gray-200);
   text-align: ${(p) => p.align || 'left'};
   white-space: nowrap;
-`
+`;
 
 const Tr = styled.tr`
   border-bottom: 1px solid var(--gray-100);
@@ -352,7 +371,7 @@ const Tr = styled.tr`
   &:hover {
     background: var(--gray-100);
   }
-`
+`;
 
 const Td = styled.td`
   padding: var(--space-4);
@@ -360,73 +379,73 @@ const Td = styled.td`
   color: var(--gray-800);
   text-align: ${(p) => p.align || 'left'};
   vertical-align: middle;
-`
+`;
 
 const CategoryCell = styled.div`
   display: flex;
   align-items: center;
   gap: var(--space-2);
-`
+`;
 
 const Emoji = styled.span`
   font-size: 1.3rem;
-`
+`;
 
 const CategoryName = styled.span`
   font-weight: 500;
-`
+`;
 
 const DescText = styled.span`
   color: var(--gray-600);
   font-size: 0.85rem;
-`
+`;
 
 const RateValue = styled.span`
   font-family: var(--font-display);
   font-size: 1.2rem;
   font-weight: 600;
   color: var(--sage);
-`
+`;
 
 const DateText = styled.span`
   font-family: var(--font-mono);
   font-size: 0.85rem;
   color: var(--gray-600);
-`
+`;
 
 const HistoryList = styled.div`
   display: flex;
   flex-direction: column;
   gap: var(--space-3);
-`
+`;
 
-const HistoryCard = styled(Card)``
+const HistoryCard = styled(Card)``;
 
 const HistoryHeader = styled.div`
   display: flex;
   justify-content: space-between;
   align-items: center;
   margin-bottom: var(--space-2);
-`
+`;
 
 const HistoryDate = styled.span`
   font-family: var(--font-mono);
   font-size: 0.85rem;
   color: var(--gray-600);
-`
+`;
 
 const HistoryTitle = styled.div`
   font-size: 1rem;
   font-weight: 500;
   color: var(--gray-800);
   margin-bottom: 4px;
-`
+`;
 
 const HistoryDesc = styled.div`
   font-size: 0.85rem;
   color: var(--gray-600);
   margin-bottom: var(--space-3);
-`
+`;
 
 const ChangeList = styled.div`
   display: flex;
@@ -435,19 +454,19 @@ const ChangeList = styled.div`
   padding: var(--space-3);
   background: var(--cream);
   border-radius: var(--radius-md);
-`
+`;
 
 const ChangeItem = styled.div`
   display: flex;
   justify-content: space-between;
   align-items: center;
   font-size: 0.85rem;
-`
+`;
 
 const ChangeCategory = styled.span`
   font-weight: 500;
   color: var(--gray-800);
-`
+`;
 
 const ChangeArrow = styled.span`
   color: var(--gray-600);
@@ -456,13 +475,13 @@ const ChangeArrow = styled.span`
     color: var(--sage);
     font-weight: 600;
   }
-`
+`;
 
 const ModalContent = styled.div`
   display: flex;
   flex-direction: column;
   gap: var(--space-3);
-`
+`;
 
 const CurrentRow = styled.div`
   display: flex;
@@ -471,35 +490,35 @@ const CurrentRow = styled.div`
   padding: var(--space-3);
   background: var(--cream);
   border-radius: var(--radius-md);
-`
+`;
 
 const CurrentLabel = styled.span`
   font-size: 0.85rem;
   color: var(--gray-600);
-`
+`;
 
 const CurrentValue = styled.span`
   font-family: var(--font-display);
   font-size: 1.3rem;
   font-weight: 600;
   color: var(--gray-800);
-`
+`;
 
 const Field = styled.div`
   display: flex;
   flex-direction: column;
   gap: 6px;
-`
+`;
 
 const FieldLabel = styled.label`
   font-size: 0.85rem;
   font-weight: 500;
   color: var(--gray-700);
-`
+`;
 
 const InputRow = styled.div`
   position: relative;
-`
+`;
 
 const Input = styled.input`
   width: 100%;
@@ -512,7 +531,7 @@ const Input = styled.input`
     outline: none;
     border-color: var(--sage);
   }
-`
+`;
 
 const InputSuffix = styled.span`
   position: absolute;
@@ -522,7 +541,7 @@ const InputSuffix = styled.span`
   color: var(--gray-600);
   font-weight: 500;
   pointer-events: none;
-`
+`;
 
 const Textarea = styled.textarea`
   width: 100%;
@@ -537,12 +556,12 @@ const Textarea = styled.textarea`
     outline: none;
     border-color: var(--sage);
   }
-`
+`;
 
 const FieldHint = styled.div`
   font-size: 0.75rem;
   color: var(--gray-400);
-`
+`;
 
 const ModalNotice = styled.div`
   padding: var(--space-3);
@@ -552,10 +571,10 @@ const ModalNotice = styled.div`
   font-size: 0.85rem;
   color: var(--gray-700);
   line-height: 1.5;
-`
+`;
 
 const ModalFooter = styled.div`
   display: flex;
   justify-content: flex-end;
   gap: var(--space-2);
-`
+`;

@@ -1,19 +1,19 @@
-import { useState } from 'react'
-import { useNavigate } from 'react-router-dom'
-import styled from 'styled-components'
+import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import styled from 'styled-components';
 
-import { AdminKPICard } from '../../../dashboard/components/admin/AdminKPICard'
-import { DonutChart } from '../../../dashboard/components/admin/DonutChart'
-import { StatsPeriodFilter } from '../../components/admin/StatsPeriodFilter'
-import { HorizontalBarChart } from '../../components/admin/HorizontalBarChart'
-import { VerticalBarChart } from '../../components/admin/VerticalBarChart'
-import { RankingList } from '../../components/admin/RankingList'
+import { AdminKPICard } from '../../../dashboard/components/admin/AdminKPICard';
+import { DonutChart } from '../../../dashboard/components/admin/DonutChart';
+import { StatsPeriodFilter } from '../../components/admin/StatsPeriodFilter';
+import { HorizontalBarChart } from '../../components/admin/HorizontalBarChart';
+import { VerticalBarChart } from '../../components/admin/VerticalBarChart';
+import { RankingList } from '../../components/admin/RankingList';
 
 const CATEGORY_DIST = [
   { label: '워크앤스테이', value: 184, color: '#7A8B71' },
   { label: '숙소', value: 142, color: '#A8B89F' },
-  { label: '코워킹오피스', value: 89, color: '#C5D1BD' },
-]
+  { label: '오피스', value: 89, color: '#C5D1BD' },
+];
 
 const REGIONS = [
   { label: '서울', value: 92, icon: '🏙️' },
@@ -25,7 +25,7 @@ const REGIONS = [
   { label: '부산', value: 28, icon: '🌃' },
   { label: '충남', value: 18, icon: '🌾' },
   { label: '전남', value: 13, icon: '🍃' },
-]
+];
 
 const RATING_DIST = [
   { label: '5.0', value: 38, highlight: true },
@@ -34,30 +34,78 @@ const RATING_DIST = [
   { label: '3.5+', value: 48 },
   { label: '3.0+', value: 22 },
   { label: '< 3.0', value: 9 },
-]
+];
 
 const TOP_OCCUPANCY = [
-  { name: '청평 숲속 파인뷰 스테이', icon: '🌲', meta: '경기 가평 · 워크앤스테이', value: 92, delta: '4%', deltaType: 'up' },
+  {
+    name: '청평 숲속 파인뷰 스테이',
+    icon: '🌲',
+    meta: '경기 가평 · 워크앤스테이',
+    value: 92,
+    delta: '4%',
+    deltaType: 'up',
+  },
   { name: '제주 흑돌 별채', icon: '🌴', meta: '제주 서귀포 · 숙소', value: 88 },
-  { name: '강릉 바다향 코워킹', icon: '🌊', meta: '강원 강릉 · 코워킹오피스', value: 85, delta: '2%', deltaType: 'up' },
-  { name: '양양 파도소리 빌라', icon: '🌅', meta: '강원 양양 · 워크앤스테이', value: 82 },
-  { name: '북촌 한옥 워크룸', icon: '🏯', meta: '서울 북촌 · 워크앤스테이', value: 78 },
-  { name: '성수 브릭라운지', icon: '🧱', meta: '서울 성수 · 코워킹오피스', value: 76, delta: '6%', deltaType: 'up' },
-  { name: '남해 올리브 팜스테이', icon: '🫒', meta: '경남 남해 · 숙소', value: 72 },
+  {
+    name: '강릉 바다향 오피스',
+    icon: '🌊',
+    meta: '강원 강릉 · 오피스',
+    value: 85,
+    delta: '2%',
+    deltaType: 'up',
+  },
+  {
+    name: '양양 파도소리 빌라',
+    icon: '🌅',
+    meta: '강원 양양 · 워크앤스테이',
+    value: 82,
+  },
+  {
+    name: '북촌 한옥 워크룸',
+    icon: '🏯',
+    meta: '서울 북촌 · 워크앤스테이',
+    value: 78,
+  },
+  {
+    name: '성수 브릭라운지',
+    icon: '🧱',
+    meta: '서울 성수 · 오피스',
+    value: 76,
+    delta: '6%',
+    deltaType: 'up',
+  },
+  {
+    name: '남해 올리브 팜스테이',
+    icon: '🫒',
+    meta: '경남 남해 · 숙소',
+    value: 72,
+  },
   { name: '경주 황남 한옥', icon: '🏛️', meta: '경북 경주 · 숙소', value: 68 },
-  { name: '부산 광안 라운지', icon: '🌃', meta: '부산 광안리 · 코워킹오피스', value: 64 },
-  { name: '하동 차밭 농가', icon: '🍃', meta: '경남 하동 · 워크앤스테이', value: 58 },
-]
+  {
+    name: '부산 광안 라운지',
+    icon: '🌃',
+    meta: '부산 광안리 · 오피스',
+    value: 64,
+  },
+  {
+    name: '하동 차밭 농가',
+    icon: '🍃',
+    meta: '경남 하동 · 워크앤스테이',
+    value: 58,
+  },
+];
 
 export default function SpaceStats() {
-  const nav = useNavigate()
-  const [period, setPeriod] = useState('30days')
+  const nav = useNavigate();
+  const [period, setPeriod] = useState('30days');
 
-  const totalSpaces = CATEGORY_DIST.reduce((s, d) => s + d.value, 0)
+  const totalSpaces = CATEGORY_DIST.reduce((s, d) => s + d.value, 0);
 
   return (
     <Page>
-      <BackLink onClick={() => nav('/admin/dashboard')}>← 관리자 대시보드</BackLink>
+      <BackLink onClick={() => nav('/admin/dashboard')}>
+        ← 관리자 대시보드
+      </BackLink>
 
       <Header>
         <Title>공간 통계</Title>
@@ -141,14 +189,14 @@ export default function SpaceStats() {
         formatValue={(v) => `${v}%`}
       />
     </Page>
-  )
+  );
 }
 
 const Page = styled.div`
   width: 100%;
   padding: var(--space-6) var(--space-5);
   animation: fadeInUp 480ms ease-out both;
-`
+`;
 
 const BackLink = styled.button`
   font-size: 0.85rem;
@@ -158,11 +206,11 @@ const BackLink = styled.button`
   &:hover {
     color: var(--gray-800);
   }
-`
+`;
 
 const Header = styled.div`
   margin-bottom: var(--space-5);
-`
+`;
 
 const Title = styled.h1`
   font-family: var(--font-display);
@@ -171,12 +219,12 @@ const Title = styled.h1`
   color: var(--gray-800);
   letter-spacing: -0.02em;
   margin-bottom: 4px;
-`
+`;
 
 const Description = styled.p`
   font-size: 0.9rem;
   color: var(--gray-600);
-`
+`;
 
 const KPIGrid = styled.div`
   display: grid;
@@ -191,7 +239,7 @@ const KPIGrid = styled.div`
   @media (max-width: 480px) {
     grid-template-columns: 1fr;
   }
-`
+`;
 
 const DonutGrid = styled.div`
   display: grid;
@@ -201,8 +249,8 @@ const DonutGrid = styled.div`
   @media (max-width: 960px) {
     grid-template-columns: 1fr;
   }
-`
+`;
 
 const ChartGap = styled.div`
   height: var(--space-5);
-`
+`;
