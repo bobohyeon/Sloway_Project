@@ -1,70 +1,39 @@
 import React from 'react';
 import styled from 'styled-components';
+import { useNavigate } from 'react-router-dom'; // 페이지 이동을 위한 hook
+import { FaHotel, FaBriefcase, FaLeaf, FaCheck } from 'react-icons/fa';
 
-const TableWrapper = styled.div`
+// --- Styled Components ---
+
+const TableContainer = styled.div`
   background: white;
-  border-radius: 15px;
+  border-radius: 12px;
   border: 1px solid #eee;
   overflow: hidden;
-  display: flex;
-  flex-direction: column;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
 `;
 
-const Table = styled.table`
+const StyledTable = styled.table`
   width: 100%;
   border-collapse: collapse;
-  font-size: 13px;
-  display: flex;
-  flex-direction: column; /* tbody 스크롤을 위해 flex 구조 사용 */
+  text-align: left;
+  font-size: 14px;
 
-  thead {
-    display: table;
-    width: 100%;
-    table-layout: fixed; /* 헤더와 바디 열 너비 맞춤 */
-    background: #fcfcf9;
-  }
-
-  tbody {
-    display: block;
-    width: 100%;
-    max-height: 350px; /* 고정 높이 설정 (원하는 높이로 조절 가능) */
-    overflow-y: auto;
-
-    /* --- 스크롤바 디자인 (WebKit) --- */
-    &::-webkit-scrollbar {
-      width: 3px; /* 스크롤바 두께 3px */
-    }
-    &::-webkit-scrollbar-thumb {
-      background: #a8b89f; /* 포인트 컬러 */
-      border-radius: 10px;
-    }
-    &::-webkit-scrollbar-track {
-      background: #f1f1f1;
-    }
-
-    tr {
-      display: table;
-      width: 100%;
-      table-layout: fixed; /* 헤더와 바디 열 너비 맞춤 */
-    }
+  th,
+  td {
+    padding: 12px 15px;
+    border-bottom: 1px solid #f9f9f9;
+    vertical-align: middle;
   }
 
   th {
-    padding: 10px;
-    text-align: left;
-    color: #888;
-    font-weight: 500;
-    border-bottom: 1px solid #eee;
+    background-color: #fafafa;
+    font-weight: 600;
+    color: #666;
   }
 
-  td {
-    padding: 10px;
-    border-bottom: 1px solid #f5f5f5;
-    vertical-align: middle;
-    /* 텍스트 줄바꿈 방지 */
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
+  tr:hover {
+    background-color: #fcfcfc;
   }
 `;
 
@@ -72,141 +41,150 @@ const SpaceCell = styled.div`
   display: flex;
   align-items: center;
   gap: 10px;
+
   .thumb {
-    width: 35px;
-    height: 35px;
+    width: 32px;
+    height: 32px;
     border-radius: 6px;
-    background: #f1f4ee;
     display: flex;
-    flex-shrink: 0;
     align-items: center;
     justify-content: center;
-    font-size: 18px;
+    font-size: 14px;
   }
+
   .name {
-    font-weight: 600;
+    font-weight: 500;
     color: #333;
-    overflow: hidden;
-    text-overflow: ellipsis;
   }
 `;
 
-const StatusBadge = styled.span`
-  padding: 4px 8px;
-  border-radius: 12px;
-  font-size: 11px;
-  display: inline-block;
-  background: ${(props) => {
-    if (props.isType) return '#f1f4ee';
-    switch (props.status) {
-      case '검수 대기':
-        return '#fff5f0';
-      case '승인 완료':
-        return '#eef6f0';
-      case '반려':
-        return '#fdf2f2';
-      case '중지':
-        return '#f5f5f5';
-      default:
-        return '#eee';
-    }
-  }};
-  color: ${(props) => {
-    if (props.isType) return '#768966';
-    switch (props.status) {
-      case '검수 대기':
-        return '#d46a4f';
-      case '승인 완료':
-        return '#2e7d32';
-      case '반려':
-        return '#c62828';
-      case '중지':
-        return '#666';
-      default:
-        return '#aaa';
-    }
-  }};
-`;
-
-const ApprovalBtn = styled.button`
-  padding: 6px 12px;
-  background: #a8b89f;
-  color: white;
-  border: none;
+const DetailButton = styled.button`
+  padding: 6px 14px;
   border-radius: 6px;
-  cursor: pointer;
   font-size: 12px;
-  white-space: nowrap;
-  transition: background 0.2s;
+  font-weight: 600;
+  cursor: pointer;
+  border: 1px solid #a8b89f;
+  background-color: #fff;
+  color: #a8b89f;
+  transition: all 0.2s;
+
   &:hover {
-    background: #86927e;
+    background-color: #a8b89f;
+    color: #fff;
   }
 `;
+
+// --- 설정 데이터 ---
+
+const TYPE_CONFIG = {
+  STATION: {
+    label: '숙소',
+    icon: <FaHotel />,
+    bgColor: '#f0f4ee',
+    color: '#a8b89f',
+  },
+  OFFICE: {
+    label: '오피스',
+    icon: <FaBriefcase />,
+    bgColor: '#edf2f7',
+    color: '#7a8da1',
+  },
+  WORK_STAY: {
+    label: '워크앤스테이',
+    icon: <FaLeaf />,
+    bgColor: '#fdf2e9',
+    color: '#d4a373',
+  },
+};
+
+const STATUS_MAP = {
+  P: { text: '대기', color: '#ff9800' },
+  A: { text: '승인', color: '#4caf50' },
+  R: { text: '반려', color: '#f44336' },
+};
+
+// --- 메인 컴포넌트 ---
 
 function ApprovalTable({ data }) {
+  const navigate = useNavigate();
+
   return (
-    <TableWrapper>
-      <Table>
+    <TableContainer>
+      <StyledTable>
         <thead>
           <tr>
-            <th style={{ width: '80px' }}>공간 ID</th>
-            <th style={{ width: '200px' }}>공간</th>
-            <th style={{ width: '90px' }}>유형</th>
-            <th style={{ width: '80px' }}>이미지</th>
-            <th style={{ width: '100px' }}>가격</th>
-            <th style={{ width: '140px' }}>제출일</th>
-            <th style={{ width: '70px' }}>대기일</th>
-            <th style={{ width: '80px' }}>상태</th>
-            <th style={{ width: '80px' }}>액션</th>
+            <th>공간 정보</th>
+            <th>유형</th>
+            <th>호스트</th>
+            <th>금액</th>
+            <th>등록일시</th>
+            <th>상태</th>
+            <th style={{ textAlign: 'center' }}>상세보기</th>
           </tr>
         </thead>
         <tbody>
-          {data.length > 0 ? (
-            data.map((item) => (
+          {data.map((item) => {
+            const typeInfo = TYPE_CONFIG[item.type] || {
+              label: item.type,
+              icon: null,
+              bgColor: '#eee',
+              color: '#999',
+            };
+            const statusInfo = STATUS_MAP[item.status] || {
+              text: item.status,
+              color: '#333',
+            };
+
+            return (
               <tr key={item.id}>
-                <td style={{ width: '80px', color: '#aaa' }}>{item.id}</td>
                 <td>
                   <SpaceCell>
-                    <div className="thumb">
-                      {item.type === '숙소'
-                        ? '🌴'
-                        : item.type === '코워킹오피스'
-                          ? '🏢'
-                          : '🎨'}
+                    <div
+                      className="thumb"
+                      style={{
+                        backgroundColor: typeInfo.bgColor,
+                        color: typeInfo.color,
+                      }}
+                    >
+                      {typeInfo.icon}
                     </div>
                     <div className="name">{item.name}</div>
                   </SpaceCell>
                 </td>
-                <td style={{ width: '90px' }}>
-                  <StatusBadge isType>{item.type}</StatusBadge>
+                <td>
+                  <span style={{ fontSize: '12px', color: '#888' }}>
+                    {typeInfo.label}
+                  </span>
                 </td>
-                <td style={{ width: '80px' }}>📷 {item.images}장</td>
-                <td style={{ width: '100px' }}>{item.price}원</td>
-                <td style={{ width: '140px', color: '#888' }}>{item.date}</td>
-                <td style={{ width: '70px' }}>
-                  {item.wait} {item.isAlert && '🚨'}
+                <td>{item.host}</td>
+                <td style={{ fontWeight: '600' }}>₩{item.price}~</td>
+                <td style={{ color: '#aaa', fontSize: '12px' }}>{item.date}</td>
+                <td>
+                  <span
+                    style={{
+                      color: statusInfo.color,
+                      fontWeight: '600',
+                      fontSize: '13px',
+                    }}
+                  >
+                    {statusInfo.text}
+                  </span>
                 </td>
-                <td style={{ width: '80px' }}>
-                  <StatusBadge status={item.status}>{item.status}</StatusBadge>
-                </td>
-                <td style={{ width: '80px' }}>
-                  <ApprovalBtn>검수 →</ApprovalBtn>
+                <td style={{ textAlign: 'center' }}>
+                  {/* ✅ 클릭 시 상세 페이지로 이동 */}
+                  <DetailButton
+                    onClick={() => navigate(`/admin/space/review/${item.id}`)}
+                  >
+                    검수하기
+                  </DetailButton>
                 </td>
               </tr>
-            ))
-          ) : (
-            <tr>
-              <td
-                colSpan="10"
-                style={{ textAlign: 'center', padding: '60px', color: '#bbb' }}
-              >
-                조회된 데이터가 없습니다.
-              </td>
-            </tr>
-          )}
+            );
+          })}
         </tbody>
-      </Table>
-    </TableWrapper>
+      </StyledTable>
+    </TableContainer>
   );
 }
 

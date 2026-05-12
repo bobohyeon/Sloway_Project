@@ -1,10 +1,10 @@
 import React from 'react';
 import styled from 'styled-components';
 
-// --- Styled Components (레이아웃 스타일) ---
+// --- Styled Components ---
 const PageContainer = styled.div`
   padding: 20px;
-  background-color: #f9faf8;
+  background-color: #f4efe6;
   height: 95.2%;
 `;
 
@@ -27,9 +27,10 @@ const FilterBar = styled.div`
   align-items: center;
   margin-bottom: 20px;
   background: white;
-  padding: 15px 25px;
+  padding: 12px 25px;
   border-radius: 12px;
   border: 1px solid #eee;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.02);
 `;
 
 const TabGroup = styled.div`
@@ -66,24 +67,33 @@ const Tab = styled.div`
   }
 `;
 
-const SearchArea = styled.div`
-  display: flex;
-  gap: 10px;
-  select,
-  input {
-    padding: 8px 12px;
-    border: 1px solid #eee;
-    border-radius: 6px;
-    font-size: 13px;
-    outline: none;
+// image_fda719.png의 느낌을 살린 부드러운 셀렉트 박스
+const StyledSelect = styled.select`
+  padding: 8px 12px;
+  border-radius: 8px;
+  border: 1.5px solid #a8b89f; /* 브랜드 컬러 포인트 */
+  background-color: #fff;
+  color: #555;
+  font-size: 14px;
+  outline: none;
+  cursor: pointer;
+  transition: all 0.2s ease;
+
+  &:hover {
+    border-color: #86927e;
+    background-color: #f9faf8;
+  }
+
+  &:focus {
+    box-shadow: 0 0 0 2px rgba(168, 184, 159, 0.2);
   }
 `;
 
-// --- Layout 컴포넌트 ---
 function SpaceApprovalLayout({
   currentTab,
   onTabChange,
   counts,
+  typeFilter,
   statsSection,
   tableSection,
 }) {
@@ -94,7 +104,6 @@ function SpaceApprovalLayout({
         <p>호스트가 등록한 공간을 검토하고 최종 승인 상태를 관리하세요</p>
       </Header>
 
-      {/* 상단 통계 영역 슬롯 */}
       {statsSection}
 
       <FilterBar>
@@ -105,19 +114,26 @@ function SpaceApprovalLayout({
               $active={currentTab === tab}
               onClick={() => onTabChange(tab)}
             >
-              {tab} <span>{counts[tab]}</span>
+              {tab === 'ALL'
+                ? '전체'
+                : tab === 'P'
+                  ? '대기'
+                  : tab === 'A'
+                    ? '승인'
+                    : '반려'}
+              <span>{counts[tab]}</span>
             </Tab>
           ))}
         </TabGroup>
-        <SearchArea>
-          <select>
-            <option>전체 유형</option>
-          </select>
-          <input type="text" placeholder="🔍 공간명·호스트 검색" />
-        </SearchArea>
+
+        <StyledSelect value={typeFilter.value} onChange={typeFilter.onChange}>
+          <option value="ALL">전체 유형</option>
+          <option value="STATION">숙소</option>
+          <option value="OFFICE">오피스</option>
+          <option value="WORK_STAY">워크앤스테이</option>
+        </StyledSelect>
       </FilterBar>
 
-      {/* 하단 테이블 영역 슬롯 */}
       {tableSection}
     </PageContainer>
   );

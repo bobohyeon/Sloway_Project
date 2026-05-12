@@ -63,9 +63,6 @@ function StationDetailPage() {
   const handleBack = () => {
     navigate('/host/space/list'); // 목록 페이지로 이동 로직
   };
-  const imageUpdate = () => {
-    navigate(``);
-  };
 
   return <StationDetailLayout data={spaceData} onBack={handleBack} />;
 }

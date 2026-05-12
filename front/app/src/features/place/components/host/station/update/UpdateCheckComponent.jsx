@@ -179,7 +179,7 @@ function UpdateCheckComponent({ formData, prev, onSubmit }) {
           <div className="value">
             {formData.monPrice
               ? `${Number(formData.monPrice).toLocaleString()}원`
-              : '(입력한 요금)'}
+              : '0원'}
           </div>
         </SummaryItem>
       </SummaryBox>
