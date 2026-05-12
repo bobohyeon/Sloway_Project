@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import styled, { keyframes } from 'styled-components';
 import RsvnCard from '../../components/user/RsvnCard';
 import {
   TabBar,
@@ -9,11 +10,33 @@ import {
   PageSub,
 } from '../../components/user/RsvnStyled';
 
+const fadeInUp = keyframes`
+  from { opacity: 0; transform: translateY(10px); }
+  to   { opacity: 1; transform: translateY(0); }
+`;
+
+const Page = styled.div`
+  max-width: 960px;
+  margin: 0 auto;
+  padding: 32px 24px;
+  animation: ${fadeInUp} 480ms ease-out both;
+`;
+
+const Header = styled.div`
+  margin-bottom: 24px;
+`;
+
+const List = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+`;
+
 const TABS = [
-  { label: '전체', count: 5 },
-  { label: '이용 예정', count: 2 },
-  { label: '이용 완료', count: 2 },
-  { label: '취소', count: 1 },
+  { label: '전체', status: null },
+  { label: '이용 예정', status: '이용 예정' },
+  { label: '이용 완료', status: '이용 완료' },
+  { label: '취소', status: '취소됨' },
 ];
 
 const DUMMY = [
@@ -28,10 +51,11 @@ const DUMMY = [
     price: '372,000원',
     icon: '🌲',
     action: '취소/환불',
+    spaceType: 'workstays',
   },
   {
     id: 2,
-    type: '코워킹오피스',
+    type: '오피스',
     status: '이용 예정',
     dday: 'D-4',
     title: '성수 브릭라운지',
@@ -40,6 +64,7 @@ const DUMMY = [
     price: '28,000원',
     icon: '🧱',
     action: '취소/환불',
+    spaceType: 'coworking-offices',
   },
   {
     id: 3,
@@ -52,10 +77,11 @@ const DUMMY = [
     price: '444,000원',
     icon: '🌴',
     action: '리뷰 작성',
+    spaceType: 'accommodations',
   },
   {
     id: 4,
-    type: '코워킹오피스',
+    type: '오피스',
     status: '이용 완료',
     dday: null,
     title: '강릉 바다향 커먼워크',
@@ -64,6 +90,7 @@ const DUMMY = [
     price: '28,000원',
     icon: '🌊',
     action: '리뷰 작성',
+    spaceType: 'coworking-offices',
   },
   {
     id: 5,
@@ -76,6 +103,7 @@ const DUMMY = [
     price: '330,000원',
     icon: '✉️',
     action: null,
+    spaceType: 'workstays',
   },
 ];
 
@@ -85,14 +113,20 @@ function RsvnListPage() {
   const filtered =
     activeTab === 0
       ? DUMMY
-      : DUMMY.filter(
-          (i) => i.status === TABS[activeTab].label || i.status === '취소됨'
-        );
+      : DUMMY.filter((i) => i.status === TABS[activeTab].status);
+
+  const counts = TABS.map((tab, idx) =>
+    idx === 0
+      ? DUMMY.length
+      : DUMMY.filter((i) => i.status === tab.status).length
+  );
 
   return (
-    <div>
-      <PageTitle>예약 목록</PageTitle>
-      <PageSub>내가 예약한 공간의 이용 현황을 확인하세요</PageSub>
+    <Page>
+      <Header>
+        <PageTitle>예약 목록</PageTitle>
+        <PageSub>내가 예약한 공간의 이용 현황을 확인하세요</PageSub>
+      </Header>
 
       <TabBar>
         {TABS.map((tab, idx) => (
@@ -102,15 +136,17 @@ function RsvnListPage() {
             onClick={() => setActiveTab(idx)}
           >
             {tab.label}
-            <TabCount $active={activeTab === idx}>{tab.count}</TabCount>
+            <TabCount $active={activeTab === idx}>{counts[idx]}</TabCount>
           </TabBtn>
         ))}
       </TabBar>
 
-      {DUMMY.map((item) => (
-        <RsvnCard key={item.id} item={item} />
-      ))}
-    </div>
+      <List>
+        {filtered.map((item) => (
+          <RsvnCard key={item.id} item={item} />
+        ))}
+      </List>
+    </Page>
   );
 }
 

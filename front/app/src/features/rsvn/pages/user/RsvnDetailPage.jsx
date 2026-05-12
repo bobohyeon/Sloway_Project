@@ -1,5 +1,5 @@
 import { useNavigate } from 'react-router-dom';
-import styled from 'styled-components';
+import styled, { keyframes } from 'styled-components';
 import RsvnStatusBadge from '../../components/user/RsvnStatusBadge';
 import {
   PageTitle,
@@ -15,6 +15,18 @@ import {
   BtnOutline,
   COLOR,
 } from '../../components/user/RsvnStyled';
+
+const fadeInUp = keyframes`
+  from { opacity: 0; transform: translateY(10px); }
+  to   { opacity: 1; transform: translateY(0); }
+`;
+
+const Page = styled.div`
+  max-width: 960px;
+  margin: 0 auto;
+  padding: 32px 24px;
+  animation: ${fadeInUp} 480ms ease-out both;
+`;
 
 const StatusBanner = styled.div`
   background: ${COLOR.gray100};
@@ -70,32 +82,39 @@ const CancelNote = styled.div`
   margin-top: 6px;
 `;
 
+// 하단 버튼 — '예약취소/환불신청' 버튼 하나만
 const BottomBar = styled.div`
   display: flex;
-  justify-content: space-between;
-  align-items: center;
+  justify-content: flex-end;
   margin-top: 24px;
   padding-top: 20px;
   border-top: 1px solid ${COLOR.gray200};
 `;
 
-const CancelLink = styled.button`
-  font-size: 13px;
-  color: ${COLOR.gray400};
-  text-decoration: underline;
-  background: none;
+const RefundBtn = styled.button`
+  padding: 10px 24px;
+  border-radius: 8px;
+  background: ${COLOR.terra};
+  color: #fff;
   border: none;
+  font-size: 14px;
+  font-weight: 600;
+  font-family: 'Noto Sans KR', sans-serif;
   cursor: pointer;
+  transition: filter 0.2s;
   &:hover {
-    color: ${COLOR.red};
+    filter: brightness(0.9);
   }
 `;
 
 function RsvnDetailPage() {
   const navigate = useNavigate();
 
+  // 더미 space id — 백엔드 연결 시 useParams로 교체
+  const spaceId = 1;
+
   return (
-    <div>
+    <Page>
       <PageTitle>예약 상세</PageTitle>
       <PageSub>예약 내역을 자세히 확인하실 수 있어요</PageSub>
       <BackLink onClick={() => navigate('/user/reservation')}>
@@ -119,7 +138,7 @@ function RsvnDetailPage() {
             style={{
               width: 56,
               height: 56,
-              background: '#F4EFE6',
+              background: COLOR.cream,
               borderRadius: 10,
               display: 'flex',
               alignItems: 'center',
@@ -138,7 +157,11 @@ function RsvnDetailPage() {
               📍 경기 가평군 청평면 · 🏠 호스트 · 청평스테이
             </div>
           </div>
-          <BtnOutline style={{ fontSize: 12, padding: '5px 12px' }}>
+          {/* 공간보기 — 백엔드 연결 시 실제 id로 교체 */}
+          <BtnOutline
+            style={{ fontSize: 12, padding: '5px 12px' }}
+            onClick={() => navigate(`/workstays/${spaceId}`)}
+          >
             공간 보기
           </BtnOutline>
         </div>
@@ -250,21 +273,22 @@ function RsvnDetailPage() {
               031-***-5678
             </div>
           </div>
-          <BtnPrimary style={{ fontSize: 12, padding: '5px 12px' }}>
+          <BtnPrimary
+            style={{ fontSize: 12, padding: '5px 12px' }}
+            onClick={() => navigate('/user/chat')}
+          >
             💬 1:1 채팅
           </BtnPrimary>
         </div>
       </SectionBox>
 
+      {/* 하단 — 예약취소/환불신청 버튼만 */}
       <BottomBar>
-        <CancelLink onClick={() => navigate('/user/reservation/cancel')}>
+        <RefundBtn onClick={() => navigate('/user/refund/request')}>
           예약 취소 / 환불 신청
-        </CancelLink>
-        <BtnPrimary onClick={() => navigate('/user/reservation')}>
-          목록으로
-        </BtnPrimary>
+        </RefundBtn>
       </BottomBar>
-    </div>
+    </Page>
   );
 }
 
