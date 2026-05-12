@@ -15,18 +15,16 @@ const ContentWrapper = styled.div`
 `;
 
 const FloatingFooter = styled.div`
-  position: sticky;
-  bottom: 20px;
   background: white;
-  padding: 20px 40px;
+  padding: 30px 40px;
   border-radius: 15px;
   display: flex;
   justify-content: space-between;
   align-items: center;
-  box-shadow: 0 -5px 20px rgba(0, 0, 0, 0.05);
+  box-shadow: 0 5px 20px rgba(0, 0, 0, 0.05);
   border: 1px solid #eee;
-  z-index: 1000;
-  margin-top: 40px;
+  margin-top: 20px;
+  width: 100%;
 `;
 
 const ButtonGroup = styled.div`
@@ -133,7 +131,7 @@ const SpaceApprovalDetailPage = () => {
 
         <FloatingFooter>
           <div>
-            <span style={{ color: '#a8b89f', fontWeight: 'bold' }}>
+            <span style={{ color: '#627c54', fontWeight: 'bold' }}>
               검수 대기중
             </span>
             <p style={{ fontSize: '12px', color: '#999', marginTop: '4px' }}>
