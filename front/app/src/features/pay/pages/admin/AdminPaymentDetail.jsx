@@ -1,6 +1,8 @@
 import { useNavigate, useParams } from 'react-router-dom'
 import styled from 'styled-components'
 
+import PageLayout from '../../../../app/layouts/page/PageLayout'
+
 import { Card, Button, Badge, Section } from '../../../pay_shared/components'
 
 const PAYMENTS = [
@@ -114,14 +116,13 @@ export default function AdminPaymentDetail() {
   const isFailed = payment.status === 'failed'
 
   return (
-    <PageWrapper>
-      <Container>
-      <BackLink onClick={() => nav('/admin/payment')}>← 결제 내역</BackLink>
-
-      <Header>
-        <Title>결제 상세</Title>
-        <Description>결제 내역과 관련 정보를 확인합니다</Description>
-      </Header>
+    <PageLayout
+      title="결제 상세"
+      description="결제 내역과 관련 정보를 확인합니다"
+      backTo="/admin/payment"
+      backLabel="결제 내역"
+      maxWidth={1200}
+    >
 
       {isRefunded && (
         <InfoBanner $variant="info">
@@ -307,56 +308,9 @@ export default function AdminPaymentDetail() {
           🖨️ 출력
         </Button>
       </Actions>
-    </Container>
-    </PageWrapper>
+    </PageLayout>
   )
 }
-
-const PageWrapper = styled.div`
-  background-color: var(--cream);
-  min-height: 100%;
-  padding: var(--space-6) var(--space-5);
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-`
-
-const Container = styled.div`
-  width: 100%;
-  max-width: 1200px;
-  display: flex;
-  flex-direction: column;
-  animation: fadeInUp 480ms ease-out both;
-`
-
-const BackLink = styled.button`
-  font-size: 0.85rem;
-  color: var(--gray-600);
-  margin-bottom: var(--space-4);
-
-  &:hover {
-    color: var(--gray-800);
-  }
-`
-
-const Header = styled.div`
-  margin-bottom: var(--space-5);
-`
-
-const Title = styled.h1`
-  font-family: var(--font-display);
-  font-size: 1.8rem;
-  font-weight: 500;
-  color: var(--gray-800);
-  letter-spacing: -0.02em;
-  margin-bottom: 4px;
-`
-
-const Description = styled.p`
-  font-size: 0.9rem;
-  color: var(--gray-600);
-`
-
 const InfoBanner = styled.div`
   display: flex;
   align-items: flex-start;

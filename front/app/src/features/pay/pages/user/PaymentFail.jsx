@@ -6,23 +6,7 @@ import { ResultHeader } from '../../components/user/ResultHeader';
 import { ErrorReasonCard } from '../../components/user/ErrorReasonCard';
 import { SolutionGuide } from '../../components/user/SolutionGuide';
 import { CustomerCenterBox } from '../../components/user/CustomerCenterBox';
-
-const PageWrapper = styled.div`
-  background-color: var(--cream);
-  min-height: 100%;
-  padding: var(--space-6) var(--space-5);
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-`
-
-const Container = styled.div`
-  width: 100%;
-  max-width: 800px;
-  display: flex;
-  flex-direction: column;
-  animation: fadeInUp 480ms ease-out both;
-`;
+;
 
 const Content = styled.div`
   display: flex;
@@ -65,8 +49,7 @@ export default function PaymentFail() {
   const nav = useNavigate();
 
   return (
-    <PageWrapper>
-      <Container>
+    <PageLayout maxWidth={800}>
       <ResultHeader
         variant="fail"
         title="결제를 완료하지 못했어요"
@@ -93,7 +76,6 @@ export default function PaymentFail() {
       </Actions>
 
       <CustomerCenterBox />
-    </Container>
-    </PageWrapper>
+    </PageLayout>
   );
 }

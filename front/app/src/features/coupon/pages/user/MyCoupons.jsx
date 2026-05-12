@@ -2,6 +2,8 @@ import { useState, useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
 import styled from 'styled-components'
 
+import PageLayout from '../../../../app/layouts/page/PageLayout'
+
 import { Tabs, EmptyState, Button } from '../../../pay_shared/components'
 import { CouponTicket } from '../../components/user/CouponTicket'
 import { CouponCodeInput } from '../../components/user/CouponCodeInput'
@@ -138,9 +140,11 @@ export default function MyCoupons() {
   }
 
   return (
-    <PageWrapper>
-      <Container>
-      <BackLink onClick={() => nav('/user/mypage')}>← 마이페이지</BackLink>
+    <PageLayout
+      title="내 쿠폰함"
+      description="받은 쿠폰을 한눈에 확인하고 사용하세요"
+      maxWidth={1200}
+    >
 
       <Header>
         <TopRow>
@@ -204,28 +208,9 @@ export default function MyCoupons() {
           ))}
         </CouponGrid>
       )}
-    </Container>
-    </PageWrapper>
+    </PageLayout>
   )
 }
-
-const PageWrapper = styled.div`
-  background-color: var(--cream);
-  min-height: 100%;
-  padding: var(--space-6) var(--space-5);
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-`
-
-const Container = styled.div`
-  width: 100%;
-  max-width: 1200px;
-  display: flex;
-  flex-direction: column;
-  animation: fadeInUp 480ms ease-out both;
-`
-
 const BackLink = styled.button`
   font-size: 0.85rem;
   color: var(--gray-600);
@@ -235,11 +220,6 @@ const BackLink = styled.button`
     color: var(--gray-800);
   }
 `
-
-const Header = styled.div`
-  margin-bottom: var(--space-5);
-`
-
 const TopRow = styled.div`
   display: flex;
   justify-content: space-between;
@@ -247,21 +227,6 @@ const TopRow = styled.div`
   gap: var(--space-3);
   flex-wrap: wrap;
 `
-
-const Title = styled.h1`
-  font-family: var(--font-display);
-  font-size: 1.8rem;
-  font-weight: 500;
-  color: var(--gray-800);
-  letter-spacing: -0.02em;
-  margin-bottom: 4px;
-`
-
-const Description = styled.p`
-  font-size: 0.9rem;
-  color: var(--gray-600);
-`
-
 const EventBtn = styled.button`
   padding: 8px 14px;
   background: var(--sage);

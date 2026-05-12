@@ -1,6 +1,8 @@
 import { useNavigate } from 'react-router-dom'
 import styled from 'styled-components'
 
+import PageLayout from '../../../../app/layouts/page/PageLayout'
+
 import { Card, Section } from '../../../pay_shared/components'
 import { CommissionPolicyTable } from '../../components/host/CommissionPolicyTable'
 
@@ -50,14 +52,11 @@ export default function CommissionPolicy() {
   const nav = useNavigate()
 
   return (
-    <PageWrapper>
-      <Container>
-      <BackLink onClick={() => nav('/host/settlement/dashboard')}>← 정산 대시보드</BackLink>
-
-      <Header>
-        <Title>수수료 정책</Title>
-        <Description>현재 적용 중인 플랫폼 수수료 정책을 확인하세요</Description>
-      </Header>
+    <PageLayout
+      title="수수료 정책"
+      description="현재 적용 중인 플랫폼 수수료 정책을 확인하세요"
+      maxWidth={800}
+    >
 
       <SummaryCard padded>
         <SummaryIcon>📊</SummaryIcon>
@@ -116,28 +115,9 @@ export default function CommissionPolicy() {
           </NoticeList>
         </NoticeContent>
       </NoticeBox>
-    </Container>
-    </PageWrapper>
+    </PageLayout>
   )
 }
-
-const PageWrapper = styled.div`
-  background-color: var(--cream);
-  min-height: 100%;
-  padding: var(--space-6) var(--space-5);
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-`
-
-const Container = styled.div`
-  width: 100%;
-  max-width: 800px;
-  display: flex;
-  flex-direction: column;
-  animation: fadeInUp 480ms ease-out both;
-`
-
 const BackLink = styled.button`
   font-size: 0.85rem;
   color: var(--gray-600);
@@ -147,25 +127,6 @@ const BackLink = styled.button`
     color: var(--gray-800);
   }
 `
-
-const Header = styled.div`
-  margin-bottom: var(--space-5);
-`
-
-const Title = styled.h1`
-  font-family: var(--font-display);
-  font-size: 1.8rem;
-  font-weight: 500;
-  color: var(--gray-800);
-  letter-spacing: -0.02em;
-  margin-bottom: 4px;
-`
-
-const Description = styled.p`
-  font-size: 0.9rem;
-  color: var(--gray-600);
-`
-
 const SummaryCard = styled(Card)`
   display: flex;
   gap: var(--space-3);

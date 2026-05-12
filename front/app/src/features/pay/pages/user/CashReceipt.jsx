@@ -2,6 +2,8 @@ import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import styled from 'styled-components'
 
+import PageLayout from '../../../../app/layouts/page/PageLayout'
+
 import { Card, Button, Tabs, EmptyState, Pagination } from '../../../pay_shared/components'
 import { CashReceiptInfo } from '../../components/user/CashReceiptInfo'
 import { EligiblePaymentItem } from '../../components/user/EligiblePaymentItem'
@@ -138,14 +140,13 @@ export default function CashReceipt() {
   }
 
   return (
-    <PageWrapper>
-      <Container>
-      <BackLink onClick={() => nav('/user/payment')}>← 결제 내역</BackLink>
-
-      <Header>
-        <Title>현금영수증</Title>
-        <Description>결제 건에 대한 현금영수증을 신청·관리할 수 있어요</Description>
-      </Header>
+    <PageLayout
+      title="현금영수증"
+      description="결제 건에 대한 현금영수증을 신청·관리할 수 있어요"
+      backTo="/user/payment"
+      backLabel="결제 내역"
+      maxWidth={800}
+    >
 
       <NoticeBox>
         <NoticeIcon>💡</NoticeIcon>
@@ -236,56 +237,9 @@ export default function CashReceipt() {
 
         <Pagination currentPage={page} totalPages={1} onChange={setPage} />
       </HistorySection>
-    </Container>
-    </PageWrapper>
+    </PageLayout>
   )
 }
-
-const PageWrapper = styled.div`
-  background-color: var(--cream);
-  min-height: 100%;
-  padding: var(--space-6) var(--space-5);
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-`
-
-const Container = styled.div`
-  width: 100%;
-  max-width: 800px;
-  display: flex;
-  flex-direction: column;
-  animation: fadeInUp 480ms ease-out both;
-`
-
-const BackLink = styled.button`
-  font-size: 0.85rem;
-  color: var(--gray-600);
-  margin-bottom: var(--space-4);
-
-  &:hover {
-    color: var(--gray-800);
-  }
-`
-
-const Header = styled.div`
-  margin-bottom: var(--space-5);
-`
-
-const Title = styled.h1`
-  font-family: var(--font-display);
-  font-size: 1.8rem;
-  font-weight: 500;
-  color: var(--gray-800);
-  letter-spacing: -0.02em;
-  margin-bottom: 4px;
-`
-
-const Description = styled.p`
-  font-size: 0.9rem;
-  color: var(--gray-600);
-`
-
 const NoticeBox = styled(Card)`
   display: flex;
   gap: var(--space-3);

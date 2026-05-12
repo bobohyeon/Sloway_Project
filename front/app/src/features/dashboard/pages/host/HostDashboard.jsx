@@ -1,5 +1,7 @@
 import { useNavigate } from 'react-router-dom'
 import styled from 'styled-components'
+
+import PageLayout from '../../../../app/layouts/page/PageLayout'
 import {
   FaInbox,
   FaComments,
@@ -223,8 +225,7 @@ export default function HostDashboard() {
   const nav = useNavigate()
 
   return (
-    <PageWrapper>
-      <Container>
+    <PageLayout maxWidth={1200}>
       <HostGreeting hostName={HOST_NAME} todayDate={TODAY} />
 
       <AlertSection>
@@ -284,28 +285,9 @@ export default function HostDashboard() {
           ))}
         </QuickGrid>
       </QuickSection>
-    </Container>
-    </PageWrapper>
+    </PageLayout>
   )
 }
-
-const PageWrapper = styled.div`
-  background-color: var(--cream);
-  min-height: 100%;
-  padding: var(--space-6) var(--space-5);
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-`
-
-const Container = styled.div`
-  width: 100%;
-  max-width: 1200px;
-  display: flex;
-  flex-direction: column;
-  animation: fadeInUp 480ms ease-out both;
-`
-
 const AlertSection = styled.div`
   margin-bottom: var(--space-5);
 `

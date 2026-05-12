@@ -2,6 +2,8 @@ import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import styled from 'styled-components'
 
+import PageLayout from '../../../../app/layouts/page/PageLayout'
+
 import { Tabs, EmptyState, Button } from '../../../pay_shared/components'
 import { EventCard } from '../../components/user/EventCard'
 
@@ -124,19 +126,16 @@ export default function EventList() {
   const urgentEvents = EVENTS.filter((e) => e.daysLeft <= 3)
 
   return (
-    <PageWrapper>
-      <Container>
-      <Header>
-        <TopRow>
-          <div>
-            <Title>🎁 이벤트 & 쿠폰</Title>
-            <Description>진행 중인 혜택을 놓치지 마세요</Description>
-          </div>
-          <MyCouponBtn onClick={() => nav('/user/coupon')}>
-            내 쿠폰함 →
-          </MyCouponBtn>
-        </TopRow>
-      </Header>
+    <PageLayout
+      title="🎁 이벤트 & 쿠폰"
+      description="진행 중인 혜택을 놓치지 마세요"
+      actions={
+        <MyCouponBtn onClick={() => nav('/user/coupon')}>
+          내 쿠폰함 →
+        </MyCouponBtn>
+      }
+      maxWidth={1200}
+    >
 
       {urgentEvents.length > 0 && tab === 'ongoing' && (
         <UrgentBanner>
@@ -170,54 +169,9 @@ export default function EventList() {
           ))}
         </EventGrid>
       )}
-    </Container>
-    </PageWrapper>
+    </PageLayout>
   )
 }
-
-const PageWrapper = styled.div`
-  background-color: var(--cream);
-  min-height: 100%;
-  padding: var(--space-6) var(--space-5);
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-`
-
-const Container = styled.div`
-  width: 100%;
-  max-width: 1200px;
-  display: flex;
-  flex-direction: column;
-  animation: fadeInUp 480ms ease-out both;
-`
-
-const Header = styled.div`
-  margin-bottom: var(--space-5);
-`
-
-const TopRow = styled.div`
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: var(--space-3);
-  flex-wrap: wrap;
-`
-
-const Title = styled.h1`
-  font-family: var(--font-display);
-  font-size: 1.8rem;
-  font-weight: 500;
-  color: var(--gray-800);
-  letter-spacing: -0.02em;
-  margin-bottom: 4px;
-`
-
-const Description = styled.p`
-  font-size: 0.9rem;
-  color: var(--gray-600);
-`
-
 const MyCouponBtn = styled.button`
   padding: 8px 14px;
   background: var(--white);

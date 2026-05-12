@@ -2,6 +2,8 @@ import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import styled from 'styled-components'
 
+import PageLayout from '../../../../app/layouts/page/PageLayout'
+
 import { Card, Section, Tabs, EmptyState, Pagination } from '../../../pay_shared/components'
 import { TaxInvoiceItem } from '../../components/host/TaxInvoiceItem'
 
@@ -78,14 +80,11 @@ export default function TaxInvoice() {
     .reduce((s, inv) => s + inv.amount, 0)
 
   return (
-    <PageWrapper>
-      <Container>
-      <BackLink onClick={() => nav('/host/settlement/dashboard')}>← 정산 대시보드</BackLink>
-
-      <Header>
-        <Title>세금계산서</Title>
-        <Description>월별로 발행된 수수료 세금계산서를 다운로드할 수 있어요</Description>
-      </Header>
+    <PageLayout
+      title="세금계산서"
+      description="월별로 발행된 수수료 세금계산서를 다운로드할 수 있어요"
+      maxWidth={1200}
+    >
 
       <BusinessCard padded>
         <BusinessHeader>
@@ -172,28 +171,9 @@ export default function TaxInvoice() {
           </NoticeList>
         </NoticeContent>
       </NoticeBox>
-    </Container>
-    </PageWrapper>
+    </PageLayout>
   )
 }
-
-const PageWrapper = styled.div`
-  background-color: var(--cream);
-  min-height: 100%;
-  padding: var(--space-6) var(--space-5);
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-`
-
-const Container = styled.div`
-  width: 100%;
-  max-width: 1200px;
-  display: flex;
-  flex-direction: column;
-  animation: fadeInUp 480ms ease-out both;
-`
-
 const BackLink = styled.button`
   font-size: 0.85rem;
   color: var(--gray-600);
@@ -203,25 +183,6 @@ const BackLink = styled.button`
     color: var(--gray-800);
   }
 `
-
-const Header = styled.div`
-  margin-bottom: var(--space-5);
-`
-
-const Title = styled.h1`
-  font-family: var(--font-display);
-  font-size: 1.8rem;
-  font-weight: 500;
-  color: var(--gray-800);
-  letter-spacing: -0.02em;
-  margin-bottom: 4px;
-`
-
-const Description = styled.p`
-  font-size: 0.9rem;
-  color: var(--gray-600);
-`
-
 const BusinessCard = styled(Card)`
   background: linear-gradient(135deg, var(--cream) 0%, var(--white) 100%);
   margin-bottom: var(--space-5);

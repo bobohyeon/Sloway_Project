@@ -2,6 +2,8 @@ import { useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import styled from 'styled-components'
 
+import PageLayout from '../../../../app/layouts/page/PageLayout'
+
 import { Card, Section, Button, Badge } from '../../../pay_shared/components'
 import { RefundStatusBanner } from '../../components/admin/RefundStatusBanner'
 import { RefundProcessHistory } from '../../components/admin/RefundProcessHistory'
@@ -222,14 +224,13 @@ export default function RefundDetail() {
   })
 
   return (
-    <PageWrapper>
-      <Container>
-      <BackLink onClick={() => nav('/admin/refund')}>← 환불 목록</BackLink>
-
-      <Header>
-        <Title>환불 상세</Title>
-        <Description>환불 처리 내역을 확인하세요</Description>
-      </Header>
+    <PageLayout
+      title="환불 상세"
+      description="환불 처리 내역을 확인하세요"
+      backTo="/admin/refund"
+      backLabel="환불 관리"
+      maxWidth={1200}
+    >
 
       {isFailed && (
         <RefundStatusBanner
@@ -374,56 +375,9 @@ export default function RefundDetail() {
           </Button>
         </ActionRight>
       </Actions>
-    </Container>
-    </PageWrapper>
+    </PageLayout>
   )
 }
-
-const PageWrapper = styled.div`
-  background-color: var(--cream);
-  min-height: 100%;
-  padding: var(--space-6) var(--space-5);
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-`
-
-const Container = styled.div`
-  width: 100%;
-  max-width: 1200px;
-  display: flex;
-  flex-direction: column;
-  animation: fadeInUp 480ms ease-out both;
-`
-
-const BackLink = styled.button`
-  font-size: 0.85rem;
-  color: var(--gray-600);
-  margin-bottom: var(--space-4);
-
-  &:hover {
-    color: var(--gray-800);
-  }
-`
-
-const Header = styled.div`
-  margin-bottom: var(--space-5);
-`
-
-const Title = styled.h1`
-  font-family: var(--font-display);
-  font-size: 1.8rem;
-  font-weight: 500;
-  color: var(--gray-800);
-  letter-spacing: -0.02em;
-  margin-bottom: 4px;
-`
-
-const Description = styled.p`
-  font-size: 0.9rem;
-  color: var(--gray-600);
-`
-
 const DetailGrid = styled.div`
   display: grid;
   grid-template-columns: 1.3fr 1fr;

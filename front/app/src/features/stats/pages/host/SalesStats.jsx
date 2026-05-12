@@ -1,12 +1,14 @@
-import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import styled from 'styled-components';
+import { useState } from 'react'
+import { useNavigate } from 'react-router-dom'
+import styled from 'styled-components'
 
-import { AdminKPICard } from '../../../dashboard/components/admin/AdminKPICard';
-import { DonutChart } from '../../../dashboard/components/admin/DonutChart';
-import { DailyTransactionChart } from '../../../dashboard/components/admin/DailyTransactionChart';
-import { StatsPeriodFilter } from '../../components/admin/StatsPeriodFilter';
-import { RankingList } from '../../components/admin/RankingList';
+import PageLayout from '../../../../app/layouts/page/PageLayout'
+
+import { AdminKPICard } from '../../../dashboard/components/admin/AdminKPICard'
+import { DonutChart } from '../../../dashboard/components/admin/DonutChart'
+import { DailyTransactionChart } from '../../../dashboard/components/admin/DailyTransactionChart'
+import { StatsPeriodFilter } from '../../components/admin/StatsPeriodFilter'
+import { RankingList } from '../../components/admin/RankingList'
 
 const DAILY_DATA = [
   { date: '2026-04-12', revenue: 1200000, bookings: 4 },
@@ -18,20 +20,20 @@ const DAILY_DATA = [
   { date: '2026-05-06', revenue: 2800000, bookings: 8 },
   { date: '2026-05-07', revenue: 3600000, bookings: 11 },
   { date: '2026-05-08', revenue: 4200000, bookings: 13 },
-];
+]
 
 const SPACE_REVENUE = [
   { label: '청평 숲속 파인뷰 스테이', value: 18500000, color: '#7A8B71' },
-  { label: '강릉 바다향 오피스', value: 14200000, color: '#A8B89F' },
+  { label: '강릉 바다향 코워킹', value: 14200000, color: '#A8B89F' },
   { label: '남해 올리브 팜스테이', value: 9300000, color: '#C5D1BD' },
-];
+]
 
 const PAYMENT_METHODS = [
   { label: '카카오페이', value: 19500000, color: '#FEE500' },
   { label: '신용카드', value: 12800000, color: '#7A8B71' },
   { label: '네이버페이', value: 6400000, color: '#03C75A' },
   { label: '토스페이', value: 3300000, color: '#0064FF' },
-];
+]
 
 const TOP_SPACES = [
   {
@@ -43,9 +45,9 @@ const TOP_SPACES = [
     deltaType: 'up',
   },
   {
-    name: '강릉 바다향 오피스',
+    name: '강릉 바다향 코워킹',
     icon: '🌊',
-    meta: '강원 강릉 · 오피스',
+    meta: '강원 강릉 · 코워킹오피스',
     value: 14200000,
     delta: '8%',
     deltaType: 'up',
@@ -58,26 +60,22 @@ const TOP_SPACES = [
     delta: '3%',
     deltaType: 'down',
   },
-];
+]
 
 export default function SalesStats() {
-  const nav = useNavigate();
-  const [period, setPeriod] = useState('30days');
+  const nav = useNavigate()
+  const [period, setPeriod] = useState('30days')
 
-  const totalRevenue = SPACE_REVENUE.reduce((s, d) => s + d.value, 0);
-  const commission = Math.floor(totalRevenue * 0.12);
-  const settlement = totalRevenue - commission;
+  const totalRevenue = SPACE_REVENUE.reduce((s, d) => s + d.value, 0)
+  const commission = Math.floor(totalRevenue * 0.12)
+  const settlement = totalRevenue - commission
 
   return (
-    <Page>
-      <BackLink onClick={() => nav('/host/dashboard')}>
-        ← 호스트 대시보드
-      </BackLink>
-
-      <Header>
-        <Title>매출 통계</Title>
-        <Description>운영 중인 공간의 매출 현황을 분석하세요</Description>
-      </Header>
+    <PageLayout
+      title="매출 통계"
+      description="운영 중인 공간의 매출 현황을 분석하세요"
+      maxWidth={1200}
+    >
 
       <StatsPeriodFilter
         selectedPeriod={period}
@@ -149,16 +147,9 @@ export default function SalesStats() {
         items={TOP_SPACES}
         formatValue={(v) => `${v.toLocaleString()}원`}
       />
-    </Page>
-  );
+    </PageLayout>
+  )
 }
-
-const Page = styled.div`
-  width: 100%;
-  padding: var(--space-6) var(--space-5);
-  animation: fadeInUp 480ms ease-out both;
-`;
-
 const BackLink = styled.button`
   font-size: 0.85rem;
   color: var(--gray-600);
@@ -167,26 +158,7 @@ const BackLink = styled.button`
   &:hover {
     color: var(--gray-800);
   }
-`;
-
-const Header = styled.div`
-  margin-bottom: var(--space-5);
-`;
-
-const Title = styled.h1`
-  font-family: var(--font-display);
-  font-size: 1.8rem;
-  font-weight: 500;
-  color: var(--gray-800);
-  letter-spacing: -0.02em;
-  margin-bottom: 4px;
-`;
-
-const Description = styled.p`
-  font-size: 0.9rem;
-  color: var(--gray-600);
-`;
-
+`
 const KPIGrid = styled.div`
   display: grid;
   grid-template-columns: repeat(4, 1fr);
@@ -200,7 +172,7 @@ const KPIGrid = styled.div`
   @media (max-width: 480px) {
     grid-template-columns: 1fr;
   }
-`;
+`
 
 const DonutGrid = styled.div`
   display: grid;
@@ -211,4 +183,4 @@ const DonutGrid = styled.div`
   @media (max-width: 960px) {
     grid-template-columns: 1fr;
   }
-`;
+`

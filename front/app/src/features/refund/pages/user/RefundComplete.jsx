@@ -1,6 +1,8 @@
 import { useNavigate } from 'react-router-dom'
 import styled from 'styled-components'
 
+import PageLayout from '../../../../app/layouts/page/PageLayout'
+
 import { Button, Card, Section } from '../../../pay_shared/components'
 import { ResultHeader } from '../../../pay/components/user/ResultHeader'
 import { RefundInfoCard } from '../../components/user/RefundInfoCard'
@@ -23,8 +25,7 @@ export default function RefundComplete() {
   const nav = useNavigate()
 
   return (
-    <PageWrapper>
-      <Container>
+    <PageLayout maxWidth={800}>
       <ResultHeader
         variant="success"
         title="환불이 완료됐어요"
@@ -71,28 +72,9 @@ export default function RefundComplete() {
           💬 고객센터 문의
         </Button>
       </Actions>
-    </Container>
-    </PageWrapper>
+    </PageLayout>
   )
 }
-
-const PageWrapper = styled.div`
-  background-color: var(--cream);
-  min-height: 100%;
-  padding: var(--space-6) var(--space-5);
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-`
-
-const Container = styled.div`
-  width: 100%;
-  max-width: 800px;
-  display: flex;
-  flex-direction: column;
-  animation: fadeInUp 480ms ease-out both;
-`
-
 const Content = styled.div`
   display: flex;
   flex-direction: column;
