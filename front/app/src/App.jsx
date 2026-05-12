@@ -204,8 +204,6 @@ function App() {
           공통 레이아웃 (헤더 + 사이드 Nav + 푸터)
           ════════════════════════════════════════════ */}
       <Route element={<DefaultLayouts />}>
-        {/* 루트 리다이렉트 */}
-        <Route index element={<Navigate to="/user/mypage" replace />} />
         {/* ══ USER ══ */}
         {/* 내 정보 */}
         <Route path="/user/mypage" element={<MyPage />} />
