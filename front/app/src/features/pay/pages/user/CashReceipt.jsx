@@ -138,7 +138,8 @@ export default function CashReceipt() {
   }
 
   return (
-    <Page>
+    <PageWrapper>
+      <Container>
       <BackLink onClick={() => nav('/user/payment')}>← 결제 내역</BackLink>
 
       <Header>
@@ -235,14 +236,25 @@ export default function CashReceipt() {
 
         <Pagination currentPage={page} totalPages={1} onChange={setPage} />
       </HistorySection>
-    </Page>
+    </Container>
+    </PageWrapper>
   )
 }
 
-const Page = styled.div`
+const PageWrapper = styled.div`
+  background-color: var(--cream);
+  min-height: 100%;
+  padding: var(--space-6) var(--space-5);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+`
+
+const Container = styled.div`
   width: 100%;
   max-width: 800px;
-  padding: var(--space-6) var(--space-5);
+  display: flex;
+  flex-direction: column;
   animation: fadeInUp 480ms ease-out both;
 `
 

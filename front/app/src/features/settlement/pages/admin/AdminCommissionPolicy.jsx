@@ -94,7 +94,8 @@ export default function AdminCommissionPolicy() {
   }
 
   return (
-    <Page>
+    <PageWrapper>
+      <Container>
       <Header>
         <Title>수수료 정책 관리</Title>
         <Description>카테고리별 플랫폼 수수료율을 관리하세요</Description>
@@ -253,15 +254,25 @@ export default function AdminCommissionPolicy() {
           </ModalContent>
         )}
       </Modal>
-    </Page>
+    </Container>
+    </PageWrapper>
   )
 }
 
-const Page = styled.div`
+const PageWrapper = styled.div`
+  background-color: var(--cream);
+  min-height: 100%;
+  padding: var(--space-6) var(--space-5);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+`
+
+const Container = styled.div`
   width: 100%;
   max-width: 1200px;
-  margin: 0 auto;
-  padding: var(--space-6) var(--space-5);
+  display: flex;
+  flex-direction: column;
   animation: fadeInUp 480ms ease-out both;
 `
 

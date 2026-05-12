@@ -58,7 +58,8 @@ export default function BookingCancel() {
     nav('/user/refund/complete');
   };
   return (
-    <Page>
+    <PageWrapper>
+      <Container>
       <Header>
         <Title>예약 취소·환불 신청</Title>
         <Description>신중하게 결정해주세요</Description>
@@ -108,14 +109,25 @@ export default function BookingCancel() {
           {refund.canRefund ? '취소 신청하기' : '환불 불가'}
         </Button>
       </Actions>
-    </Page>
+    </Container>
+    </PageWrapper>
   );
 }
 
-const Page = styled.div`
-  max-width: 800px;
-  margin: 0 auto;
+const PageWrapper = styled.div`
+  background-color: var(--cream);
+  min-height: 100%;
   padding: var(--space-6) var(--space-5);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+`
+
+const Container = styled.div`
+  width: 100%;
+  max-width: 800px;
+  display: flex;
+  flex-direction: column;
   animation: fadeInUp 480ms ease-out both;
 `;
 

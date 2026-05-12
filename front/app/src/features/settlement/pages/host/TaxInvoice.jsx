@@ -78,7 +78,8 @@ export default function TaxInvoice() {
     .reduce((s, inv) => s + inv.amount, 0)
 
   return (
-    <Page>
+    <PageWrapper>
+      <Container>
       <BackLink onClick={() => nav('/host/settlement/dashboard')}>← 정산 대시보드</BackLink>
 
       <Header>
@@ -171,14 +172,25 @@ export default function TaxInvoice() {
           </NoticeList>
         </NoticeContent>
       </NoticeBox>
-    </Page>
+    </Container>
+    </PageWrapper>
   )
 }
 
-const Page = styled.div`
-  width: 100%;
-  max-width: 800px;
+const PageWrapper = styled.div`
+  background-color: var(--cream);
+  min-height: 100%;
   padding: var(--space-6) var(--space-5);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+`
+
+const Container = styled.div`
+  width: 100%;
+  max-width: 1200px;
+  display: flex;
+  flex-direction: column;
   animation: fadeInUp 480ms ease-out both;
 `
 

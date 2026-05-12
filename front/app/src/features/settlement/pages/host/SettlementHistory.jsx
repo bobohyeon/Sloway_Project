@@ -10,67 +10,67 @@ import { SettlementFilterBar } from '../../components/host/SettlementFilterBar'
 const SETTLEMENTS = [
   {
     id: 1,
-    settlementDate: '2026.06.05',
+    settlementDate: '2026.05.13',
     spaceName: '청평 숲속 파인뷰 스테이',
     spaceEmoji: '🌲',
     spaceId: 1,
-    bookingCount: 9,
-    salesAmount: 5550000,
+    bookingCount: 5,
+    salesAmount: 2780000,
     feeRate: 12.5,
-    feeAmount: 693750,
-    payoutAmount: 4856250,
+    feeAmount: 347500,
+    payoutAmount: 2432500,
     status: 'scheduled',
   },
   {
     id: 2,
-    settlementDate: '2026.04.05',
+    settlementDate: '2026.05.09',
     spaceName: '청평 숲속 파인뷰 스테이',
     spaceEmoji: '🌲',
     spaceId: 1,
-    bookingCount: 8,
-    salesAmount: 4180000,
+    bookingCount: 4,
+    salesAmount: 2080000,
     feeRate: 12.5,
-    feeAmount: 522500,
-    payoutAmount: 3657500,
+    feeAmount: 260000,
+    payoutAmount: 1820000,
     status: 'completed',
   },
   {
     id: 3,
-    settlementDate: '2026.03.05',
+    settlementDate: '2026.05.05',
     spaceName: '청평 숲속 파인뷰 스테이',
     spaceEmoji: '🌲',
     spaceId: 1,
-    bookingCount: 6,
-    salesAmount: 3168000,
+    bookingCount: 3,
+    salesAmount: 1554000,
     feeRate: 12.5,
-    feeAmount: 396000,
-    payoutAmount: 2772000,
+    feeAmount: 194000,
+    payoutAmount: 1360000,
     status: 'completed',
   },
   {
     id: 4,
-    settlementDate: '2026.02.05',
+    settlementDate: '2026.05.01',
     spaceName: '강릉 바다향 코워킹',
     spaceEmoji: '🌊',
     spaceId: 2,
-    bookingCount: 14,
-    salesAmount: 1960000,
+    bookingCount: 8,
+    salesAmount: 980000,
     feeRate: 10,
-    feeAmount: 196000,
-    payoutAmount: 1764000,
+    feeAmount: 98000,
+    payoutAmount: 882000,
     status: 'completed',
   },
   {
     id: 5,
-    settlementDate: '2026.01.05',
+    settlementDate: '2026.04.27',
     spaceName: '청평 숲속 파인뷰 스테이',
     spaceEmoji: '🌲',
     spaceId: 1,
-    bookingCount: 7,
-    salesAmount: 3920000,
+    bookingCount: 6,
+    salesAmount: 3360000,
     feeRate: 12.5,
-    feeAmount: 490000,
-    payoutAmount: 3430000,
+    feeAmount: 420000,
+    payoutAmount: 2940000,
     status: 'completed',
   },
 ]
@@ -98,7 +98,7 @@ export default function SettlementHistory() {
     0
   )
   const monthPayout = SETTLEMENTS.filter(
-    (s) => s.status === 'completed' && s.settlementDate.startsWith('2026.04')
+    (s) => s.status === 'completed' && s.settlementDate.startsWith('2026.05')
   ).reduce((sum, s) => sum + s.payoutAmount, 0)
   const expectedPayout = SETTLEMENTS.filter((s) => s.status === 'scheduled').reduce(
     (sum, s) => sum + s.payoutAmount,
@@ -120,7 +120,8 @@ export default function SettlementHistory() {
   ]
 
   return (
-    <Page>
+    <PageWrapper>
+      <Container>
       <BackLink onClick={() => nav('/host/settlement/dashboard')}>← 정산 대시보드</BackLink>
 
       <Header>
@@ -193,13 +194,25 @@ export default function SettlementHistory() {
       )}
 
       <Pagination currentPage={page} totalPages={2} onChange={setPage} />
-    </Page>
+    </Container>
+    </PageWrapper>
   )
 }
 
-const Page = styled.div`
-  width: 100%;
+const PageWrapper = styled.div`
+  background-color: var(--cream);
+  min-height: 100%;
   padding: var(--space-6) var(--space-5);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+`
+
+const Container = styled.div`
+  width: 100%;
+  max-width: 1200px;
+  display: flex;
+  flex-direction: column;
   animation: fadeInUp 480ms ease-out both;
 `
 
@@ -237,7 +250,7 @@ const StatGrid = styled.div`
   gap: var(--space-3);
   margin-bottom: var(--space-5);
 
-  @media (max-width: 720px) {
+  @media (max-width: 1200px) {
     grid-template-columns: 1fr;
   }
 `

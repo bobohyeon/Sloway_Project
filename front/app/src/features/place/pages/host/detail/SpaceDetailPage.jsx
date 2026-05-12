@@ -4,108 +4,102 @@ import SpaceDetailLayout from '../../../layouts/host/detail/SpaceDetailLayout';
 import SpaceDetailComponent from '../../../components/host/detail/place/SpaceDetailComponent';
 
 function SpaceDetailPage() {
+  const { id } = useParams();
+  const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState('ALL');
-  const [spaces] = useState([
+
+  // 1. 공간(Place) 정보: 현재 건물의 대분류 타입 정의
+  const [placeInfo] = useState({
+    name: '강릉 바다 스테이',
+    type: 'WORK_STAY', // STATION, OFFICE, WORK_STAY 중 하나
+  });
+
+  const [units] = useState([
     {
       id: 1,
-      type: 'STATION',
-      title: '강릉 바다 스테이 101호',
-      location: '강원 강릉',
+      type: 'WORK_STAY',
+      title: '101호',
+      thumbnail: '',
+      createdAt: '2026.05.01',
       rating: 4.9,
     },
     {
       id: 2,
-      type: 'STATION',
-      title: '강릉 바다 스테이 102호',
-      location: '강원 강릉',
-      rating: 4.9,
+      type: 'WORK_STAY',
+      title: '102호',
+      thumbnail: '',
+      createdAt: '2026.05.02',
+      rating: 4.8,
     },
     {
       id: 3,
-      type: 'STATION',
-      title: '강릉 바다 스테이 201호',
-      location: '강원 강릉',
+      type: 'WORK_STAY',
+      title: '201호',
+      thumbnail: '',
+      createdAt: '2026.05.10',
       rating: 4.9,
     },
     {
       id: 4,
-      type: 'OFFICE',
-      title: '성수 브릭오피스 팀룸',
-      location: '서울 성수',
-      rating: 4.4,
+      type: 'STATION',
+      title: '202호',
+      thumbnail: '',
+      createdAt: '2026.05.10',
+      rating: 4.9,
     },
     {
       id: 5,
-      type: 'OFFICE',
-      title: '성수 브릭오피스 개인룸',
-      location: '서울 성수',
-      rating: 4.4,
-    },
-    {
-      id: 6,
-      type: 'WORK_STAY',
-      title: '제주 애월당 단독룸',
-      location: '제주 애월',
-      rating: 4.8,
-    },
-    {
-      id: 7,
-      type: 'WORK_STAY',
-      title: '제주 애월당 오피스룸',
-      location: '제주 애월',
-      rating: 4.8,
+      type: 'STATION',
+      title: '301호',
+      thumbnail: '',
+      createdAt: '2026.05.10',
+      rating: 4.9,
     },
   ]);
 
-  const tabs = [
-    { key: 'ALL', label: '전체', count: spaces.length },
-    {
-      key: 'STATION',
-      label: '숙소',
-      count: spaces.filter((s) => s.type === 'STATION').length,
-    },
-    {
-      key: 'OFFICE',
-      label: '오피스',
-      count: spaces.filter((s) => s.type === 'OFFICE').length,
-    },
-    {
-      key: 'WORK_STAY',
-      label: '워크앤스테이',
-      count: spaces.filter((s) => s.type === 'WORK_STAY').length,
-    },
-  ];
-
-  const filteredData =
-    activeTab === 'ALL' ? spaces : spaces.filter((s) => s.type === activeTab);
-
-  const navigate = useNavigate();
-
-  const handleCardClick = (id, type) => {
+  // 유형 한글 변환 헬퍼
+  const getTypeLabel = (type) => {
     switch (type) {
       case 'STATION':
-        navigate(`/host/lodging/${id}`); // 숙소 관리 경로
-        break;
-      case 'WORK_STAY':
-        navigate(`/host/workstay/${id}`); // 워크앤스테이 관리 경로
-        break;
+        return '숙소';
       case 'OFFICE':
-        navigate(`/host/coworking/${id}`); // 오피스 관리 경로
-        break;
+        return '오피스';
+      case 'WORK_STAY':
+        return '워크앤스테이';
       default:
-        console.warn('Unknown space type:', type);
+        return '';
     }
   };
+
+  // 3. 탭 구성 (상세 페이지 내에서도 '전체' 개수 표시용)
+
+  const handleBack = () => {
+    navigate('/host/space/list'); // 목록 페이지로 이동 로직
+  };
+
+  const handleCardClick = (unitId) => {
+    const basePath = {
+      STATION: 'lodging',
+      WORK_STAY: 'workstay',
+      OFFICE: 'coworking',
+    }[placeInfo.type];
+
+    navigate(`/host/${basePath}/${unitId}`);
+  };
+
   return (
     <SpaceDetailLayout
-      title="내 공간 목록"
-      description="등록된 숙소, 오피스, 워크앤스테이를 관리하세요."
-      tabs={tabs}
-      activeTab={activeTab}
-      onTabChange={setActiveTab}
+      title={`${placeInfo.name} ${getTypeLabel(placeInfo.type)} 목록`}
+      description={`등록된 ${getTypeLabel(placeInfo.type)}를 관리하고 정보를 수정하세요.`}
+      onBack={handleBack}
     >
-      <SpaceDetailComponent data={filteredData} onCardClick={handleCardClick} />
+      <SpaceDetailComponent
+        data={units}
+        onCardClick={handleCardClick}
+        showTypeBadge={false} // 상세 리스트에서는 유형 배지 숨김 처리
+      />
     </SpaceDetailLayout>
   );
 }
+
 export default SpaceDetailPage;

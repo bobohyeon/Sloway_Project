@@ -1,7 +1,7 @@
 import React from 'react';
 import styled from 'styled-components';
 import { useNavigate } from 'react-router-dom';
-
+import { FaHotel, FaBriefcase, FaLeaf } from 'react-icons/fa';
 const SpaceCard = styled.div`
   background: white;
   border-radius: 15px;
@@ -59,7 +59,6 @@ const StatusTag = styled.span`
   border-radius: 6px;
   font-size: 11px;
   font-weight: 600;
-  /* 운영 중일 때와 검수 대기일 때의 시각적 구분만 남김 */
   background: ${(props) => (props.$isPending ? '#f5f5f5' : '#76896610')};
   color: ${(props) => (props.$isPending ? '#999' : '#768966')};
   border: 1px solid ${(props) => (props.$isPending ? '#e0e0e0' : '#76896630')};
@@ -118,6 +117,44 @@ const ActionButton = styled.button`
   }
 `;
 
+const TypeBadge = styled.span`
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  border-radius: 6px;
+  font-size: 11px;
+  font-weight: 700;
+  margin-bottom: 8px;
+  letter-spacing: -0.02em;
+
+  ${({ $type }) => {
+    switch ($type) {
+      case 'STATION':
+        return `background-color: #e3f2fd; color: #1976d2;`;
+      case 'OFFICE':
+        return `background-color: #f3e5f5; color: #7b1fa2;`;
+      case 'WORK_STAY':
+        return `background-color: #e8f5e9; color: #2e7d32;`;
+      default:
+        return `background-color: #f5f5f5; color: #616161;`;
+    }
+  }}
+`;
+
+const getTypeInfo = (type) => {
+  switch (type) {
+    case 'STATION':
+      return { label: '숙소', icon: <FaHotel size={12} /> };
+    case 'OFFICE':
+      return { label: '오피스', icon: <FaBriefcase size={12} /> };
+    case 'WORK_STAY':
+      return { label: '워크앤스테이', icon: <FaLeaf size={12} /> };
+    default:
+      return { label: type, icon: null };
+  }
+};
+
 function SpaceListComponent({ data = [] }) {
   const navigate = useNavigate();
 
@@ -131,59 +168,68 @@ function SpaceListComponent({ data = [] }) {
 
   return (
     <>
-      {data.map((space) => (
-        <SpaceCard
-          key={space.id}
-          onClick={() => {
-            navigate(`/host/space/${space.id}`);
-          }}
-        >
-          <Thumbnail>{space.icon}</Thumbnail>
+      {data.map((space) => {
+        // 타입별 아이콘과 라벨 가져오기
+        const { label, icon } = getTypeInfo(space.type);
 
-          <ContentArea>
-            <div className="status-row">
-              <StatusTag $isPending={space.status === '검수 대기'}>
-                {space.status}
-              </StatusTag>
-            </div>
-            <h3>{space.title}</h3>
-            <div className="info-row">
-              <span>📍 {space.location}</span>
-              <span>
-                ⭐ {space.rating} ({space.reviews})
-              </span>
-              <span>• 예약 {space.monthlyBookings}건</span>
-            </div>
-          </ContentArea>
+        return (
+          <SpaceCard
+            key={space.id}
+            onClick={() => navigate(`/host/space/${space.id}`)}
+          >
+            <Thumbnail>{space.icon}</Thumbnail>
 
-          <RightArea>
-            <div className="price-label">이용 금액</div>
-            <div className="price-value">
-              {Number(space.price).toLocaleString()}원~
-            </div>
-            <div className="button-group">
-              <ActionButton
-                className="image-btn"
-                onClick={(evt) => {
-                  evt.stopPropagation();
-                  navigate(`/host/space/${space.id}/images`);
-                }}
-              >
-                🖼️ 이미지 관리
-              </ActionButton>
-              <ActionButton
-                className="manage-btn"
-                onClick={(evt) => {
-                  evt.stopPropagation();
-                  navigate(`/host/space/${space.id}/edit`);
-                }}
-              >
-                공간 정보 수정
-              </ActionButton>
-            </div>
-          </RightArea>
-        </SpaceCard>
-      ))}
+            <ContentArea>
+              {/* 배지 내부 구조 수정: 아이콘을 컴포넌트로 직접 넣음 */}
+              <TypeBadge $type={space.type}>
+                {icon}
+                {label}
+              </TypeBadge>
+
+              <div className="status-row">
+                <StatusTag $isPending={space.status === '검수 대기'}>
+                  {space.status}
+                </StatusTag>
+              </div>
+              <h3>{space.title}</h3>
+              <div className="info-row">
+                <span>📍 {space.location}</span>
+                <span>
+                  ⭐ {space.rating} ({space.reviews})
+                </span>
+                <span>• 예약 {space.monthlyBookings}건</span>
+              </div>
+            </ContentArea>
+
+            <RightArea>
+              <div className="price-label">이용 금액</div>
+              <div className="price-value">
+                {Number(space.price).toLocaleString()}원~
+              </div>
+              <div className="button-group">
+                <ActionButton
+                  className="image-btn"
+                  onClick={(evt) => {
+                    evt.stopPropagation();
+                    navigate(`/host/space/${space.id}/images`);
+                  }}
+                >
+                  🖼️ 이미지 관리
+                </ActionButton>
+                <ActionButton
+                  className="manage-btn"
+                  onClick={(evt) => {
+                    evt.stopPropagation();
+                    navigate(`/host/space/${space.id}/edit`);
+                  }}
+                >
+                  공간 정보 수정
+                </ActionButton>
+              </div>
+            </RightArea>
+          </SpaceCard>
+        );
+      })}
     </>
   );
 }

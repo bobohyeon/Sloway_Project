@@ -158,17 +158,28 @@ function UpdateWorkCheckComponent({ formData, prev, onSubmit }) {
           🏠 워크스테이 요약
         </h3>
         <SummaryItem>
-          <div className="label">워크스테이명</div>
-          <div className="value">{formData.title || '(미입력)'}</div>
-        </SummaryItem>
-        <SummaryItem>
-          <div className="label">마스터 공간</div>
+          <div className="label">공간</div>
           <div className="value">
             {formData.placeNo
               ? `[No.${formData.placeNo}] ${formData.placeTitle}`
               : '선택 안됨'}
           </div>
         </SummaryItem>
+
+        <SummaryItem>
+          <div className="label">워크스테이명</div>
+          <div className="value">{formData.title || '(미입력)'}</div>
+        </SummaryItem>
+
+        <SummaryItem>
+          <div className="label">편의시설</div>
+          <div className="value">
+            {formData.facilities && formData.facilities.length > 0
+              ? formData.facilities.join(', ')
+              : '(선택한 편의시설 없음)'}
+          </div>
+        </SummaryItem>
+
         <SummaryItem>
           <div className="label">대표 요금(월)</div>
           <div className="value">
@@ -189,6 +200,16 @@ function UpdateWorkCheckComponent({ formData, prev, onSubmit }) {
         <SummaryItem>
           <div className="label">수용 인원</div>
           <div className="value">{formData.office?.peopleCnt || 0}명</div>
+        </SummaryItem>
+
+        <SummaryItem>
+          <div className="label">편의시설</div>
+          <div className="value">
+            {formData.office?.facilities &&
+            formData.office?.facilities.length > 0
+              ? formData.office?.facilities.join(', ')
+              : '(선택한 편의시설 없음)'}
+          </div>
         </SummaryItem>
       </SummaryBox>
 

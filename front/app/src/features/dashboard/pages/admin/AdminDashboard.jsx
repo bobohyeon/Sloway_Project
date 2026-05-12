@@ -1,5 +1,16 @@
 import { useNavigate } from 'react-router-dom'
 import styled from 'styled-components'
+import {
+  FaExclamationTriangle,
+  FaHome,
+  FaFlag,
+  FaUsers,
+  FaPlusCircle,
+  FaCoins,
+  FaChartBar,
+  FaFileAlt,
+  FaBullhorn,
+} from 'react-icons/fa'
 
 import { AlertBanner } from '../../components/admin/AlertBanner'
 import { AdminKPICard } from '../../components/admin/AdminKPICard'
@@ -10,7 +21,7 @@ import { AdminQuickAction } from '../../components/admin/AdminQuickAction'
 const ALERTS = [
   {
     id: 1,
-    icon: '⚠️',
+    icon: <FaExclamationTriangle />,
     title: '환불 이상 감지',
     description: 'PG사 송금 실패 또는 호스트 거절 케이스가 발생했어요',
     count: 2,
@@ -18,7 +29,7 @@ const ALERTS = [
   },
   {
     id: 2,
-    icon: '🏠',
+    icon: <FaHome />,
     title: '신규 공간 승인 대기',
     description: '호스트가 등록한 공간을 검토해주세요',
     count: 5,
@@ -26,7 +37,7 @@ const ALERTS = [
   },
   {
     id: 3,
-    icon: '🚨',
+    icon: <FaFlag />,
     title: '신고된 리뷰',
     description: '리뷰 신고가 접수됐어요. 검토 후 처리해주세요',
     count: 1,
@@ -60,14 +71,14 @@ const PAYMENT_METHODS = [
 const QUICK_ACTIONS = [
   {
     id: 1,
-    icon: '👥',
+    icon: <FaUsers />,
     title: '회원 관리',
     description: '회원 조회 및 권한 설정',
     path: '/admin/members',
   },
   {
     id: 2,
-    icon: '🏠',
+    icon: <FaHome />,
     title: '공간 승인',
     description: '신규 등록 공간 검토',
     count: 5,
@@ -75,7 +86,7 @@ const QUICK_ACTIONS = [
   },
   {
     id: 3,
-    icon: '💰',
+    icon: <FaCoins />,
     title: '환불 관리',
     description: '환불 요청 모니터링',
     count: 2,
@@ -83,7 +94,7 @@ const QUICK_ACTIONS = [
   },
   {
     id: 4,
-    icon: '🚨',
+    icon: <FaFlag />,
     title: '신고 처리',
     description: '리뷰·게시글 신고 처리',
     count: 1,
@@ -91,14 +102,14 @@ const QUICK_ACTIONS = [
   },
   {
     id: 5,
-    icon: '📑',
+    icon: <FaFileAlt />,
     title: '수수료 정책',
     description: '카테고리별 수수료 관리',
     path: '/admin/settlement/fee',
   },
   {
     id: 6,
-    icon: '📢',
+    icon: <FaBullhorn />,
     title: '공지사항 관리',
     description: '플랫폼 공지 작성·발행',
     path: '/admin/notice',
@@ -109,7 +120,8 @@ export default function AdminDashboard() {
   const nav = useNavigate()
 
   return (
-    <Page>
+    <PageWrapper>
+      <Container>
       <Header>
         <Title>관리자 대시보드</Title>
         <Description>플랫폼 운영 현황을 한눈에 확인하세요</Description>
@@ -127,14 +139,14 @@ export default function AdminDashboard() {
           label="총 회원수"
           value="12,458"
           unit="명"
-          icon="👥"
+          icon={<FaUsers />}
           subText="전체 누적"
         />
         <AdminKPICard
           label="신규 가입"
           value="142"
           unit="명"
-          icon="✨"
+          icon={<FaPlusCircle />}
           delta="18%"
           deltaType="up"
           subText="전월 대비"
@@ -143,7 +155,7 @@ export default function AdminDashboard() {
           label="활성 호스트"
           value="348"
           unit="명"
-          icon="🏠"
+          icon={<FaHome />}
           delta="5%"
           deltaType="up"
           subText="이번 주"
@@ -152,7 +164,7 @@ export default function AdminDashboard() {
           label="이번 달 매출"
           value="8,420"
           unit="만원"
-          icon="💰"
+          icon={<FaCoins />}
           delta="12.5%"
           deltaType="up"
           subText="전월 대비"
@@ -196,13 +208,25 @@ export default function AdminDashboard() {
           ))}
         </QuickGrid>
       </QuickSection>
-    </Page>
+    </Container>
+    </PageWrapper>
   )
 }
 
-const Page = styled.div`
-  width: 100%;
+const PageWrapper = styled.div`
+  background-color: var(--cream);
+  min-height: 100%;
   padding: var(--space-6) var(--space-5);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+`
+
+const Container = styled.div`
+  width: 100%;
+  max-width: 1200px;
+  display: flex;
+  flex-direction: column;
   animation: fadeInUp 480ms ease-out both;
 `
 

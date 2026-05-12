@@ -1,28 +1,6 @@
 import React from 'react';
 import styled from 'styled-components';
-import {
-  FaHome,
-  FaUserCircle,
-  FaMapMarkerAlt,
-  FaHotel,
-  FaBriefcase,
-  FaLeaf,
-  FaImages,
-  FaClipboardList,
-  FaCalendarAlt,
-  FaBan,
-  FaCoins,
-  FaFileInvoiceDollar,
-  FaUniversity,
-  FaReceipt,
-  FaChartBar,
-  FaStar,
-  FaCommentDots,
-  FaBullhorn,
-  FaBell,
-  FaCog,
-  FaStore,
-} from 'react-icons/fa';
+import { FaHotel } from 'react-icons/fa';
 
 const FormCard = styled.div`
   background: white;

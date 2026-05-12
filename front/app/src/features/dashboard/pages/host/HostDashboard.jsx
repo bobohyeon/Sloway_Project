@@ -1,5 +1,16 @@
 import { useNavigate } from 'react-router-dom'
 import styled from 'styled-components'
+import {
+  FaInbox,
+  FaComments,
+  FaCalendarAlt,
+  FaCoins,
+  FaStar,
+  FaPlus,
+  FaClipboardList,
+  FaChartBar,
+  FaHome,
+} from 'react-icons/fa'
 
 import { HostGreeting } from '../../components/host/HostGreeting'
 import { HostAlertBanner } from '../../components/host/HostAlertBanner'
@@ -15,7 +26,7 @@ const TODAY = '2026.05.11 (월)'
 const ALERTS = [
   {
     id: 1,
-    icon: '📥',
+    icon: <FaInbox />,
     title: '신규 예약',
     description: '확인이 필요한 신규 예약이 있어요',
     count: 2,
@@ -23,7 +34,7 @@ const ALERTS = [
   },
   {
     id: 2,
-    icon: '💬',
+    icon: <FaComments />,
     title: '새 문의',
     description: '게스트가 보낸 문의에 답변해주세요',
     count: 1,
@@ -36,14 +47,14 @@ const KPIS = [
     label: '오늘 예약',
     value: '3',
     unit: '건',
-    icon: '📅',
+    icon: <FaCalendarAlt />,
     subText: '체크인 2 / 체크아웃 1',
   },
   {
     label: '이번 달 매출',
     value: '5,420,000',
     unit: '원',
-    icon: '💰',
+    icon: <FaCoins />,
     delta: '12.5%',
     deltaType: 'up',
     subText: '전월 대비',
@@ -53,14 +64,14 @@ const KPIS = [
     label: '평균 평점',
     value: '4.8',
     unit: '/ 5.0',
-    icon: '⭐',
+    icon: <FaStar />,
     subText: '리뷰 132개',
   },
   {
     label: '신규 문의',
     value: '1',
     unit: '건',
-    icon: '💬',
+    icon: <FaComments />,
     subText: '답변 대기',
   },
 ]
@@ -164,14 +175,14 @@ const MY_SPACES = [
 const QUICK_ACTIONS = [
   {
     id: 1,
-    icon: '➕',
+    icon: <FaPlus />,
     title: '공간 등록',
     description: '새로운 공간을 등록해보세요',
     path: '/host/space',
   },
   {
     id: 2,
-    icon: '📋',
+    icon: <FaClipboardList />,
     title: '예약 관리',
     description: '예약 현황 및 일정 관리',
     count: 2,
@@ -179,7 +190,7 @@ const QUICK_ACTIONS = [
   },
   {
     id: 3,
-    icon: '💬',
+    icon: <FaComments />,
     title: '메시지',
     description: '게스트 문의 답변',
     count: 1,
@@ -187,21 +198,21 @@ const QUICK_ACTIONS = [
   },
   {
     id: 4,
-    icon: '💰',
+    icon: <FaCoins />,
     title: '정산 보기',
     description: '매출과 정산 내역 확인',
     path: '/host/settlement/dashboard',
   },
   {
     id: 5,
-    icon: '📊',
+    icon: <FaChartBar />,
     title: '매출 통계',
     description: '상세 매출 분석과 트렌드',
     path: '/host/stats/sales',
   },
   {
     id: 6,
-    icon: '🏠',
+    icon: <FaHome />,
     title: '내 공간 관리',
     description: '공간 정보 수정 및 상태 변경',
     path: '/host/space/list',
@@ -212,7 +223,8 @@ export default function HostDashboard() {
   const nav = useNavigate()
 
   return (
-    <Page>
+    <PageWrapper>
+      <Container>
       <HostGreeting hostName={HOST_NAME} todayDate={TODAY} />
 
       <AlertSection>
@@ -272,13 +284,25 @@ export default function HostDashboard() {
           ))}
         </QuickGrid>
       </QuickSection>
-    </Page>
+    </Container>
+    </PageWrapper>
   )
 }
 
-const Page = styled.div`
-  width: 100%;
+const PageWrapper = styled.div`
+  background-color: var(--cream);
+  min-height: 100%;
   padding: var(--space-6) var(--space-5);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+`
+
+const Container = styled.div`
+  width: 100%;
+  max-width: 1200px;
+  display: flex;
+  flex-direction: column;
   animation: fadeInUp 480ms ease-out both;
 `
 

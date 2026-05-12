@@ -172,7 +172,8 @@ export default function PaymentDetail() {
   const isFailed = payment.status === 'failed'
 
   return (
-    <Page>
+    <PageWrapper>
+      <Container>
       <BackLink onClick={() => nav('/user/payment')}>← 결제 내역</BackLink>
 
       <ReceiptCard padded>
@@ -225,14 +226,25 @@ export default function PaymentDetail() {
           🖨️ 영수증 출력
         </Button>
       </Actions>
-    </Page>
+    </Container>
+    </PageWrapper>
   )
 }
 
-const Page = styled.div`
-  max-width: 800px;
-  margin: 0 auto;
+const PageWrapper = styled.div`
+  background-color: var(--cream);
+  min-height: 100%;
   padding: var(--space-6) var(--space-5);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+`
+
+const Container = styled.div`
+  width: 100%;
+  max-width: 800px;
+  display: flex;
+  flex-direction: column;
   animation: fadeInUp 480ms ease-out both;
 `
 

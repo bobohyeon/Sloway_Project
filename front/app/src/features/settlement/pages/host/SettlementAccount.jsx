@@ -23,7 +23,8 @@ export default function SettlementAccount() {
   const [modalOpen, setModalOpen] = useState(false)
 
   return (
-    <Page>
+    <PageWrapper>
+      <Container>
       <BackLink onClick={() => nav('/host/settlement/dashboard')}>← 정산 대시보드</BackLink>
 
       <Header>
@@ -83,14 +84,25 @@ export default function SettlementAccount() {
         }}
         isReVerify={!!account}
       />
-    </Page>
+    </Container>
+    </PageWrapper>
   )
 }
 
-const Page = styled.div`
-  width: 100%;
-  max-width: 720px;
+const PageWrapper = styled.div`
+  background-color: var(--cream);
+  min-height: 100%;
   padding: var(--space-6) var(--space-5);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+`
+
+const Container = styled.div`
+  width: 100%;
+  max-width: 800px;
+  display: flex;
+  flex-direction: column;
   animation: fadeInUp 480ms ease-out both;
 `
 

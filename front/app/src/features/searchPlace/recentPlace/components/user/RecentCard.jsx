@@ -1,4 +1,3 @@
-import { useNavigate } from 'react-router-dom';
 import styled from 'styled-components';
 import { COLOR } from '../../../../rsvn/components/user/RsvnStyled';
 
@@ -81,15 +80,9 @@ const DeleteBtn = styled.button`
   }
 `;
 
-function RecentCard({ item, onDelete }) {
-  const navigate = useNavigate();
-
+function RecentCard({ item, onDelete, onClick }) {
   return (
-    <Card
-      onClick={() =>
-        navigate(`/user/spaces/${item.type.toLowerCase()}/${item.id}`)
-      }
-    >
+    <Card onClick={() => onClick && onClick(item)}>
       <Thumb>{item.icon}</Thumb>
       <div style={{ flex: 1, minWidth: 0 }}>
         <div

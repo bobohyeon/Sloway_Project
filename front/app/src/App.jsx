@@ -53,6 +53,7 @@ import MainPage from './features/main/pages/MainPage';
 
 // ── 공간 검수 (관리자) ────────────────────────────────────
 import SpaceApprovalPage from './features/approval/pages/admin/SpaceApprovalPage';
+import SpaceApprovalDetailPage from './features/approval/pages/admin/SpaceApprovalDetailPage';
 
 // ── 예약 (일반회원) ───────────────────────────────────────
 import RsvnListPage from './features/rsvn/pages/user/RsvnListPage';
@@ -66,6 +67,7 @@ import HostRsvnDetailPage from './features/rsvn/pages/host/HostRsvnDetailPage';
 import HostRsvnCalendarPage from './features/rsvn/pages/host/HostRsvnCalendarPage';
 import BlackoutPage from './features/rsvn/pages/host/BlackoutPage';
 import BlackoutAddPage from './features/rsvn/blackout/pages/host/BlackoutAddPage';
+import BlackoutEditPage from './features/rsvn/blackout/pages/host/BlackoutEditPage';
 
 // ── 예약 (관리자) ─────────────────────────────────────────
 import AdminRsvnListPage from './features/rsvn/pages/admin/AdminRsvnListPage';
@@ -93,6 +95,10 @@ import PaymentDetail from './features/pay/pages/user/PaymentDetail';
 import PaymentMethods from './features/pay/pages/user/PaymentMethods';
 import CashReceipt from './features/pay/pages/user/CashReceipt';
 import PointHistory from './features/point/pages/user/PointHistory';
+
+// ── 결제 (관리자) ──────────────────────────────────────────
+import AdminPaymentList from './features/pay/pages/admin/AdminPaymentList';
+import AdminPaymentDetail from './features/pay/pages/admin/AdminPaymentDetail';
 
 // ── 환불 (일반회원) ────────────────────────────────────────
 import BookingCancel from './features/refund/pages/user/BookingCancel';
@@ -130,7 +136,7 @@ import EventList from './features/coupon/pages/user/EventList';
 import MyCoupons from './features/coupon/pages/user/MyCoupons';
 
 // ── 찜 ────────────────────────────────────────────────────
-// import WishListPage from './features/wishList/pages/user/WishListPage';
+import WishListPage from './features/wishList/pages/user/WishListPage';
 
 // ── 임시 플레이스홀더 ─────────────────────────────────────
 const Todo = ({ label }) => (
@@ -156,6 +162,14 @@ function App() {
       <Route path="/workstays/:id" element={<WorkstayDetailPage />} />
       <Route path="/coworking-offices/:id" element={<OfficeDetailPage />} />
       <Route path="/review/:id" element={<ReviewDetailPage />} />
+
+      {/* ════════════════════════════════════════════
+          결제 진행 페이지 (헤더·사이드nav·푸터 없음)
+          야놀자/토스처럼 결제 집중 모드
+          ════════════════════════════════════════════ */}
+      <Route path="/user/payment/checkout" element={<BookingPaymentPage />} />
+      <Route path="/user/payment/complete" element={<PaymentComplete />} />
+      <Route path="/user/payment/fail" element={<PaymentFail />} />
 
       {/* ════════════════════════════════════════════
           인증 레이아웃 (헤더·사이드바 없음)
@@ -191,8 +205,6 @@ function App() {
           공통 레이아웃 (헤더 + 사이드 Nav + 푸터)
           ════════════════════════════════════════════ */}
       <Route element={<DefaultLayouts />}>
-        {/* 루트 리다이렉트 */}
-        <Route index element={<Navigate to="/user/mypage" replace />} />
         {/* ══ USER ══ */}
         {/* 내 정보 */}
         <Route path="/user/mypage" element={<MyPage />} />
@@ -218,9 +230,6 @@ function App() {
         <Route path="/user/payment/receipt" element={<CashReceipt />} />
         <Route path="/user/payment" element={<PaymentHistory />} />
         <Route path="/user/payment/method" element={<PaymentMethods />} />
-        <Route path="/user/payment/checkout" element={<BookingPaymentPage />} />
-        <Route path="/user/payment/complete" element={<PaymentComplete />} />
-        <Route path="/user/payment/fail" element={<PaymentFail />} />
         <Route path="/user/payment/:id" element={<PaymentDetail />} />
         <Route path="/user/point" element={<PointHistory />} />
         <Route path="/event" element={<EventList />} />
@@ -229,7 +238,7 @@ function App() {
         <Route path="/user/refund/request" element={<BookingCancel />} />
         <Route path="/user/refund/complete" element={<RefundComplete />} />
         {/* 활동 */}
-        <Route path="/user/wishlist" element={<Todo label="찜 목록" />} />
+        <Route path="/user/wishlist" element={<WishListPage />} />
         <Route path="/user/recent" element={<RecentPlacePage />} />
         <Route path="/user/review" element={<MyReviewPage />} />
         <Route path="/user/review/write" element={<ReviewWritePage />} />
@@ -308,6 +317,10 @@ function App() {
           path="/host/reservation/block/add"
           element={<BlackoutAddPage />}
         />
+        <Route
+          path="/host/reservation/block/edit/:id"
+          element={<BlackoutEditPage />}
+        />
         {/* 정산·통계 */}
         <Route
           path="/host/settlement/dashboard"
@@ -362,7 +375,7 @@ function App() {
         <Route path="/admin/space/review" element={<SpaceApprovalPage />} />
         <Route
           path="/admin/space/review/:id"
-          element={<Todo label="공간 상세 검수" />}
+          element={<SpaceApprovalDetailPage />}
         />
         {/* 예약·리뷰 */}
         <Route path="/admin/reservation" element={<AdminRsvnListPage />} />
@@ -376,11 +389,8 @@ function App() {
           element={<AdminReviewReportPage />}
         />
         {/* 결제·환불 */}
-        <Route
-          path="/admin/payment"
-          element={<Todo label="전체 결제 내역" />}
-        />
-        <Route path="/admin/payment/:id" element={<Todo label="결제 상세" />} />
+        <Route path="/admin/payment" element={<AdminPaymentList />} />
+        <Route path="/admin/payment/:id" element={<AdminPaymentDetail />} />
         <Route path="/admin/refund" element={<RefundList />} />
         <Route path="/admin/refund/:id" element={<RefundDetail />} />
         {/* 정산·수수료 */}

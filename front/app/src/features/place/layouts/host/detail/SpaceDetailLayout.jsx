@@ -10,6 +10,16 @@ const PageWrapper = styled.div`
   align-items: center;
 `;
 
+const BackLink = styled.div`
+  color: #888;
+  font-size: 14px;
+  margin-bottom: 20px;
+  cursor: pointer;
+  &:hover {
+    text-decoration: underline;
+  }
+`;
+
 const Container = styled.div`
   width: 100%;
   max-width: 1100px;
@@ -30,7 +40,7 @@ const Header = styled.div`
   }
 `;
 
-function SpaceDetailLayout({ title, description, children, summarySection }) {
+function SpaceDetailLayout({ title, description, children, onBack }) {
   return (
     <PageWrapper>
       <Container>
@@ -38,8 +48,7 @@ function SpaceDetailLayout({ title, description, children, summarySection }) {
           <h1>{title}</h1>
           <p>{description}</p>
         </Header>
-
-        {summarySection}
+        <BackLink onClick={onBack}>← 내 공간 목록</BackLink>
 
         {children}
       </Container>

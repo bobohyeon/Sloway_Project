@@ -21,7 +21,7 @@ function WishListPage() {
     {
       id: 2,
       type: 'OFFICE',
-      typeLabel: '코워킹오피스',
+      typeLabel: '오피스',
       title: '강릉 바다향 커먼워크',
       location: '강원 강릉',
       rating: 4.8,
@@ -62,7 +62,7 @@ function WishListPage() {
     },
     {
       key: 'OFFICE',
-      label: '코워킹오피스',
+      label: '오피스',
       count: wishes.filter((i) => i.type === 'OFFICE').length,
     },
     {
@@ -76,9 +76,7 @@ function WishListPage() {
     activeTab === 'ALL' ? wishes : wishes.filter((i) => i.type === activeTab);
 
   const handleToggleWish = (id) => {
-    if (window.confirm('찜 목록에서 삭제하시겠습니까?')) {
-      setWishes(wishes.filter((w) => w.id !== id));
-    }
+    setWishes(wishes.filter((w) => w.id !== id));
   };
 
   return (

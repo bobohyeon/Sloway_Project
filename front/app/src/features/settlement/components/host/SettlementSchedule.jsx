@@ -29,7 +29,7 @@ export function SettlementSchedule({ periodStart, periodEnd, settlementDate, day
 
       <Notice>
         <span>💡</span>
-        <span>매월 1일~말일 매출이 익월 5일에 등록된 정산 계좌로 입금됩니다</span>
+        <span>최근 4일간 발생한 결제 건들이 일괄 정산되어 등록된 계좌로 입금됩니다</span>
       </Notice>
     </Wrap>
   )

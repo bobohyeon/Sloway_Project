@@ -1,154 +1,133 @@
 import React from 'react';
 import styled from 'styled-components';
-import { useNavigate } from 'react-router-dom';
+import { FaHotel, FaBriefcase, FaLeaf, FaStar } from 'react-icons/fa';
 
-const SpaceCard = styled.div`
+const Grid = styled.div`
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: 20px;
+  width: 100%;
+`;
+
+const Card = styled.div`
   background: white;
-  border-radius: 16px;
-  padding: 24px;
-  display: flex;
-  align-items: center;
-  margin-bottom: 12px;
+  border-radius: 20px;
+  overflow: hidden;
   border: 1px solid #eee;
   cursor: pointer;
+  transition:
+    transform 0.2s,
+    box-shadow 0.2s;
+
   &:hover {
-    border-color: #768966;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+    transform: translateY(-5px);
+    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.05);
   }
 `;
 
-const IconBox = styled.div`
-  width: 64px;
-  height: 64px;
-  background: #f1f4ee;
-  border-radius: 12px;
+const ImageArea = styled.div`
+  width: 100%;
+  height: 180px;
+  background-color: #f1f4ee; /* 시안 배경색 */
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 32px;
-  margin-right: 20px;
+  position: relative;
+  overflow: hidden;
+
+  img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  .fallback-icon {
+    font-size: 50px;
+    color: #768966;
+    opacity: 0.6;
+  }
 `;
 
-const InfoArea = styled.div`
-  flex: 1;
-  .type-tag {
-    font-size: 11px;
-    font-weight: 700;
-    padding: 2px 8px;
-    border-radius: 4px;
-    margin-bottom: 6px;
-    display: inline-block;
-    ${({ $type }) =>
-      $type === 'STATION'
-        ? 'background: #e3f2fd; color: #1976d2;'
-        : $type === 'OFFICE'
-          ? 'background: #f3e5f5; color: #7b1fa2;'
-          : 'background: #e8f5e9; color: #388e3c;'}
+const Content = styled.div`
+  padding: 20px;
+
+  .date-row {
+    display: flex;
+    justify-content: flex-end;
+    font-size: 12px;
+    color: #999;
+    margin-bottom: 10px;
   }
+
   h3 {
     font-size: 18px;
-    margin: 0 0 6px 0;
+    font-weight: 700;
     color: #333;
+    margin: 0 0 15px 0;
   }
-  p {
+
+  .footer-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding-top: 15px;
+    border-top: 1px solid #f5f5f5;
+  }
+
+  .rating {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    color: #768966;
+    font-weight: 700;
     font-size: 14px;
-    color: #888;
-    margin: 0;
   }
 `;
 
-const ButtonGroup = styled.div`
-  display: flex;
-  gap: 8px;
-`;
-
-const ActionButton = styled.button`
-  padding: 10px 16px;
-  border-radius: 8px;
-  font-size: 13px;
-  font-weight: 600;
-  cursor: pointer;
-  border: 1px solid #ddd;
-  background: white;
-  &:hover {
-    background: #f5f5f5;
-    border-color: #ccc;
+// 타입에 따른 react-icons 반환 함수
+const getTypeIcon = (type) => {
+  switch (type) {
+    case 'STATION':
+      return <FaHotel className="fallback-icon" />;
+    case 'OFFICE':
+      return <FaBriefcase className="fallback-icon" />;
+    case 'WORK_STAY':
+      return <FaLeaf className="fallback-icon" />;
+    default:
+      return <FaHotel className="fallback-icon" />;
   }
-  &.primary {
-    background: #768966;
-    color: white;
-    border-color: #768966;
-  }
-`;
+};
 
 function SpaceDetailComponent({ data, onCardClick }) {
-  const navigate = useNavigate();
-
-  // 유형별 경로 접두사를 반환하는 헬퍼 함수
-  const getPathByType = (type) => {
-    switch (type) {
-      case 'STATION':
-        return 'lodging';
-      case 'WORK_STAY':
-        return 'workstay';
-      case 'OFFICE':
-        return 'coworking';
-      default:
-        return 'space';
-    }
-  };
-
   return (
-    <>
-      {data.map((space) => {
-        const typePath = getPathByType(space.type);
+    <Grid>
+      {data.map((item) => (
+        <Card key={item.id} onClick={() => onCardClick(item.id)}>
+          <ImageArea>
+            {/* 썸네일 이미지가 있으면 이미지를 보여주고, 없으면 아이콘 노출 */}
+            {item.thumbnail ? (
+              <img src={item.thumbnail} alt={item.title} />
+            ) : (
+              getTypeIcon(item.type)
+            )}
+          </ImageArea>
 
-        return (
-          <SpaceCard
-            key={space.id}
-            onClick={() => onCardClick(space.id, space.type)}
-          >
-            <IconBox>
-              {space.type === 'STATION'
-                ? '🏠'
-                : space.type === 'OFFICE'
-                  ? '🏢'
-                  : '🌿'}
-            </IconBox>
+          <Content>
+            <div className="date-row">
+              등록일 {item.created_at || '2026.05.12'}
+            </div>
 
-            <InfoArea $type={space.type}>
-              <span className="type-tag">{space.type}</span>
-              <h3>{space.title}</h3>
-              <p>
-                📍 {space.location} | ⭐ {space.rating}
-              </p>
-            </InfoArea>
+            <h3>{item.title}</h3>
 
-            <ButtonGroup>
-              <ActionButton
-                onClick={(e) => {
-                  e.stopPropagation(); // 카드 클릭 이벤트 전파 방지
-                  // 예: /host/lodging/1/images
-                  navigate(`/host/${typePath}/${space.id}/images`);
-                }}
-              >
-                이미지 관리
-              </ActionButton>
-              <ActionButton
-                className="primary"
-                onClick={(e) => {
-                  e.stopPropagation(); // 카드 클릭 이벤트 전파 방지
-                  // 예: /host/lodging/1/edit
-                  navigate(`/host/${typePath}/${space.id}/edit`);
-                }}
-              >
-                공간 정보 수정
-              </ActionButton>
-            </ButtonGroup>
-          </SpaceCard>
-        );
-      })}
-    </>
+            <div className="footer-row">
+              <div className="rating">
+                <FaStar size={14} /> {item.rating}
+              </div>
+            </div>
+          </Content>
+        </Card>
+      ))}
+    </Grid>
   );
 }
 

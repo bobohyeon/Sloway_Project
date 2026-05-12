@@ -95,7 +95,8 @@ export default function PaymentHistory() {
   ]
 
   return (
-    <Page>
+    <PageWrapper>
+      <Container>
       <Header>
         <Title>결제 내역</Title>
         <Description>지금까지의 모든 결제 내역을 확인하실 수 있어요</Description>
@@ -147,14 +148,25 @@ export default function PaymentHistory() {
       )}
 
       <Pagination currentPage={page} totalPages={2} onChange={setPage} />
-    </Page>
+    </Container>
+    </PageWrapper>
   )
 }
 
-const Page = styled.div`
-  max-width: 960px;
-  margin: 0 auto;
-  padding: var(--space-8) var(--space-6);
+const PageWrapper = styled.div`
+  background-color: var(--cream);
+  min-height: 100%;
+  padding: var(--space-6) var(--space-5);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+`
+
+const Container = styled.div`
+  width: 100%;
+  max-width: 1200px;
+  display: flex;
+  flex-direction: column;
   animation: fadeInUp 480ms ease-out both;
 `
 
