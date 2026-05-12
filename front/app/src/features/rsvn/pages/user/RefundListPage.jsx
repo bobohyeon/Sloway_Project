@@ -1,5 +1,6 @@
 import { useState } from 'react';
-import styled from 'styled-components';
+import { useNavigate } from 'react-router-dom';
+import styled, { keyframes } from 'styled-components';
 import RsvnStatusBadge from '../../components/user/RsvnStatusBadge';
 import {
   TabBar,
@@ -18,25 +19,30 @@ import {
   COLOR,
 } from '../../components/user/RsvnStyled';
 
+const fadeInUp = keyframes`
+  from { opacity: 0; transform: translateY(10px); }
+  to   { opacity: 1; transform: translateY(0); }
+`;
+
+const Page = styled.div`
+  max-width: 960px;
+  margin: 0 auto;
+  padding: 32px 24px;
+  animation: ${fadeInUp} 480ms ease-out both;
+`;
+
+const Header = styled.div`
+  margin-bottom: 24px;
+`;
+
+// status: '완료' | '환불 불가' 만 사용
 const TABS = [
-  { label: '전체', count: 4 },
-  { label: '처리 중', count: 1 },
-  { label: '환불 완료', count: 2 },
-  { label: '환불 불가', count: 1 },
+  { label: '전체', status: null },
+  { label: '환불 완료', status: '완료' },
+  { label: '환불 불가', status: '환불 불가' },
 ];
 
 const DUMMY = [
-  {
-    id: 1,
-    status: '처리 중',
-    autoTag: null,
-    title: '청평 숲속 파인뷰 스테이',
-    code: 'RF-20260424-00847',
-    date: '신청 2026.04.24 · 일정 변경',
-    price: '326,500원',
-    sub: '진행 상태 →',
-    icon: '🌲',
-  },
   {
     id: 2,
     status: '완료',
@@ -45,7 +51,7 @@ const DUMMY = [
     code: 'RF-20260320-00612',
     date: '신청 2026.03.20 · 완료 2026.03.24 · 개인 사정',
     price: '165,000원',
-    sub: '위약금 165,000원',
+    penaltyNote: '위약금 165,000원',
     icon: '✉️',
   },
   {
@@ -54,9 +60,9 @@ const DUMMY = [
     autoTag: '💚 호스트 거절 · 자동환불',
     title: '성수 브릭라운지',
     code: 'RF-20260215-00344',
-    date: '신청 2026.02.15 · 완료 2026.02.15',
+    date: '신청 2026.02.15 · 완료 2026.02.15 · 호스트 거절',
     price: '28,000원',
-    sub: null,
+    penaltyNote: null,
     icon: '🧱',
   },
   {
@@ -67,16 +73,19 @@ const DUMMY = [
     code: 'RF-20260108-00122',
     date: '신청 2026.01.08 · 이용일 당일 취소',
     price: '0원',
-    sub: null,
+    penaltyNote: null,
     icon: '🌅',
   },
 ];
 
-const SubText = styled.div`
+const PenaltyNote = styled.div`
   font-size: 12px;
-  color: ${({ $warn }) => ($warn ? COLOR.red : COLOR.terra)};
-  text-decoration: underline;
-  cursor: pointer;
+  color: ${COLOR.red};
+`;
+
+const AutoTag = styled.span`
+  font-size: 11px;
+  color: ${COLOR.green};
 `;
 
 const SummaryBox = styled.div`
@@ -101,21 +110,29 @@ const SumLbl = styled.div`
   color: ${COLOR.gray400};
 `;
 
-const AutoTag = styled.span`
-  font-size: 11px;
-  color: ${COLOR.green};
-`;
-
 function RefundListPage() {
   const [activeTab, setActiveTab] = useState(0);
+  const navigate = useNavigate();
+
+  const filtered =
+    activeTab === 0
+      ? DUMMY
+      : DUMMY.filter((i) => i.status === TABS[activeTab].status);
+
+  const counts = TABS.map((tab, idx) =>
+    idx === 0
+      ? DUMMY.length
+      : DUMMY.filter((i) => i.status === tab.status).length
+  );
 
   return (
-    <div>
-      <PageTitle>취소·환불 내역</PageTitle>
-      <PageSub>
-        내가 취소했거나 환불된 예약의 처리 현황을 한눈에 볼 수 있어요
-      </PageSub>
-
+    <Page>
+      <Header>
+        <PageTitle>취소·환불 내역</PageTitle>
+        <PageSub>
+          내가 취소했거나 환불된 예약의 처리 현황을 한눈에 볼 수 있어요
+        </PageSub>
+      </Header>
       <TabBar>
         {TABS.map((tab, idx) => (
           <TabBtn
@@ -124,13 +141,12 @@ function RefundListPage() {
             onClick={() => setActiveTab(idx)}
           >
             {tab.label}
-            <TabCount $active={activeTab === idx}>{tab.count}</TabCount>
+            <TabCount $active={activeTab === idx}>{counts[idx]}</TabCount>
           </TabBtn>
         ))}
       </TabBar>
-
-      {DUMMY.map((item) => (
-        <Card key={item.id}>
+      {filtered.map((item) => (
+        <Card key={item.id} onClick={() => navigate('/user/refund/complete')}>
           <CardRow>
             <Thumb>{item.icon}</Thumb>
             <CardBody>
@@ -148,10 +164,8 @@ function RefundListPage() {
             <CardRight>
               <div style={{ fontSize: 11, color: COLOR.gray400 }}>환불</div>
               <div style={{ fontSize: 15, fontWeight: 700 }}>{item.price}</div>
-              {item.sub && (
-                <SubText $warn={item.sub.includes('위약금')}>
-                  {item.sub}
-                </SubText>
+              {item.penaltyNote && (
+                <PenaltyNote>{item.penaltyNote}</PenaltyNote>
               )}
             </CardRight>
           </CardRow>
@@ -160,19 +174,19 @@ function RefundListPage() {
 
       <SummaryBox>
         <div>
-          <SumVal>4</SumVal>
+          <SumVal>{DUMMY.length}</SumVal>
           <SumLbl>총 건수</SumLbl>
         </div>
         <div>
-          <SumVal>519,500원</SumVal>
+          <SumVal>193,000원</SumVal>
           <SumLbl>총 환불 금액</SumLbl>
         </div>
         <div>
-          <SumVal $red>405,000원</SumVal>
+          <SumVal $red>165,000원</SumVal>
           <SumLbl>총 위약금</SumLbl>
         </div>
       </SummaryBox>
-    </div>
+    </Page>
   );
 }
 
