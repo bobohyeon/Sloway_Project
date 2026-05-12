@@ -1,15 +1,8 @@
-import { useState, useMemo } from 'react';
-import { useNavigate } from 'react-router-dom';
-import styled from 'styled-components';
+import { useState, useMemo } from 'react'
+import { useNavigate } from 'react-router-dom'
+import styled from 'styled-components'
 
-import {
-  Tabs,
-  StatCard,
-  EmptyState,
-  Pagination,
-  Button,
-  Badge,
-} from '../../../pay_shared/components';
+import { Tabs, StatCard, EmptyState, Pagination, Button, Badge } from '../../../pay_shared/components'
 
 const PAYMENTS = [
   {
@@ -30,9 +23,9 @@ const PAYMENTS = [
     id: 'PAY-20260508-918',
     userName: '박지수',
     userEmail: 'jisoo.park@example.com',
-    spaceName: '강릉 바다향 오피스',
+    spaceName: '강릉 바다향 코워킹',
     spaceEmoji: '🌊',
-    category: '오피스',
+    category: '코워킹오피스',
     method: '신용카드',
     methodIcon: '💳',
     amount: 56000,
@@ -72,9 +65,9 @@ const PAYMENTS = [
     id: 'PAY-20260507-912',
     userName: '정유나',
     userEmail: 'yuna.jung@example.com',
-    spaceName: '강릉 바다향 오피스',
+    spaceName: '강릉 바다향 코워킹',
     spaceEmoji: '🌊',
-    category: '오피스',
+    category: '코워킹오피스',
     method: '토스페이',
     methodIcon: 'T',
     amount: 84000,
@@ -89,7 +82,7 @@ const PAYMENTS = [
     userEmail: 'seungwon.han@example.com',
     spaceName: '성수 브릭라운지',
     spaceEmoji: '🧱',
-    category: '오피스',
+    category: '코워킹오피스',
     method: '카카오페이',
     methodIcon: '💬',
     amount: 28000,
@@ -126,42 +119,43 @@ const PAYMENTS = [
     pg: 'KG이니시스',
     failReason: '잔액 부족',
   },
-];
+]
 
 const TABS = [
   { label: '전체', value: 'all', count: 8 },
   { label: '완료', value: 'completed', count: 5 },
   { label: '환불', value: 'refunded', count: 1 },
   { label: '실패', value: 'failed', count: 2 },
-];
+]
 
 export default function AdminPaymentList() {
-  const nav = useNavigate();
-  const [tab, setTab] = useState('all');
-  const [keyword, setKeyword] = useState('');
+  const nav = useNavigate()
+  const [tab, setTab] = useState('all')
+  const [keyword, setKeyword] = useState('')
 
   const filtered = useMemo(() => {
-    let list = PAYMENTS;
-    if (tab !== 'all') list = list.filter((p) => p.status === tab);
+    let list = PAYMENTS
+    if (tab !== 'all') list = list.filter((p) => p.status === tab)
     if (keyword) {
       list = list.filter(
         (p) =>
           p.userName.includes(keyword) ||
           p.spaceName.includes(keyword) ||
           p.id.includes(keyword)
-      );
+      )
     }
-    return list;
-  }, [tab, keyword]);
+    return list
+  }, [tab, keyword])
 
-  const completed = PAYMENTS.filter((p) => p.status === 'completed');
-  const refunded = PAYMENTS.filter((p) => p.status === 'refunded');
-  const failed = PAYMENTS.filter((p) => p.status === 'failed');
+  const completed = PAYMENTS.filter((p) => p.status === 'completed')
+  const refunded = PAYMENTS.filter((p) => p.status === 'refunded')
+  const failed = PAYMENTS.filter((p) => p.status === 'failed')
 
-  const totalAmount = completed.reduce((sum, p) => sum + p.amount, 0);
+  const totalAmount = completed.reduce((sum, p) => sum + p.amount, 0)
 
   return (
-    <Page>
+    <PageWrapper>
+      <Container>
       <Header>
         <Title>전체 결제 내역</Title>
         <Description>플랫폼 전체 결제 현황을 모니터링하세요</Description>
@@ -268,21 +262,9 @@ export default function AdminPaymentList() {
                     <DateText>{p.paidAt}</DateText>
                   </Td>
                   <Td align="center">
-                    {p.status === 'completed' && (
-                      <Badge variant="success" size="sm">
-                        ✓ 완료
-                      </Badge>
-                    )}
-                    {p.status === 'refunded' && (
-                      <Badge variant="info" size="sm">
-                        ↻ 환불
-                      </Badge>
-                    )}
-                    {p.status === 'failed' && (
-                      <Badge variant="danger" size="sm">
-                        ✗ 실패
-                      </Badge>
-                    )}
+                    {p.status === 'completed' && <Badge variant="success" size="sm">✓ 완료</Badge>}
+                    {p.status === 'refunded' && <Badge variant="info" size="sm">↻ 환불</Badge>}
+                    {p.status === 'failed' && <Badge variant="danger" size="sm">✗ 실패</Badge>}
                   </Td>
                   <Td align="center">
                     <Button
@@ -301,21 +283,31 @@ export default function AdminPaymentList() {
       )}
 
       <Pagination current={1} total={1} onChange={() => {}} />
-    </Page>
-  );
+    </Container>
+    </PageWrapper>
+  )
 }
 
-const Page = styled.div`
+const PageWrapper = styled.div`
+  background-color: var(--cream);
+  min-height: 100%;
+  padding: var(--space-6) var(--space-5);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+`
+
+const Container = styled.div`
   width: 100%;
   max-width: 1200px;
-  margin: 0 auto;
-  padding: var(--space-6) var(--space-5);
+  display: flex;
+  flex-direction: column;
   animation: fadeInUp 480ms ease-out both;
-`;
+`
 
 const Header = styled.div`
   margin-bottom: var(--space-5);
-`;
+`
 
 const Title = styled.h1`
   font-family: var(--font-display);
@@ -324,12 +316,12 @@ const Title = styled.h1`
   color: var(--gray-800);
   letter-spacing: -0.02em;
   margin-bottom: 4px;
-`;
+`
 
 const Description = styled.p`
   font-size: 0.9rem;
   color: var(--gray-600);
-`;
+`
 
 const StatGrid = styled.div`
   display: grid;
@@ -343,14 +335,14 @@ const StatGrid = styled.div`
   @media (max-width: 480px) {
     grid-template-columns: 1fr;
   }
-`;
+`
 
 const FilterRow = styled.div`
   display: flex;
   gap: var(--space-3);
   margin-bottom: var(--space-4);
   align-items: center;
-`;
+`
 
 const SearchBox = styled.div`
   flex: 1;
@@ -365,11 +357,11 @@ const SearchBox = styled.div`
   &:focus-within {
     border-color: var(--sage);
   }
-`;
+`
 
 const SearchIcon = styled.span`
   color: var(--gray-400);
-`;
+`
 
 const SearchInput = styled.input`
   flex: 1;
@@ -381,7 +373,7 @@ const SearchInput = styled.input`
   &::placeholder {
     color: var(--gray-400);
   }
-`;
+`
 
 const TableWrap = styled.div`
   background: var(--white);
@@ -389,12 +381,12 @@ const TableWrap = styled.div`
   border-radius: var(--radius-lg);
   overflow: hidden;
   margin: var(--space-4) 0;
-`;
+`
 
 const Table = styled.table`
   width: 100%;
   border-collapse: collapse;
-`;
+`
 
 const Th = styled.th`
   padding: var(--space-3) var(--space-4);
@@ -405,7 +397,7 @@ const Th = styled.th`
   border-bottom: 1px solid var(--gray-200);
   text-align: ${(p) => p.align || 'left'};
   white-space: nowrap;
-`;
+`
 
 const Tr = styled.tr`
   background: ${(p) => (p.$alert ? 'rgba(220, 38, 38, 0.04)' : 'transparent')};
@@ -414,7 +406,7 @@ const Tr = styled.tr`
   &:hover {
     background: var(--gray-100);
   }
-`;
+`
 
 const Td = styled.td`
   padding: var(--space-3) var(--space-4);
@@ -422,35 +414,35 @@ const Td = styled.td`
   color: var(--gray-800);
   text-align: ${(p) => p.align || 'left'};
   vertical-align: middle;
-`;
+`
 
 const PaymentId = styled.span`
   font-family: var(--font-mono);
   font-size: 0.75rem;
   color: var(--gray-600);
-`;
+`
 
 const UserInfo = styled.div`
   display: flex;
   flex-direction: column;
   gap: 2px;
-`;
+`
 
 const UserName = styled.div`
   font-weight: 500;
   color: var(--gray-800);
-`;
+`
 
 const UserEmail = styled.div`
   font-size: 0.75rem;
   color: var(--gray-600);
-`;
+`
 
 const SpaceInfo = styled.div`
   display: flex;
   align-items: center;
   gap: var(--space-2);
-`;
+`
 
 const SpaceEmoji = styled.div`
   width: 36px;
@@ -462,28 +454,28 @@ const SpaceEmoji = styled.div`
   justify-content: center;
   font-size: 1.1rem;
   flex-shrink: 0;
-`;
+`
 
 const SpaceDetails = styled.div`
   display: flex;
   flex-direction: column;
   gap: 2px;
-`;
+`
 
 const SpaceName = styled.div`
   color: var(--gray-800);
-`;
+`
 
 const CategoryTag = styled.div`
   font-size: 0.72rem;
   color: var(--gray-600);
-`;
+`
 
 const MethodInfo = styled.div`
   display: flex;
   align-items: center;
   gap: var(--space-2);
-`;
+`
 
 const MethodIcon = styled.div`
   width: 28px;
@@ -495,20 +487,20 @@ const MethodIcon = styled.div`
   justify-content: center;
   font-size: 0.85rem;
   font-weight: 600;
-`;
+`
 
 const MethodName = styled.span`
   font-size: 0.85rem;
-`;
+`
 
 const Amount = styled.span`
   font-weight: 600;
   color: ${(p) => (p.$refunded ? 'var(--gray-400)' : 'var(--gray-800)')};
   text-decoration: ${(p) => (p.$refunded ? 'line-through' : 'none')};
-`;
+`
 
 const DateText = styled.span`
   font-family: var(--font-mono);
   font-size: 0.78rem;
   color: var(--gray-600);
-`;
+`

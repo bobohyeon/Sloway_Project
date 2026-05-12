@@ -8,10 +8,10 @@ import { RecentSettlementsTable } from '../../components/host/RecentSettlementsT
 import { QuickActionCard } from '../../components/host/QuickActionCard'
 
 const SCHEDULE = {
-  periodStart: '2026.05.01',
-  periodEnd: '2026.05.31',
-  settlementDate: '2026.06.05',
-  daysRemaining: 18,
+  periodStart: '2026.05.09',
+  periodEnd: '2026.05.12',
+  settlementDate: '2026.05.13',
+  daysRemaining: 1,
 }
 
 const MONTHLY_SALES = [
@@ -27,29 +27,29 @@ const MONTHLY_SALES = [
 const RECENT_SETTLEMENTS = [
   {
     id: 1,
-    settlementDate: '2026.04.05',
+    settlementDate: '2026.05.09',
     spaceName: '청평 숲속 파인뷰 스테이',
     spaceEmoji: '🌲',
-    bookingCount: 8,
-    amount: 3420000,
+    bookingCount: 4,
+    amount: 1820000,
     status: 'completed',
   },
   {
     id: 2,
-    settlementDate: '2026.03.05',
+    settlementDate: '2026.05.05',
     spaceName: '청평 숲속 파인뷰 스테이',
     spaceEmoji: '🌲',
-    bookingCount: 6,
-    amount: 2580000,
+    bookingCount: 3,
+    amount: 1360000,
     status: 'completed',
   },
   {
     id: 3,
-    settlementDate: '2026.02.05',
+    settlementDate: '2026.05.01',
     spaceName: '청평 숲속 파인뷰 스테이',
     spaceEmoji: '🌲',
-    bookingCount: 7,
-    amount: 2940000,
+    bookingCount: 5,
+    amount: 2240000,
     status: 'completed',
   },
 ]
@@ -64,7 +64,8 @@ export default function SettlementDashboard() {
   const totalSales = MONTHLY_SALES.reduce((s, x) => s + x.amount, 0)
 
   return (
-    <Page>
+    <PageWrapper>
+      <Container>
       <Header>
         <Title>정산 대시보드</Title>
         <Description>이번 달 매출과 정산 예정 금액을 확인하세요</Description>
@@ -140,13 +141,25 @@ export default function SettlementDashboard() {
           />
         </QuickGrid>
       </QuickActionsSection>
-    </Page>
+    </Container>
+    </PageWrapper>
   )
 }
 
-const Page = styled.div`
-  width: 100%;
+const PageWrapper = styled.div`
+  background-color: var(--cream);
+  min-height: 100%;
   padding: var(--space-6) var(--space-5);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+`
+
+const Container = styled.div`
+  width: 100%;
+  max-width: 1200px;
+  display: flex;
+  flex-direction: column;
   animation: fadeInUp 480ms ease-out both;
 `
 
@@ -174,7 +187,7 @@ const StatGrid = styled.div`
   gap: var(--space-3);
   margin-bottom: var(--space-5);
 
-  @media (max-width: 960px) {
+  @media (max-width: 1200px) {
     grid-template-columns: repeat(2, 1fr);
   }
 

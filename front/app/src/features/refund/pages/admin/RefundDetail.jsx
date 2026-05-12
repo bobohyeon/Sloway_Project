@@ -38,7 +38,7 @@ const REFUNDS = [
     refundId: 'RFD-20260507-00918',
     bookingId: 'SW-20260516-001052',
     paymentId: 'PAY-20260420-00845',
-    status: 'manual',
+    status: 'completed',
     userName: '김도현',
     userEmail: 'dohyun.kim@example.com',
     userPhone: '010-****-5678',
@@ -55,7 +55,7 @@ const REFUNDS = [
     requestedAt: '2026.05.07 18:22',
     reason: '호스트가 예약을 거절했어요',
     isHostRejected: true,
-    alertMessage: '호스트 거절 - 자동 100% 환불 진행 (수동 검토)',
+    alertMessage: null,
   },
   {
     id: 3,
@@ -163,35 +163,9 @@ function buildProcessHistory(refund) {
       {
         status: 'error',
         title: '자동 재시도 (3회) 모두 실패',
-        description: '최종 실패 - 관리자 수동 처리 필요',
+        description: 'PG사 응답 대기 - 자동 재처리 예정',
         at: '2026.05.08 09:18',
         actor: '시스템',
-      },
-      {
-        status: 'active',
-        title: '관리자 검토 대기 중',
-        at: null,
-        actor: null,
-      },
-    ]
-  }
-
-  if (refund.status === 'manual') {
-    return [
-      ...baseEvents,
-      {
-        status: 'done',
-        title: '호스트 거절 확인',
-        description: '호스트가 예약을 거절하여 100% 환불 대상으로 분류',
-        at: '2026.05.07 18:25',
-        actor: '시스템',
-      },
-      {
-        status: 'active',
-        title: '관리자 수동 검토 진행 중',
-        description: '호스트 거절 케이스 정책 확인 필요',
-        at: null,
-        actor: null,
       },
     ]
   }
@@ -223,16 +197,7 @@ function getSavedMemos(refund) {
       {
         author: '시스템',
         at: '2026.05.08 09:18',
-        content: '자동 처리 실패 - 우선순위 HIGH 큐로 이관됨',
-      },
-    ]
-  }
-  if (refund.status === 'manual') {
-    return [
-      {
-        author: '시스템',
-        at: '2026.05.07 18:25',
-        content: '호스트 거절 케이스 - 자동 100% 환불 진행',
+        content: '자동 처리 실패 - 자동 재시도 큐로 이관됨',
       },
     ]
   }
@@ -248,7 +213,7 @@ export default function RefundDetail() {
   const refund = REFUNDS.find((r) => String(r.id) === id) || REFUNDS[0]
   const processHistory = buildProcessHistory(refund)
   const savedMemos = getSavedMemos(refund)
-  const isAbnormal = refund.status === 'failed' || refund.status === 'manual'
+  const isFailed = refund.status === 'failed'
 
   const calc = useRefundCalculation({
     amount: refund.paidAmount,
@@ -256,44 +221,21 @@ export default function RefundDetail() {
     hostRejected: refund.isHostRejected,
   })
 
-  const handleManualApprove = () => {
-    if (window.confirm(`${calc.refundAmount.toLocaleString()}원 환불을 수동 승인하시겠어요?`)) {
-      alert('수동 승인 완료. 다시 PG사로 송금 요청합니다.')
-      nav('/admin/refund')
-    }
-  }
-
-  const handleReject = () => {
-    if (window.confirm('환불 요청을 거절하시겠어요? 사용자에게 알림이 발송됩니다.')) {
-      alert('환불 거절 처리됐어요. 사용자에게 알림 발송됨.')
-      nav('/admin/refund')
-    }
-  }
-
-  const handleRetry = () => {
-    if (window.confirm('PG사 송금을 재시도하시겠어요?')) {
-      alert('PG사로 재요청을 보냈어요. 결과는 처리 이력에서 확인하세요.')
-    }
-  }
-
   return (
-    <Page>
+    <PageWrapper>
+      <Container>
       <BackLink onClick={() => nav('/admin/refund')}>← 환불 목록</BackLink>
 
       <Header>
-        <Title>환불 상세 처리</Title>
-        <Description>환불 신청을 검토하고 처리하세요</Description>
+        <Title>환불 상세</Title>
+        <Description>환불 처리 내역을 확인하세요</Description>
       </Header>
 
-      {isAbnormal && (
+      {isFailed && (
         <RefundStatusBanner
-          variant={refund.status === 'failed' ? 'danger' : 'warning'}
-          title={refund.status === 'failed'
-            ? `⚠️ 이상 감지 - ${refund.alertMessage}`
-            : `👁 수동 검토 - ${refund.alertMessage}`}
-          description={refund.status === 'failed'
-            ? 'PG사 측 송금이 실패했어요. 잔액 충전 확인 후 재시도하거나 수동 승인이 필요합니다.'
-            : '호스트 거절 케이스로 100% 환불 진행 중입니다. 정책 검토 후 처리해주세요.'}
+          variant="danger"
+          title={`⚠️ PG 송금 실패 - ${refund.alertMessage}`}
+          description="자동 재시도 진행 중입니다. PG사 응답에 따라 환불이 완료되거나 재처리됩니다."
         />
       )}
       {refund.status === 'completed' && (
@@ -308,8 +250,7 @@ export default function RefundDetail() {
         <Section title="환불 정보">
           <InfoCard padded>
             <InfoHeader>
-              {refund.status === 'failed' && <Badge variant="danger" size="md">⚠️ 이상</Badge>}
-              {refund.status === 'manual' && <Badge variant="warning" size="md">👁 수동검토</Badge>}
+              {refund.status === 'failed' && <Badge variant="danger" size="md">⚠️ 송금 실패</Badge>}
               {refund.status === 'completed' && <Badge variant="success" size="md">✓ 완료</Badge>}
               <RefundId>{refund.refundId}</RefundId>
             </InfoHeader>
@@ -427,39 +368,31 @@ export default function RefundDetail() {
       <AdminMemoBox memo={memo} onChange={setMemo} savedMemos={savedMemos} />
 
       <Actions>
-        {refund.status === 'completed' ? (
-          <ActionRight style={{ marginLeft: 'auto' }}>
-            <Button variant="secondary" onClick={() => nav('/admin/refund')}>
-              목록으로
-            </Button>
-          </ActionRight>
-        ) : (
-          <>
-            <ActionLeft>
-              <Button variant="danger" onClick={handleReject}>
-                ✗ 거절
-              </Button>
-            </ActionLeft>
-            <ActionRight>
-              {refund.status === 'failed' && (
-                <Button variant="secondary" onClick={handleRetry}>
-                  🔄 PG사 재시도
-                </Button>
-              )}
-              <Button variant="primary" onClick={handleManualApprove}>
-                ✓ 수동 승인 ({calc.refundAmount.toLocaleString()}원)
-              </Button>
-            </ActionRight>
-          </>
-        )}
+        <ActionRight style={{ marginLeft: 'auto' }}>
+          <Button variant="secondary" onClick={() => nav('/admin/refund')}>
+            목록으로
+          </Button>
+        </ActionRight>
       </Actions>
-    </Page>
+    </Container>
+    </PageWrapper>
   )
 }
 
-const Page = styled.div`
-  width: 100%;
+const PageWrapper = styled.div`
+  background-color: var(--cream);
+  min-height: 100%;
   padding: var(--space-6) var(--space-5);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+`
+
+const Container = styled.div`
+  width: 100%;
+  max-width: 1200px;
+  display: flex;
+  flex-direction: column;
   animation: fadeInUp 480ms ease-out both;
 `
 

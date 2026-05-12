@@ -124,7 +124,8 @@ export default function EventList() {
   const urgentEvents = EVENTS.filter((e) => e.daysLeft <= 3)
 
   return (
-    <Page>
+    <PageWrapper>
+      <Container>
       <Header>
         <TopRow>
           <div>
@@ -169,14 +170,25 @@ export default function EventList() {
           ))}
         </EventGrid>
       )}
-    </Page>
+    </Container>
+    </PageWrapper>
   )
 }
 
-const Page = styled.div`
-  width: 100%;
-  max-width: 800px;
+const PageWrapper = styled.div`
+  background-color: var(--cream);
+  min-height: 100%;
   padding: var(--space-6) var(--space-5);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+`
+
+const Container = styled.div`
+  width: 100%;
+  max-width: 1200px;
+  display: flex;
+  flex-direction: column;
   animation: fadeInUp 480ms ease-out both;
 `
 

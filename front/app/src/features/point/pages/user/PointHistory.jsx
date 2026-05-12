@@ -1,26 +1,21 @@
-import { useState, useMemo } from 'react';
-import { useNavigate } from 'react-router-dom';
-import styled from 'styled-components';
+import { useState, useMemo } from 'react'
+import { useNavigate } from 'react-router-dom'
+import styled from 'styled-components'
 
-import {
-  Tabs,
-  EmptyState,
-  Pagination,
-  Button,
-} from '../../../pay_shared/components';
-import { PointBalance } from '../../components/user/PointBalance';
-import { PointExpiringSoon } from '../../components/user/PointExpiringSoon';
-import { PointStatsRow } from '../../components/user/PointStatsRow';
-import { PointHistoryItem } from '../../components/user/PointHistoryItem';
-import { PointPolicyNotice } from '../../components/user/PointPolicyNotice';
+import { Tabs, EmptyState, Pagination, Button } from '../../../pay_shared/components'
+import { PointBalance } from '../../components/user/PointBalance'
+import { PointExpiringSoon } from '../../components/user/PointExpiringSoon'
+import { PointStatsRow } from '../../components/user/PointStatsRow'
+import { PointHistoryItem } from '../../components/user/PointHistoryItem'
+import { PointPolicyNotice } from '../../components/user/PointPolicyNotice'
 
-const BALANCE = 2450;
-const PENDING_POINTS = 3240;
+const BALANCE = 2450
+const PENDING_POINTS = 3240
 
 const EXPIRING_ITEMS = [
   {
     amount: 800,
-    reason: '2025.05.15 적립 (강릉 바다향 오피스)',
+    reason: '2025.05.15 적립 (강릉 바다향 코워킹)',
     expireDate: '2026.05.15',
     daysLeft: 4,
   },
@@ -30,11 +25,11 @@ const EXPIRING_ITEMS = [
     expireDate: '2026.05.28',
     daysLeft: 17,
   },
-];
+]
 
-const TOTAL_EARNED = 5820;
-const TOTAL_USED = 2400;
-const TOTAL_EXPIRED = 970;
+const TOTAL_EARNED = 5820
+const TOTAL_USED = 2400
+const TOTAL_EXPIRED = 970
 
 const HISTORY = [
   {
@@ -55,7 +50,7 @@ const HISTORY = [
   },
   {
     type: 'earned',
-    title: '강릉 바다향 오피스 이용 완료',
+    title: '강릉 바다향 코워킹 이용 완료',
     description: '결제액 1% 적립',
     amount: 240,
     at: '2026.05.06 09:14',
@@ -95,45 +90,34 @@ const HISTORY = [
   },
   {
     type: 'cancelled',
-    title: '강릉 바다향 오피스 결제 취소',
+    title: '강릉 바다향 코워킹 결제 취소',
     description: '환불 처리 시 포인트 복원',
     amount: 240,
     at: '2026.04.15 11:20',
     balanceAfter: 3210,
   },
-];
+]
 
 export default function PointHistory() {
-  const nav = useNavigate();
-  const [tab, setTab] = useState('all');
-  const [page, setPage] = useState(1);
+  const nav = useNavigate()
+  const [tab, setTab] = useState('all')
+  const [page, setPage] = useState(1)
 
   const filtered = useMemo(() => {
-    if (tab === 'all') return HISTORY;
-    return HISTORY.filter((h) => h.type === tab);
-  }, [tab]);
+    if (tab === 'all') return HISTORY
+    return HISTORY.filter((h) => h.type === tab)
+  }, [tab])
 
   const tabs = [
     { value: 'all', label: '전체', count: HISTORY.length },
-    {
-      value: 'earned',
-      label: '적립',
-      count: HISTORY.filter((h) => h.type === 'earned').length,
-    },
-    {
-      value: 'used',
-      label: '사용',
-      count: HISTORY.filter((h) => h.type === 'used').length,
-    },
-    {
-      value: 'expired',
-      label: '만료',
-      count: HISTORY.filter((h) => h.type === 'expired').length,
-    },
-  ];
+    { value: 'earned', label: '적립', count: HISTORY.filter((h) => h.type === 'earned').length },
+    { value: 'used', label: '사용', count: HISTORY.filter((h) => h.type === 'used').length },
+    { value: 'expired', label: '만료', count: HISTORY.filter((h) => h.type === 'expired').length },
+  ]
 
   return (
-    <Page>
+    <PageWrapper>
+      <Container>
       <BackLink onClick={() => nav('/user/mypage')}>← 마이페이지</BackLink>
 
       <Header>
@@ -194,16 +178,27 @@ export default function PointHistory() {
 
         <Pagination currentPage={page} totalPages={2} onChange={setPage} />
       </HistorySection>
-    </Page>
-  );
+    </Container>
+    </PageWrapper>
+  )
 }
 
-const Page = styled.div`
-  width: 100%;
-  max-width: 720px;
+const PageWrapper = styled.div`
+  background-color: var(--cream);
+  min-height: 100%;
   padding: var(--space-6) var(--space-5);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+`
+
+const Container = styled.div`
+  width: 100%;
+  max-width: 800px;
+  display: flex;
+  flex-direction: column;
   animation: fadeInUp 480ms ease-out both;
-`;
+`
 
 const BackLink = styled.button`
   font-size: 0.85rem;
@@ -213,11 +208,11 @@ const BackLink = styled.button`
   &:hover {
     color: var(--gray-800);
   }
-`;
+`
 
 const Header = styled.div`
   margin-bottom: var(--space-5);
-`;
+`
 
 const Title = styled.h1`
   font-family: var(--font-display);
@@ -226,51 +221,51 @@ const Title = styled.h1`
   color: var(--gray-800);
   letter-spacing: -0.02em;
   margin-bottom: 4px;
-`;
+`
 
 const Description = styled.p`
   font-size: 0.9rem;
   color: var(--gray-600);
-`;
+`
 
 const BalanceSection = styled.div`
   margin-bottom: var(--space-4);
-`;
+`
 
 const ExpiringSection = styled.div`
   margin-bottom: var(--space-4);
-`;
+`
 
 const StatsSection = styled.div`
   margin-bottom: var(--space-5);
-`;
+`
 
 const PolicySection = styled.div`
   margin-bottom: var(--space-6);
-`;
+`
 
-const HistorySection = styled.div``;
+const HistorySection = styled.div``
 
 const SectionHeader = styled.div`
   display: flex;
   justify-content: space-between;
   align-items: center;
   margin-bottom: var(--space-3);
-`;
+`
 
 const SectionTitle = styled.h3`
   font-family: var(--font-display);
   font-size: 1.05rem;
   font-weight: 500;
   color: var(--gray-800);
-`;
+`
 
 const TabsWrap = styled.div`
   margin-bottom: var(--space-3);
-`;
+`
 
 const List = styled.div`
   display: flex;
   flex-direction: column;
   gap: var(--space-2);
-`;
+`

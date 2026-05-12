@@ -8,7 +8,7 @@ export function RecentSettlementsTable({ items, onSeeAll, onClickItem }) {
         <EmptyState
           icon="📋"
           title="아직 정산 내역이 없어요"
-          description="공간을 운영하면 매월 5일에 정산이 진행돼요"
+          description="4일마다 결제 발생 건에 대해 자동 정산이 진행돼요"
         />
       </Section>
     )

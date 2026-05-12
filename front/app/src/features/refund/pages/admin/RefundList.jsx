@@ -22,7 +22,7 @@ const REFUND_REQUESTS = [
     completedAt: null,
     status: 'failed',
     isHostRejected: false,
-    alertMessage: 'PG사 송금 실패 - 수동 처리 필요',
+    alertMessage: 'PG사 송금 실패 - 자동 재처리 대기',
   },
   {
     id: 2,
@@ -35,10 +35,10 @@ const REFUND_REQUESTS = [
     refundAmount: 540000,
     rate: 100,
     requestedAt: '2026.05.07 18:22',
-    completedAt: null,
-    status: 'manual',
+    completedAt: '2026.05.07 19:30',
+    status: 'completed',
     isHostRejected: true,
-    alertMessage: '호스트 거절 - 자동 100% 환불 진행',
+    alertMessage: null,
   },
   {
     id: 3,
@@ -95,7 +95,7 @@ export default function RefundList() {
   const [page, setPage] = useState(1)
 
   const filtered = REFUND_REQUESTS.filter((r) => {
-    if (tab === 'abnormal' && !['failed', 'manual'].includes(r.status)) return false
+    if (tab === 'abnormal' && r.status !== 'failed') return false
     if (tab === 'host_rejected' && !r.isHostRejected) return false
     if (tab !== 'all' && tab !== 'abnormal' && tab !== 'host_rejected' && r.status !== tab) return false
     if (search && !r.userName.includes(search) && !r.refundId.includes(search)) return false
@@ -103,22 +103,23 @@ export default function RefundList() {
   })
 
   const total = REFUND_REQUESTS.length
-  const processing = REFUND_REQUESTS.filter((r) => r.status === 'processing' || r.status === 'manual').length
+  const processing = REFUND_REQUESTS.filter((r) => r.status === 'processing').length
   const completed = REFUND_REQUESTS.filter((r) => r.status === 'completed').length
-  const abnormal = REFUND_REQUESTS.filter((r) => ['failed', 'manual'].includes(r.status)).length
+  const abnormal = REFUND_REQUESTS.filter((r) => r.status === 'failed').length
 
   const tabs = [
     { value: 'all', label: '전체', count: total },
     { value: 'completed', label: '완료', count: completed },
-    { value: 'abnormal', label: '이상감지', count: abnormal },
+    { value: 'abnormal', label: '송금실패', count: abnormal },
     { value: 'host_rejected', label: '호스트거절', count: REFUND_REQUESTS.filter((r) => r.isHostRejected).length },
   ]
 
   return (
-    <Page>
+    <PageWrapper>
+      <Container>
       <Header>
         <Title>환불 관리</Title>
-        <Description>모든 환불 요청을 모니터링하고 예외 케이스를 처리하세요</Description>
+        <Description>모든 환불 요청을 모니터링하고 예외 케이스를 확인하세요</Description>
       </Header>
 
       <StatGrid>
@@ -134,21 +135,21 @@ export default function RefundList() {
           label="처리 중"
           value={processing.toLocaleString()}
           unit="건"
-          subText="자동 처리 대기"
+          subText="자동 처리 중"
         />
         <SettlementStatCard
           icon="✓"
           label="처리 완료"
           value={completed.toLocaleString()}
           unit="건"
-          subText="자동 + 수동"
+          subText="환불 완료"
         />
         <SettlementStatCard
           icon="⚠️"
-          label="이상 감지"
+          label="송금 실패"
           value={abnormal.toLocaleString()}
           unit="건"
-          subText="수동 검토 필요"
+          subText="자동 재시도 대기"
           highlight={abnormal > 0}
         />
       </StatGrid>
@@ -194,13 +195,25 @@ export default function RefundList() {
       )}
 
       <Pagination currentPage={page} totalPages={1} onChange={setPage} />
-    </Page>
+    </Container>
+    </PageWrapper>
   )
 }
 
-const Page = styled.div`
-  width: 100%;
+const PageWrapper = styled.div`
+  background-color: var(--cream);
+  min-height: 100%;
   padding: var(--space-6) var(--space-5);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+`
+
+const Container = styled.div`
+  width: 100%;
+  max-width: 1200px;
+  display: flex;
+  flex-direction: column;
   animation: fadeInUp 480ms ease-out both;
 `
 

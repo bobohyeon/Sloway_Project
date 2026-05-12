@@ -26,7 +26,8 @@ export default function PaymentComplete() {
   const nav = useNavigate()
 
   return (
-    <Page>
+    <PageWrapper>
+      <Container>
       <ResultHeader
         variant="success"
         title="결제가 완료됐어요"
@@ -53,14 +54,25 @@ export default function PaymentComplete() {
       <BackLink onClick={() => nav('/')}>
         ← 메인으로 돌아가기
       </BackLink>
-    </Page>
+    </Container>
+    </PageWrapper>
   )
 }
 
-const Page = styled.div`
+const PageWrapper = styled.div`
+  background-color: var(--cream);
+  min-height: 100%;
+  padding: var(--space-6) var(--space-5);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+`
+
+const Container = styled.div`
+  width: 100%;
   max-width: 800px;
-  margin: 0 auto;
-  padding: var(--space-12) var(--space-6);
+  display: flex;
+  flex-direction: column;
   animation: fadeInUp 480ms ease-out both;
 `
 
