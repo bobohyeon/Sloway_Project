@@ -20,6 +20,8 @@ import {
 	FaBullhorn,
 	FaQuestionCircle,
 	FaCrown,
+	FaChartPie,
+	FaUsers,
 } from "react-icons/fa";
 
 const Wrapper = styled.div`
@@ -81,7 +83,11 @@ const adminMenuGroups = [
 	{
 		title: "통계",
 		items: [
-			{ url: "/admin/stats/sales", str: "매출 통계", icon: <FaChartBar /> },
+			{ url: "/admin/stats/sales", str: "통합 대시보드", icon: <FaChartPie /> },
+			{ url: "/admin/stats/revenue", str: "매출 통계", icon: <FaChartBar /> },
+			{ url: "/admin/stats/booking", str: "예약 통계", icon: <FaClipboardList /> },
+			{ url: "/admin/stats/member", str: "회원 통계", icon: <FaUsers /> },
+			{ url: "/admin/stats/space", str: "공간 통계", icon: <FaBuilding /> },
 		],
 	},
 	{
