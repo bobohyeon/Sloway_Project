@@ -1,52 +1,28 @@
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import styled from 'styled-components';
+import styled, { keyframes } from 'styled-components';
 import {
   PageTitle,
   PageSub,
   BtnPrimary,
-  BtnOutline,
   COLOR,
 } from '../../components/user/RsvnStyled';
-import { useState } from 'react';
 
-const DUMMY = [
-  {
-    id: 1,
-    reason: '정비·보수',
-    space: '청평 숲속 파인뷰',
-    title: '내부 정비',
-    date: '2026.05.13 ~ 2026.05.15',
-    time: null,
-    icon: '🔧',
-  },
-  {
-    id: 2,
-    reason: '청소',
-    space: '성수 브릭라운지',
-    title: '정기 청소',
-    date: '2026.05.25',
-    time: '10:00 ~ 14:00',
-    icon: '🧹',
-  },
-  {
-    id: 3,
-    reason: '정비·보수',
-    space: '제주 돌담집 리트릿',
-    title: '장기 점검 · 에어컨 교체',
-    date: '2026.06.01 ~ 2026.06.10',
-    time: null,
-    icon: '🔧',
-  },
-  {
-    id: 4,
-    reason: '개인 이용',
-    space: '청평 숲속 파인뷰',
-    title: '호스트 개인 이용',
-    date: '2026.05.30 ~ 2026.06.02',
-    time: null,
-    icon: '🏠',
-  },
-];
+const fadeInUp = keyframes`
+  from { opacity: 0; transform: translateY(10px); }
+  to   { opacity: 1; transform: translateY(0); }
+`;
+
+const Page = styled.div`
+  max-width: 960px;
+  margin: 0 auto;
+  padding: 32px 24px;
+  animation: ${fadeInUp} 480ms ease-out both;
+`;
+
+const Header = styled.div`
+  margin-bottom: 20px;
+`;
 
 const InfoBanner = styled.div`
   background: #fffbf0;
@@ -59,6 +35,7 @@ const InfoBanner = styled.div`
   align-items: flex-start;
   font-size: 12px;
   color: #666;
+  line-height: 1.7;
 `;
 
 const FilterRow = styled.div`
@@ -66,11 +43,14 @@ const FilterRow = styled.div`
   justify-content: space-between;
   align-items: center;
   margin-bottom: 14px;
+  flex-wrap: wrap;
+  gap: 10px;
 `;
 
-const FilterTabs = styled.div`
+const FilterLeft = styled.div`
   display: flex;
   gap: 6px;
+  flex-wrap: wrap;
 `;
 
 const FilterTab = styled.button`
@@ -156,33 +136,93 @@ const DelBtn = styled.button`
   }
 `;
 
+const EmptyBox = styled.div`
+  text-align: center;
+  padding: 60px 0;
+  color: ${COLOR.gray400};
+  font-size: 14px;
+`;
+
+const DUMMY = [
+  {
+    id: 1,
+    reason: '정비·보수',
+    space: '청평 숲속 파인뷰',
+    title: '내부 정비',
+    date: '2026.05.13 ~ 2026.05.15',
+    time: null,
+    icon: '🔧',
+  },
+  {
+    id: 2,
+    reason: '청소',
+    space: '성수 브릭라운지',
+    title: '정기 청소',
+    date: '2026.05.25',
+    time: '10:00 ~ 14:00',
+    icon: '🧹',
+  },
+  {
+    id: 3,
+    reason: '정비·보수',
+    space: '제주 돌담집 리트릿',
+    title: '장기 점검 · 에어컨 교체',
+    date: '2026.06.01 ~ 2026.06.10',
+    time: null,
+    icon: '🔧',
+  },
+  {
+    id: 4,
+    reason: '개인 이용',
+    space: '청평 숲속 파인뷰',
+    title: '호스트 개인 이용',
+    date: '2026.05.30 ~ 2026.06.02',
+    time: null,
+    icon: '🏠',
+  },
+];
+
+const FILTERS = ['공간 전체', '다가오는 일정'];
+
 function BlackoutPage() {
   const navigate = useNavigate();
+  const [items, setItems] = useState(DUMMY);
   const [activeFilter, setActiveFilter] = useState(0);
+  const [spaceFilter, setSpaceFilter] = useState('전체 공간');
+
+  const filtered = items.filter(
+    (item) => spaceFilter === '전체 공간' || item.space === spaceFilter
+  );
+
+  const handleDelete = (id) => {
+    const ok = window.confirm(
+      '이용 불가 설정을 삭제하시겠어요?\n삭제하면 해당 기간에 예약이 다시 가능해집니다.'
+    );
+    if (ok) setItems((prev) => prev.filter((i) => i.id !== id));
+  };
 
   return (
-    <div>
+    <Page>
       <div
         style={{
           display: 'flex',
           justifyContent: 'space-between',
           alignItems: 'flex-start',
-          marginBottom: 20,
         }}
       >
-        <div>
+        <Header>
           <PageTitle>이용 불가 설정</PageTitle>
           <PageSub style={{ margin: 0 }}>
             예약을 받지 않을 날짜·시간을 관리하세요
           </PageSub>
-        </div>
+        </Header>
         <BtnPrimary onClick={() => navigate('/host/reservation/block/add')}>
           + 이용 불가 추가
         </BtnPrimary>
       </div>
 
       <InfoBanner>
-        <span style={{ fontSize: 18 }}>💡</span>
+        <span style={{ fontSize: 18, flexShrink: 0 }}>💡</span>
         <div>
           <div style={{ fontWeight: 700, marginBottom: 3 }}>
             이용 불가 설정이란?
@@ -194,8 +234,8 @@ function BlackoutPage() {
       </InfoBanner>
 
       <FilterRow>
-        <FilterTabs>
-          {['공간 전체', '다가오는 일정'].map((t, i) => (
+        <FilterLeft>
+          {FILTERS.map((t, i) => (
             <FilterTab
               key={i}
               $active={activeFilter === i}
@@ -204,35 +244,56 @@ function BlackoutPage() {
               {t}
             </FilterTab>
           ))}
-        </FilterTabs>
-        <Select>
+        </FilterLeft>
+        <Select
+          value={spaceFilter}
+          onChange={(e) => setSpaceFilter(e.target.value)}
+        >
           <option>전체 공간</option>
+          <option>청평 숲속 파인뷰</option>
+          <option>성수 브릭라운지</option>
+          <option>제주 돌담집 리트릿</option>
         </Select>
       </FilterRow>
 
-      {DUMMY.map((item) => (
-        <BlackoutCard key={item.id}>
-          <CardIcon>{item.icon}</CardIcon>
-          <div style={{ flex: 1 }}>
-            <div style={{ display: 'flex', gap: 6, marginBottom: 5 }}>
-              <ReasonTag>{item.reason}</ReasonTag>
-              <span style={{ fontSize: 12, color: COLOR.gray400 }}>
-                📍 {item.space}
-              </span>
+      {filtered.length === 0 ? (
+        <EmptyBox>
+          <div style={{ fontSize: 32, marginBottom: 12 }}>🚫</div>
+          <div>이용 불가 설정이 없어요</div>
+        </EmptyBox>
+      ) : (
+        filtered.map((item) => (
+          <BlackoutCard key={item.id}>
+            <CardIcon>{item.icon}</CardIcon>
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <div style={{ display: 'flex', gap: 6, marginBottom: 5 }}>
+                <ReasonTag>{item.reason}</ReasonTag>
+                <span style={{ fontSize: 12, color: COLOR.gray400 }}>
+                  📍 {item.space}
+                </span>
+              </div>
+              <div style={{ fontSize: 15, fontWeight: 700, marginBottom: 2 }}>
+                {item.title}
+              </div>
+              <div style={{ fontSize: 12, color: COLOR.gray400 }}>
+                📅 {item.date}
+                {item.time && <span> · ⏰ {item.time}</span>}
+              </div>
             </div>
-            <div style={{ fontSize: 15, fontWeight: 700 }}>{item.title}</div>
-            <div style={{ fontSize: 12, color: COLOR.gray400, marginTop: 2 }}>
-              📅 {item.date}
-              {item.time && <span> · ⏰ {item.time}</span>}
+            <div style={{ display: 'flex', gap: 8, flexShrink: 0 }}>
+              <EditBtn
+                onClick={() =>
+                  navigate(`/host/reservation/block/edit/${item.id}`)
+                }
+              >
+                ✏️ 수정
+              </EditBtn>
+              <DelBtn onClick={() => handleDelete(item.id)}>🗑️ 삭제</DelBtn>
             </div>
-          </div>
-          <div style={{ display: 'flex', gap: 8 }}>
-            <EditBtn>✏️ 수정</EditBtn>
-            <DelBtn>🗑️ 삭제</DelBtn>
-          </div>
-        </BlackoutCard>
-      ))}
-    </div>
+          </BlackoutCard>
+        ))
+      )}
+    </Page>
   );
 }
 

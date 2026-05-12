@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 import styled, { keyframes } from 'styled-components';
 import {
   PageTitle,
@@ -154,10 +154,68 @@ const BottomBtns = styled.div`
 
 const TYPES = ['🔧 정비·보수', '🧹 청소', '🏠 개인 이용', '📝 기타'];
 
-function BlackoutAddPage() {
+// 더미 — 백엔드 연결 시 id로 fetch해서 교체
+const DUMMY_DATA = {
+  1: {
+    space: '청평 숲속 파인뷰 스테이',
+    typeIdx: 0,
+    title: '내부 정비',
+    startDate: '2026-05-13',
+    endDate: '2026-05-15',
+    timeOn: false,
+    startTime: '',
+    endTime: '',
+    memo: '',
+  },
+  2: {
+    space: '성수 브릭라운지',
+    typeIdx: 1,
+    title: '정기 청소',
+    startDate: '2026-05-25',
+    endDate: '2026-05-25',
+    timeOn: true,
+    startTime: '10:00',
+    endTime: '14:00',
+    memo: '',
+  },
+  3: {
+    space: '제주 돌담집 리트릿',
+    typeIdx: 0,
+    title: '장기 점검',
+    startDate: '2026-06-01',
+    endDate: '2026-06-10',
+    timeOn: false,
+    startTime: '',
+    endTime: '',
+    memo: '에어컨 교체 예정',
+  },
+  4: {
+    space: '청평 숲속 파인뷰 스테이',
+    typeIdx: 2,
+    title: '호스트 개인 이용',
+    startDate: '2026-05-30',
+    endDate: '2026-06-02',
+    timeOn: false,
+    startTime: '',
+    endTime: '',
+    memo: '',
+  },
+};
+
+function BlackoutEditPage() {
   const navigate = useNavigate();
-  const [selectedType, setSelectedType] = useState(0);
-  const [timeOn, setTimeOn] = useState(true);
+  const { id } = useParams();
+  const init = DUMMY_DATA[id] || DUMMY_DATA[1];
+
+  const [space, setSpace] = useState(init.space);
+  const [selectedType, setSelectedType] = useState(init.typeIdx);
+  const [title, setTitle] = useState(init.title);
+  const [startDate, setStartDate] = useState(init.startDate);
+  const [endDate, setEndDate] = useState(init.endDate);
+  const [timeOn, setTimeOn] = useState(init.timeOn);
+  const [startTime, setStartTime] = useState(init.startTime);
+  const [endTime, setEndTime] = useState(init.endTime);
+  const [memo, setMemo] = useState(init.memo);
 
   const handleSave = () => {
     navigate('/host/reservation/block');
@@ -165,8 +223,8 @@ function BlackoutAddPage() {
 
   return (
     <Page>
-      <PageTitle>이용 불가 추가</PageTitle>
-      <PageSub>예약을 받지 않을 날짜·시간을 설정하세요</PageSub>
+      <PageTitle>이용 불가 수정</PageTitle>
+      <PageSub>이용 불가 설정 내용을 수정하세요</PageSub>
       <BackLink onClick={() => navigate('/host/reservation/block')}>
         ← 이용 불가 목록
       </BackLink>
@@ -176,8 +234,7 @@ function BlackoutAddPage() {
           <Label>
             공간 선택 <Req>*</Req>
           </Label>
-          <Select>
-            <option value="">공간을 선택해주세요</option>
+          <Select value={space} onChange={(e) => setSpace(e.target.value)}>
             <option>청평 숲속 파인뷰 스테이</option>
             <option>성수 브릭라운지</option>
             <option>제주 돌담집 리트릿</option>
@@ -205,7 +262,11 @@ function BlackoutAddPage() {
           <Label>
             제목 <Req>*</Req>
           </Label>
-          <Input type="text" placeholder="예) 내부 정비, 정기 청소" />
+          <Input
+            type="text"
+            value={title}
+            onChange={(e) => setTitle(e.target.value)}
+          />
         </FormRow>
 
         <FormRow>
@@ -213,9 +274,17 @@ function BlackoutAddPage() {
             날짜 <Req>*</Req>
           </Label>
           <DateRow>
-            <Input type="date" defaultValue="2026-05-13" />
+            <Input
+              type="date"
+              value={startDate}
+              onChange={(e) => setStartDate(e.target.value)}
+            />
             <span style={{ color: COLOR.gray400 }}>~</span>
-            <Input type="date" defaultValue="2026-05-15" />
+            <Input
+              type="date"
+              value={endDate}
+              onChange={(e) => setEndDate(e.target.value)}
+            />
           </DateRow>
         </FormRow>
 
@@ -235,16 +304,29 @@ function BlackoutAddPage() {
               시간 <Req>*</Req>
             </Label>
             <DateRow>
-              <Input type="time" defaultValue="10:00" />
+              <Input
+                type="time"
+                value={startTime}
+                onChange={(e) => setStartTime(e.target.value)}
+              />
               <span style={{ color: COLOR.gray400 }}>~</span>
-              <Input type="time" defaultValue="14:00" />
+              <Input
+                type="time"
+                value={endTime}
+                onChange={(e) => setEndTime(e.target.value)}
+              />
             </DateRow>
           </FormRow>
         )}
 
         <FormRow>
           <Label>메모 (선택)</Label>
-          <Textarea rows={3} placeholder="추가 안내 사항을 입력해주세요" />
+          <Textarea
+            rows={3}
+            value={memo}
+            onChange={(e) => setMemo(e.target.value)}
+            placeholder="추가 안내 사항을 입력해주세요"
+          />
         </FormRow>
       </FormBox>
 
@@ -258,4 +340,4 @@ function BlackoutAddPage() {
   );
 }
 
-export default BlackoutAddPage;
+export default BlackoutEditPage;

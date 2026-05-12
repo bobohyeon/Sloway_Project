@@ -67,6 +67,7 @@ import HostRsvnDetailPage from './features/rsvn/pages/host/HostRsvnDetailPage';
 import HostRsvnCalendarPage from './features/rsvn/pages/host/HostRsvnCalendarPage';
 import BlackoutPage from './features/rsvn/pages/host/BlackoutPage';
 import BlackoutAddPage from './features/rsvn/blackout/pages/host/BlackoutAddPage';
+import BlackoutEditPage from './features/rsvn/blackout/pages/host/BlackoutEditPage';
 
 // ── 예약 (관리자) ─────────────────────────────────────────
 import AdminRsvnListPage from './features/rsvn/pages/admin/AdminRsvnListPage';
@@ -315,6 +316,10 @@ function App() {
         <Route
           path="/host/reservation/block/add"
           element={<BlackoutAddPage />}
+        />
+        <Route
+          path="/host/reservation/block/edit/:id"
+          element={<BlackoutEditPage />}
         />
         {/* 정산·통계 */}
         <Route
