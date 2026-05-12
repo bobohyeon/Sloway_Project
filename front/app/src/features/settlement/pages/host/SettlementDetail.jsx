@@ -1,6 +1,8 @@
 import { useNavigate, useParams } from 'react-router-dom'
 import styled from 'styled-components'
 
+import PageLayout from '../../../../app/layouts/page/PageLayout'
+
 import { Card, Section, Button } from '../../../pay_shared/components'
 import { SettlementDetailHeader } from '../../components/host/SettlementDetailHeader'
 import { SettlementBookingsList } from '../../components/host/SettlementBookingsList'
@@ -143,14 +145,13 @@ export default function SettlementDetail() {
   const settlement = SETTLEMENTS.find((s) => String(s.id) === id) || SETTLEMENTS[0]
 
   return (
-    <PageWrapper>
-      <Container>
-      <BackLink onClick={() => nav('/host/settlement/history')}>← 정산 내역으로</BackLink>
-
-      <Header>
-        <Title>정산 상세</Title>
-        <Description>이 정산에 포함된 예약과 수수료 내역을 확인하세요</Description>
-      </Header>
+    <PageLayout
+      title="정산 상세"
+      description="이 정산에 포함된 예약과 수수료 내역을 확인하세요"
+      backTo="/host/settlement/history"
+      backLabel="정산 내역"
+      maxWidth={800}
+    >
 
       <SectionWrap>
         <SettlementDetailHeader settlement={settlement} />
@@ -185,56 +186,9 @@ export default function SettlementDetail() {
           </Button>
         )}
       </Actions>
-    </Container>
-    </PageWrapper>
+    </PageLayout>
   )
 }
-
-const PageWrapper = styled.div`
-  background-color: var(--cream);
-  min-height: 100%;
-  padding: var(--space-6) var(--space-5);
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-`
-
-const Container = styled.div`
-  width: 100%;
-  max-width: 800px;
-  display: flex;
-  flex-direction: column;
-  animation: fadeInUp 480ms ease-out both;
-`
-
-const BackLink = styled.button`
-  font-size: 0.85rem;
-  color: var(--gray-600);
-  margin-bottom: var(--space-4);
-
-  &:hover {
-    color: var(--gray-800);
-  }
-`
-
-const Header = styled.div`
-  margin-bottom: var(--space-5);
-`
-
-const Title = styled.h1`
-  font-family: var(--font-display);
-  font-size: 1.8rem;
-  font-weight: 500;
-  color: var(--gray-800);
-  letter-spacing: -0.02em;
-  margin-bottom: 4px;
-`
-
-const Description = styled.p`
-  font-size: 0.9rem;
-  color: var(--gray-600);
-`
-
 const SectionWrap = styled.div`
   margin-bottom: var(--space-5);
 `

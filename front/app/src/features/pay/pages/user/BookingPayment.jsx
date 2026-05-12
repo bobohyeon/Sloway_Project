@@ -89,8 +89,7 @@ export default function BookingPaymentPage() {
   };
 
   return (
-    <PageWrapper>
-      <Container>
+    <PageLayout maxWidth={1200}>
       <PaymentSteps current={2} />
 
       <Layout>
@@ -144,27 +143,10 @@ export default function BookingPaymentPage() {
           onClose={() => setCouponModalOpen(false)}
         />
       )}
-    </Container>
-    </PageWrapper>
+    </PageLayout>
   );
 }
-
-const PageWrapper = styled.div`
-  background-color: var(--cream);
-  min-height: 100%;
-  padding: var(--space-6) var(--space-5);
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-`
-
-const Container = styled.div`
-  width: 100%;
-  max-width: 1200px;
-  display: flex;
-  flex-direction: column;
-  animation: fadeInUp 480ms ease-out both;
-`;
+;
 
 const Layout = styled.div`
   display: grid;

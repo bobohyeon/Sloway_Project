@@ -2,6 +2,8 @@ import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import styled from 'styled-components'
 
+import PageLayout from '../../../../app/layouts/page/PageLayout'
+
 import { Card, Button, Section, Badge } from '../../../pay_shared/components'
 import { Modal } from '../../../pay_shared/components/Modal'
 
@@ -94,12 +96,11 @@ export default function AdminCommissionPolicy() {
   }
 
   return (
-    <PageWrapper>
-      <Container>
-      <Header>
-        <Title>수수료 정책 관리</Title>
-        <Description>카테고리별 플랫폼 수수료율을 관리하세요</Description>
-      </Header>
+    <PageLayout
+      title="수수료 정책 관리"
+      description="카테고리별 플랫폼 수수료율을 관리하세요"
+      maxWidth={1200}
+    >
 
       <NoticeBanner>
         <NoticeIcon>💡</NoticeIcon>
@@ -254,46 +255,9 @@ export default function AdminCommissionPolicy() {
           </ModalContent>
         )}
       </Modal>
-    </Container>
-    </PageWrapper>
+    </PageLayout>
   )
 }
-
-const PageWrapper = styled.div`
-  background-color: var(--cream);
-  min-height: 100%;
-  padding: var(--space-6) var(--space-5);
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-`
-
-const Container = styled.div`
-  width: 100%;
-  max-width: 1200px;
-  display: flex;
-  flex-direction: column;
-  animation: fadeInUp 480ms ease-out both;
-`
-
-const Header = styled.div`
-  margin-bottom: var(--space-5);
-`
-
-const Title = styled.h1`
-  font-family: var(--font-display);
-  font-size: 1.8rem;
-  font-weight: 500;
-  color: var(--gray-800);
-  letter-spacing: -0.02em;
-  margin-bottom: 4px;
-`
-
-const Description = styled.p`
-  font-size: 0.9rem;
-  color: var(--gray-600);
-`
-
 const NoticeBanner = styled.div`
   display: flex;
   gap: var(--space-3);

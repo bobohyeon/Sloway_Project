@@ -58,12 +58,13 @@ export default function BookingCancel() {
     nav('/user/refund/complete');
   };
   return (
-    <PageWrapper>
-      <Container>
-      <Header>
-        <Title>예약 취소·환불 신청</Title>
-        <Description>신중하게 결정해주세요</Description>
-      </Header>
+    <PageLayout
+      title="예약 취소·환불 신청"
+      description="신중하게 결정해주세요"
+      backTo="/user/reservation"
+      backLabel="예약 내역"
+      maxWidth={800}
+    >
 
       <BackLink onClick={() => nav(-1)}>← 예약 상세</BackLink>
 
@@ -109,57 +110,14 @@ export default function BookingCancel() {
           {refund.canRefund ? '취소 신청하기' : '환불 불가'}
         </Button>
       </Actions>
-    </Container>
-    </PageWrapper>
+    </PageLayout>
   );
 }
-
-const PageWrapper = styled.div`
-  background-color: var(--cream);
-  min-height: 100%;
-  padding: var(--space-6) var(--space-5);
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-`
-
-const Container = styled.div`
-  width: 100%;
-  max-width: 800px;
-  display: flex;
-  flex-direction: column;
-  animation: fadeInUp 480ms ease-out both;
-`;
-
-const Header = styled.div`
-  margin-bottom: var(--space-3);
-  padding-bottom: var(--space-4);
-  border-bottom: 1px solid var(--gray-200);
-`;
-
-const Title = styled.h1`
-  font-family: var(--font-display);
-  font-size: 1.8rem;
-  font-weight: 500;
-  color: var(--gray-800);
-  letter-spacing: -0.02em;
-  margin-bottom: 4px;
-`;
-
-const Description = styled.p`
-  font-size: 0.9rem;
-  color: var(--gray-600);
-`;
-
-const BackLink = styled.button`
-  font-size: 0.85rem;
-  color: var(--gray-600);
-  margin-bottom: var(--space-4);
-
-  &:hover {
-    color: var(--gray-800);
-  }
-`;
+;
+;
+;
+;
+;
 
 const Section = styled.div`
   margin-bottom: var(--space-5);

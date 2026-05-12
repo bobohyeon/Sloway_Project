@@ -2,6 +2,8 @@ import { useState, useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
 import styled from 'styled-components'
 
+import PageLayout from '../../../../app/layouts/page/PageLayout'
+
 import { Tabs, StatCard, EmptyState, Pagination, Button, Badge } from '../../../pay_shared/components'
 
 const PAYMENTS = [
@@ -154,12 +156,11 @@ export default function AdminPaymentList() {
   const totalAmount = completed.reduce((sum, p) => sum + p.amount, 0)
 
   return (
-    <PageWrapper>
-      <Container>
-      <Header>
-        <Title>전체 결제 내역</Title>
-        <Description>플랫폼 전체 결제 현황을 모니터링하세요</Description>
-      </Header>
+    <PageLayout
+      title="전체 결제 내역"
+      description="플랫폼 전체 결제 현황을 모니터링하세요"
+      maxWidth={1200}
+    >
 
       <StatGrid>
         <StatCard
@@ -283,46 +284,9 @@ export default function AdminPaymentList() {
       )}
 
       <Pagination current={1} total={1} onChange={() => {}} />
-    </Container>
-    </PageWrapper>
+    </PageLayout>
   )
 }
-
-const PageWrapper = styled.div`
-  background-color: var(--cream);
-  min-height: 100%;
-  padding: var(--space-6) var(--space-5);
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-`
-
-const Container = styled.div`
-  width: 100%;
-  max-width: 1200px;
-  display: flex;
-  flex-direction: column;
-  animation: fadeInUp 480ms ease-out both;
-`
-
-const Header = styled.div`
-  margin-bottom: var(--space-5);
-`
-
-const Title = styled.h1`
-  font-family: var(--font-display);
-  font-size: 1.8rem;
-  font-weight: 500;
-  color: var(--gray-800);
-  letter-spacing: -0.02em;
-  margin-bottom: 4px;
-`
-
-const Description = styled.p`
-  font-size: 0.9rem;
-  color: var(--gray-600);
-`
-
 const StatGrid = styled.div`
   display: grid;
   grid-template-columns: repeat(4, 1fr);

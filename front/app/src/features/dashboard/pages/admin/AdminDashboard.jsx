@@ -1,5 +1,7 @@
 import { useNavigate } from 'react-router-dom'
 import styled from 'styled-components'
+
+import PageLayout from '../../../../app/layouts/page/PageLayout'
 import {
   FaExclamationTriangle,
   FaHome,
@@ -120,12 +122,11 @@ export default function AdminDashboard() {
   const nav = useNavigate()
 
   return (
-    <PageWrapper>
-      <Container>
-      <Header>
-        <Title>관리자 대시보드</Title>
-        <Description>플랫폼 운영 현황을 한눈에 확인하세요</Description>
-      </Header>
+    <PageLayout
+      title="관리자 대시보드"
+      description="플랫폼 운영 현황을 한눈에 확인하세요"
+      maxWidth={1200}
+    >
 
       <AlertSection>
         <AlertBanner
@@ -208,46 +209,9 @@ export default function AdminDashboard() {
           ))}
         </QuickGrid>
       </QuickSection>
-    </Container>
-    </PageWrapper>
+    </PageLayout>
   )
 }
-
-const PageWrapper = styled.div`
-  background-color: var(--cream);
-  min-height: 100%;
-  padding: var(--space-6) var(--space-5);
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-`
-
-const Container = styled.div`
-  width: 100%;
-  max-width: 1200px;
-  display: flex;
-  flex-direction: column;
-  animation: fadeInUp 480ms ease-out both;
-`
-
-const Header = styled.div`
-  margin-bottom: var(--space-5);
-`
-
-const Title = styled.h1`
-  font-family: var(--font-display);
-  font-size: 1.8rem;
-  font-weight: 500;
-  color: var(--gray-800);
-  letter-spacing: -0.02em;
-  margin-bottom: 4px;
-`
-
-const Description = styled.p`
-  font-size: 0.9rem;
-  color: var(--gray-600);
-`
-
 const AlertSection = styled.div`
   margin-bottom: var(--space-5);
 `
