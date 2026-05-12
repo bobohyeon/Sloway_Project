@@ -1,5 +1,5 @@
 import { useNavigate } from 'react-router-dom';
-import styled from 'styled-components';
+import styled, { keyframes } from 'styled-components';
 import RsvnStatusBadge from '../../components/user/RsvnStatusBadge';
 import {
   PageTitle,
@@ -16,15 +16,16 @@ import {
 } from '../../components/user/RsvnStyled';
 import { ApproveBtn } from '../../components/host/HostRsvnStyled';
 
-const TopCard = styled.div`
-  background: #fff;
-  border: 1.5px solid ${COLOR.orange};
-  border-radius: 12px;
-  padding: 20px;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-bottom: 16px;
+const fadeInUp = keyframes`
+  from { opacity: 0; transform: translateY(10px); }
+  to   { opacity: 1; transform: translateY(0); }
+`;
+
+const Page = styled.div`
+  max-width: 960px;
+  margin: 0 auto;
+  padding: 32px 24px;
+  animation: ${fadeInUp} 480ms ease-out both;
 `;
 
 const SpaceThumb = styled.div`
@@ -39,15 +40,6 @@ const SpaceThumb = styled.div`
   flex-shrink: 0;
 `;
 
-const NewBadge = styled.span`
-  font-size: 10px;
-  font-weight: 700;
-  padding: 2px 6px;
-  border-radius: 4px;
-  background: #fff0e0;
-  color: ${COLOR.orange};
-`;
-
 const GuestAvatar = styled.div`
   width: 44px;
   height: 44px;
@@ -59,7 +51,6 @@ const GuestAvatar = styled.div`
   font-weight: 700;
   font-size: 16px;
   color: #fff;
-  flex-shrink: 0;
 `;
 
 const PayRow = styled.div`
@@ -89,51 +80,34 @@ const RequestBox = styled.div`
   margin-top: 10px;
 `;
 
-const BottomBar = styled.div`
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-top: 24px;
-  padding-top: 20px;
-  border-top: 1px solid ${COLOR.gray200};
-`;
-
 function HostRsvnDetailPage() {
   const navigate = useNavigate();
 
   return (
-    <div>
+    <Page>
       <PageTitle>예약 상세</PageTitle>
       <PageSub>예약 내역과 게스트 정보를 확인하세요</PageSub>
       <BackLink onClick={() => navigate('/host/reservation/list')}>
         ← 예약 목록
       </BackLink>
 
-      {/* 상단 공간 + 승인/거절 */}
-      <TopCard>
+      {/* 공간 + 상태 */}
+      <SectionBox style={{ marginBottom: 16 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
           <SpaceThumb>🌲</SpaceThumb>
-          <div>
+          <div style={{ flex: 1 }}>
             <div style={{ display: 'flex', gap: 6, marginBottom: 6 }}>
-              <RsvnStatusBadge type="status" label="승인 대기" />
-              <NewBadge>NEW</NewBadge>
+              <RsvnStatusBadge type="status" label="확정" />
             </div>
             <div style={{ fontSize: 18, fontWeight: 700 }}>
               청평 숲속 파인뷰
             </div>
             <div style={{ fontSize: 12, color: COLOR.gray400, marginTop: 4 }}>
-              예약번호 SW-20260424-000892
-            </div>
-            <div style={{ fontSize: 12, color: COLOR.gray400 }}>
-              요청 · 2026.04.24 14:32
+              예약번호 SW-20260508-000847 · 요청 2026.04.24 14:32
             </div>
           </div>
         </div>
-        <div style={{ display: 'flex', gap: 8 }}>
-          <ApproveBtn $reject>거절</ApproveBtn>
-          <ApproveBtn>✓ 예약 승인</ApproveBtn>
-        </div>
-      </TopCard>
+      </SectionBox>
 
       {/* 게스트 정보 */}
       <SectionBox>
@@ -153,7 +127,10 @@ function HostRsvnDetailPage() {
               2024.11 가입 · Sloway 이용 3회 · 평점 ★ 4.8
             </div>
           </div>
-          <BtnOutline style={{ fontSize: 12, padding: '5px 12px' }}>
+          <BtnOutline
+            style={{ fontSize: 12, padding: '5px 12px' }}
+            onClick={() => navigate('/host/chat')}
+          >
             💬 메시지 보내기
           </BtnOutline>
         </div>
@@ -175,11 +152,11 @@ function HostRsvnDetailPage() {
         <InfoGrid>
           <InfoItem>
             <InfoLabel>체크인</InfoLabel>
-            <InfoValue>2026.05.10 (토) 오후 3:00</InfoValue>
+            <InfoValue>2026.05.08 (목) 오후 3:00</InfoValue>
           </InfoItem>
           <InfoItem>
             <InfoLabel>체크아웃</InfoLabel>
-            <InfoValue>2026.05.12 (월) 오전 11:00까지</InfoValue>
+            <InfoValue>2026.05.10 (토) 오전 11:00</InfoValue>
           </InfoItem>
           <InfoItem>
             <InfoLabel>기간</InfoLabel>
@@ -187,7 +164,7 @@ function HostRsvnDetailPage() {
           </InfoItem>
           <InfoItem>
             <InfoLabel>이용 인원</InfoLabel>
-            <InfoValue>3명</InfoValue>
+            <InfoValue>2명</InfoValue>
           </InfoItem>
         </InfoGrid>
         <RequestBox>
@@ -201,18 +178,18 @@ function HostRsvnDetailPage() {
         <SectionTitle>💰 예상 정산 금액</SectionTitle>
         <PayRow>
           <span>게스트 결제 금액</span>
-          <span>382,000원</span>
+          <span>326,500원</span>
         </PayRow>
         <PayRow>
           <span style={{ color: COLOR.gray400 }}>플랫폼 수수료 (12.5%)</span>
-          <span style={{ color: COLOR.gray400 }}>-49,500원</span>
+          <span style={{ color: COLOR.gray400 }}>-40,813원</span>
         </PayRow>
         <div
           style={{ borderTop: `1px solid ${COLOR.gray200}`, margin: '10px 0' }}
         />
         <PayRow $total>
           <span>내 정산 금액</span>
-          <span style={{ color: COLOR.terra }}>332,500원</span>
+          <span style={{ color: COLOR.terra }}>285,687원</span>
         </PayRow>
         <div style={{ fontSize: 11, color: COLOR.gray400, marginTop: 4 }}>
           정산 예정일: 이용 완료 후 다음 정산일 (월 1회, 매월 5일)
@@ -227,7 +204,7 @@ function HostRsvnDetailPage() {
           <span>카카오페이</span>
         </PayRow>
         <PayRow>
-          <span>숙박비 (2박)</span>
+          <span>기본 요금 (2박)</span>
           <span>370,000원</span>
         </PayRow>
         <PayRow>
@@ -242,17 +219,23 @@ function HostRsvnDetailPage() {
           <span style={{ color: COLOR.terra }}>382,000원</span>
         </PayRow>
       </SectionBox>
-
-      <BottomBar>
-        <BtnOutline onClick={() => navigate('/host/reservation/list')}>
-          목록으로
-        </BtnOutline>
-        <div style={{ display: 'flex', gap: 8 }}>
-          <ApproveBtn $reject>예약 거절</ApproveBtn>
-          <ApproveBtn>✓ 예약 승인</ApproveBtn>
-        </div>
-      </BottomBar>
-    </div>
+      <div
+        style={{
+          display: 'flex',
+          justifyContent: 'flex-end',
+          marginTop: 24,
+          paddingTop: 20,
+          borderTop: `1px solid ${COLOR.gray200}`,
+        }}
+      >
+        <ApproveBtn
+          $reject
+          onClick={() => alert('예약 거절 — 백엔드 연결 후 구현 예정')}
+        >
+          예약 거절
+        </ApproveBtn>
+      </div>
+    </Page>
   );
 }
 
