@@ -28,7 +28,7 @@ public class FeeApiController {
 
     @GetMapping("/fee")
     public ResponseEntity<List<FeeResDto>> findAll() {
-        return ResponseEntity.ok(feeService.findAll());
+        return ResponseEntity.ok(feeService.findFeeAll());
     }
 
     @GetMapping("/fee/{id}")
