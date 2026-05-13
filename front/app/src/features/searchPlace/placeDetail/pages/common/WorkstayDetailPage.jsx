@@ -1,3 +1,5 @@
+import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import DetailLayout from '../../layouts/DetailLayout';
 import DetailImageBox from '../../components/common/DetailImageBox';
 import DetailMainBox from '../../components/common/DetailMainBox';
@@ -16,6 +18,17 @@ const SPACE = {
     { label: '체크아웃', value: '오전 11:00' },
     { label: '최대 인원', value: '6명 (기준 4명)' },
     { label: '업무 공간', value: '독립형 데스크 4석' },
+  ],
+  facilities: [
+    { icon: '🖥', name: '듀얼 모니터' },
+    { icon: '📶', name: '기가 와이파이' },
+    { icon: '🏢', name: '소형 회의실' },
+    { icon: '🖨', name: '프린터' },
+    { icon: '🍳', name: '주방' },
+    { icon: '🧺', name: '세탁기' },
+    { icon: '🚗', name: '주차 가능' },
+    { icon: '♨️', name: '장작 난로' },
+    { icon: '📺', name: 'TV' },
   ],
   notices: [
     {
@@ -46,13 +59,13 @@ const REVIEWS = [
       { label: '편의시설', val: 4 },
       { label: '집중도', val: 5 },
     ],
-    text: '조용하고 몰입감 있어요. 듀얼모니터도 잘 쓰고 왔습니다. 다음에 팀원들이랑 또 오고 싶어요! 회의실도 넓고 쾌적했고, 와이파이도 빠릿빠릿해서 화상회의도 문제없었어요. 숲 속이라 공기도 너무 좋고 저녁에 산책도 할 수 있어서 좋았습니다.',
+    text: '조용하고 몰입감 있어요. 듀얼모니터도 잘 쓰고 왔습니다. 다음에 팀원들이랑 또 오고 싶어요! 회의실도 넓고 쾌적했고, 와이파이도 빠릿빠릿해서 화상회의도 문제없었어요.',
     helpful: 24,
     imgs: 3,
     reply: {
       hostName: '청평스테이',
       date: '2026.04.23',
-      text: '감사합니다! 다음에도 좋은 시간 보내러 오세요. 언제든 환영합니다 🌲',
+      text: '감사합니다! 다음에도 좋은 시간 보내러 오세요 🌲',
     },
   },
   {
@@ -68,7 +81,7 @@ const REVIEWS = [
       { label: '편의시설', val: 5 },
       { label: '집중도', val: 5 },
     ],
-    text: '리모트 워크 일주일 했는데 너무 좋았어요. 인터넷 속도 빠르고 데스크 셋업이 진짜 편했습니다. 노트북 거치대까지 있어서 자세도 편하게 작업할 수 있었어요. 모니터 두 개에 키보드/마우스까지 다 갖춰져 있어서 짐도 적게 들고 갈 수 있었습니다.',
+    text: '리모트 워크 일주일 했는데 너무 좋았어요. 인터넷 속도 빠르고 데스크 셋업이 진짜 편했습니다.',
     helpful: 18,
     imgs: 2,
     reply: null,
@@ -86,28 +99,38 @@ const REVIEWS = [
       { label: '편의시설', val: 4 },
       { label: '집중도', val: 5 },
     ],
-    text: '전반적으로 만족스러웠어요. 조용한 환경에서 집중해서 일할 수 있었고, 침구도 깨끗했습니다. 다만 부엌이 좀 작아서 요리하기는 살짝 불편했어요.',
+    text: '전반적으로 만족스러웠어요. 조용한 환경에서 집중해서 일할 수 있었고, 침구도 깨끗했습니다.',
     helpful: 12,
     imgs: 1,
     reply: {
       hostName: '청평스테이',
       date: '2026.03.29',
-      text: '소중한 후기 감사드려요! 부엌 부분은 다음 업데이트 때 개선해보겠습니다 🙏',
+      text: '소중한 후기 감사드려요! 🙏',
     },
   },
 ];
 
 function WorkstayDetailPage() {
+  const [wished, setWished] = useState(false);
+
   return (
     <DetailLayout
-      imageBox={<DetailImageBox icon="🌲" moreCount={12} />}
-      mainBox={<DetailMainBox space={SPACE} reviews={REVIEWS} />}
+      imageBox={<DetailImageBox icon="🌲" />}
+      mainBox={
+        <DetailMainBox
+          space={SPACE}
+          reviews={REVIEWS}
+          wished={wished}
+          onWishToggle={setWished}
+        />
+      }
       rsvnBox={
         <DetailRsvnBox
           spaceType="workstay"
           rsvnInfo={RSVN_INFO}
           price={185000}
           priceUnit="원/박"
+          onWishToggle={() => setWished((v) => !v)}
         />
       }
     />
