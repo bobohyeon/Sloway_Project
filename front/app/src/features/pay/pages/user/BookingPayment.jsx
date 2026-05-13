@@ -148,8 +148,6 @@ export default function BookingPaymentPage() {
     </PageLayout>
   );
 }
-;
-
 const Layout = styled.div`
   display: grid;
   grid-template-columns: 1fr 380px;
