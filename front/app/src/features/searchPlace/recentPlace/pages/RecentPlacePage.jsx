@@ -1,29 +1,14 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import styled, { keyframes } from 'styled-components';
-import {
-  PageTitle,
-  PageSub,
-  COLOR,
-} from '../../../rsvn/components/user/RsvnStyled';
+import PageLayout from '../../../../app/layouts/page/PageLayout';
+import { COLOR } from '../../../rsvn/components/user/RsvnStyled';
 import RecentCard from '../components/user/RecentCard';
 
 const fadeInUp = keyframes`
   from { opacity: 0; transform: translateY(10px); }
   to   { opacity: 1; transform: translateY(0); }
 `;
-
-const Page = styled.div`
-  max-width: 960px;
-  margin: 0 auto;
-  padding: 32px 24px;
-  animation: ${fadeInUp} 480ms ease-out both;
-`;
-
-const Header = styled.div`
-  margin-bottom: 24px;
-`;
-
 const ListHeader = styled.div`
   display: flex;
   justify-content: space-between;
@@ -156,14 +141,7 @@ function RecentPlacePage() {
   };
 
   return (
-    <Page>
-      <Header>
-        <PageTitle>최근 본 공간</PageTitle>
-        <PageSub>
-          최근 조회한 공간 {items.length}개 · 최대 10개까지 표시됩니다
-        </PageSub>
-      </Header>
-
+    <PageLayout title="최근 본 공간" maxWidth={1200}>
       {items.length > 0 ? (
         <>
           <ListHeader>
@@ -190,7 +168,7 @@ function RecentPlacePage() {
           </div>
         </EmptyBox>
       )}
-    </Page>
+    </PageLayout>
   );
 }
 

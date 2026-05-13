@@ -1,9 +1,8 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import styled, { keyframes } from 'styled-components';
+import PageLayout from '../../../../app/layouts/page/PageLayout';
 import {
-  PageTitle,
-  PageSub,
   BtnPrimary,
   COLOR,
 } from '../../components/user/RsvnStyled';
@@ -202,24 +201,16 @@ function BlackoutPage() {
   };
 
   return (
-    <Page>
-      <div
-        style={{
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'flex-start',
-        }}
-      >
-        <Header>
-          <PageTitle>이용 불가 설정</PageTitle>
-          <PageSub style={{ margin: 0 }}>
-            예약을 받지 않을 날짜·시간을 관리하세요
-          </PageSub>
-        </Header>
+    <PageLayout
+      title="이용 불가 설정"
+      description="예약을 받지 않을 날짜·시간을 관리하세요"
+      actions={
         <BtnPrimary onClick={() => navigate('/host/reservation/block/add')}>
           + 이용 불가 추가
         </BtnPrimary>
-      </div>
+      }
+      maxWidth={1200}
+    >
 
       <InfoBanner>
         <span style={{ fontSize: 18, flexShrink: 0 }}>💡</span>
@@ -293,7 +284,7 @@ function BlackoutPage() {
           </BlackoutCard>
         ))
       )}
-    </Page>
+    </PageLayout>
   );
 }
 

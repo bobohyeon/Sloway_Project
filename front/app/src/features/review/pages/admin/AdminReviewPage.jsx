@@ -1,13 +1,11 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import styled, { keyframes } from 'styled-components';
+import PageLayout from '../../../../app/layouts/page/PageLayout';
 import {
   TabBar,
   TabBtn,
-  TabCount,
-  PageTitle,
-  PageSub,
-  Card,
+  TabCount,Card,
   CardRow,
   Thumb,
   CardBody,
@@ -24,18 +22,6 @@ const fadeInUp = keyframes`
   from { opacity: 0; transform: translateY(10px); }
   to   { opacity: 1; transform: translateY(0); }
 `;
-
-const Page = styled.div`
-  max-width: 960px;
-  margin: 0 auto;
-  padding: 32px 24px;
-  animation: ${fadeInUp} 480ms ease-out both;
-`;
-
-const Header = styled.div`
-  margin-bottom: 24px;
-`;
-
 const FilterRow = styled.div`
   display: flex;
   gap: 8px;
@@ -198,11 +184,11 @@ function AdminReviewPage() {
     );
 
   return (
-    <Page>
-      <Header>
-        <PageTitle>리뷰 신고 관리</PageTitle>
-        <PageSub>접수된 리뷰 신고를 검토하고 처리하세요</PageSub>
-      </Header>
+    <PageLayout
+      title="리뷰 신고 관리"
+      description="접수된 리뷰 신고를 검토하고 처리하세요"
+      maxWidth={1200}
+    >
 
       <TabBar>
         {TABS.map((tab, idx) => (
@@ -318,7 +304,7 @@ function AdminReviewPage() {
           <PageBtn onClick={() => setPage((p) => p + 1)}>›</PageBtn>
         </Pagination>
       )}
-    </Page>
+    </PageLayout>
   );
 }
 
