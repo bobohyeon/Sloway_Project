@@ -68,8 +68,6 @@ export default function BookingCancel() {
       maxWidth={800}
     >
 
-      <BackLink onClick={() => nav(-1)}>← 예약 상세</BackLink>
-
       <Section>
         <BookingSummaryCard booking={BOOKING} />
       </Section>
