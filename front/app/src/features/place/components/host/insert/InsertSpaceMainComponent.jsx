@@ -89,6 +89,28 @@ const SubmitButton = styled.button`
   }
 `;
 
+const StyledSelect = styled.select`
+  width: 100%;
+  padding: 12px 10px;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  font-size: 15px;
+  background-color: white;
+  appearance: none; /* 기본 화살표 숨김 */
+  background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23666' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
+  background-repeat: no-repeat;
+  background-position: right 15px center;
+  background-size: 15px;
+  cursor: pointer;
+  box-sizing: border-box;
+  margin-bottom: 25px;
+
+  &:focus {
+    outline: none;
+    border-color: #8fa382;
+  }
+`;
+
 function InsertSpaceMainComponent({
   formData,
   setFormData,
@@ -96,17 +118,12 @@ function InsertSpaceMainComponent({
   setStep,
   currentStep,
 }) {
-  // 주소를 좌표로 변환하는 함수
-  // 주소를 좌표로 변환하는 함수
   const getCoords = (address) => {
-    // 1. kakao 객체가 있는지 먼저 확인
     if (!window.kakao || !window.kakao.maps || !window.kakao.maps.services) {
       console.error('카카오 지도 SDK가 로드되지 않았습니다.');
       return;
     }
-
     const geocoder = new window.kakao.maps.services.Geocoder();
-
     geocoder.addressSearch(address, (result, status) => {
       if (status === window.kakao.maps.services.Status.OK) {
         setFormData((prev) => ({
@@ -114,8 +131,6 @@ function InsertSpaceMainComponent({
           latitude: result[0].y,
           longitude: result[0].x,
         }));
-      } else {
-        console.error('좌표 변환 실패:', status);
       }
     });
   };
@@ -124,29 +139,8 @@ function InsertSpaceMainComponent({
     new window.daum.Postcode({
       oncomplete: function (data) {
         let fullAddress = data.address;
-        let extraAddress = '';
-
-        if (data.addressType === 'R') {
-          if (data.bname !== '') extraAddress += data.bname;
-          if (data.buildingName !== '') {
-            extraAddress +=
-              extraAddress !== ''
-                ? `, ${data.buildingName}`
-                : data.buildingName;
-          }
-          fullAddress += extraAddress !== '' ? ` (${extraAddress})` : '';
-        }
-
-        // 주소 업데이트
-        setFormData((prev) => ({
-          ...prev,
-          address: fullAddress,
-        }));
-
-        // 좌표 추출 실행
+        setFormData((prev) => ({ ...prev, address: fullAddress }));
         getCoords(fullAddress);
-
-        // 상세주소 포커스
         document.getElementsByName('detailAddress')[0].focus();
       },
     }).open();
@@ -155,6 +149,20 @@ function InsertSpaceMainComponent({
   return (
     <FormCard>
       <SectionTitle>기본 정보 (단계: {currentStep})</SectionTitle>
+
+      <FormGroup>
+        <label>
+          공간 유형<span>*</span>
+        </label>
+        <StyledSelect name="type" value={formData.type} onChange={handleChange}>
+          <option value="" disabled>
+            등록할 공간의 유형을 선택하세요
+          </option>
+          <option value="WORK_STAY">워크스테이</option>
+          <option value="STATION">숙소</option>
+          <option value="OFFICE">오피스</option>
+        </StyledSelect>
+      </FormGroup>
 
       <FormGroup>
         <label>
@@ -199,7 +207,7 @@ function InsertSpaceMainComponent({
           공간 설명<span>*</span>
         </label>
         <textarea
-          name="content" // 부모 formData의 key인 content와 맞춤
+          name="content"
           rows="5"
           value={formData.content}
           placeholder="공간을 소개해 주세요"
