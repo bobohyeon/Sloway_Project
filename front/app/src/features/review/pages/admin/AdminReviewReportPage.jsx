@@ -1,440 +1,391 @@
 import { useState } from 'react';
-import styled from 'styled-components';
+import { useNavigate } from 'react-router-dom';
+import styled, { keyframes } from 'styled-components';
 import {
-  TabBar,
-  TabBtn,
-  TabCount,
   PageTitle,
   PageSub,
-  StatCards,
-  StatCard,
-  StatLabel,
-  StatValue,
-  BtnPrimary,
+  BackLink,
+  SectionBox,
+  SectionTitle,
   BtnOutline,
   COLOR,
 } from '../../../rsvn/components/user/RsvnStyled';
 
-const REPORTS = [
-  {
-    id: 1,
-    code: 'RP-2026-00042',
-    space: '양양 파도소리 빌라',
-    text: '이상한 광고성 내용이 포함된 부적절한 리뷰 샘플입니다. 자세히 보니 공간과는 관련 없고...',
-    count: 3,
-    date: '2026.04.23 10:15',
-    urgent: true,
-  },
-  {
-    id: 2,
-    code: 'RP-2026-00038',
-    space: '제주 돌담집 리트릿',
-    text: '리뷰에 욕설과 혐오 표현이 일부 포함되어 있음. "정말 최악이에요 ㅅ.......',
-    count: 1,
-    date: '2026.04.20 16:38',
-    urgent: false,
-  },
-];
-
-const DECISIONS = [
-  { icon: '✓', title: '리뷰 유지', desc: '부적절한 내용이 없다고 판단' },
-  { icon: '⚠️', title: '작성자 경고', desc: '경고 알림 발송 · 리뷰 유지' },
-  { icon: '🙈', title: '리뷰 숨김', desc: '비공개 처리 (복구 가능)' },
-  { icon: '🗑️', title: '리뷰 삭제', desc: '영구 삭제 + 작성자 제재' },
-];
-
-const SplitLayout = styled.div`
-  display: grid;
-  grid-template-columns: 340px 1fr;
-  gap: 16px;
-  align-items: start;
+const fadeInUp = keyframes`
+  from { opacity: 0; transform: translateY(10px); }
+  to   { opacity: 1; transform: translateY(0); }
 `;
 
-const ReportCard = styled.div`
-  background: #fff;
-  border: 1.5px solid
-    ${({ $selected }) => ($selected ? COLOR.orange : COLOR.gray200)};
-  background: ${({ $selected }) => ($selected ? '#FFF8F0' : '#fff')};
-  border-radius: 10px;
-  padding: 16px;
-  cursor: pointer;
-  margin-bottom: 8px;
-  transition: all 0.15s;
+const Page = styled.div`
+  max-width: 960px;
+  margin: 0 auto;
+  padding: 32px 24px;
+  animation: ${fadeInUp} 480ms ease-out both;
 `;
 
-const UrgentTag = styled.span`
-  font-size: 10px;
+const StatusBadge = styled.span`
+  display: inline-block;
+  font-size: 12px;
   font-weight: 700;
-  padding: 2px 6px;
-  border-radius: 4px;
-  background: #fff0f0;
-  color: ${COLOR.red};
-`;
-
-const DetailBox = styled.div`
-  background: #fff;
-  border: 1px solid ${COLOR.gray200};
-  border-radius: 12px;
-  padding: 22px;
-`;
-
-const TargetReview = styled.div`
-  background: ${COLOR.gray100};
-  border-radius: 10px;
-  padding: 14px;
+  padding: 4px 12px;
+  border-radius: 20px;
+  background: #fff3e0;
+  color: #e65100;
   margin-bottom: 16px;
 `;
 
-const ReportItem = styled.div`
+const InfoGrid = styled.div`
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 14px 40px;
+`;
+
+const InfoItem = styled.div`
   display: flex;
-  align-items: flex-start;
-  gap: 10px;
-  padding: 10px 0;
+  flex-direction: column;
+  gap: 4px;
+`;
+
+const InfoLabel = styled.span`
+  font-size: 11px;
+  color: #8a8a8a;
+`;
+
+const InfoValue = styled.span`
+  font-size: 14px;
+  font-weight: 600;
+  color: ${COLOR.black};
+`;
+
+const ReviewBox = styled.div`
+  background: ${COLOR.gray100};
+  border-radius: 10px;
+  padding: 16px 18px;
+  margin-top: 12px;
+`;
+
+const Stars = styled.span`
+  color: #c97d4c;
+  font-size: 13px;
+`;
+
+const ReviewText = styled.p`
+  font-size: 14px;
+  color: #333;
+  line-height: 1.7;
+  margin: 8px 0 0;
+`;
+
+const TabBar = styled.div`
+  display: flex;
+  border-bottom: 1px solid ${COLOR.gray200};
+  margin-bottom: 20px;
+`;
+
+const TabBtn = styled.button`
+  padding: 10px 16px;
+  font-size: 13px;
+  font-weight: ${({ $active }) => ($active ? 700 : 400)};
+  color: ${({ $active }) => ($active ? COLOR.black : '#AAAAAA')};
+  background: none;
+  border: none;
+  border-bottom: 2.5px solid
+    ${({ $active }) => ($active ? COLOR.green : 'transparent')};
+  margin-bottom: -1px;
+  cursor: pointer;
+`;
+
+const HistoryItem = styled.div`
+  display: flex;
+  gap: 14px;
+  padding: 12px 0;
   border-bottom: 1px solid ${COLOR.gray200};
   &:last-child {
     border-bottom: none;
   }
 `;
 
-const ReportIcon = styled.div`
-  width: 30px;
-  height: 30px;
-  border-radius: 6px;
-  background: #fff0f0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 14px;
+const HistoryDot = styled.div`
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: ${({ $status }) =>
+    $status === 'PENDING'
+      ? '#E65100'
+      : $status === 'KEPT'
+        ? COLOR.green
+        : COLOR.red};
+  margin-top: 4px;
   flex-shrink: 0;
 `;
 
-const DecisionGrid = styled.div`
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 10px;
-  margin-bottom: 14px;
-`;
-
-const DecisionBtn = styled.button`
-  padding: 14px 16px;
-  border: 1.5px solid
-    ${({ $active }) => ($active ? COLOR.green : COLOR.gray200)};
-  background: ${({ $active }) => ($active ? COLOR.greenLight : '#fff')};
-  border-radius: 10px;
-  cursor: pointer;
-  text-align: left;
-  transition: all 0.15s;
-  &:hover {
-    border-color: ${COLOR.sage};
-  }
-`;
-
-const Textarea = styled.textarea`
+const NoteArea = styled.textarea`
   width: 100%;
-  padding: 10px 12px;
+  padding: 12px 14px;
   border: 1px solid ${COLOR.gray200};
   border-radius: 8px;
   font-size: 13px;
-  font-family: inherit;
+  font-family: 'Noto Sans KR', sans-serif;
   resize: none;
   outline: none;
+  box-sizing: border-box;
   &:focus {
     border-color: ${COLOR.sage};
   }
 `;
 
-const BottomBtns = styled.div`
-  display: grid;
-  grid-template-columns: 1fr 1fr;
+const ActionRow = styled.div`
+  display: flex;
+  justify-content: flex-end;
   gap: 10px;
+  padding-top: 20px;
+  border-top: 1px solid ${COLOR.gray200};
+  margin-top: 24px;
 `;
 
-function AdminReviewReportPage() {
-  const [activeTab, setActiveTab] = useState(0);
-  const [selectedReport, setSelected] = useState(0);
-  const [decision, setDecision] = useState(0);
+const HoldBtn = styled.button`
+  padding: 10px 24px;
+  border-radius: 8px;
+  border: 1px solid ${COLOR.gray200};
+  background: #fff;
+  font-size: 14px;
+  font-weight: 600;
+  font-family: 'Noto Sans KR', sans-serif;
+  cursor: pointer;
+  &:hover {
+    border-color: ${COLOR.sage};
+  }
+`;
 
-  const TABS = [
-    { label: '전체', count: 3 },
-    { label: '🚩 처리 대기', count: 2 },
-    { label: '처리 완료', count: 1 },
-  ];
+const ConfirmBtn = styled.button`
+  padding: 10px 24px;
+  border-radius: 8px;
+  border: none;
+  background: ${COLOR.red};
+  color: #fff;
+  font-size: 14px;
+  font-weight: 600;
+  font-family: 'Noto Sans KR', sans-serif;
+  cursor: pointer;
+  &:hover {
+    filter: brightness(0.9);
+  }
+`;
+
+const DETAIL = {
+  id: 1,
+  status: 'PENDING',
+  reason: '욕설·비방',
+  reportDate: '2026.05.10 14:32',
+  reporter: { name: '박민수', joinDate: '2024.03', rsvnCount: 5 },
+  reviewer: { name: '홍길동', joinDate: '2023.11', rsvnCount: 12 },
+  space: '청평 숲속 파인뷰 스테이',
+  review: {
+    date: '2026.05.08',
+    score: 1,
+    text: '진짜 최악이야 다시는 안 와. 호스트도 불친절하고 시설도 광고랑 달라.',
+    imgs: 2,
+  },
+  reportDetail: '욕설이 포함된 내용으로 다른 이용자에게 불쾌감을 줄 수 있음',
+  history: [{ date: '2026.05.10 14:32', status: 'PENDING', note: '신고 접수' }],
+};
+
+const DECISION_TABS = ['신고 내용', '처리 이력'];
+
+function AdminReviewReportPage() {
+  const navigate = useNavigate();
+  const [activeTab, setActiveTab] = useState(0);
+  const [note, setNote] = useState('');
+  const [decision, setDecision] = useState('KEEP'); // KEEP | DELETE
+
+  const handleHold = () => {
+    navigate('/admin/review/report');
+  };
+
+  const handleConfirm = () => {
+    alert('처리되었습니다');
+    navigate('/admin/review/report');
+  };
 
   return (
-    <div>
-      <PageTitle>리뷰 신고 처리</PageTitle>
-      <PageSub>접수된 리뷰 신고를 검토하고 조치하세요</PageSub>
+    <Page>
+      <PageTitle>신고 상세</PageTitle>
+      <PageSub>신고 내용을 검토하고 처리 여부를 결정하세요</PageSub>
+      <BackLink onClick={() => navigate('/admin/review/report')}>
+        ← 신고 관리 목록
+      </BackLink>
 
-      <StatCards>
-        <StatCard $accent={COLOR.red}>
-          <StatLabel>신고 대기</StatLabel>
-          <StatValue $color={COLOR.red}>2건</StatValue>
-        </StatCard>
-        <StatCard>
-          <StatLabel>이번 달 처리</StatLabel>
-          <StatValue>18건</StatValue>
-        </StatCard>
-        <StatCard>
-          <StatLabel>삭제 처리율</StatLabel>
-          <StatValue>73%</StatValue>
-        </StatCard>
-        <StatCard>
-          <StatLabel>평균 처리 시간</StatLabel>
-          <StatValue>1.2일</StatValue>
-        </StatCard>
-      </StatCards>
+      <StatusBadge>검토 중</StatusBadge>
 
-      <TabBar style={{ marginBottom: 16 }}>
-        {TABS.map((tab, idx) => (
-          <TabBtn
-            key={idx}
-            $active={activeTab === idx}
-            onClick={() => setActiveTab(idx)}
-          >
-            {tab.label}
-            <TabCount $active={activeTab === idx}>{tab.count}</TabCount>
-          </TabBtn>
-        ))}
-      </TabBar>
-
-      <SplitLayout>
-        {/* 신고 목록 */}
-        <div>
-          {REPORTS.map((r, i) => (
-            <ReportCard
-              key={r.id}
-              $selected={selectedReport === i}
-              onClick={() => setSelected(i)}
-            >
-              <div style={{ display: 'flex', gap: 5, marginBottom: 6 }}>
-                <span
-                  style={{
-                    fontSize: 10,
-                    fontWeight: 700,
-                    padding: '2px 6px',
-                    borderRadius: 4,
-                    background: '#FFF3E0',
-                    color: COLOR.orange,
-                  }}
-                >
-                  대기
-                </span>
-                {r.urgent && <UrgentTag>🔴 긴급</UrgentTag>}
-                <span
-                  style={{
-                    fontSize: 11,
-                    color: COLOR.gray400,
-                    marginLeft: 'auto',
-                  }}
-                >
-                  신고 {r.count}건
-                </span>
-              </div>
-              <div style={{ fontSize: 13, fontWeight: 700, marginBottom: 3 }}>
-                {r.code}
-              </div>
-              <div
-                style={{ fontSize: 12, color: COLOR.gray400, marginBottom: 6 }}
-              >
-                📍 {r.space}
-              </div>
-              <div
-                style={{
-                  fontSize: 12,
-                  color: '#555',
-                  lineHeight: 1.5,
-                  overflow: 'hidden',
-                  maxHeight: 40,
-                }}
-              >
-                {r.text}
-              </div>
-              <div style={{ fontSize: 11, color: COLOR.gray400, marginTop: 8 }}>
-                {r.date}
-              </div>
-            </ReportCard>
-          ))}
+      {/* 신고 정보 */}
+      <SectionBox>
+        <SectionTitle>신고 정보</SectionTitle>
+        <InfoGrid>
+          <InfoItem>
+            <InfoLabel>신고 사유</InfoLabel>
+            <InfoValue>{DETAIL.reason}</InfoValue>
+          </InfoItem>
+          <InfoItem>
+            <InfoLabel>신고 일시</InfoLabel>
+            <InfoValue>{DETAIL.reportDate}</InfoValue>
+          </InfoItem>
+          <InfoItem>
+            <InfoLabel>신고자</InfoLabel>
+            <InfoValue>{DETAIL.reporter.name}</InfoValue>
+            <span style={{ fontSize: 11, color: COLOR.gray400 }}>
+              {DETAIL.reporter.joinDate} 가입 · 예약 {DETAIL.reporter.rsvnCount}
+              회
+            </span>
+          </InfoItem>
+          <InfoItem>
+            <InfoLabel>리뷰 작성자</InfoLabel>
+            <InfoValue>{DETAIL.reviewer.name}</InfoValue>
+            <span style={{ fontSize: 11, color: COLOR.gray400 }}>
+              {DETAIL.reviewer.joinDate} 가입 · 예약 {DETAIL.reviewer.rsvnCount}
+              회
+            </span>
+          </InfoItem>
+          <InfoItem>
+            <InfoLabel>대상 공간</InfoLabel>
+            <InfoValue>{DETAIL.space}</InfoValue>
+          </InfoItem>
+        </InfoGrid>
+        <div
+          style={{
+            marginTop: 12,
+            padding: '10px 14px',
+            background: '#FFF8F0',
+            borderRadius: 8,
+            fontSize: 13,
+            color: '#666',
+          }}
+        >
+          📝 신고 상세: {DETAIL.reportDetail}
         </div>
+      </SectionBox>
 
-        {/* 상세 처리 */}
-        <DetailBox>
+      {/* 신고된 리뷰 */}
+      <SectionBox>
+        <SectionTitle>신고된 리뷰</SectionTitle>
+        <ReviewBox>
           <div
             style={{
               display: 'flex',
               alignItems: 'center',
               gap: 8,
-              marginBottom: 14,
+              marginBottom: 4,
             }}
           >
-            <span style={{ fontSize: 15, fontWeight: 700 }}>
-              {REPORTS[selectedReport].code}
+            <Stars>
+              {'★'.repeat(DETAIL.review.score)}
+              {'☆'.repeat(5 - DETAIL.review.score)}
+            </Stars>
+            <span style={{ fontSize: 12, color: COLOR.gray400 }}>
+              {DETAIL.review.date}
             </span>
-            <span
-              style={{
-                fontSize: 10,
-                fontWeight: 700,
-                padding: '2px 6px',
-                borderRadius: 4,
-                background: '#FFF3E0',
-                color: COLOR.orange,
-              }}
-            >
-              대기
-            </span>
-            {REPORTS[selectedReport].urgent && <UrgentTag>🔴 긴급</UrgentTag>}
-            <span
-              style={{ fontSize: 12, color: COLOR.gray400, marginLeft: 'auto' }}
-            >
-              신고 접수 · {REPORTS[selectedReport].date}
-            </span>
+            {DETAIL.review.imgs > 0 && (
+              <span style={{ fontSize: 12, color: COLOR.gray400 }}>
+                📷 {DETAIL.review.imgs}장
+              </span>
+            )}
           </div>
+          <ReviewText>{DETAIL.review.text}</ReviewText>
+        </ReviewBox>
+      </SectionBox>
 
-          <div style={{ fontSize: 14, fontWeight: 700, marginBottom: 10 }}>
-            📋 신고된 리뷰
-          </div>
-          <TargetReview>
-            <div
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: 8,
-                marginBottom: 8,
-              }}
-            >
-              <div
-                style={{
-                  width: 28,
-                  height: 28,
-                  borderRadius: '50%',
-                  background: COLOR.gray200,
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  fontSize: 11,
-                  fontWeight: 700,
-                }}
-              >
-                익
-              </div>
-              <span style={{ fontSize: 13, fontWeight: 600 }}>익명회원</span>
-              <span style={{ color: '#C97D4C', fontSize: 12 }}>★☆☆☆☆</span>
-            </div>
-            <div style={{ fontSize: 13, color: '#555', lineHeight: 1.6 }}>
-              이상한 광고성 내용이 포함된 부적절한 리뷰 샘플입니다...
-            </div>
-            <div style={{ fontSize: 12, color: COLOR.gray400, marginTop: 4 }}>
-              📍 {REPORTS[selectedReport].space}
-            </div>
-          </TargetReview>
+      {/* 탭 */}
+      <TabBar>
+        {DECISION_TABS.map((tab, idx) => (
+          <TabBtn
+            key={idx}
+            $active={activeTab === idx}
+            onClick={() => setActiveTab(idx)}
+          >
+            {tab}
+          </TabBtn>
+        ))}
+      </TabBar>
 
-          <div style={{ fontSize: 14, fontWeight: 700, marginBottom: 10 }}>
-            🚩 신고 내역 ({REPORTS[selectedReport].count}건)
-          </div>
-          <div style={{ marginBottom: 16 }}>
-            {[
-              {
-                icon: '📢',
-                tag: '광고·스팸',
-                user: 'M000124',
-                text: '광고성 콘텐츠로 보입니다',
-                date: '2026.04.23 10:15',
-              },
-              {
-                icon: '📢',
-                tag: '광고·스팸',
-                user: 'M000098',
-                text: '공간과 무관한 업체 홍보 글입니다',
-                date: '2026.04.23 14:22',
-              },
-              {
-                icon: '❓',
-                tag: '허위·과장',
-                user: 'M000076',
-                text: '실제 이용자가 아닌 것 같아요',
-                date: '2026.04.23 18:45',
-              },
-            ]
-              .slice(0, REPORTS[selectedReport].count)
-              .map((item, i) => (
-                <ReportItem key={i}>
-                  <ReportIcon>{item.icon}</ReportIcon>
-                  <div style={{ flex: 1 }}>
-                    <div
-                      style={{
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: 6,
-                        marginBottom: 2,
-                      }}
-                    >
-                      <span
-                        style={{
-                          fontSize: 10,
-                          fontWeight: 700,
-                          padding: '2px 6px',
-                          borderRadius: 4,
-                          background: '#FFF3E0',
-                          color: COLOR.orange,
-                        }}
-                      >
-                        {item.tag}
-                      </span>
-                      <span style={{ fontSize: 12, fontWeight: 600 }}>
-                        {item.user}
-                      </span>
-                    </div>
-                    <div style={{ fontSize: 12, color: '#555' }}>
-                      {item.text}
-                    </div>
+      {activeTab === 0 && (
+        <>
+          {/* 처리 결정 */}
+          <SectionBox>
+            <SectionTitle>처리 결정</SectionTitle>
+            <div style={{ display: 'flex', gap: 10, marginBottom: 16 }}>
+              {[
+                {
+                  value: 'KEEP',
+                  label: '✅ 리뷰 유지',
+                  desc: '신고 사유 불충분 · 리뷰 정상 유지',
+                },
+                {
+                  value: 'DELETE',
+                  label: '🗑 리뷰 삭제',
+                  desc: '규정 위반 · 리뷰 삭제 처리',
+                },
+              ].map((opt) => (
+                <div
+                  key={opt.value}
+                  onClick={() => setDecision(opt.value)}
+                  style={{
+                    flex: 1,
+                    padding: '14px 16px',
+                    borderRadius: 10,
+                    cursor: 'pointer',
+                    border: `2px solid ${decision === opt.value ? (opt.value === 'DELETE' ? COLOR.red : COLOR.green) : COLOR.gray200}`,
+                    background:
+                      decision === opt.value
+                        ? opt.value === 'DELETE'
+                          ? '#FFEBEB'
+                          : COLOR.greenLight
+                        : '#fff',
+                  }}
+                >
+                  <div
+                    style={{ fontSize: 14, fontWeight: 700, marginBottom: 4 }}
+                  >
+                    {opt.label}
                   </div>
-                  <span style={{ fontSize: 11, color: COLOR.gray400 }}>
-                    {item.date}
-                  </span>
-                </ReportItem>
+                  <div style={{ fontSize: 12, color: COLOR.gray400 }}>
+                    {opt.desc}
+                  </div>
+                </div>
               ))}
-          </div>
-
-          <div style={{ fontSize: 14, fontWeight: 700, marginBottom: 10 }}>
-            🔧 처리 결정
-          </div>
-          <DecisionGrid>
-            {DECISIONS.map((d, i) => (
-              <DecisionBtn
-                key={i}
-                $active={decision === i}
-                onClick={() => setDecision(i)}
-              >
-                <div style={{ fontSize: 13, fontWeight: 700, marginBottom: 3 }}>
-                  {d.icon} {d.title}
-                </div>
-                <div style={{ fontSize: 11, color: COLOR.gray400 }}>
-                  {d.desc}
-                </div>
-              </DecisionBtn>
-            ))}
-          </DecisionGrid>
-
-          <div style={{ marginBottom: 14 }}>
-            <div style={{ fontSize: 13, fontWeight: 600, marginBottom: 6 }}>
-              처리 메모 (내부용) <span style={{ color: COLOR.red }}>*</span>
             </div>
-            <Textarea
+            <NoteArea
               rows={3}
-              placeholder="판단 근거와 처리 이유를 기록해주세요 (감사 로그에 저장됨)"
+              placeholder="처리 메모를 남겨주세요 (내부 기록용)"
+              value={note}
+              onChange={(e) => setNote(e.target.value)}
             />
-          </div>
+          </SectionBox>
+        </>
+      )}
 
-          <BottomBtns>
-            <BtnOutline style={{ justifyContent: 'center', padding: '10px' }}>
-              보류 (추가 검토)
-            </BtnOutline>
-            <BtnPrimary style={{ justifyContent: 'center', padding: '10px' }}>
-              처리 확정
-            </BtnPrimary>
-          </BottomBtns>
-        </DetailBox>
-      </SplitLayout>
-    </div>
+      {activeTab === 1 && (
+        <SectionBox>
+          <SectionTitle>처리 이력</SectionTitle>
+          {DETAIL.history.map((h, i) => (
+            <HistoryItem key={i}>
+              <HistoryDot $status={h.status} />
+              <div>
+                <div style={{ fontSize: 13, fontWeight: 600 }}>{h.note}</div>
+                <div
+                  style={{ fontSize: 12, color: COLOR.gray400, marginTop: 2 }}
+                >
+                  {h.date}
+                </div>
+              </div>
+            </HistoryItem>
+          ))}
+        </SectionBox>
+      )}
+
+      <ActionRow>
+        <HoldBtn onClick={handleHold}>보류</HoldBtn>
+        <ConfirmBtn onClick={handleConfirm}>처리 확정</ConfirmBtn>
+      </ActionRow>
+    </Page>
   );
 }
 

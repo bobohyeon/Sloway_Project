@@ -1,11 +1,10 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import styled from 'styled-components';
+import styled, { keyframes } from 'styled-components';
 import {
   PageTitle,
   PageSub,
   BackLink,
-  BtnPrimary,
   BtnOutline,
   COLOR,
 } from '../../../rsvn/components/user/RsvnStyled';
@@ -24,6 +23,18 @@ const REASONS = [
   { title: '저작권 침해', desc: '타인의 글·사진 무단 사용' },
   { title: '기타', desc: '위 사유에 해당하지 않음' },
 ];
+
+const fadeInUp = keyframes`
+  from { opacity: 0; transform: translateY(10px); }
+  to   { opacity: 1; transform: translateY(0); }
+`;
+
+const Page = styled.div`
+  max-width: 720px;
+  margin: 0 auto;
+  padding: 32px 24px;
+  animation: ${fadeInUp} 480ms ease-out both;
+`;
 
 const TargetBox = styled.div`
   background: #fff5f5;
@@ -81,8 +92,7 @@ const AgreeBox = styled.div`
 const BottomBtns = styled.div`
   display: flex;
   gap: 10px;
-  button,
-  a {
+  button {
     flex: 1;
     justify-content: center;
   }
@@ -96,6 +106,7 @@ const ReportBtn = styled.button`
   color: #fff;
   font-size: 14px;
   font-weight: 600;
+  font-family: 'Noto Sans KR', sans-serif;
   border: none;
   cursor: pointer;
   &:hover {
@@ -104,12 +115,26 @@ const ReportBtn = styled.button`
 `;
 
 function ReviewReportPage() {
-  const [selected, setSelected] = useState(0);
-  const [detail, setDetail] = useState('');
   const navigate = useNavigate();
+  const [selected, setSelected] = useState(null);
+  const [detail, setDetail] = useState('');
+  const [agreed, setAgreed] = useState(false);
+
+  const handleReport = () => {
+    if (selected === null) {
+      alert('신고 사유를 선택해주세요');
+      return;
+    }
+    if (!agreed) {
+      alert('동의 체크박스를 확인해주세요');
+      return;
+    }
+    alert('신고되었습니다');
+    navigate(-1);
+  };
 
   return (
-    <div>
+    <Page>
       <PageTitle>리뷰 신고</PageTitle>
       <PageSub>부적절한 리뷰를 신고해주세요</PageSub>
       <BackLink onClick={() => navigate(-1)}>← 뒤로</BackLink>
@@ -221,7 +246,12 @@ function ReviewReportPage() {
       </CautionBox>
 
       <AgreeBox>
-        <input type="checkbox" id="agree" />
+        <input
+          type="checkbox"
+          id="agree"
+          checked={agreed}
+          onChange={(e) => setAgreed(e.target.checked)}
+        />
         <label htmlFor="agree">
           * 위 내용을 확인했으며, 허위 신고 시 제재를 받을 수 있음에 동의합니다
         </label>
@@ -229,9 +259,9 @@ function ReviewReportPage() {
 
       <BottomBtns>
         <BtnOutline onClick={() => navigate(-1)}>취소</BtnOutline>
-        <ReportBtn>🚩 신고하기</ReportBtn>
+        <ReportBtn onClick={handleReport}>🚩 신고하기</ReportBtn>
       </BottomBtns>
-    </div>
+    </Page>
   );
 }
 
