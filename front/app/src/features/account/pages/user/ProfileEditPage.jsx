@@ -3,6 +3,8 @@ import styled from 'styled-components';
 import { useNavigate } from 'react-router-dom';
 import ProfileImageField from '../../components/user/ProfileImageField';
 import EmailVerifyField from '../../components/user/EmailVerifyField';
+import PageLayout from '../../../../app/layouts/page/PageLayout';
+
 // ─── 더미 초기 데이터 (백엔드 연동 후 GET API로 교체) ───────
 const DUMMY_INITIAL = {
   email: 'hong@sloway.co.kr',
@@ -26,20 +28,10 @@ const formatPhone = (value) => {
 };
 
 // ─── Styled Components ─────────────────────────────────────
-const Page = styled.div`
-  padding: 32px;
-  max-width: 720px;
-  width: 100%;
-  margin: 0 auto;
+const Form = styled.form`
   display: flex;
   flex-direction: column;
   gap: 20px;
-`;
-
-const PageTitle = styled.h1`
-  font-size: 22px;
-  font-weight: 700;
-  color: var(--gray-800);
 `;
 
 const Card = styled.section`
@@ -242,10 +234,8 @@ function ProfileEditPage() {
   };
 
   return (
-    <Page>
-      <PageTitle>내 정보 수정</PageTitle>
-
-      <form onSubmit={handleSubmit} noValidate>
+    <PageLayout title="내 정보 수정">
+      <Form onSubmit={handleSubmit} noValidate>
         {/* 프로필 이미지 */}
         <Card>
           <ProfileImageField
@@ -310,8 +300,8 @@ function ProfileEditPage() {
             {saving ? '저장 중...' : '저장'}
           </PrimaryBtn>
         </ButtonRow>
-      </form>
-    </Page>
+      </Form>
+    </PageLayout>
   );
 }
 
