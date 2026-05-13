@@ -1,13 +1,11 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import styled, { keyframes } from 'styled-components';
+import PageLayout from '../../../../app/layouts/page/PageLayout';
 import {
   TabBar,
   TabBtn,
-  TabCount,
-  PageTitle,
-  PageSub,
-  Card,
+  TabCount,Card,
   CardRow,
   Thumb,
   CardBody,
@@ -22,18 +20,6 @@ const fadeInUp = keyframes`
   from { opacity: 0; transform: translateY(10px); }
   to   { opacity: 1; transform: translateY(0); }
 `;
-
-const Page = styled.div`
-  max-width: 960px;
-  margin: 0 auto;
-  padding: 32px 24px;
-  animation: ${fadeInUp} 480ms ease-out both;
-`;
-
-const Header = styled.div`
-  margin-bottom: 24px;
-`;
-
 const NoticeBanner = styled.div`
   background: #fffbf0;
   border: 1px solid #ffe4a0;
@@ -143,11 +129,11 @@ function MyReviewPage() {
   ];
 
   return (
-    <Page>
-      <Header>
-        <PageTitle>내 리뷰</PageTitle>
-        <PageSub>이용한 공간에 리뷰를 작성하고 관리하세요</PageSub>
-      </Header>
+    <PageLayout
+      title="내 리뷰"
+      description="이용한 공간에 리뷰를 작성하고 관리하세요"
+      maxWidth={960}
+    >
 
       <TabBar>
         {TABS.map((tab, idx) => (
@@ -234,7 +220,7 @@ function MyReviewPage() {
           ))}
         </>
       )}
-    </Page>
+    </PageLayout>
   );
 }
 

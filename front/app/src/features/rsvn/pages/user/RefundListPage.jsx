@@ -1,14 +1,12 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import styled, { keyframes } from 'styled-components';
+import PageLayout from '../../../../app/layouts/page/PageLayout';
 import RsvnStatusBadge from '../../components/user/RsvnStatusBadge';
 import {
   TabBar,
   TabBtn,
-  TabCount,
-  PageTitle,
-  PageSub,
-  Card,
+  TabCount,Card,
   CardRow,
   Thumb,
   CardBody,
@@ -23,18 +21,6 @@ const fadeInUp = keyframes`
   from { opacity: 0; transform: translateY(10px); }
   to   { opacity: 1; transform: translateY(0); }
 `;
-
-const Page = styled.div`
-  max-width: 960px;
-  margin: 0 auto;
-  padding: 32px 24px;
-  animation: ${fadeInUp} 480ms ease-out both;
-`;
-
-const Header = styled.div`
-  margin-bottom: 24px;
-`;
-
 // status: '완료' | '환불 불가' 만 사용
 const TABS = [
   { label: '전체', status: null },
@@ -126,13 +112,11 @@ function RefundListPage() {
   );
 
   return (
-    <Page>
-      <Header>
-        <PageTitle>취소·환불 내역</PageTitle>
-        <PageSub>
-          내가 취소했거나 환불된 예약의 처리 현황을 한눈에 볼 수 있어요
-        </PageSub>
-      </Header>
+    <PageLayout
+      title="취소·환불 내역"
+      description="내가 취소했거나 환불된 예약의 처리 현황을 한눈에 볼 수 있어요"
+      maxWidth={960}
+    >
       <TabBar>
         {TABS.map((tab, idx) => (
           <TabBtn
@@ -186,7 +170,7 @@ function RefundListPage() {
           <SumLbl>총 위약금</SumLbl>
         </div>
       </SummaryBox>
-    </Page>
+    </PageLayout>
   );
 }
 

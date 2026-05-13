@@ -1,10 +1,8 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import styled, { keyframes } from 'styled-components';
+import PageLayout from '../../../../app/layouts/page/PageLayout';
 import {
-  PageTitle,
-  PageSub,
-  BackLink,
   SectionBox,
   SectionTitle,
   BtnOutline,
@@ -15,14 +13,6 @@ const fadeInUp = keyframes`
   from { opacity: 0; transform: translateY(10px); }
   to   { opacity: 1; transform: translateY(0); }
 `;
-
-const Page = styled.div`
-  max-width: 960px;
-  margin: 0 auto;
-  padding: 32px 24px;
-  animation: ${fadeInUp} 480ms ease-out both;
-`;
-
 const StatusBadge = styled.span`
   display: inline-block;
   font-size: 12px;
@@ -208,13 +198,13 @@ function AdminReviewReportPage() {
   };
 
   return (
-    <Page>
-      <PageTitle>신고 상세</PageTitle>
-      <PageSub>신고 내용을 검토하고 처리 여부를 결정하세요</PageSub>
-      <BackLink onClick={() => navigate('/admin/review/report')}>
-        ← 신고 관리 목록
-      </BackLink>
-
+    <PageLayout
+      title="신고 상세"
+      description="신고 내용을 검토하고 처리 여부를 결정하세요"
+      backTo="/admin/review/report"
+      backLabel="리뷰 신고 관리"
+      maxWidth={1200}
+    >
       <StatusBadge>검토 중</StatusBadge>
 
       {/* 신고 정보 */}
@@ -385,7 +375,7 @@ function AdminReviewReportPage() {
         <HoldBtn onClick={handleHold}>보류</HoldBtn>
         <ConfirmBtn onClick={handleConfirm}>처리 확정</ConfirmBtn>
       </ActionRow>
-    </Page>
+    </PageLayout>
   );
 }
 

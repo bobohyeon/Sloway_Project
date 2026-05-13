@@ -1,10 +1,8 @@
 import { useNavigate } from 'react-router-dom';
 import styled, { keyframes } from 'styled-components';
+import PageLayout from '../../../../app/layouts/page/PageLayout';
 import RsvnStatusBadge from '../../components/user/RsvnStatusBadge';
 import {
-  PageTitle,
-  PageSub,
-  BackLink,
   SectionBox,
   SectionTitle,
   InfoGrid,
@@ -20,14 +18,6 @@ const fadeInUp = keyframes`
   from { opacity: 0; transform: translateY(10px); }
   to   { opacity: 1; transform: translateY(0); }
 `;
-
-const Page = styled.div`
-  max-width: 960px;
-  margin: 0 auto;
-  padding: 32px 24px;
-  animation: ${fadeInUp} 480ms ease-out both;
-`;
-
 const SpaceThumb = styled.div`
   width: 52px;
   height: 52px;
@@ -84,13 +74,13 @@ function HostRsvnDetailPage() {
   const navigate = useNavigate();
 
   return (
-    <Page>
-      <PageTitle>예약 상세</PageTitle>
-      <PageSub>예약 내역과 게스트 정보를 확인하세요</PageSub>
-      <BackLink onClick={() => navigate('/host/reservation/list')}>
-        ← 예약 목록
-      </BackLink>
-
+    <PageLayout
+      title="예약 상세"
+      description="예약 내역과 게스트 정보를 확인하세요"
+      backTo="/host/reservation/list"
+      backLabel="예약 목록"
+      maxWidth={960}
+    >
       {/* 공간 + 상태 */}
       <SectionBox style={{ marginBottom: 16 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
@@ -235,7 +225,7 @@ function HostRsvnDetailPage() {
           예약 거절
         </ApproveBtn>
       </div>
-    </Page>
+    </PageLayout>
   );
 }
 

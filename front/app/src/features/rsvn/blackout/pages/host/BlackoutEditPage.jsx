@@ -1,9 +1,8 @@
 import { useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import styled, { keyframes } from 'styled-components';
+import PageLayout from '../../../../../app/layouts/page/PageLayout';
 import {
-  PageTitle,
-  PageSub,
   BackLink,
   BtnPrimary,
   BtnOutline,
@@ -14,14 +13,6 @@ const fadeInUp = keyframes`
   from { opacity: 0; transform: translateY(10px); }
   to   { opacity: 1; transform: translateY(0); }
 `;
-
-const Page = styled.div`
-  max-width: 960px;
-  margin: 0 auto;
-  padding: 32px 24px;
-  animation: ${fadeInUp} 480ms ease-out both;
-`;
-
 const FormBox = styled.div`
   background: #fff;
   border: 1px solid ${COLOR.gray200};
@@ -222,9 +213,11 @@ function BlackoutEditPage() {
   };
 
   return (
-    <Page>
-      <PageTitle>이용 불가 수정</PageTitle>
-      <PageSub>이용 불가 설정 내용을 수정하세요</PageSub>
+    <PageLayout
+      title="이용 불가 수정"
+      description="이용 불가 설정 내용을 수정하세요"
+      maxWidth={800}
+    >
       <BackLink onClick={() => navigate('/host/reservation/block')}>
         ← 이용 불가 목록
       </BackLink>
@@ -336,7 +329,7 @@ function BlackoutEditPage() {
         </BtnOutline>
         <BtnPrimary onClick={handleSave}>저장</BtnPrimary>
       </BottomBtns>
-    </Page>
+    </PageLayout>
   );
 }
 

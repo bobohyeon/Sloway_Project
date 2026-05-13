@@ -1,10 +1,8 @@
 import { useNavigate } from 'react-router-dom';
 import styled from 'styled-components';
+import PageLayout from '../../../../app/layouts/page/PageLayout';
 import RsvnStatusBadge from '../../components/user/RsvnStatusBadge';
 import {
-  PageTitle,
-  PageSub,
-  BackLink,
   SectionBox,
   SectionTitle,
   BtnOutline,
@@ -131,26 +129,14 @@ function AdminRsvnDetailPage() {
   const navigate = useNavigate();
 
   return (
-    <div>
-      <div
-        style={{
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'flex-start',
-          marginBottom: 20,
-        }}
-      >
-        <div>
-          <PageTitle>예약 상세</PageTitle>
-          <PageSub style={{ margin: 0 }}>
-            예약 정보를 확인하고 필요 시 강제 취소할 수 있습니다
-          </PageSub>
-        </div>
-        <ForceBtn>⚠️ 강제 취소</ForceBtn>
-      </div>
-      <BackLink onClick={() => navigate('/admin/reservation')}>
-        ← 전체 예약
-      </BackLink>
+    <PageLayout
+      title="예약 상세"
+      description="예약 정보를 확인하고 필요 시 강제 취소할 수 있습니다"
+      backTo="/admin/reservation"
+      backLabel="전체 예약"
+      actions={<ForceBtn>⚠️ 강제 취소</ForceBtn>}
+      maxWidth={1200}
+    >
 
       {/* 예약 요약 */}
       <TopCard>
@@ -433,7 +419,7 @@ function AdminRsvnDetailPage() {
           </LogItem>
         ))}
       </SectionBox>
-    </div>
+    </PageLayout>
   );
 }
 

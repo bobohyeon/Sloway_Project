@@ -1,10 +1,8 @@
 import { useNavigate } from 'react-router-dom';
 import styled, { keyframes } from 'styled-components';
+import PageLayout from '../../../../app/layouts/page/PageLayout';
 import RsvnStatusBadge from '../../components/user/RsvnStatusBadge';
 import {
-  PageTitle,
-  PageSub,
-  BackLink,
   SectionBox,
   SectionTitle,
   InfoGrid,
@@ -20,14 +18,6 @@ const fadeInUp = keyframes`
   from { opacity: 0; transform: translateY(10px); }
   to   { opacity: 1; transform: translateY(0); }
 `;
-
-const Page = styled.div`
-  max-width: 960px;
-  margin: 0 auto;
-  padding: 32px 24px;
-  animation: ${fadeInUp} 480ms ease-out both;
-`;
-
 const StatusBanner = styled.div`
   background: ${COLOR.gray100};
   border-radius: 12px;
@@ -114,13 +104,12 @@ function RsvnDetailPage() {
   const spaceId = 1;
 
   return (
-    <Page>
-      <PageTitle>예약 상세</PageTitle>
-      <PageSub>예약 내역을 자세히 확인하실 수 있어요</PageSub>
-      <BackLink onClick={() => navigate('/user/reservation')}>
-        ← 예약 목록
-      </BackLink>
-
+    <PageLayout
+      title="예약 상세"
+      description="예약 내역을 자세히 확인하실 수 있어요"
+      backTo="/user/reservation"
+      maxWidth={960}
+    >
       <StatusBanner>
         <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
           <RsvnStatusBadge type="status" label="확정" />
@@ -288,7 +277,7 @@ function RsvnDetailPage() {
           예약 취소 / 환불 신청
         </RefundBtn>
       </BottomBar>
-    </Page>
+    </PageLayout>
   );
 }
 

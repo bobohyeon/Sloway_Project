@@ -1,9 +1,8 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import styled, { keyframes, css } from 'styled-components';
+import PageLayout from '../../../../app/layouts/page/PageLayout';
 import {
-  PageTitle,
-  PageSub,
   SectionBox,
   StatCards,
   StatCard,
@@ -390,14 +389,10 @@ function HostRsvnCalendarPage() {
   ];
 
   return (
-    <Page>
-      <HeaderRow>
-        <div>
-          <PageTitle>예약 달력</PageTitle>
-          <PageSub style={{ margin: 0 }}>
-            내 공간의 예약 현황을 달력으로 확인하세요
-          </PageSub>
-        </div>
+    <PageLayout
+      title="예약 달력"
+      description="내 공간의 예약 현황을 달력으로 확인하세요"
+      actions={
         <RightRow>
           <Select>
             <option>전체 공간</option>
@@ -418,7 +413,9 @@ function HostRsvnCalendarPage() {
             </ToggleBtn>
           </ViewToggle>
         </RightRow>
-      </HeaderRow>
+      }
+      maxWidth={1200}
+    >
 
       <StatCards>
         <StatCard>
@@ -593,7 +590,7 @@ function HostRsvnCalendarPage() {
           </Modal>
         </Overlay>
       )}
-    </Page>
+    </PageLayout>
   );
 }
 

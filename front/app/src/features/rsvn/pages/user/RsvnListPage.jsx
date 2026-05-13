@@ -1,31 +1,17 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import styled, { keyframes } from 'styled-components';
+import PageLayout from '../../../../app/layouts/page/PageLayout';
 import RsvnCard from '../../components/user/RsvnCard';
 import {
   TabBar,
   TabBtn,
-  TabCount,
-  PageTitle,
-  PageSub,
-} from '../../components/user/RsvnStyled';
+  TabCount,} from '../../components/user/RsvnStyled';
 
 const fadeInUp = keyframes`
   from { opacity: 0; transform: translateY(10px); }
   to   { opacity: 1; transform: translateY(0); }
 `;
-
-const Page = styled.div`
-  max-width: 960px;
-  margin: 0 auto;
-  padding: 32px 24px;
-  animation: ${fadeInUp} 480ms ease-out both;
-`;
-
-const Header = styled.div`
-  margin-bottom: 24px;
-`;
-
 const List = styled.div`
   display: flex;
   flex-direction: column;
@@ -122,11 +108,11 @@ function RsvnListPage() {
   );
 
   return (
-    <Page>
-      <Header>
-        <PageTitle>예약 목록</PageTitle>
-        <PageSub>내가 예약한 공간의 이용 현황을 확인하세요</PageSub>
-      </Header>
+    <PageLayout
+      title="예약 목록"
+      description="내가 예약한 공간의 이용 현황을 확인하세요"
+      maxWidth={960}
+    >
 
       <TabBar>
         {TABS.map((tab, idx) => (
@@ -146,7 +132,7 @@ function RsvnListPage() {
           <RsvnCard key={item.id} item={item} />
         ))}
       </List>
-    </Page>
+    </PageLayout>
   );
 }
 

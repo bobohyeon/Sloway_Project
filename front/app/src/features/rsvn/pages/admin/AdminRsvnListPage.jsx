@@ -1,14 +1,13 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import styled from 'styled-components';
+import PageLayout from '../../../../app/layouts/page/PageLayout';
 import RsvnStatusBadge from '../../components/user/RsvnStatusBadge';
 import {
   TabBar,
   TabBtn,
   TabCount,
-  PageTitle,
-  PageSub,
-  StatCards,
+StatCards,
   StatCard,
   StatLabel,
   StatValue,
@@ -208,9 +207,11 @@ function AdminRsvnListPage() {
   const navigate = useNavigate();
 
   return (
-    <div>
-      <PageTitle>전체 예약 관리</PageTitle>
-      <PageSub>모든 예약을 조회하고 문제 상황을 처리하세요</PageSub>
+    <PageLayout
+      title="전체 예약 관리"
+      description="모든 예약을 조회하고 문제 상황을 처리하세요"
+      maxWidth={1200}
+    >
 
       <StatCards>
         <StatCard>
@@ -319,7 +320,7 @@ function AdminRsvnListPage() {
         ))}
         <PageBtn>›</PageBtn>
       </Pagination>
-    </div>
+    </PageLayout>
   );
 }
 
