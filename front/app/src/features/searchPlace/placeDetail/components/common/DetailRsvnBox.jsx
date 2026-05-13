@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import styled from 'styled-components';
 import { COLOR } from '../../../../rsvn/components/user/RsvnStyled';
 
@@ -41,7 +42,6 @@ const InfoRow = styled.div`
 const InfoLabel = styled.span`
   color: #666;
 `;
-
 const InfoValue = styled.span`
   font-weight: 600;
   color: ${COLOR.black};
@@ -116,16 +116,17 @@ const CancelPolicy = styled.p`
   cursor: pointer;
 `;
 
-// spaceType: 'stay' | 'workstay' | 'office'
-// rsvnInfo: 날짜/인원 등 예약 정보
 function DetailRsvnBox({
-  spaceType = 'stay',
   rsvnInfo = {},
   price = 0,
   priceUnit = '원/박',
   serviceFee = 12000,
   cancelPolicy = '무료 취소 · 이용 7일 전까지',
+  onWishToggle,
 }) {
+  const navigate = useNavigate();
+  const [isWished, setIsWished] = useState(false);
+
   const {
     checkIn = '5월 8일',
     checkOut = '5월 10일',
@@ -135,6 +136,11 @@ function DetailRsvnBox({
 
   const totalBase = price * nights;
   const grandTotal = totalBase + serviceFee;
+
+  const handleWish = () => {
+    setIsWished((v) => !v);
+    onWishToggle && onWishToggle();
+  };
 
   return (
     <Box>
@@ -154,8 +160,20 @@ function DetailRsvnBox({
         <InfoValue>{guests}</InfoValue>
       </InfoRow>
 
-      <RsvnBtn>예약하기</RsvnBtn>
-      <WishBtn>찜하기</WishBtn>
+      <RsvnBtn onClick={() => navigate('/user/payment/checkout')}>
+        예약하기
+      </RsvnBtn>
+
+      <WishBtn
+        onClick={handleWish}
+        style={{
+          borderColor: isWished ? '#E65100' : '#E8DFD0',
+          color: isWished ? '#E65100' : '#4A4A4A',
+          background: isWished ? '#FFF3E0' : 'none',
+        }}
+      >
+        {isWished ? '♥ 찜됨' : '♡ 찜하기'}
+      </WishBtn>
 
       {price > 0 && nights > 0 && (
         <CalcBox>

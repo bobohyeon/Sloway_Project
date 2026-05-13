@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import styled, { keyframes } from 'styled-components';
 import ReviewItem from './ReviewItem';
+import { COLOR } from '../../../../rsvn/components/user/RsvnStyled';
 
 const TABS = ['공간 정보', '편의시설', '리뷰', '위치·주변'];
 
@@ -58,7 +59,6 @@ const ActionBtn = styled.button`
   align-items: center;
   justify-content: center;
   transition: all 0.2s;
-
   &:hover {
     background: #eef5ee;
     border-color: #84a98c;
@@ -100,7 +100,6 @@ const TabBtn = styled.button`
   gap: 4px;
   margin-bottom: -1px;
   transition: all 0.2s;
-
   &:hover {
     color: #2d6a4f;
   }
@@ -122,7 +121,6 @@ const SectionTitle = styled.h2`
   font-weight: 400;
   color: #0d2418;
   margin: 28px 0 14px;
-
   &:first-child {
     margin-top: 0;
   }
@@ -138,6 +136,9 @@ const InfoGrid = styled.div`
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 16px 40px;
+  background: ${COLOR.gray100};
+  border-radius: 10px;
+  padding: 16px 20px;
 `;
 
 const InfoItem = styled.div`
@@ -180,18 +181,6 @@ const NoticeBadge = styled.span`
   margin-top: 2px;
 `;
 
-const NoticeTitle = styled.p`
-  font-size: 13px;
-  font-weight: 600;
-  color: #1a1a1a;
-  margin-bottom: 2px;
-`;
-
-const NoticeDesc = styled.p`
-  font-size: 12px;
-  color: #4a4a4a;
-`;
-
 const FacilityGrid = styled.div`
   display: grid;
   grid-template-columns: repeat(3, 1fr);
@@ -206,22 +195,53 @@ const FacilityItem = styled.div`
   color: #4a4a4a;
 `;
 
-function DetailMainBox({ space = {}, reviews = [] }) {
+const ReviewList = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  margin-top: 8px;
+`;
+
+const EmptyReview = styled.div`
+  padding: 60px 20px;
+  text-align: center;
+  font-size: 14px;
+  color: #888;
+  background: #faf7f2;
+  border-radius: 10px;
+`;
+
+// ── 컴포넌트 ──────────────────────────────────────────────
+// space props 키 통일:
+//   type, title, score, reviewCount, location
+//   description, infoItems[{label,value}], notices[{title,desc}]
+//   facilities[{icon,name}]
+// wished, onWishToggle: 찜 토글
+// reviews: 리뷰 배열
+
+function DetailMainBox({
+  space = {},
+  reviews = [],
+  wished = false,
+  onWishToggle,
+}) {
   const [activeTab, setActiveTab] = useState(0);
+  const [isWished, setIsWished] = useState(wished);
+
+  const handleWish = () => {
+    const next = !isWished;
+    setIsWished(next);
+    onWishToggle && onWishToggle(next);
+  };
 
   const {
     type = '숙소',
-    name = '공간명',
+    title = '공간명',
     score = 0,
     reviewCount = 0,
-    region = '지역',
-    checkIn = '15:00',
-    checkOut = '11:00',
-    maxGuest = 4,
-    baseGuest = 2,
-    rooms = 2,
-    beds = 2,
+    location = '지역',
     description = '',
+    infoItems = [],
     notices = [],
     facilities = [],
   } = space;
@@ -231,10 +251,19 @@ function DetailMainBox({ space = {}, reviews = [] }) {
       <TypeBadge>{type}</TypeBadge>
 
       <TitleRow>
-        <Title>{name}</Title>
+        <Title>{title}</Title>
         <Actions>
-          <ActionBtn title="찜하기">♡</ActionBtn>
-          <ActionBtn title="공유">↗</ActionBtn>
+          <ActionBtn
+            title="찜하기"
+            onClick={handleWish}
+            style={{
+              color: isWished ? '#E65100' : '#aaa',
+              borderColor: isWished ? '#E65100' : '#E8DFD0',
+              background: isWished ? '#FFF3E0' : '#fff',
+            }}
+          >
+            {isWished ? '♥' : '♡'}
+          </ActionBtn>
         </Actions>
       </TitleRow>
 
@@ -242,7 +271,7 @@ function DetailMainBox({ space = {}, reviews = [] }) {
         <Score>★ {score}</Score>
         <span>({reviewCount} 리뷰)</span>
         <span>·</span>
-        <span>📍 {region}</span>
+        <span>📍 {location}</span>
       </Meta>
 
       <Tabs>
@@ -260,44 +289,39 @@ function DetailMainBox({ space = {}, reviews = [] }) {
         ))}
       </Tabs>
 
+      {/* ── 공간 정보 탭 ── */}
       {activeTab === 0 && (
         <TabContent>
           <SectionTitle>공간 소개</SectionTitle>
           <Desc>{description || '공간 소개를 불러오는 중입니다.'}</Desc>
 
-          <SectionTitle>기본 정보</SectionTitle>
-          <InfoGrid>
-            <InfoItem>
-              <InfoLabel>체크인</InfoLabel>
-              <InfoValue>오후 {checkIn}</InfoValue>
-            </InfoItem>
-            <InfoItem>
-              <InfoLabel>체크아웃</InfoLabel>
-              <InfoValue>오전 {checkOut}</InfoValue>
-            </InfoItem>
-            <InfoItem>
-              <InfoLabel>최대 인원</InfoLabel>
-              <InfoValue>
-                {maxGuest}명 (기준 {baseGuest}명)
-              </InfoValue>
-            </InfoItem>
-            <InfoItem>
-              <InfoLabel>침실</InfoLabel>
-              <InfoValue>
-                {rooms}개 · 침대 {beds}개
-              </InfoValue>
-            </InfoItem>
-          </InfoGrid>
+          {infoItems.length > 0 && (
+            <>
+              <SectionTitle>기본 정보</SectionTitle>
+              <InfoGrid>
+                {infoItems.map((item, i) => (
+                  <InfoItem key={i}>
+                    <InfoLabel>{item.label}</InfoLabel>
+                    <InfoValue>{item.value}</InfoValue>
+                  </InfoItem>
+                ))}
+              </InfoGrid>
+            </>
+          )}
 
           {notices.length > 0 && (
             <>
               <SectionTitle>공지사항</SectionTitle>
-              {notices.map((notice, idx) => (
-                <NoticeItem key={idx}>
+              {notices.map((n, i) => (
+                <NoticeItem key={i}>
                   <NoticeBadge>공지</NoticeBadge>
                   <div>
-                    <NoticeTitle>{notice.title}</NoticeTitle>
-                    <NoticeDesc>{notice.desc}</NoticeDesc>
+                    <div
+                      style={{ fontSize: 13, fontWeight: 600, marginBottom: 2 }}
+                    >
+                      {n.title}
+                    </div>
+                    <div style={{ fontSize: 12, color: '#666' }}>{n.desc}</div>
                   </div>
                 </NoticeItem>
               ))}
@@ -306,24 +330,29 @@ function DetailMainBox({ space = {}, reviews = [] }) {
         </TabContent>
       )}
 
+      {/* ── 편의시설 탭 ── */}
       {activeTab === 1 && (
         <TabContent>
           <SectionTitle>편의시설</SectionTitle>
-          <FacilityGrid>
-            {facilities.map((f, idx) => (
-              <FacilityItem key={idx}>
-                <span>{f.icon || '✓'}</span>
-                <span>{f.name}</span>
-              </FacilityItem>
-            ))}
-          </FacilityGrid>
+          {facilities.length > 0 ? (
+            <FacilityGrid>
+              {facilities.map((f, i) => (
+                <FacilityItem key={i}>
+                  <span>{f.icon || '✓'}</span>
+                  <span>{f.name}</span>
+                </FacilityItem>
+              ))}
+            </FacilityGrid>
+          ) : (
+            <EmptyReview>편의시설 정보가 없어요</EmptyReview>
+          )}
         </TabContent>
       )}
 
+      {/* ── 리뷰 탭 ── */}
       {activeTab === 2 && (
         <TabContent>
           <SectionTitle>리뷰 ({reviewCount})</SectionTitle>
-
           {reviews.length === 0 ? (
             <EmptyReview>아직 작성된 리뷰가 없어요</EmptyReview>
           ) : (
@@ -336,9 +365,13 @@ function DetailMainBox({ space = {}, reviews = [] }) {
         </TabContent>
       )}
 
+      {/* ── 위치·주변 탭 ── */}
       {activeTab === 3 && (
         <TabContent>
           <SectionTitle>위치·주변</SectionTitle>
+          <div style={{ color: COLOR.gray400, fontSize: 13 }}>
+            카카오맵 연동 예정
+          </div>
         </TabContent>
       )}
     </Wrap>
@@ -346,19 +379,3 @@ function DetailMainBox({ space = {}, reviews = [] }) {
 }
 
 export default DetailMainBox;
-
-const ReviewList = styled.div`
-  display: flex;
-  flex-direction: column;
-  gap: 0;
-  margin-top: 8px;
-`;
-
-const EmptyReview = styled.div`
-  padding: 60px 20px;
-  text-align: center;
-  font-size: 14px;
-  color: #888;
-  background: #faf7f2;
-  border-radius: 10px;
-`;
