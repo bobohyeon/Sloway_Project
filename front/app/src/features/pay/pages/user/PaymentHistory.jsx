@@ -1,17 +1,12 @@
-import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import styled from 'styled-components';
+import { useState } from 'react'
+import { useNavigate } from 'react-router-dom'
+import styled from 'styled-components'
 
-import PageLayout from '../../../../app/layouts/page/PageLayout';
+import PageLayout from '../../../../app/layouts/page/PageLayout'
 
-import {
-  StatCard,
-  EmptyState,
-  Pagination,
-  Button,
-} from '../../../pay_shared/components';
-import { PaymentListItem } from '../../components/user/PaymentListItem';
-import { PaymentFilterBar } from '../../components/user/PaymentFilterBar';
+import { StatCard, EmptyState, Pagination, Button } from '../../../pay_shared/components'
+import { PaymentListItem } from '../../components/user/PaymentListItem'
+import { PaymentFilterBar } from '../../components/user/PaymentFilterBar'
 
 const PAYMENTS = [
   {
@@ -74,43 +69,32 @@ const PAYMENTS = [
     paidAt: '2026.01.10 12:00',
     status: 'failed',
   },
-];
+]
 
 export default function PaymentHistory() {
-  const nav = useNavigate();
-  const [tab, setTab] = useState('all');
-  const [period, setPeriod] = useState('month');
-  const [page, setPage] = useState(1);
+  const nav = useNavigate()
+  const [tab, setTab] = useState('all')
+  const [period, setPeriod] = useState('month')
+  const [page, setPage] = useState(1)
 
-  const filtered = PAYMENTS.filter((p) => tab === 'all' || p.status === tab);
+  const filtered = PAYMENTS.filter((p) => tab === 'all' || p.status === tab)
 
-  const totalCompleted = PAYMENTS.filter(
-    (p) => p.status === 'completed'
-  ).reduce((s, p) => s + p.amount, 0);
+  const totalCompleted = PAYMENTS.filter((p) => p.status === 'completed').reduce(
+    (s, p) => s + p.amount,
+    0
+  )
   const totalRefunded = PAYMENTS.filter((p) => p.status === 'refunded').reduce(
     (s, p) => s + p.amount,
     0
-  );
-  const realPaid = totalCompleted - totalRefunded;
+  )
+  const realPaid = totalCompleted - totalRefunded
 
   const tabs = [
     { value: 'all', label: '전체', count: PAYMENTS.length },
-    {
-      value: 'completed',
-      label: '결제 완료',
-      count: PAYMENTS.filter((p) => p.status === 'completed').length,
-    },
-    {
-      value: 'refunded',
-      label: '환불',
-      count: PAYMENTS.filter((p) => p.status === 'refunded').length,
-    },
-    {
-      value: 'failed',
-      label: '결제 실패',
-      count: PAYMENTS.filter((p) => p.status === 'failed').length,
-    },
-  ];
+    { value: 'completed', label: '결제 완료', count: PAYMENTS.filter((p) => p.status === 'completed').length },
+    { value: 'refunded', label: '환불', count: PAYMENTS.filter((p) => p.status === 'refunded').length },
+    { value: 'failed', label: '결제 실패', count: PAYMENTS.filter((p) => p.status === 'failed').length },
+  ]
 
   return (
     <PageLayout
@@ -118,6 +102,7 @@ export default function PaymentHistory() {
       description="지금까지의 모든 결제 내역을 확인하실 수 있어요"
       maxWidth={1200}
     >
+
       <StatGrid>
         <StatCard label="총 결제" value={PAYMENTS.length} unit="건" icon="💳" />
         <StatCard
@@ -127,18 +112,8 @@ export default function PaymentHistory() {
           icon="✓"
           highlight
         />
-        <StatCard
-          label="환불 금액"
-          value={totalRefunded.toLocaleString()}
-          unit="원"
-          icon="↩️"
-        />
-        <StatCard
-          label="실결제"
-          value={realPaid.toLocaleString()}
-          unit="원"
-          icon="🌱"
-        />
+        <StatCard label="환불 금액" value={totalRefunded.toLocaleString()} unit="원" icon="↩️" />
+        <StatCard label="실결제" value={realPaid.toLocaleString()} unit="원" icon="🌱" />
       </StatGrid>
 
       <PaymentFilterBar
@@ -175,7 +150,7 @@ export default function PaymentHistory() {
 
       <Pagination currentPage={page} totalPages={2} onChange={setPage} />
     </PageLayout>
-  );
+  )
 }
 const StatGrid = styled.div`
   display: grid;
@@ -186,10 +161,10 @@ const StatGrid = styled.div`
   @media (max-width: 720px) {
     grid-template-columns: repeat(2, 1fr);
   }
-`;
+`
 
 const List = styled.div`
   display: flex;
   flex-direction: column;
   gap: var(--space-3);
-`;
+`

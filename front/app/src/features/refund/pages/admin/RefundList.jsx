@@ -97,9 +97,8 @@ export default function RefundList() {
   const [page, setPage] = useState(1)
 
   const filtered = REFUND_REQUESTS.filter((r) => {
-    if (tab === 'abnormal' && r.status !== 'failed') return false
     if (tab === 'host_rejected' && !r.isHostRejected) return false
-    if (tab !== 'all' && tab !== 'abnormal' && tab !== 'host_rejected' && r.status !== tab) return false
+    if (tab !== 'all' && tab !== 'host_rejected' && r.status !== tab) return false
     if (search && !r.userName.includes(search) && !r.refundId.includes(search)) return false
     return true
   })
@@ -107,13 +106,15 @@ export default function RefundList() {
   const total = REFUND_REQUESTS.length
   const processing = REFUND_REQUESTS.filter((r) => r.status === 'processing').length
   const completed = REFUND_REQUESTS.filter((r) => r.status === 'completed').length
-  const abnormal = REFUND_REQUESTS.filter((r) => r.status === 'failed').length
+  const failed = REFUND_REQUESTS.filter((r) => r.status === 'failed').length
+  const hostRejected = REFUND_REQUESTS.filter((r) => r.isHostRejected).length
 
   const tabs = [
     { value: 'all', label: '전체', count: total },
+    { value: 'processing', label: '처리 중', count: processing },
     { value: 'completed', label: '완료', count: completed },
-    { value: 'abnormal', label: '송금실패', count: abnormal },
-    { value: 'host_rejected', label: '호스트거절', count: REFUND_REQUESTS.filter((r) => r.isHostRejected).length },
+    { value: 'failed', label: '실패', count: failed },
+    { value: 'host_rejected', label: '호스트거절', count: hostRejected },
   ]
 
   return (
@@ -147,11 +148,11 @@ export default function RefundList() {
         />
         <SettlementStatCard
           icon="⚠️"
-          label="송금 실패"
-          value={abnormal.toLocaleString()}
+          label="실패"
+          value={failed.toLocaleString()}
           unit="건"
-          subText="자동 재시도 대기"
-          highlight={abnormal > 0}
+          subText="자동 재시도 중"
+          highlight={failed > 0}
         />
       </StatGrid>
 

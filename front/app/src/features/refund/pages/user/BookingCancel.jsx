@@ -2,6 +2,8 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import styled from 'styled-components';
 
+import PageLayout from '../../../../app/layouts/page/PageLayout';
+
 import { Button } from '../../../pay_shared/components';
 import { BookingSummaryCard } from '../../../pay/components/user/BookingSummaryCard';
 import { RefundSummaryCard } from '../../components/user/RefundSummaryCard';

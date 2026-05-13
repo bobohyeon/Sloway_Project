@@ -32,7 +32,7 @@ export default function PaymentComplete() {
       <ResultHeader
         variant="success"
         title="결제가 완료됐어요"
-        description="예약이 확정됐어요. 체크인 하루 전 리마인드 알림을 보내드릴게요."
+        description="결제와 동시에 예약이 자동으로 확정됐어요. 체크인 하루 전 리마인드 알림을 보내드릴게요."
       />
 
       <Content>

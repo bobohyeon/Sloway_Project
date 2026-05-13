@@ -33,7 +33,7 @@ const REFUNDS = [
     requestedAt: '2026.05.08 09:14',
     reason: '일정이 변경됐어요',
     isHostRejected: false,
-    alertMessage: 'PG사 송금 실패 - 자동 재시도 3회 실패. 수동 처리 필요',
+    alertMessage: 'PG사 송금 실패 - 자동 재시도 진행 중',
   },
   {
     id: 2,
@@ -164,8 +164,8 @@ function buildProcessHistory(refund) {
       },
       {
         status: 'error',
-        title: '자동 재시도 (3회) 모두 실패',
-        description: 'PG사 응답 대기 - 자동 재처리 예정',
+        title: '자동 재시도 진행 중',
+        description: 'PG사 응답 대기 - 자동 재처리 큐 대기 중',
         at: '2026.05.08 09:18',
         actor: '시스템',
       },
@@ -199,7 +199,7 @@ function getSavedMemos(refund) {
       {
         author: '시스템',
         at: '2026.05.08 09:18',
-        content: '자동 처리 실패 - 자동 재시도 큐로 이관됨',
+        content: '자동 재시도 큐로 이관됨 - PG사 응답 대기',
       },
     ]
   }

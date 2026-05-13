@@ -1,6 +1,8 @@
 import { useNavigate } from 'react-router-dom';
 import styled from 'styled-components';
 
+import PageLayout from '../../../../app/layouts/page/PageLayout';
+
 import { Button } from '../../../pay_shared/components';
 import { ResultHeader } from '../../components/user/ResultHeader';
 import { ErrorReasonCard } from '../../components/user/ErrorReasonCard';
