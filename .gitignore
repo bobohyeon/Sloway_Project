@@ -62,6 +62,8 @@ logs/
 Thumbs.db
 desktop.ini
 
+# QueryDSL 생성 파일
+src/main/generated/
 
 # ===========================================
 # 프론트엔드 (React)
