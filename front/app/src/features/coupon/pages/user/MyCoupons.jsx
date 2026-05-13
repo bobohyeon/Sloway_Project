@@ -143,20 +143,13 @@ export default function MyCoupons() {
     <PageLayout
       title="내 쿠폰함"
       description="받은 쿠폰을 한눈에 확인하고 사용하세요"
+      actions={
+        <EventBtn onClick={() => nav('/event')}>
+          🎁 이벤트 보러가기 →
+        </EventBtn>
+      }
       maxWidth={1200}
     >
-
-      <Header>
-        <TopRow>
-          <div>
-            <Title>내 쿠폰함</Title>
-            <Description>받은 쿠폰을 한눈에 확인하고 사용하세요</Description>
-          </div>
-          <EventBtn onClick={() => nav('/event')}>
-            🎁 이벤트 보러가기 →
-          </EventBtn>
-        </TopRow>
-      </Header>
 
       <CouponCodeInput onSubmit={handleCodeSubmit} />
 
@@ -219,13 +212,6 @@ const BackLink = styled.button`
   &:hover {
     color: var(--gray-800);
   }
-`
-const TopRow = styled.div`
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: var(--space-3);
-  flex-wrap: wrap;
 `
 const EventBtn = styled.button`
   padding: 8px 14px;

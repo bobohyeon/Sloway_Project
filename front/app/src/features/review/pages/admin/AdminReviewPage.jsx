@@ -1,80 +1,51 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import styled from 'styled-components';
+import styled, { keyframes } from 'styled-components';
 import {
   TabBar,
   TabBtn,
   TabCount,
   PageTitle,
   PageSub,
-  StatCards,
-  StatCard,
-  StatLabel,
-  StatValue,
+  Card,
+  CardRow,
+  Thumb,
+  CardBody,
+  TagRow,
+  CardTitle,
+  CardMeta,
+  CardRight,
   Pagination,
   PageBtn,
   COLOR,
 } from '../../../rsvn/components/user/RsvnStyled';
 
-const DUMMY = [
-  {
-    id: 1,
-    reviewer: '민정',
-    avatar: '민',
-    color: '#A8B89F',
-    space: '청평 숲속 파인뷰',
-    code: 'RV-2026-00847',
-    date: '2026.04.22',
-    score: 5,
-    text: '조용하고 몰입감 있어요. 듀얼모니터도 잘 쓰고 왔습니다!',
-    imgs: 3,
-    helpful: 24,
-    type: '워크앤스테이',
-    reported: false,
-  },
-  {
-    id: 2,
-    reviewer: '익명회원',
-    avatar: '익',
-    color: '#CCC',
-    space: '양양 파도소리 빌라',
-    code: 'RV-2026-00835',
-    date: '2026.04.20',
-    score: 1,
-    text: '이상한 광고성 내용이 포함된 부적절한 리뷰 샘플입니다...',
-    imgs: 0,
-    helpful: 0,
-    type: '숙소',
-    reported: true,
-    reportCount: 3,
-  },
-  {
-    id: 3,
-    reviewer: '수연',
-    avatar: '수',
-    color: '#7B9EA8',
-    space: '제주 돌담집 리트릿',
-    code: 'RV-2026-00830',
-    date: '2026.04.10',
-    score: 5,
-    text: '돌담 너머 바다 보면서 일하는 게 너무 좋았어요 :)',
-    imgs: 2,
-    helpful: 32,
-    type: '숙소',
-    reported: false,
-  },
-];
+const fadeInUp = keyframes`
+  from { opacity: 0; transform: translateY(10px); }
+  to   { opacity: 1; transform: translateY(0); }
+`;
+
+const Page = styled.div`
+  max-width: 960px;
+  margin: 0 auto;
+  padding: 32px 24px;
+  animation: ${fadeInUp} 480ms ease-out both;
+`;
+
+const Header = styled.div`
+  margin-bottom: 24px;
+`;
 
 const FilterRow = styled.div`
   display: flex;
   gap: 8px;
-  margin-bottom: 16px;
   flex-wrap: wrap;
   align-items: center;
+  margin-bottom: 16px;
 `;
 
 const Select = styled.select`
-  padding: 8px 12px;
+  padding: 7px 12px;
   border: 1px solid ${COLOR.gray200};
   border-radius: 8px;
   font-size: 13px;
@@ -83,131 +54,155 @@ const Select = styled.select`
 `;
 
 const SearchInput = styled.input`
-  flex: 1;
-  padding: 8px 12px;
+  padding: 7px 12px;
   border: 1px solid ${COLOR.gray200};
   border-radius: 8px;
   font-size: 13px;
   outline: none;
-  min-width: 180px;
-`;
-
-const SearchBtn = styled.button`
-  padding: 8px 16px;
-  background: ${COLOR.green};
-  color: #fff;
-  border: none;
-  border-radius: 8px;
-  font-size: 13px;
-  font-weight: 600;
-  cursor: pointer;
-`;
-
-const ReviewRow = styled.div`
-  background: #fff;
-  border: 1.5px solid
-    ${({ $reported }) => ($reported ? '#FFCDD2' : COLOR.gray200)};
-  border-radius: 10px;
-  padding: 16px 18px;
-  margin-bottom: 8px;
-  cursor: pointer;
-  transition: box-shadow 0.15s;
-  &:hover {
-    box-shadow: 0 3px 10px rgba(0, 0, 0, 0.06);
+  flex: 1;
+  min-width: 160px;
+  &:focus {
+    border-color: ${COLOR.sage};
   }
 `;
 
-const Avatar = styled.div`
-  width: 32px;
-  height: 32px;
-  border-radius: 50%;
-  background: ${({ $color }) => $color};
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-weight: 700;
-  font-size: 13px;
+const SearchBtn = styled.button`
+  padding: 7px 16px;
+  border-radius: 8px;
+  background: ${COLOR.green};
   color: #fff;
-  flex-shrink: 0;
-`;
-
-const Stars = styled.span`
-  color: #c97d4c;
-  font-size: 12px;
-`;
-
-const TypeTag = styled.span`
-  font-size: 10px;
+  border: none;
+  font-size: 13px;
   font-weight: 600;
-  padding: 2px 6px;
-  border-radius: 4px;
-  background: rgba(168, 184, 159, 0.18);
-  color: #5b6b53;
-`;
-
-const ReportBadge = styled.span`
-  font-size: 10px;
-  font-weight: 700;
-  padding: 2px 7px;
-  border-radius: 4px;
-  background: #fff0f0;
-  color: ${COLOR.red};
-  display: inline-flex;
-  align-items: center;
-  gap: 3px;
-`;
-
-const ActionBtns = styled.div`
-  display: flex;
-  gap: 6px;
-`;
-
-const BtnAction = styled.button`
-  font-size: 11px;
-  padding: 4px 10px;
-  border-radius: 6px;
-  border: ${({ $danger }) =>
-    $danger ? '1px solid #fcc' : `1px solid ${COLOR.gray200}`};
-  background: ${({ $green }) => ($green ? '#EEF5EE' : '#fff')};
-  color: ${({ $danger }) =>
-    $danger ? COLOR.red : ($green) => ($green ? COLOR.green : '#555')};
   cursor: pointer;
+  &:hover {
+    background: #1a3a2a;
+  }
 `;
+
+const StatusBadge = styled.span`
+  font-size: 11px;
+  font-weight: 600;
+  padding: 2px 8px;
+  border-radius: 4px;
+  background: ${({ $status }) =>
+    $status === 'PENDING'
+      ? '#FFF3E0'
+      : $status === 'KEPT'
+        ? '#EEF5EE'
+        : '#FFEBEB'};
+  color: ${({ $status }) =>
+    $status === 'PENDING'
+      ? '#E65100'
+      : $status === 'KEPT'
+        ? '#2D6A4F'
+        : '#C0392B'};
+`;
+
+const TABS = [
+  { label: '전체', status: null },
+  { label: '검토 중', status: 'PENDING' },
+  { label: '유지', status: 'KEPT' },
+  { label: '삭제됨', status: 'DELETED' },
+];
+
+const STATUS_LABEL = { PENDING: '검토 중', KEPT: '유지', DELETED: '삭제됨' };
+
+const REASONS = [
+  '욕설·비방',
+  '허위 사실',
+  '광고성',
+  '개인정보',
+  '무관한 내용',
+  '기타',
+];
+
+const DUMMY = [
+  {
+    id: 1,
+    status: 'PENDING',
+    reason: '욕설·비방',
+    reporter: '박민수',
+    reviewer: '홍길동',
+    space: '청평 숲속 파인뷰',
+    reportDate: '2026.05.10',
+    reviewText: '진짜 최악이야 다시는 안 와',
+    icon: '🌲',
+  },
+  {
+    id: 2,
+    status: 'PENDING',
+    reason: '허위 사실',
+    reporter: '이지은',
+    reviewer: '김수현',
+    space: '성수 브릭라운지',
+    reportDate: '2026.05.08',
+    reviewText: '와이파이 아예 안 터짐 (실제로는 기가급)',
+    icon: '🧱',
+  },
+  {
+    id: 3,
+    status: 'KEPT',
+    reason: '광고성',
+    reporter: '정유리',
+    reviewer: '이강',
+    space: '강릉 바다향 커먼워크',
+    reportDate: '2026.04.28',
+    reviewText: '다른 카페가 더 좋아요 (링크)',
+    icon: '🌊',
+  },
+  {
+    id: 4,
+    status: 'DELETED',
+    reason: '개인정보',
+    reporter: '최준호',
+    reviewer: '소영',
+    space: '제주 돌담집 리트릿',
+    reportDate: '2026.04.20',
+    reviewText: '호스트 연락처는 xxx-xxxx-xxxx',
+    icon: '🌴',
+  },
+  {
+    id: 5,
+    status: 'PENDING',
+    reason: '무관한 내용',
+    reporter: '한지수',
+    reviewer: '민재',
+    space: '청평 숲속 파인뷰',
+    reportDate: '2026.05.12',
+    reviewText: '오늘 날씨가 좋네요 ㅎㅎ',
+    icon: '🌲',
+  },
+];
 
 function AdminReviewPage() {
-  const [activeTab, setActiveTab] = useState(0);
   const navigate = useNavigate();
+  const [activeTab, setActiveTab] = useState(0);
+  const [reasonFilter, setReasonFilter] = useState('전체 사유');
+  const [keyword, setKeyword] = useState('');
+  const [page, setPage] = useState(1);
 
-  const TABS = [
-    { label: '전체', count: 7 },
-    { label: '공개', count: 5 },
-    { label: '🚩 신고됨', count: 1 },
-    { label: '숨김', count: 1 },
-  ];
+  const counts = TABS.map((tab, idx) =>
+    idx === 0
+      ? DUMMY.length
+      : DUMMY.filter((i) => i.status === tab.status).length
+  );
+
+  const filtered = DUMMY.filter(
+    (i) => activeTab === 0 || i.status === TABS[activeTab].status
+  )
+    .filter((i) => reasonFilter === '전체 사유' || i.reason === reasonFilter)
+    .filter(
+      (i) =>
+        !keyword || i.reporter.includes(keyword) || i.reviewer.includes(keyword)
+    );
 
   return (
-    <div>
-      <PageTitle>리뷰 관리</PageTitle>
-      <PageSub>플랫폼의 모든 리뷰를 조회하고 관리하세요</PageSub>
-
-      <StatCards>
-        <StatCard>
-          <StatLabel>전체 리뷰</StatLabel>
-          <StatValue>3,428개</StatValue>
-        </StatCard>
-        <StatCard $accent="#C97D4C">
-          <StatLabel>평균 평점</StatLabel>
-          <StatValue $color="#C97D4C">4.4</StatValue>
-        </StatCard>
-        <StatCard $accent={COLOR.red}>
-          <StatLabel>신고 대기</StatLabel>
-          <StatValue $color={COLOR.red}>1건</StatValue>
-        </StatCard>
-        <StatCard>
-          <StatLabel>이번 달 작성</StatLabel>
-          <StatValue>142개</StatValue>
-        </StatCard>
-      </StatCards>
+    <Page>
+      <Header>
+        <PageTitle>리뷰 신고 관리</PageTitle>
+        <PageSub>접수된 리뷰 신고를 검토하고 처리하세요</PageSub>
+      </Header>
 
       <TabBar>
         {TABS.map((tab, idx) => (
@@ -217,133 +212,113 @@ function AdminReviewPage() {
             onClick={() => setActiveTab(idx)}
           >
             {tab.label}
-            <TabCount $active={activeTab === idx}>{tab.count}</TabCount>
+            <TabCount $active={activeTab === idx}>{counts[idx]}</TabCount>
           </TabBtn>
         ))}
       </TabBar>
 
       <FilterRow>
-        <Select>
-          <option>전체 평점</option>
-          <option>5점</option>
-          <option>4점</option>
-          <option>3점 이하</option>
+        <Select
+          value={reasonFilter}
+          onChange={(e) => setReasonFilter(e.target.value)}
+        >
+          <option>전체 사유</option>
+          {REASONS.map((r) => (
+            <option key={r}>{r}</option>
+          ))}
         </Select>
         <Select>
-          <option>전체 공간</option>
+          <option>전체 기간</option>
+          <option>이번 달</option>
+          <option>지난 3개월</option>
         </Select>
-        <SearchInput placeholder="공간명·작성자 ID 검색" />
-        <SearchBtn>검색</SearchBtn>
+        <SearchInput
+          placeholder="신고자 · 작성자 검색"
+          value={keyword}
+          onChange={(e) => setKeyword(e.target.value)}
+        />
+        <SearchBtn onClick={() => setPage(1)}>검색</SearchBtn>
       </FilterRow>
 
-      {DUMMY.map((item) => (
-        <ReviewRow
-          key={item.id}
-          $reported={item.reported}
-          onClick={() => item.reported && navigate('/admin/review/report')}
+      {filtered.length === 0 && (
+        <div
+          style={{
+            textAlign: 'center',
+            padding: '40px 0',
+            color: COLOR.gray400,
+            fontSize: 14,
+          }}
         >
-          <div
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: 10,
-              marginBottom: 8,
-            }}
-          >
-            <Avatar $color={item.color}>{item.avatar}</Avatar>
-            <div style={{ flex: 1 }}>
-              <div
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: 8,
-                  flexWrap: 'wrap',
-                }}
-              >
-                <span style={{ fontSize: 13, fontWeight: 700 }}>
-                  {item.reviewer}
-                </span>
-                <TypeTag>공개</TypeTag>
-                {item.reported && (
-                  <ReportBadge>🚩 신고 {item.reportCount}건</ReportBadge>
-                )}
-                <span style={{ fontSize: 11, color: COLOR.gray400 }}>
-                  {item.code} · {item.space} · {item.date}
-                </span>
-              </div>
-            </div>
-            <Stars>
-              {'★'.repeat(item.score)}
-              {'☆'.repeat(5 - item.score)}
-            </Stars>
-            <span style={{ fontSize: 13, fontWeight: 700, marginLeft: 4 }}>
-              {item.score}.0
-            </span>
-            <ActionBtns>
-              {item.reported ? (
-                <BtnAction
-                  $danger
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    navigate('/admin/review/report');
+          조건에 맞는 신고가 없어요
+        </div>
+      )}
+
+      {filtered.map((item) => (
+        <Card
+          key={item.id}
+          onClick={() => navigate(`/admin/review/report/${item.id}`)}
+        >
+          <CardRow>
+            <Thumb>{item.icon}</Thumb>
+            <CardBody>
+              <TagRow>
+                <StatusBadge $status={item.status}>
+                  {STATUS_LABEL[item.status]}
+                </StatusBadge>
+                <span
+                  style={{
+                    fontSize: 11,
+                    padding: '2px 7px',
+                    borderRadius: 4,
+                    background: '#F5F0E8',
+                    color: '#666',
                   }}
                 >
-                  신고 처리 →
-                </BtnAction>
-              ) : (
-                <>
-                  <BtnAction>본문 보기</BtnAction>
-                  <BtnAction $green>숨김 처리</BtnAction>
-                  <BtnAction $danger>삭제</BtnAction>
-                </>
-              )}
-            </ActionBtns>
-          </div>
-          <div
-            style={{
-              fontSize: 13,
-              color: item.reported ? COLOR.red : '#444',
-              lineHeight: 1.5,
-              overflow: 'hidden',
-              whiteSpace: 'nowrap',
-              textOverflow: 'ellipsis',
-            }}
-          >
-            {item.text}
-          </div>
-          <div
-            style={{
-              fontSize: 11,
-              color: COLOR.gray400,
-              marginTop: 6,
-              display: 'flex',
-              gap: 12,
-            }}
-          >
-            <span>📸 사진 {item.imgs}장</span>
-            <span>👍 도움돼요 {item.helpful}</span>
-            <TypeTag>{item.type}</TypeTag>
-            {item.reported && (
-              <span style={{ color: COLOR.red, fontWeight: 600 }}>
-                🚩 신고 사유: 광고·스팸
-              </span>
-            )}
-          </div>
-        </ReviewRow>
+                  {item.reason}
+                </span>
+              </TagRow>
+              <CardTitle style={{ marginTop: 4 }}>{item.space}</CardTitle>
+              <CardMeta>
+                <span>신고자: {item.reporter}</span>
+                <span>·</span>
+                <span>작성자: {item.reviewer}</span>
+                <span>·</span>
+                <span>{item.reportDate}</span>
+              </CardMeta>
+              <div
+                style={{
+                  fontSize: 12,
+                  color: '#666',
+                  marginTop: 6,
+                  overflow: 'hidden',
+                  whiteSpace: 'nowrap',
+                  textOverflow: 'ellipsis',
+                }}
+              >
+                "{item.reviewText}"
+              </div>
+            </CardBody>
+            <CardRight>
+              <span style={{ fontSize: 12, color: COLOR.green }}>상세 →</span>
+            </CardRight>
+          </CardRow>
+        </Card>
       ))}
 
-      <Pagination>
-        <PageBtn>‹</PageBtn>
-        {[1, 2, 3].map((p) => (
-          <PageBtn key={p} $active={p === 1}>
-            {p}
+      {filtered.length > 0 && (
+        <Pagination>
+          <PageBtn onClick={() => setPage((p) => Math.max(1, p - 1))}>
+            ‹
           </PageBtn>
-        ))}
-        <span style={{ fontSize: 13, color: COLOR.gray400 }}>...</span>
-        <PageBtn>228</PageBtn>
-        <PageBtn>›</PageBtn>
-      </Pagination>
-    </div>
+          {[1, 2].map((p) => (
+            <PageBtn key={p} $active={page === p} onClick={() => setPage(p)}>
+              {p}
+            </PageBtn>
+          ))}
+          <PageBtn onClick={() => setPage((p) => p + 1)}>›</PageBtn>
+        </Pagination>
+      )}
+    </Page>
   );
 }
 

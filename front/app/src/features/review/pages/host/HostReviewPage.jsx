@@ -1,115 +1,45 @@
 import { useState } from 'react';
-import styled from 'styled-components';
+import { useNavigate } from 'react-router-dom';
+import styled, { keyframes } from 'styled-components';
 import {
   TabBar,
   TabBtn,
   TabCount,
-  StatCards,
-  StatCard,
-  StatLabel,
-  StatValue,
-  BtnOutline,
+  PageTitle,
+  PageSub,
+  Card,
+  CardRow,
+  Thumb,
+  CardBody,
+  TagRow,
+  CardTitle,
+  CardMeta,
+  CardRight,
   COLOR,
 } from '../../../rsvn/components/user/RsvnStyled';
-import {
-  ReviewText,
-  ReviewImgs,
-  ReviewImg,
-  ReplyBox,
-} from '../../components/user/ReviewStyled';
 
-const TABS = [
-  { label: '전체', count: 5 },
-  { label: '답글 대기', count: 3 },
-  { label: '답글 완료', count: 2 },
-];
-
-const DUMMY = [
-  {
-    id: 1,
-    name: '민정',
-    avatar: '민',
-    color: '#A8B89F',
-    space: '청평 숲속 파인뷰',
-    date: '2026.04.22',
-    score: 5,
-    text: '조용하고 몰입감 있어요. 듀얼모니터도 잘 쓰고 왔습니다. 다음에 팀원들이랑 또 오고 싶어요!',
-    imgs: 3,
-    reply: null,
-  },
-  {
-    id: 2,
-    name: '수연',
-    avatar: '수',
-    color: '#7B9EA8',
-    space: '제주 돌담집 리트릿',
-    date: '2026.04.10',
-    score: 5,
-    text: '돌담 너머 바다 보면서 일하는 게 너무 좋았어요. 호스트님이 주신 감귤차도 정말 맛있었습니다 :)',
-    imgs: 0,
-    reply: {
-      text: '감사합니다! 다음 방문 때 또 따뜻한 차 준비해들게요 🍊',
-      date: '2026.04.11',
-    },
-  },
-  {
-    id: 3,
-    name: '민재',
-    avatar: '민',
-    color: '#8B7BA8',
-    space: '성수 브릭라운지',
-    date: '2026.04.05',
-    score: 4,
-    text: '전체적으로 좋았는데 주말에 사람이 조금 많은 편이에요. 조용한 공간을 원하시면 평일 추천!',
-    imgs: 0,
-    reply: {
-      text: '피드백 감사합니다! 주말 혼잡 문제는 예약 시스템 개선으로 나아질 예정이에요 🙏',
-      date: '2026.04.05',
-    },
-  },
-];
-
-const ReviewCard = styled.div`
-  background: #fff;
-  border: 1px solid ${COLOR.gray200};
-  border-radius: 12px;
-  padding: 20px;
-  margin-bottom: 10px;
+const fadeInUp = keyframes`
+  from { opacity: 0; transform: translateY(10px); }
+  to   { opacity: 1; transform: translateY(0); }
 `;
 
-const ReviewerRow = styled.div`
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  margin-bottom: 10px;
+const Page = styled.div`
+  max-width: 960px;
+  margin: 0 auto;
+  padding: 32px 24px;
+  animation: ${fadeInUp} 480ms ease-out both;
 `;
 
-const Avatar = styled.div`
-  width: 36px;
-  height: 36px;
-  border-radius: 50%;
-  background: ${({ $color }) => $color};
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-weight: 700;
-  font-size: 14px;
-  color: #fff;
-  flex-shrink: 0;
-`;
-
-const Stars = styled.span`
-  color: #c97d4c;
-  font-size: 13px;
+const Header = styled.div`
+  margin-bottom: 24px;
 `;
 
 const FilterRow = styled.div`
   display: flex;
-  justify-content: space-between;
+  gap: 8px;
+  flex-wrap: wrap;
   align-items: center;
   margin-bottom: 16px;
-  flex-wrap: wrap;
-  gap: 10px;
 `;
 
 const Select = styled.select`
@@ -119,200 +49,354 @@ const Select = styled.select`
   font-size: 13px;
   background: #fff;
   outline: none;
-`;
-
-const ReplyBtn = styled.button`
-  background: ${COLOR.sage};
-  color: #fff;
-  padding: 7px 16px;
-  border-radius: 6px;
-  font-size: 12px;
-  font-weight: 600;
-  border: none;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  gap: 4px;
-`;
-
-const ReplyTextarea = styled.textarea`
-  width: 100%;
-  padding: 10px 12px;
-  border: 1px solid ${COLOR.gray200};
-  border-radius: 8px;
-  font-size: 13px;
-  font-family: inherit;
-  resize: none;
-  outline: none;
   &:focus {
     border-color: ${COLOR.sage};
   }
 `;
 
+const SearchInput = styled.input`
+  padding: 7px 12px;
+  border: 1px solid ${COLOR.gray200};
+  border-radius: 8px;
+  font-size: 13px;
+  outline: none;
+  flex: 1;
+  min-width: 160px;
+  &:focus {
+    border-color: ${COLOR.sage};
+  }
+`;
+
+const Stars = styled.span`
+  color: #c97d4c;
+  font-size: 13px;
+`;
+
+const ReviewText = styled.div`
+  font-size: 13px;
+  color: #555;
+  margin-top: 6px;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+`;
+
+const ReplyArea = styled.textarea`
+  width: 100%;
+  padding: 10px 14px;
+  border: 1px solid ${COLOR.gray200};
+  border-radius: 8px;
+  font-size: 13px;
+  font-family: 'Noto Sans KR', sans-serif;
+  resize: none;
+  outline: none;
+  box-sizing: border-box;
+  margin-top: 10px;
+  &:focus {
+    border-color: ${COLOR.sage};
+  }
+`;
+
+const ReplySubmitBtn = styled.button`
+  padding: 7px 18px;
+  border-radius: 8px;
+  background: ${COLOR.green};
+  color: #fff;
+  border: none;
+  font-size: 13px;
+  font-weight: 600;
+  font-family: 'Noto Sans KR', sans-serif;
+  cursor: pointer;
+  margin-top: 8px;
+  float: right;
+  &:hover {
+    background: #1a3a2a;
+  }
+`;
+
+const ReplyBox = styled.div`
+  background: ${COLOR.gray100};
+  border-radius: 8px;
+  padding: 12px 14px;
+  border-left: 3px solid ${COLOR.sage};
+  margin-top: 10px;
+  font-size: 13px;
+  color: #555;
+`;
+
+const ReplyLabel = styled.div`
+  font-size: 11px;
+  font-weight: 700;
+  color: ${COLOR.green};
+  margin-bottom: 5px;
+`;
+
+const EditBtn = styled.button`
+  font-size: 12px;
+  color: ${COLOR.gray400};
+  background: none;
+  border: none;
+  cursor: pointer;
+  text-decoration: underline;
+  &:hover {
+    color: ${COLOR.black};
+  }
+`;
+
+const TABS = [
+  { label: '전체', status: null },
+  { label: '답글 필요', status: 'pending' },
+  { label: '답글 완료', status: 'done' },
+];
+
+const DUMMY = [
+  {
+    id: 1,
+    status: 'pending',
+    space: '청평 숲속 파인뷰',
+    type: '워크앤스테이',
+    reviewer: '민정',
+    avatar: '민',
+    score: 5,
+    date: '2026.04.22',
+    text: '조용하고 몰입감 있어요. 듀얼모니터도 잘 쓰고 왔습니다. 다음에 또 오고 싶어요!',
+    reply: null,
+    icon: '🌲',
+  },
+  {
+    id: 2,
+    status: 'done',
+    space: '청평 숲속 파인뷰',
+    type: '워크앤스테이',
+    reviewer: '준호',
+    avatar: '준',
+    score: 4,
+    date: '2026.04.10',
+    text: '리모트 워크 일주일 했는데 너무 좋았어요. 인터넷 속도 빠르고 데스크 셋업이 편했습니다.',
+    reply: {
+      text: '감사합니다! 다음에도 좋은 시간 보내러 오세요 🌲',
+      date: '2026.04.11',
+    },
+    icon: '🌲',
+  },
+  {
+    id: 3,
+    status: 'pending',
+    space: '성수 브릭라운지',
+    type: '오피스',
+    reviewer: '이강',
+    avatar: '이',
+    score: 5,
+    date: '2026.03.18',
+    text: '바다 뷰 보면서 일하는 게 너무 좋아요. 와이파이 엄청 빠르고 폰부스도 있어서 편했어요.',
+    reply: null,
+    icon: '🧱',
+  },
+  {
+    id: 4,
+    status: 'done',
+    space: '성수 브릭라운지',
+    type: '오피스',
+    reviewer: '소영',
+    avatar: '소',
+    score: 3,
+    date: '2026.03.05',
+    text: '주말에 사람이 많아서 좀 시끄러웠어요. 평일에 오시는 걸 추천해요.',
+    reply: {
+      text: '불편함을 드려 죄송합니다. 주말 혼잡 개선 중이에요 🙏',
+      date: '2026.03.06',
+    },
+    icon: '🧱',
+  },
+];
+
 function HostReviewPage() {
   const [activeTab, setActiveTab] = useState(0);
-  const [openReply, setOpenReply] = useState(null);
+  const [spaceFilter, setSpaceFilter] = useState('전체 공간');
+  const [keyword, setKeyword] = useState('');
+  const [replyTexts, setReplyTexts] = useState({});
+  const [editingId, setEditingId] = useState(null);
+  const [submitted, setSubmitted] = useState({});
+
+  const counts = TABS.map((tab, idx) =>
+    idx === 0
+      ? DUMMY.length
+      : DUMMY.filter((i) => i.status === tab.status).length
+  );
+
+  const filtered = DUMMY.filter(
+    (i) => activeTab === 0 || i.status === TABS[activeTab].status
+  )
+    .filter((i) => spaceFilter === '전체 공간' || i.space === spaceFilter)
+    .filter(
+      (i) =>
+        !keyword || i.reviewer.includes(keyword) || i.text.includes(keyword)
+    );
+
+  const handleReplyChange = (id, val) =>
+    setReplyTexts((prev) => ({ ...prev, [id]: val }));
+
+  const handleSubmit = (id) => {
+    if (!replyTexts[id]?.trim()) return;
+    setSubmitted((prev) => ({ ...prev, [id]: replyTexts[id] }));
+    setEditingId(null);
+  };
 
   return (
-    <div>
-      <StatCards>
-        <StatCard>
-          <StatLabel>전체 리뷰</StatLabel>
-          <StatValue>5개</StatValue>
-        </StatCard>
-        <StatCard $accent="#C97D4C">
-          <StatLabel>평균 평점</StatLabel>
-          <StatValue $color="#C97D4C">4.4</StatValue>
-        </StatCard>
-        <StatCard $accent={COLOR.orange}>
-          <StatLabel>답글 대기</StatLabel>
-          <StatValue $color={COLOR.orange}>3개</StatValue>
-        </StatCard>
-        <StatCard>
-          <StatLabel>답글률</StatLabel>
-          <StatValue>40%</StatValue>
-        </StatCard>
-      </StatCards>
+    <Page>
+      <Header>
+        <PageTitle>답글 관리</PageTitle>
+        <PageSub>게스트 리뷰에 답글을 달고 소통하세요</PageSub>
+      </Header>
+
+      <TabBar>
+        {TABS.map((tab, idx) => (
+          <TabBtn
+            key={idx}
+            $active={activeTab === idx}
+            onClick={() => setActiveTab(idx)}
+          >
+            {tab.label}
+            <TabCount $active={activeTab === idx}>{counts[idx]}</TabCount>
+          </TabBtn>
+        ))}
+      </TabBar>
 
       <FilterRow>
-        <TabBar style={{ margin: 0, border: 'none' }}>
-          {TABS.map((tab, idx) => (
-            <TabBtn
-              key={idx}
-              $active={activeTab === idx}
-              onClick={() => setActiveTab(idx)}
-            >
-              {tab.label}
-              <TabCount $active={activeTab === idx}>{tab.count}</TabCount>
-            </TabBtn>
-          ))}
-        </TabBar>
-        <div style={{ display: 'flex', gap: 8 }}>
-          <Select>
-            <option>전체 공간</option>
-          </Select>
-          <Select>
-            <option>최신순</option>
-          </Select>
-        </div>
+        <Select
+          value={spaceFilter}
+          onChange={(e) => setSpaceFilter(e.target.value)}
+        >
+          <option>전체 공간</option>
+          <option>청평 숲속 파인뷰</option>
+          <option>성수 브릭라운지</option>
+        </Select>
+        <Select>
+          <option>전체 기간</option>
+          <option>이번 달</option>
+          <option>지난 3개월</option>
+        </Select>
+        <SearchInput
+          placeholder="작성자명 · 내용 검색"
+          value={keyword}
+          onChange={(e) => setKeyword(e.target.value)}
+        />
       </FilterRow>
 
-      {DUMMY.map((item) => (
-        <ReviewCard key={item.id}>
-          <ReviewerRow>
-            <Avatar $color={item.color}>{item.avatar}</Avatar>
-            <div style={{ flex: 1 }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                <span style={{ fontWeight: 700, fontSize: 13 }}>
-                  {item.name}
-                </span>
-                <span style={{ fontSize: 11, color: COLOR.gray400 }}>
-                  {item.date} · 📍 {item.space}
-                </span>
-              </div>
-            </div>
-            <Stars>
-              {'★'.repeat(item.score)}
-              {'☆'.repeat(5 - item.score)}
-            </Stars>
-            <span style={{ fontSize: 13, fontWeight: 700, marginLeft: 4 }}>
-              {item.score}.0
-            </span>
-          </ReviewerRow>
+      {filtered.length === 0 && (
+        <div
+          style={{
+            textAlign: 'center',
+            padding: '40px 0',
+            color: COLOR.gray400,
+            fontSize: 14,
+          }}
+        >
+          조건에 맞는 리뷰가 없어요
+        </div>
+      )}
 
-          <ReviewText>{item.text}</ReviewText>
+      {filtered.map((item) => {
+        const existingReply = submitted[item.id]
+          ? { text: submitted[item.id], date: '방금' }
+          : item.reply;
+        const isEditing = editingId === item.id;
 
-          {item.imgs > 0 && (
-            <ReviewImgs>
-              {Array(item.imgs)
-                .fill(0)
-                .map((_, i) => (
-                  <ReviewImg key={i}>📷</ReviewImg>
-                ))}
-            </ReviewImgs>
-          )}
-
-          {item.reply ? (
-            <ReplyBox>
-              <div
-                style={{
-                  display: 'flex',
-                  justifyContent: 'space-between',
-                  marginBottom: 6,
-                }}
-              >
-                <span
-                  style={{ fontSize: 11, fontWeight: 700, color: COLOR.green }}
-                >
-                  🏠 내 답글 · {item.reply.date}
-                </span>
-                <div style={{ display: 'flex', gap: 6 }}>
-                  <BtnOutline style={{ fontSize: 11, padding: '3px 10px' }}>
-                    수정
-                  </BtnOutline>
-                  <button
+        return (
+          <Card key={item.id} style={{ cursor: 'default' }}>
+            <CardRow>
+              <Thumb>{item.icon}</Thumb>
+              <CardBody>
+                <TagRow>
+                  <span
                     style={{
                       fontSize: 11,
-                      padding: '3px 10px',
-                      borderRadius: 6,
-                      border: '1px solid #fcc',
-                      color: COLOR.red,
-                      background: '#fff',
-                      cursor: 'pointer',
+                      fontWeight: 600,
+                      padding: '2px 7px',
+                      borderRadius: 4,
+                      background: 'rgba(168,184,159,0.18)',
+                      color: '#5b6b53',
                     }}
                   >
-                    삭제
-                  </button>
-                </div>
-              </div>
-              <div style={{ fontSize: 12, color: '#555', lineHeight: 1.6 }}>
-                {item.reply.text}
-              </div>
-            </ReplyBox>
-          ) : openReply === item.id ? (
-            <div style={{ marginTop: 10 }}>
-              <ReplyTextarea
-                rows={3}
-                placeholder="게스트에게 감사 인사나 안내를 남겨주세요..."
-              />
-              <div
-                style={{
-                  display: 'flex',
-                  justifyContent: 'flex-end',
-                  gap: 6,
-                  marginTop: 6,
-                }}
-              >
-                <BtnOutline
-                  style={{ fontSize: 12, padding: '5px 12px' }}
-                  onClick={() => setOpenReply(null)}
-                >
-                  취소
-                </BtnOutline>
-                <button
+                    {item.type}
+                  </span>
+                  <span style={{ fontSize: 12, color: COLOR.gray400 }}>
+                    {item.space}
+                  </span>
+                </TagRow>
+                <div
                   style={{
-                    padding: '5px 12px',
-                    borderRadius: 6,
-                    background: COLOR.green,
-                    color: '#fff',
-                    fontSize: 12,
-                    fontWeight: 600,
-                    border: 'none',
-                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 6,
+                    marginTop: 4,
                   }}
                 >
-                  등록
-                </button>
-              </div>
-            </div>
-          ) : (
-            <ReplyBtn onClick={() => setOpenReply(item.id)}>
-              🏠 답글 작성하기
-            </ReplyBtn>
-          )}
-        </ReviewCard>
-      ))}
-    </div>
+                  <span style={{ fontSize: 14, fontWeight: 700 }}>
+                    {item.reviewer}
+                  </span>
+                  <Stars>
+                    {'★'.repeat(item.score)}
+                    {'☆'.repeat(5 - item.score)}
+                  </Stars>
+                  <span style={{ fontSize: 12, color: COLOR.gray400 }}>
+                    {item.date}
+                  </span>
+                </div>
+                <ReviewText>{item.text}</ReviewText>
+
+                {/* 기존 답글 */}
+                {existingReply && !isEditing && (
+                  <ReplyBox>
+                    <ReplyLabel>🏠 내 답글 · {existingReply.date}</ReplyLabel>
+                    <div>{existingReply.text}</div>
+                    <EditBtn
+                      onClick={() => {
+                        setEditingId(item.id);
+                        handleReplyChange(item.id, existingReply.text);
+                      }}
+                    >
+                      수정
+                    </EditBtn>
+                  </ReplyBox>
+                )}
+
+                {/* 답글 입력 */}
+                {(!existingReply || isEditing) && (
+                  <div>
+                    <ReplyArea
+                      rows={3}
+                      placeholder="게스트에게 감사한 마음을 전해보세요"
+                      value={replyTexts[item.id] || ''}
+                      onChange={(e) =>
+                        handleReplyChange(item.id, e.target.value)
+                      }
+                    />
+                    <div
+                      style={{
+                        display: 'flex',
+                        gap: 8,
+                        justifyContent: 'flex-end',
+                        marginTop: 8,
+                      }}
+                    >
+                      {isEditing && (
+                        <EditBtn onClick={() => setEditingId(null)}>
+                          취소
+                        </EditBtn>
+                      )}
+                      <ReplySubmitBtn onClick={() => handleSubmit(item.id)}>
+                        {isEditing ? '수정 완료' : '답글 등록'}
+                      </ReplySubmitBtn>
+                    </div>
+                  </div>
+                )}
+              </CardBody>
+            </CardRow>
+          </Card>
+        );
+      })}
+    </Page>
   );
 }
 

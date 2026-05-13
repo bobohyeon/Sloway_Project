@@ -1,10 +1,9 @@
-import React from 'react';
 import styled from 'styled-components';
+import PageLayout from '../../../../../app/layouts/page/PageLayout';
 
 const PageWrapper = styled.div`
   background-color: #f4efe6;
   min-height: 100vh;
-  padding: 40px 20px 120px 20px;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -15,26 +14,6 @@ const Container = styled.div`
   max-width: 1100px;
   display: flex;
   flex-direction: column;
-`;
-
-const Header = styled.div`
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-end;
-  margin-bottom: 30px;
-
-  .title-area h1 {
-    font-size: 28px;
-    font-weight: 800;
-    color: #333;
-    margin: 0;
-  }
-
-  .title-area p {
-    font-size: 16px;
-    color: #666;
-    margin: 8px 0 0 0;
-  }
 `;
 
 const TabBar = styled.div`
@@ -83,33 +62,31 @@ function SpaceListLayout({
   return (
     <PageWrapper>
       <Container>
-        <Header>
-          <div className="title-area">
-            <h1>내 공간 목록</h1>
-            <p>운영 중인 공간을 관리하세요</p>
-          </div>
-        </Header>
+        <PageLayout
+          title={'내 공간 목록'}
+          description={'운영 중인 공간을 관리하세요'}
+        >
+          {/* 1. 요약 정보 섹션 (5 전체공간 / 3 운영중 등) */}
+          {summarySection}
 
-        {/* 1. 요약 정보 섹션 (5 전체공간 / 3 운영중 등) */}
-        {summarySection}
+          {/* 2. 유형별 필터 탭 (전체 / 숙소 / 오피스 / 워크앤스테이) */}
+          {tabs && (
+            <TabBar>
+              {tabs.map((tab) => (
+                <TabItem
+                  key={tab.key}
+                  $active={activeTab === tab.key}
+                  onClick={() => onTabChange(tab.key)}
+                >
+                  {tab.label} <span>{tab.count}</span>
+                </TabItem>
+              ))}
+            </TabBar>
+          )}
 
-        {/* 2. 유형별 필터 탭 (전체 / 숙소 / 오피스 / 워크앤스테이) */}
-        {tabs && (
-          <TabBar>
-            {tabs.map((tab) => (
-              <TabItem
-                key={tab.key}
-                $active={activeTab === tab.key}
-                onClick={() => onTabChange(tab.key)}
-              >
-                {tab.label} <span>{tab.count}</span>
-              </TabItem>
-            ))}
-          </TabBar>
-        )}
-
-        {/* 3. 실제 공간 리스트 섹션 */}
-        <ListContainer>{listSection}</ListContainer>
+          {/* 3. 실제 공간 리스트 섹션 */}
+          <ListContainer>{listSection}</ListContainer>
+        </PageLayout>
       </Container>
     </PageWrapper>
   );

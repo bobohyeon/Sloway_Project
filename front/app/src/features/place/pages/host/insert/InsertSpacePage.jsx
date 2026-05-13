@@ -9,6 +9,7 @@ function InsertSpacePage() {
   const [step, setStep] = useState(1);
 
   const [formData, setFormData] = useState({
+    type: '',
     title: '',
     address: '',
     detailAddress: '',

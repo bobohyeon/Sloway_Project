@@ -2,6 +2,8 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import styled from 'styled-components';
 
+import PageLayout from '../../../../app/layouts/page/PageLayout';
+
 import { PaymentSteps } from '../../components/user/PaymentSteps';
 import { BookingSummaryCard } from '../../components/user/BookingSummaryCard';
 import { CouponSection } from '../../components/user/CouponSection';
@@ -146,8 +148,6 @@ export default function BookingPaymentPage() {
     </PageLayout>
   );
 }
-;
-
 const Layout = styled.div`
   display: grid;
   grid-template-columns: 1fr 380px;
