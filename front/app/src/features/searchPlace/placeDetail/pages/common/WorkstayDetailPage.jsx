@@ -32,11 +32,76 @@ const RSVN_INFO = {
   nights: 2,
 };
 
+const REVIEWS = [
+  {
+    id: 1,
+    name: '민정',
+    avatar: '민',
+    avatarColor: '#A8B89F',
+    date: '2026.04.22',
+    usedDate: '2026.04.18 ~ 2026.04.20',
+    scores: [
+      { label: '종합 만족도', val: 5 },
+      { label: '업무 환경', val: 5 },
+      { label: '편의시설', val: 4 },
+      { label: '집중도', val: 5 },
+    ],
+    text: '조용하고 몰입감 있어요. 듀얼모니터도 잘 쓰고 왔습니다. 다음에 팀원들이랑 또 오고 싶어요! 회의실도 넓고 쾌적했고, 와이파이도 빠릿빠릿해서 화상회의도 문제없었어요. 숲 속이라 공기도 너무 좋고 저녁에 산책도 할 수 있어서 좋았습니다.',
+    helpful: 24,
+    imgs: 3,
+    reply: {
+      hostName: '청평스테이',
+      date: '2026.04.23',
+      text: '감사합니다! 다음에도 좋은 시간 보내러 오세요. 언제든 환영합니다 🌲',
+    },
+  },
+  {
+    id: 2,
+    name: '준호',
+    avatar: '준',
+    avatarColor: '#C97D4C',
+    date: '2026.04.10',
+    usedDate: '2026.04.05 ~ 2026.04.07',
+    scores: [
+      { label: '종합 만족도', val: 5 },
+      { label: '업무 환경', val: 5 },
+      { label: '편의시설', val: 5 },
+      { label: '집중도', val: 5 },
+    ],
+    text: '리모트 워크 일주일 했는데 너무 좋았어요. 인터넷 속도 빠르고 데스크 셋업이 진짜 편했습니다. 노트북 거치대까지 있어서 자세도 편하게 작업할 수 있었어요. 모니터 두 개에 키보드/마우스까지 다 갖춰져 있어서 짐도 적게 들고 갈 수 있었습니다.',
+    helpful: 18,
+    imgs: 2,
+    reply: null,
+  },
+  {
+    id: 3,
+    name: '소영',
+    avatar: '소',
+    avatarColor: '#7A9B7E',
+    date: '2026.03.28',
+    usedDate: '2026.03.22 ~ 2026.03.24',
+    scores: [
+      { label: '종합 만족도', val: 4 },
+      { label: '업무 환경', val: 4 },
+      { label: '편의시설', val: 4 },
+      { label: '집중도', val: 5 },
+    ],
+    text: '전반적으로 만족스러웠어요. 조용한 환경에서 집중해서 일할 수 있었고, 침구도 깨끗했습니다. 다만 부엌이 좀 작아서 요리하기는 살짝 불편했어요.',
+    helpful: 12,
+    imgs: 1,
+    reply: {
+      hostName: '청평스테이',
+      date: '2026.03.29',
+      text: '소중한 후기 감사드려요! 부엌 부분은 다음 업데이트 때 개선해보겠습니다 🙏',
+    },
+  },
+];
+
 function WorkstayDetailPage() {
   return (
     <DetailLayout
       imageBox={<DetailImageBox icon="🌲" moreCount={12} />}
-      mainBox={<DetailMainBox space={SPACE} />}
+      mainBox={<DetailMainBox space={SPACE} reviews={REVIEWS} />}
       rsvnBox={
         <DetailRsvnBox
           spaceType="workstay"

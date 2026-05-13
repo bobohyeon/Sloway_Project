@@ -539,9 +539,21 @@ const TypeTag = styled.span`
 function MainPage() {
   const navigate = useNavigate();
   const [location, setLocation] = useState('');
+  const [date, setDate] = useState('');
+  const [guests, setGuests] = useState(1);
+  const [spaceType, setSpaceType] = useState('전체');
 
   const goSearch = () => {
-    navigate('/spaces/search');
+    navigate('/spaces/search', {
+      state: { region: location || '전체', guests, type: spaceType },
+    });
+  };
+
+  // 공간 유형 클릭 → 유형 필터 적용해서 검색
+  const goSearchByType = (type) => {
+    navigate('/spaces/search', {
+      state: { type, region: location || '전체', guests },
+    });
   };
 
   const goDetail = (type, id) => {
@@ -575,17 +587,106 @@ function MainPage() {
         </HeroSub>
 
         <SearchBox>
-          <SearchField>
-            <SearchLabel>어디로</SearchLabel>
-            <SearchValue $placeholder>제주, 강릉, 남해...</SearchValue>
+          {/* 어디로 */}
+          <SearchField as="div" style={{ padding: 0, flex: 1 }}>
+            <SearchLabel style={{ padding: '14px 20px 0', display: 'block' }}>
+              어디로
+            </SearchLabel>
+            <input
+              value={location}
+              onChange={(e) => setLocation(e.target.value)}
+              placeholder="제주, 강릉, 남해..."
+              style={{
+                width: '100%',
+                border: 'none',
+                background: 'transparent',
+                fontSize: 14,
+                padding: '4px 20px 14px',
+                outline: 'none',
+                fontFamily: 'inherit',
+                boxSizing: 'border-box',
+              }}
+            />
           </SearchField>
-          <SearchField>
-            <SearchLabel>언제</SearchLabel>
-            <SearchValue $placeholder>날짜 선택</SearchValue>
+          {/* 공간 유형 */}
+          <SearchField style={{ flex: 1 }}>
+            <SearchLabel>공간 유형</SearchLabel>
+            <select
+              value={spaceType}
+              onChange={(e) => setSpaceType(e.target.value)}
+              style={{
+                border: 'none',
+                background: 'transparent',
+                fontSize: 14,
+                outline: 'none',
+                fontFamily: 'inherit',
+                color: '#1A1A1A',
+                cursor: 'pointer',
+                width: '100%',
+              }}
+            >
+              <option value="전체">전체</option>
+              <option value="워크앤스테이">워크앤스테이</option>
+              <option value="오피스">오피스</option>
+              <option value="숙소">숙소</option>
+            </select>
           </SearchField>
-          <SearchField>
-            <SearchLabel>누구와</SearchLabel>
-            <SearchValue $placeholder>인원 추가</SearchValue>
+          {/* 인원 */}
+          <SearchField style={{ flex: 1 }}>
+            <SearchLabel>인원</SearchLabel>
+            <div
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: 10,
+              }}
+            >
+              <button
+                onClick={() => setGuests((g) => Math.max(1, g - 1))}
+                style={{
+                  width: 26,
+                  height: 26,
+                  borderRadius: '50%',
+                  border: '1px solid #E0D8C8',
+                  background: '#fff',
+                  cursor: 'pointer',
+                  fontSize: 16,
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                }}
+              >
+                −
+              </button>
+              <span
+                style={{
+                  fontSize: 14,
+                  fontWeight: 600,
+                  minWidth: 28,
+                  textAlign: 'center',
+                }}
+              >
+                {guests}명
+              </span>
+              <button
+                onClick={() => setGuests((g) => g + 1)}
+                style={{
+                  width: 26,
+                  height: 26,
+                  borderRadius: '50%',
+                  border: '1px solid #E0D8C8',
+                  background: '#fff',
+                  cursor: 'pointer',
+                  fontSize: 16,
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                }}
+              >
+                +
+              </button>
+            </div>
           </SearchField>
           <SearchBtn onClick={goSearch}>검색</SearchBtn>
         </SearchBox>
@@ -618,7 +719,7 @@ function MainPage() {
               type: '숙소',
             },
           ].map((t, i) => (
-            <TypeCard key={i} onClick={goSearch}>
+            <TypeCard key={i} onClick={() => goSearchByType(t.type)}>
               <TypeArrow>→</TypeArrow>
               <TypeIcon>{t.icon}</TypeIcon>
               <div
@@ -708,7 +809,10 @@ function MainPage() {
         </SectionRow>
         <RankGrid>
           {TOP_SPACES.map((s, i) => (
-            <RankCard key={i} onClick={goSearch}>
+            <RankCard
+              key={i}
+              onClick={() => navigate(`/spaces/${i + 1}/rooms`)}
+            >
               <RankNum>{s.rank}</RankNum>
               <div style={{ fontSize: 32, marginBottom: 10 }}>{s.icon}</div>
               <div style={{ fontSize: 14, fontWeight: 700, marginBottom: 4 }}>
@@ -831,7 +935,9 @@ function MainPage() {
                   </span>
                 </div>
               </div>
-              <BookBtn onClick={goSearch}>예약하기</BookBtn>
+              <BookBtn onClick={() => navigate('/accommodations/3')}>
+                예약하기
+              </BookBtn>
             </BannerCardBody>
           </BannerCard>
         </BannerInner>

@@ -151,17 +151,15 @@ const ArrowBtn = styled.div`
   color: ${COLOR.gray400};
 `;
 
-function SpaceCard({ item }) {
+function SpaceCard({ item, onClick }) {
   const navigate = useNavigate();
 
   const handleClick = () => {
-    const path =
-      item.type === '오피스'
-        ? `/user/spaces/office/${item.id}`
-        : item.type === '워크앤스테이'
-          ? `/user/spaces/workstay/${item.id}`
-          : `/user/spaces/stay/${item.id}`;
-    navigate(path);
+    if (onClick) {
+      onClick(item);
+    } else {
+      navigate(`/spaces/${item.id}/rooms`, { state: { space: item } });
+    }
   };
 
   return (
