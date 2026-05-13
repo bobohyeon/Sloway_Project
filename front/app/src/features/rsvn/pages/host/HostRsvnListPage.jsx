@@ -1,14 +1,12 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import styled, { keyframes } from 'styled-components';
+import PageLayout from '../../../../app/layouts/page/PageLayout';
 import RsvnStatusBadge from '../../components/user/RsvnStatusBadge';
 import {
   TabBar,
   TabBtn,
-  TabCount,
-  PageTitle,
-  PageSub,
-  Card,
+  TabCount,Card,
   CardRow,
   Thumb,
   CardBody,
@@ -31,18 +29,6 @@ const fadeInUp = keyframes`
   from { opacity: 0; transform: translateY(10px); }
   to   { opacity: 1; transform: translateY(0); }
 `;
-
-const Page = styled.div`
-  max-width: 960px;
-  margin: 0 auto;
-  padding: 32px 24px;
-  animation: ${fadeInUp} 480ms ease-out both;
-`;
-
-const Header = styled.div`
-  margin-bottom: 24px;
-`;
-
 const FilterRow = styled.div`
   display: flex;
   gap: 8px;
@@ -203,11 +189,11 @@ function HostRsvnListPage() {
   );
 
   return (
-    <Page>
-      <Header>
-        <PageTitle>예약 목록</PageTitle>
-        <PageSub>내 공간의 예약 현황을 관리하세요</PageSub>
-      </Header>
+    <PageLayout
+      title="예약 목록"
+      description="내 공간의 예약 현황을 관리하세요"
+      maxWidth={1200}
+    >
 
       {/* 상단 스탯 카드 — 클릭 시 필터링 or 이동 */}
       <StatCards>
@@ -351,7 +337,7 @@ function HostRsvnListPage() {
         ))}
         <PageBtn onClick={() => setPage((p) => p + 1)}>›</PageBtn>
       </Pagination>
-    </Page>
+    </PageLayout>
   );
 }
 

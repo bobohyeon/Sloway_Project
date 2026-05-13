@@ -1,9 +1,8 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import styled, { keyframes } from 'styled-components';
+import PageLayout from '../../../../app/layouts/page/PageLayout';
 import {
-  PageTitle,
-  PageSub,
   BackLink,
   BtnOutline,
   COLOR,
@@ -28,14 +27,6 @@ const fadeInUp = keyframes`
   from { opacity: 0; transform: translateY(10px); }
   to   { opacity: 1; transform: translateY(0); }
 `;
-
-const Page = styled.div`
-  max-width: 720px;
-  margin: 0 auto;
-  padding: 32px 24px;
-  animation: ${fadeInUp} 480ms ease-out both;
-`;
-
 const TargetBox = styled.div`
   background: #fff5f5;
   border: 1px solid #ffcdd2;
@@ -134,9 +125,11 @@ function ReviewReportPage() {
   };
 
   return (
-    <Page>
-      <PageTitle>리뷰 신고</PageTitle>
-      <PageSub>부적절한 리뷰를 신고해주세요</PageSub>
+    <PageLayout
+      title="리뷰 신고"
+      description="부적절한 리뷰를 신고해주세요"
+      maxWidth={800}
+    >
       <BackLink onClick={() => navigate(-1)}>← 뒤로</BackLink>
 
       <TargetBox>
@@ -261,7 +254,7 @@ function ReviewReportPage() {
         <BtnOutline onClick={() => navigate(-1)}>취소</BtnOutline>
         <ReportBtn onClick={handleReport}>🚩 신고하기</ReportBtn>
       </BottomBtns>
-    </Page>
+    </PageLayout>
   );
 }
 

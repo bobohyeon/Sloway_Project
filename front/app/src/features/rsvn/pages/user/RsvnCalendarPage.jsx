@@ -1,9 +1,8 @@
 import { useState } from 'react';
 import styled, { keyframes, css } from 'styled-components';
+import PageLayout from '../../../../app/layouts/page/PageLayout';
 import { useNavigate } from 'react-router-dom';
 import {
-  PageTitle,
-  PageSub,
   SectionBox,
   StatCards,
   StatCard,
@@ -305,14 +304,10 @@ function RsvnCalendarPage() {
   const week = WEEKS[weekIdx];
 
   return (
-    <Page>
-      <HeaderRow>
-        <div>
-          <PageTitle>예약 달력</PageTitle>
-          <PageSub style={{ margin: 0 }}>
-            내 예약 일정을 달력으로 확인하세요
-          </PageSub>
-        </div>
+    <PageLayout
+      title="예약 달력"
+      description="내 예약 일정을 달력으로 확인하세요"
+      actions={
         <ViewToggle>
           <ToggleBtn
             $active={view === 'month'}
@@ -324,7 +319,9 @@ function RsvnCalendarPage() {
             주
           </ToggleBtn>
         </ViewToggle>
-      </HeaderRow>
+      }
+      maxWidth={960}
+    >
 
       <StatCards>
         <StatCard>
@@ -436,7 +433,7 @@ function RsvnCalendarPage() {
           </LegendItem>
         </Legend>
       </SectionBox>
-    </Page>
+    </PageLayout>
   );
 }
 
