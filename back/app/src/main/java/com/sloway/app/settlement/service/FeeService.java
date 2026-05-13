@@ -26,7 +26,7 @@ public class FeeService {
         feeRepository.save(entity);
     }
 
-    public List<FeeResDto> findAll() {
+    public List<FeeResDto> findFeeAll() {
         List<FeeEntity> list = feeRepository.findAll();
         return list.stream().map(FeeResDto::from).toList();
     }
