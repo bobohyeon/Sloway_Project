@@ -1,0 +1,26 @@
+package com.sloway.app.place.entity.amenity;
+
+import jakarta.persistence.*;
+import lombok.*;
+
+@Entity
+@Table(name = "AMENITY")
+@Builder
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
+@AllArgsConstructor(access = AccessLevel.PRIVATE)
+@Getter
+public class AmenityEntity {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long no;
+
+    @Column(length = 30, nullable = false)
+    private String name;
+
+    @Enumerated(EnumType.STRING)
+    @Column(length = 1, nullable = false)
+    @Builder.Default
+    private AmenityCategory category = AmenityCategory.C;
+
+}
