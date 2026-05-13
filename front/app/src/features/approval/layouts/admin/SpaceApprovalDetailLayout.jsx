@@ -1,7 +1,7 @@
 import React from 'react';
 import styled from 'styled-components';
-import { FaChevronLeft } from 'react-icons/fa';
 import { useNavigate } from 'react-router-dom';
+import PageLayout from '../../../../app/layouts/page/PageLayout';
 
 const Container = styled.div`
   padding: 30px;
@@ -40,20 +40,19 @@ const Header = styled.div`
   }
 `;
 
-const SpaceDetailLayout = ({ children, title, description }) => {
+const SpaceApprovalDetailLayout = ({ children, title, description }) => {
   const navigate = useNavigate();
   return (
     <Container>
-      <BackButton onClick={() => navigate(-1)}>
-        <FaChevronLeft /> 공간 검수 목록
-      </BackButton>
-      <Header>
-        <h1>{title}</h1>
-        <p>{description}</p>
-      </Header>
-      {children}
+      <PageLayout
+        title={title}
+        description={description}
+        backLabel="공간 검수 목록"
+        backTo={-1}
+        children={children}
+      />
     </Container>
   );
 };
 
-export default SpaceDetailLayout;
+export default SpaceApprovalDetailLayout;

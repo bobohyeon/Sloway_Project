@@ -1,5 +1,6 @@
 import React from 'react';
 import styled from 'styled-components';
+import PageLayout from '../../../../app/layouts/page/PageLayout';
 
 const PageWrapper = styled.div`
   background-color: #f4efe6;
@@ -57,24 +58,24 @@ function WishListLayout({ tabs, activeTab, onTabChange, children }) {
   return (
     <PageWrapper>
       <Container>
-        <Header>
-          <h1>찜 목록</h1>
-          <p>마음에 담아둔 공간들이에요</p>
-        </Header>
+        <PageLayout
+          title={'찜 목록'}
+          description={'마음에 담아둔 공간들이에요'}
+        >
+          <TabBar>
+            {tabs.map((tab) => (
+              <TabItem
+                key={tab.key}
+                $active={activeTab === tab.key}
+                onClick={() => onTabChange(tab.key)}
+              >
+                {tab.label} <span>{tab.count}</span>
+              </TabItem>
+            ))}
+          </TabBar>
 
-        <TabBar>
-          {tabs.map((tab) => (
-            <TabItem
-              key={tab.key}
-              $active={activeTab === tab.key}
-              onClick={() => onTabChange(tab.key)}
-            >
-              {tab.label} <span>{tab.count}</span>
-            </TabItem>
-          ))}
-        </TabBar>
-
-        {children}
+          {children}
+        </PageLayout>
       </Container>
     </PageWrapper>
   );

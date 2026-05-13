@@ -1,6 +1,6 @@
-import React from 'react'
-import { useNavigate } from 'react-router-dom'
-import styled from 'styled-components'
+import React from 'react';
+import { useNavigate } from 'react-router-dom';
+import styled from 'styled-components';
 
 /**
  * PageLayout - 모든 페이지의 공통 레이아웃
@@ -29,20 +29,14 @@ function PageLayout({
   backTo,
   backLabel = '이전',
   actions,
-  maxWidth = 1200,
+  maxWidth = 1400,
   children,
 }) {
-  const navigate = useNavigate()
+  const navigate = useNavigate();
 
   return (
     <PageWrapper>
       <Container $maxWidth={maxWidth}>
-        {backTo && (
-          <BackButton onClick={() => navigate(backTo)}>
-            ← {backLabel}
-          </BackButton>
-        )}
-
         {(title || actions) && (
           <Header>
             <HeaderLeft>
@@ -53,13 +47,18 @@ function PageLayout({
           </Header>
         )}
 
+        {backTo && (
+          <BackButton onClick={() => navigate(backTo)}>
+            ← {backLabel}
+          </BackButton>
+        )}
         {children}
       </Container>
     </PageWrapper>
-  )
+  );
 }
 
-export default PageLayout
+export default PageLayout;
 
 const PageWrapper = styled.div`
   background-color: #f4efe6;
@@ -68,7 +67,7 @@ const PageWrapper = styled.div`
   display: flex;
   flex-direction: column;
   align-items: center;
-`
+`;
 
 const Container = styled.div`
   width: 100%;
@@ -88,7 +87,7 @@ const Container = styled.div`
       transform: translateY(0);
     }
   }
-`
+`;
 
 const BackButton = styled.button`
   font-family: 'Noto Sans KR', sans-serif;
@@ -105,7 +104,7 @@ const BackButton = styled.button`
   &:hover {
     color: #1a1a1a;
   }
-`
+`;
 
 const Header = styled.header`
   display: flex;
@@ -114,19 +113,19 @@ const Header = styled.header`
   gap: 16px;
   margin-bottom: 24px;
   flex-wrap: wrap;
-`
+`;
 
 const HeaderLeft = styled.div`
   flex: 1;
   min-width: 0;
-`
+`;
 
 const HeaderRight = styled.div`
   display: flex;
   gap: 8px;
   align-items: center;
   flex-shrink: 0;
-`
+`;
 
 const Title = styled.h1`
   font-family: 'Noto Sans KR', sans-serif;
@@ -136,7 +135,7 @@ const Title = styled.h1`
   letter-spacing: -0.02em;
   line-height: 1.3;
   margin: 0 0 8px 0;
-`
+`;
 
 const Description = styled.p`
   font-family: 'Noto Sans KR', sans-serif;
@@ -144,4 +143,4 @@ const Description = styled.p`
   color: #888;
   line-height: 1.5;
   margin: 0;
-`
+`;

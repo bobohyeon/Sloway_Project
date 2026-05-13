@@ -1,5 +1,6 @@
 import React from 'react';
 import styled from 'styled-components';
+import PageLayout from './../../../../app/layouts/page/PageLayout';
 
 // --- Styled Components ---
 const PageContainer = styled.div`
@@ -99,42 +100,42 @@ function SpaceApprovalLayout({
 }) {
   return (
     <PageContainer>
-      <Header>
-        <h1>공간 검수 및 승인</h1>
-        <p>호스트가 등록한 공간을 검토하고 최종 승인 상태를 관리하세요</p>
-      </Header>
+      <PageLayout
+        title="공간 검수 및 승인"
+        description="호스트가 등록한 공간을 검토하고 최종 승인 상태를 관리하세요"
+      >
+        {statsSection}
 
-      {statsSection}
+        <FilterBar>
+          <TabGroup>
+            {Object.keys(counts).map((tab) => (
+              <Tab
+                key={tab}
+                $active={currentTab === tab}
+                onClick={() => onTabChange(tab)}
+              >
+                {tab === 'ALL'
+                  ? '전체'
+                  : tab === 'P'
+                    ? '대기'
+                    : tab === 'A'
+                      ? '승인'
+                      : '반려'}
+                <span>{counts[tab]}</span>
+              </Tab>
+            ))}
+          </TabGroup>
 
-      <FilterBar>
-        <TabGroup>
-          {Object.keys(counts).map((tab) => (
-            <Tab
-              key={tab}
-              $active={currentTab === tab}
-              onClick={() => onTabChange(tab)}
-            >
-              {tab === 'ALL'
-                ? '전체'
-                : tab === 'P'
-                  ? '대기'
-                  : tab === 'A'
-                    ? '승인'
-                    : '반려'}
-              <span>{counts[tab]}</span>
-            </Tab>
-          ))}
-        </TabGroup>
+          <StyledSelect value={typeFilter.value} onChange={typeFilter.onChange}>
+            <option value="ALL">전체 유형</option>
+            <option value="STATION">숙소</option>
+            <option value="OFFICE">오피스</option>
+            <option value="WORK_STAY">워크앤스테이</option>
+          </StyledSelect>
+        </FilterBar>
 
-        <StyledSelect value={typeFilter.value} onChange={typeFilter.onChange}>
-          <option value="ALL">전체 유형</option>
-          <option value="STATION">숙소</option>
-          <option value="OFFICE">오피스</option>
-          <option value="WORK_STAY">워크앤스테이</option>
-        </StyledSelect>
-      </FilterBar>
-
-      {tableSection}
+        {tableSection}
+      </PageLayout>
     </PageContainer>
   );
 }
