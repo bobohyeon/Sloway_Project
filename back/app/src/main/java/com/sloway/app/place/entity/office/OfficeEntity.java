@@ -1,5 +1,6 @@
 package com.sloway.app.place.entity.office;
 
+import com.sloway.app.common.entity.BaseEntity;
 import com.sloway.app.place.entity.place.PlaceEntity;
 import jakarta.persistence.*;
 import lombok.*;
@@ -10,7 +11,7 @@ import lombok.*;
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @AllArgsConstructor(access = AccessLevel.PRIVATE)
 @Getter
-public class OfficeEntity {
+public class OfficeEntity extends BaseEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

@@ -1,5 +1,6 @@
 package com.sloway.app.place.entity.workStay;
 
+import com.sloway.app.common.entity.BaseEntity;
 import com.sloway.app.place.entity.place.PlaceEntity;
 import jakarta.persistence.*;
 import lombok.*;
@@ -12,7 +13,7 @@ import java.time.LocalDateTime;
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @AllArgsConstructor(access = AccessLevel.PRIVATE)
 @Getter
-public class WorkStayEntity {
+public class WorkStayEntity extends BaseEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
