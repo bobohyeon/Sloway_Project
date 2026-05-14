@@ -146,16 +146,11 @@ const PRICE_RANGES = [
   { label: '15~25만원', min: 150000, max: 250000 },
   { label: '25만원 이상', min: 250000, max: Infinity },
 ];
-const AMENITY_OPTIONS = [
-  '회의실',
-  '와이파이',
-  '주방',
-  '모니터',
-  '주차',
-  '프린터',
-  '폰부스',
-  '세탁기',
-];
+const AMENITY_OPTIONS = {
+  공통: ['회의실', '와이파이', '공용PC', '반려동물 동반', '공용라운지'],
+  숙박: ['주방', '편의용품', '세탁기', '스타일러'],
+  오피스: ['주차', '프린터', '웹캠', '빔프로젝터'],
+};
 
 const Layout = styled.div`
   display: flex;
@@ -531,19 +526,22 @@ function SearchResultPage() {
 
           <Divider />
 
-          <FilterSection>
-            <FilterTitle>편의시설</FilterTitle>
-            {AMENITY_OPTIONS.map((a) => (
-              <CheckRow key={a}>
-                <input
-                  type="checkbox"
-                  checked={amenities.includes(a)}
-                  onChange={() => toggleAmenity(a)}
-                />
-                {a}
-              </CheckRow>
-            ))}
-          </FilterSection>
+          {/* 편의시설 */}
+          {Object.entries(AMENITY_OPTIONS).map(([category, items]) => (
+            <FilterSection key={category}>
+              <FilterTitle>{category} 편의시설</FilterTitle>
+              {items.map((a) => (
+                <CheckRow key={a}>
+                  <input
+                    type="checkbox"
+                    checked={amenities.includes(a)}
+                    onChange={() => toggleAmenity(a)}
+                  />
+                  {a}
+                </CheckRow>
+              ))}
+            </FilterSection>
+          ))}
 
           <ResetBtn onClick={reset}>필터 초기화</ResetBtn>
         </SideFilter>
