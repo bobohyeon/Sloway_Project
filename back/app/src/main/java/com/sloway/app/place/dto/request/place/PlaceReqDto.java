@@ -21,17 +21,8 @@ public class PlaceReqDto {
     private String detailAddress;
     private String latitude;
     private String longitude;
-    private List<ImageDto> images;
 
-    @Getter
-    @Setter
-    public static class ImageDto {
-        private MultipartFile imageFile;
-        private int sort;
-    }
-
-    //이미지까지 한번에 처리할 수 있도록 aws이미지 삽입 후 사용
-    public PlaceEntity toEntity(List<String> awsImageUrls){
+    public PlaceEntity toEntity(){
         PlaceEntity place = PlaceEntity.builder()
                 .type(type)
                 .title(title)
@@ -41,18 +32,6 @@ public class PlaceReqDto {
                 .latitude(latitude)
                 .longitude(longitude)
                 .build();
-        if (images != null && !images.isEmpty() && awsImageUrls != null) {
-            List<ImgPlaceEntity> imageEntities = IntStream.range(0, Math.min(images.size(), awsImageUrls.size()))
-                    .mapToObj(i -> ImgPlaceEntity.builder()
-                            .currentUrl(awsImageUrls.get(i))
-                            .sort(images.get(i).getSort())
-                            .placeEntity(place)
-                            .build())
-                    .collect(Collectors.toList());
-
-            place.setImages(imageEntities);
-
-        }
         return place;
     }
 }

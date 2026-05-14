@@ -1,5 +1,6 @@
 package com.sloway.app.place.entity.station;
 
+import com.sloway.app.common.entity.BaseEntity;
 import com.sloway.app.place.entity.amenity.station.StationAmenityEntity;
 import com.sloway.app.place.entity.place.ImgPlaceEntity;
 import com.sloway.app.place.entity.place.PlaceEntity;
@@ -16,7 +17,7 @@ import java.util.List;
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @AllArgsConstructor(access = AccessLevel.PRIVATE)
 @Getter
-public class StationEntity {
+public class StationEntity extends BaseEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -75,12 +76,6 @@ public class StationEntity {
     private int holPrice;
 
 
-    // 이미지 연관관계 추가
-    // cascade = CascadeType.ALL: Place 저장 시 이미지도 같이 저장
-    @Builder.Default
-    @OneToMany(mappedBy = "stationEntity", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<ImgStationEntity> images = new ArrayList<>();
-
     @Builder.Default
     @OneToMany(mappedBy = "stationEntity", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<StationExceptionPeriodEntity> stationExceptionPeriodEntities = new ArrayList<>();
@@ -89,12 +84,9 @@ public class StationEntity {
     @OneToMany(mappedBy = "stationEntity", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<StationAmenityEntity> stationAmenityEntities = new ArrayList<>();
 
-    public void setImages(List<ImgStationEntity> images) {
-        this.images = images;
-        for (ImgStationEntity img : images) {
-            img.setStationEntity(this);
-        }
-    }
+    @Builder.Default
+    @OneToMany(mappedBy = "stationEntity", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<ImgStationEntity> images = new ArrayList<>();
 
     public void setAmenities(List<StationAmenityEntity> amenities) {
         this.stationAmenityEntities = amenities;
@@ -109,7 +101,7 @@ public class StationEntity {
             period.setStationEntity(this);
         }
     }
-    private void updateTitleAndContent(String title, String content) {
+    public void updateTitleAndContent(String title, String content) {
         this.title = title;
         this.content = content;
     }

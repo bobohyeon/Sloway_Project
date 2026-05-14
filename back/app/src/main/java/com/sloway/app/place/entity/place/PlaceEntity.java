@@ -58,12 +58,6 @@ public class PlaceEntity extends BaseEntity {
     @OneToMany(mappedBy = "placeEntity", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<ImgPlaceEntity> images = new ArrayList<>();
 
-    public void setImages(List<ImgPlaceEntity> images) {
-        this.images = images;
-        for (ImgPlaceEntity img : images) {
-            img.setPlaceEntity(this);
-        }
-    }
 
     public void updateTitleAndContent(String title, String content){
         this.title = title;
