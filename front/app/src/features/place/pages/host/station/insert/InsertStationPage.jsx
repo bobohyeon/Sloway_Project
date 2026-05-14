@@ -13,6 +13,7 @@ function InsertStationPage() {
   const [formData, setFormData] = useState({
     // 1단계: 마스터 공간 선택 및 기본 정보
     placeNo: '',
+    placeTitle: '',
     title: '',
     content: '',
 
@@ -32,7 +33,7 @@ function InsertStationPage() {
     friPrice: '',
     satPrice: '',
     sunPrice: '',
-    holidayPrice: '',
+    holPrice: '',
     exceptionPeriods: [],
 
     // 4단계: 이미지

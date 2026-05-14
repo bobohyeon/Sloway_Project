@@ -542,12 +542,24 @@ function MainPage() {
   const [date, setDate] = useState('');
   const [guests, setGuests] = useState(1);
   const [spaceType, setSpaceType] = useState('전체');
+  const [region, setRegion] = useState('전체');
 
   const goSearch = () => {
     navigate('/spaces/search', {
-      state: { region: location || '전체', guests, type: spaceType },
+      state: { region, type: spaceType, guests },
     });
   };
+
+  const REGIONS = [
+    '전체',
+    '서울',
+    '경기',
+    '강원',
+    '경상',
+    '충청',
+    '전라',
+    '제주',
+  ];
 
   // 공간 유형 클릭 → 유형 필터 적용해서 검색
   const goSearchByType = (type) => {
@@ -588,25 +600,28 @@ function MainPage() {
 
         <SearchBox>
           {/* 어디로 */}
-          <SearchField as="div" style={{ padding: 0, flex: 1 }}>
-            <SearchLabel style={{ padding: '14px 20px 0', display: 'block' }}>
-              어디로
-            </SearchLabel>
-            <input
-              value={location}
-              onChange={(e) => setLocation(e.target.value)}
-              placeholder="제주, 강릉, 남해..."
+          <SearchField as="div" style={{ padding: '14px 20px', flex: 1 }}>
+            <SearchLabel>어디로</SearchLabel>
+            <select
+              value={region}
+              onChange={(e) => setRegion(e.target.value)}
               style={{
-                width: '100%',
                 border: 'none',
                 background: 'transparent',
                 fontSize: 14,
-                padding: '4px 20px 14px',
                 outline: 'none',
                 fontFamily: 'inherit',
-                boxSizing: 'border-box',
+                color: region === '전체' ? '#aaa' : '#1A1A1A',
+                cursor: 'pointer',
+                width: '100%',
               }}
-            />
+            >
+              {REGIONS.map((r) => (
+                <option key={r} value={r}>
+                  {r}
+                </option>
+              ))}
+            </select>
           </SearchField>
           {/* 공간 유형 */}
           <SearchField style={{ flex: 1 }}>
