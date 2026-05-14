@@ -17,6 +17,7 @@ public class StationExceptionPeriodEntity {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long no;
 
+    @Setter
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "STATION_NO", nullable = false)
     private StationEntity stationEntity;

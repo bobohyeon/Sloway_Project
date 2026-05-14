@@ -12,6 +12,7 @@ function UpdateStationPage() {
   const [formData, setFormData] = useState({
     // 1단계: 마스터 공간 선택 및 기본 정보
     placeNo: '',
+    placeTitle: '',
     title: '',
     content: '',
 
@@ -33,9 +34,6 @@ function UpdateStationPage() {
     sunPrice: '',
     holidayPrice: '',
     exceptionPeriods: [],
-
-    // 4단계: 이미지
-    images: [],
   });
 
   const handleChange = (e) => {
