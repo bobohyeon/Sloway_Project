@@ -1,6 +1,6 @@
 package com.sloway.app.payment.pay.entity;
 
-import com.sloway.app.payment.pay.common.entity.PayBaseEntity;
+import com.sloway.app.common.entity.BaseEntity;
 import com.sloway.app.payment.pay.common.PayMethod;
 import com.sloway.app.payment.pay.common.PayStatus;
 import jakarta.persistence.*;
@@ -13,12 +13,12 @@ import lombok.NoArgsConstructor;
 import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "PAYMENT")
+@Table(name = "PAY")
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @AllArgsConstructor(access = AccessLevel.PRIVATE)
 @Builder
-public class PayEntity extends PayBaseEntity {
+public class PayEntity extends BaseEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

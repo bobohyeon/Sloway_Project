@@ -28,4 +28,5 @@ public class PointService {
     // TODO: savePoint(...) — 적립 (status = 대기, 7일 후 확정 예약)
 
     // TODO: usePoint(...) — 사용 (정책 검증 후 음수 row 생성 또는 적립 row 차감)
+    // TODO: Rich()  — 유효기간 계산
 }

@@ -1,5 +1,6 @@
 package com.sloway.app.payment.coupon.entity;
 
+import com.sloway.app.common.entity.BaseEntity;
 import com.sloway.app.payment.coupon.common.CouponDcType;
 import com.sloway.app.payment.coupon.common.CouponStatus;
 import jakarta.persistence.*;
@@ -13,7 +14,7 @@ import java.time.LocalDateTime;
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @AllArgsConstructor(access = AccessLevel.PRIVATE)
 @Builder
-public class CouponEntity {
+public class CouponEntity extends BaseEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -35,9 +36,6 @@ public class CouponEntity {
 
     @Column
     private Long memberNo;
-
-    @Column
-    private LocalDateTime issuedAt;
 
     @Column
     private LocalDateTime expiredAt;
