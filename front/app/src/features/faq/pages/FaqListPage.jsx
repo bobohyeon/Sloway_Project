@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import styled, { css } from 'styled-components';
 import { Badge, EmptyState, Card } from '../../pay_shared/components';
+import PageLayout from '../../../app/layouts/page/PageLayout';
 
 // ─── Mock 데이터 (백엔드 연동 시 GET /api/faqs?category= 로 대체) ────────────
 const MOCK_FAQS = [
@@ -107,13 +108,10 @@ export default function FaqListPage() {
   };
 
   return (
-    <Wrap>
-      {/* 헤더 */}
-      <PageHeader>
-        <PageTitle>자주 묻는 질문</PageTitle>
-        <PageDesc>궁금한 점을 빠르게 해결해 드립니다.</PageDesc>
-      </PageHeader>
-
+    <PageLayout
+      title="자주 묻는 질문"
+      description="궁금한 점을 빠르게 해결해 드립니다."
+    >
       {/* 검색 바 */}
       <SearchBar>
         <SearchInput
@@ -208,7 +206,7 @@ export default function FaqListPage() {
         </BannerText>
         <ContactLink href="/inquiries/new">문의하기 →</ContactLink>
       </ContactBanner>
-    </Wrap>
+    </PageLayout>
   );
 }
 

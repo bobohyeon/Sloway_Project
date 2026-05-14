@@ -11,6 +11,7 @@ import {
   Card,
 } from '../../../pay_shared/components';
 import { useNavigate } from 'react-router-dom';
+import PageLayout from '../../../../app/layouts/page/PageLayout';
 
 // ─── Mock 데이터 (백엔드 연동 시 API 호출로 대체) ───────────────────────────
 const MOCK_NOTICES = Array.from({ length: 18 }, (_, i) => ({
@@ -103,18 +104,10 @@ export default function NoticeManagePage() {
   };
 
   return (
-    <Wrap>
-      {/* 페이지 헤더 */}
-      <PageHeader>
-        <div>
-          <PageTitle>공지사항 관리</PageTitle>
-          <PageDesc>공지사항을 등록하고 노출 순서를 관리합니다.</PageDesc>
-        </div>
-        <Button onClick={() => navigate('/admin/notices/new')}>
-          + 공지사항 등록
-        </Button>
-      </PageHeader>
-
+    <PageLayout
+      title="공지사항 관리"
+      description="공지사항을 등록하고 노출 순서를 관리합니다"
+    >
       {/* 탭 */}
       <TabWrap>
         <Tabs
@@ -158,6 +151,9 @@ export default function NoticeManagePage() {
             />
             <Button size="sm" variant="secondary" onClick={handleSearch}>
               검색
+            </Button>
+            <Button onClick={() => navigate('/admin/notices/new')}>
+              + 공지사항 등록
             </Button>
           </SearchGroup>
         </FilterRow>
@@ -213,9 +209,9 @@ export default function NoticeManagePage() {
                       카테고리
                     </Th>
                     <Th>제목</Th>
-                    <Th $w="80px" $center>
+                    {/* <Th $w="80px" $center>
                       상태
-                    </Th>
+                    </Th> */}
                     <Th $w="110px" $center>
                       노출 시작
                     </Th>
@@ -266,7 +262,7 @@ export default function NoticeManagePage() {
                           </TitleText>
                         </TitleCell>
                       </Td>
-                      <Td $center>
+                      {/* <Td $center>
                         <Badge
                           size="sm"
                           variant={
@@ -275,7 +271,7 @@ export default function NoticeManagePage() {
                         >
                           {notice.status === 'active' ? '게시중' : '미게시'}
                         </Badge>
-                      </Td>
+                      </Td> */}
                       <Td $center $muted>
                         {notice.exposureStart}
                       </Td>
@@ -339,7 +335,7 @@ export default function NoticeManagePage() {
           삭제된 게시물은 복구할 수 없습니다.
         </ModalText>
       </Modal>
-    </Wrap>
+    </PageLayout>
   );
 }
 

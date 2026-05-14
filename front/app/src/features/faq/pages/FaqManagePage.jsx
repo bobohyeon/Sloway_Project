@@ -11,6 +11,7 @@ import {
   Tabs,
   Card,
 } from '../../pay_shared/components';
+import PageLayout from '../../../app/layouts/page/PageLayout';
 
 // ─── Mock 데이터 (백엔드 연동 시 GET /api/admin/faqs 로 대체) ────────────────
 const MOCK_FAQS = Array.from({ length: 24 }, (_, i) => ({
@@ -109,15 +110,10 @@ export default function FaqManagePage() {
   };
 
   return (
-    <Wrap>
-      <PageHeader>
-        <div>
-          <PageTitle>FAQ 관리</PageTitle>
-          <PageDesc>자주 묻는 질문을 등록하고 노출 순서를 관리합니다.</PageDesc>
-        </div>
-        <Button onClick={() => navigate('/admin/faqs/new')}>+ FAQ 등록</Button>
-      </PageHeader>
-
+    <PageLayout
+      title="FAQ 관리"
+      description="자주 묻는 질문을 등록하고 노출 순서를 관리합니다"
+    >
       <TabWrap>
         <Tabs
           items={TAB_ITEMS}
@@ -160,6 +156,9 @@ export default function FaqManagePage() {
             />
             <Button size="sm" variant="secondary" onClick={handleSearch}>
               검색
+            </Button>
+            <Button onClick={() => navigate('/admin/faqs/new')}>
+              + FAQ 등록
             </Button>
           </SearchGroup>
         </FilterRow>
@@ -215,9 +214,9 @@ export default function FaqManagePage() {
                       카테고리
                     </Th>
                     <Th>질문</Th>
-                    <Th $w="80px" $center>
+                    {/* <Th $w="80px" $center>
                       상태
-                    </Th>
+                    </Th> */}
                     <Th $w="110px" $center>
                       등록일
                     </Th>
@@ -255,7 +254,7 @@ export default function FaqManagePage() {
                           {faq.question}
                         </QuestionText>
                       </Td>
-                      <Td $center>
+                      {/* <Td $center>
                         <Badge
                           size="sm"
                           variant={
@@ -264,7 +263,7 @@ export default function FaqManagePage() {
                         >
                           {faq.status === 'active' ? '게시중' : '미게시'}
                         </Badge>
-                      </Td>
+                      </Td> */}
                       <Td $center $muted>
                         {faq.createdAt}
                       </Td>
@@ -318,7 +317,7 @@ export default function FaqManagePage() {
           삭제된 항목은 복구할 수 없습니다.
         </ModalText>
       </Modal>
-    </Wrap>
+    </PageLayout>
   );
 }
 
