@@ -19,7 +19,7 @@ import java.util.stream.IntStream;
 @Setter
 public class StationReqDto {
 
-    private int placeNo;
+    private Long placeNo;
     private String title;
     private String content;
     private int maxPeople;
@@ -37,7 +37,6 @@ public class StationReqDto {
     private int sunPrice;
     private int holPrice;
     private List<ExceptionPeriodDto> exceptionPeriods;
-    private List<ImageStationDto> images;
 
     @Getter
     @Setter
@@ -60,14 +59,7 @@ public class StationReqDto {
         private int holPrice;
     }
 
-    @Getter
-    @Setter
-    public static class ImageStationDto {
-        private MultipartFile imageFile;
-        private int sort;
-    }
-
-    public StationEntity toEntity(PlaceEntity place, List<String> awsImageUrls, List<AmenityEntity> amenities) {
+    public StationEntity toEntity(PlaceEntity place, List<AmenityEntity> amenities) {
         StationEntity station = StationEntity.builder()
                 .placeEntity(place)
                 .title(title)
@@ -118,19 +110,6 @@ public class StationReqDto {
                     .collect(Collectors.toList());
 
             station.setExceptionPeriods(periodEntities);
-        }
-
-        // 3. 이미지 (기존 로직 유지)
-        if (images != null && !images.isEmpty() && awsImageUrls != null) {
-            List<ImgStationEntity> imageEntities = IntStream.range(0, Math.min(images.size(), awsImageUrls.size()))
-                    .mapToObj(i -> ImgStationEntity.builder()
-                            .currentUrl(awsImageUrls.get(i))
-                            .sort(images.get(i).getSort())
-                            .stationEntity(station)
-                            .build())
-                    .collect(Collectors.toList());
-
-            station.setImages(imageEntities);
         }
 
         return station;

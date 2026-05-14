@@ -1,5 +1,7 @@
 package com.sloway.app.place.entity.place;
 
+import com.sloway.app.place.entity.station.ImgStationEntity;
+import com.sloway.app.place.entity.station.StationEntity;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -26,4 +28,11 @@ public class ImgPlaceEntity {
     @Column(nullable = false)
     private int sort;
 
+    public static ImgPlaceEntity from(PlaceEntity placeEntity, String currentUrl, int sort){
+        return ImgPlaceEntity.builder()
+                .placeEntity(placeEntity)
+                .currentUrl(currentUrl)
+                .sort(sort)
+                .build();
+    }
 }

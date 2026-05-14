@@ -1,9 +1,9 @@
-package com.sloway.app.place.controller.place;
+package com.sloway.app.place.controller.station;
 
 import com.sloway.app.place.dto.request.sort.ImgSortReqDto;
-import com.sloway.app.place.dto.request.place.PlaceReqDto;
-import com.sloway.app.place.dto.request.place.PlaceUpdateReqDto;
-import com.sloway.app.place.service.place.PlaceService;
+import com.sloway.app.place.dto.request.station.StationReqDto;
+import com.sloway.app.place.dto.request.station.StationUpdateReqDto;
+import com.sloway.app.place.service.station.StationService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
@@ -16,59 +16,59 @@ import java.util.List;
 
 @RequiredArgsConstructor
 @RestController
-@RequestMapping("/api/place")
+@RequestMapping("/api/station")
 @Slf4j
-public class PlaceApiController {
+public class StationApiController {
 
-    private final PlaceService placeService;
+    private final StationService stationService;
 
-     // 장소 등록 (정보 + 이미지 + 정렬정보)
+    // 숙소 등록
     @PostMapping(value = "/insert", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    public ResponseEntity<Object> savePlace(
-            @RequestPart("dto") PlaceReqDto dto,
+    public ResponseEntity<Object> saveStation(
+            @RequestPart("dto") StationReqDto dto,
             @RequestPart("files") List<MultipartFile> files,
             @RequestPart("sortList") List<ImgSortReqDto> sortList) {
 
-        // userNo값 필요 파라미터 추가예정
-        placeService.savePlace(dto, files, sortList);
+        stationService.saveStation(dto, files, sortList);
 
         return ResponseEntity
                 .status(HttpStatus.CREATED)
                 .build();
     }
 
-    // 장소 기본 정보 수정 (제목, 내용)
+    // 기본 정보 수정
     @PutMapping("/update/{no}")
-    public ResponseEntity<Object> updatePlace(
+    public ResponseEntity<Object> updateStation(
             @PathVariable Long no,
-            @RequestBody PlaceUpdateReqDto dto) {
+            @RequestBody StationUpdateReqDto dto) {
 
-        placeService.updatePlace(no, dto);
+        stationService.updateStation(no, dto);
 
         return ResponseEntity
                 .status(HttpStatus.OK)
                 .build();
     }
 
-     // 장소 이미지 수정 (기존 이미지 삭제 후 재생성)
+
+    // 스테이션 이미지 수정
     @PutMapping(value = "/update/image/{no}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    public ResponseEntity<Object> updateImagePlace(
+    public ResponseEntity<Object> updateImageStation(
             @PathVariable Long no,
             @RequestPart("files") List<MultipartFile> files,
             @RequestPart("sortList") List<ImgSortReqDto> sortList) {
 
-        placeService.updatePlaceImg(no, files, sortList);
+        stationService.updateStationImg(no, files, sortList);
 
         return ResponseEntity
                 .status(HttpStatus.OK)
                 .build();
     }
 
-    // 장소 삭제 (Soft Delete)
+    // 스테이션 삭제
     @DeleteMapping("/delete/{no}")
-    public ResponseEntity<Object> deletePlace(@PathVariable Long no) {
+    public ResponseEntity<Object> deleteStation(@PathVariable Long no) {
 
-        placeService.deletePlace(no);
+        stationService.deleteStation(no);
 
         return ResponseEntity
                 .status(HttpStatus.OK)
