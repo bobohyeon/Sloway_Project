@@ -1,8 +1,8 @@
-package com.sloway.app.settlement.controller;
+package com.sloway.app.settlement.fee.controller;
 
-import com.sloway.app.settlement.dto.request.FeeCreateReqDto;
-import com.sloway.app.settlement.dto.response.FeeResDto;
-import com.sloway.app.settlement.service.FeeService;
+import com.sloway.app.settlement.fee.dto.request.FeeCreateReqDto;
+import com.sloway.app.settlement.fee.dto.response.FeeResDto;
+import com.sloway.app.settlement.fee.service.FeeService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;

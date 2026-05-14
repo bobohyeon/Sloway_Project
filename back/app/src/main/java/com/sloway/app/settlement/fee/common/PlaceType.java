@@ -1,4 +1,4 @@
-package com.sloway.app.settlement.common;
+package com.sloway.app.settlement.fee.common;
 
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
