@@ -1,6 +1,7 @@
 package com.sloway.app.payment.coupon.dto.request;
 
 import com.sloway.app.payment.coupon.common.CouponDcType;
+import com.sloway.app.payment.coupon.common.CouponStatus;
 import com.sloway.app.payment.coupon.entity.CouponEntity;
 import lombok.Getter;
 
@@ -11,7 +12,7 @@ public class CouponCreateReqDto {
 
     private String couponName;
     private CouponDcType dcType;
-    private Integer dcvalue;
+    private Integer dcValue;
     private Long memberNo;
     private LocalDateTime expiredAt;
 
@@ -19,9 +20,10 @@ public class CouponCreateReqDto {
         return CouponEntity.builder()
                 .couponName(couponName)
                 .dcType(dcType)
-                .dcValue(dcvalue)
+                .dcValue(dcValue)
                 .memberNo(memberNo)
                 .expiredAt(expiredAt)
+                .status(CouponStatus.CREATED)
                 .build();
     }
 }

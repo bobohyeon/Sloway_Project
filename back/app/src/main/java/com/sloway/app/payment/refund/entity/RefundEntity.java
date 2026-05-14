@@ -1,5 +1,6 @@
 package com.sloway.app.payment.refund.entity;
 
+import com.sloway.app.common.entity.BaseEntity;
 import com.sloway.app.payment.refund.common.RefundRate;
 import com.sloway.app.payment.refund.common.RefundReason;
 import com.sloway.app.payment.refund.common.RefundStatus;
@@ -14,7 +15,7 @@ import java.time.LocalDateTime;
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @AllArgsConstructor(access = AccessLevel.PRIVATE)
 @Builder
-public class RefundEntity {
+public class RefundEntity extends BaseEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -62,7 +63,7 @@ public class RefundEntity {
         this.refundedAt = LocalDateTime.now();
     }
 
-    public void failedtRefund() {
+    public void failedRefund() {
         if (this.status != RefundStatus.REQUESTED) {
             throw new IllegalStateException("환불 요청 상태를 확인하세요.");
         }

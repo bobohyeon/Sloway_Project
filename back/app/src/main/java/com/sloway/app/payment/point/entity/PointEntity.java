@@ -1,5 +1,6 @@
 package com.sloway.app.payment.point.entity;
 
+import com.sloway.app.common.entity.BaseEntity;
 import com.sloway.app.payment.point.common.PointDealType;
 import com.sloway.app.payment.point.common.PointStatus;
 import jakarta.persistence.*;
@@ -13,7 +14,7 @@ import java.time.LocalDateTime;
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @AllArgsConstructor(access = AccessLevel.PRIVATE)
 @Builder
-public class PointEntity {
+public class PointEntity extends BaseEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -36,13 +37,9 @@ public class PointEntity {
     private LocalDateTime expiredAt;
 
     @Column
-    private LocalDateTime expiration;
-
-    @Column
     @Enumerated(EnumType.STRING)
     private PointStatus status;
 
-    // TODO: confirmEarn() — 적립 확정 (이용 완료 + 7일 후 호출 예정)
     public void confirmEarn() {
         if (this.status != PointStatus.WAIT) {
             throw new IllegalStateException("적립 대기상태에서만 적립확정 가능");
@@ -53,14 +50,14 @@ public class PointEntity {
 
     public void expire() {
         if (this.status != PointStatus.WAIT && this.status != PointStatus.SAVE) {
-            throw new IllegalStateException("WAIT 또는 EARN 상태만 만료 가능합니다.");
+            throw new IllegalStateException("WAIT 또는 SAVE 상태만 만료 가능합니다.");
         }
         this.status = PointStatus.EXPIRATION;
     }
 
     public void cancel() {
         if (this.status != PointStatus.WAIT && this.status != PointStatus.SAVE) {
-            throw new IllegalStateException("WAIT 또는 EARN 상태만 취소 가능합니다.");
+            throw new IllegalStateException("WAIT 또는 SAVE 상태만 취소 가능합니다.");
         }
         this.status = PointStatus.CANCEL;
     }
