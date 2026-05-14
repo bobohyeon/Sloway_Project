@@ -22,6 +22,16 @@ public class BlackOutEntity {
     @ManyToOne(fetch = FetchType.LAZY)
     private PlaceEntity placeNo;
 
+    @Column(nullable = false, length = 100, name = "title")
+    private String title;
+
+    @Column(columnDefinition = "TEXT", name = "memo")
+    private String memo;
+
+    @Enumerated(EnumType.STRING)
+    @Column(length = 1, nullable = false, name = "reason_type")
+    private BlackOutReasonType reasonType;
+
     @Column(nullable = false, name = "start_date")
     private LocalDateTime startDate;
 
@@ -40,6 +50,10 @@ public class BlackOutEntity {
     @PrePersist
     public void prePersist(){
         this.createdAt = LocalDateTime.now();
+    }
+
+    public void update(){
+
     }
 
 }

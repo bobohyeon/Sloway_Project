@@ -1,6 +1,7 @@
 package com.sloway.app.reservation.blackOut.dto.response;
 
 import com.sloway.app.reservation.blackOut.entity.BlackOutEntity;
+import com.sloway.app.reservation.blackOut.entity.BlackOutReasonType;
 import lombok.Builder;
 import lombok.Getter;
 
@@ -12,6 +13,9 @@ public class BlackOutResDto {
 
     private Long no;
     private Long placeNo;
+    private String title;
+    private String memo;
+    private BlackOutReasonType reasonType;
     private LocalDateTime startDate;
     private LocalDateTime endDate;
     private LocalDateTime startTime;
@@ -22,6 +26,9 @@ public class BlackOutResDto {
         return BlackOutResDto.builder()
                 .no(entity.getNo())
                 .placeNo(entity.getPlaceNo().getNo())
+                .title(entity.getTitle())
+                .memo(entity.getMemo())
+                .reasonType(entity.getReasonType())
                 .startDate(entity.getStartDate())
                 .endDate(entity.getEndDate())
                 .startTime(entity.getStartTime())
