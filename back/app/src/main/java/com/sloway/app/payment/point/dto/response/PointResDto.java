@@ -1,18 +1,39 @@
 package com.sloway.app.payment.point.dto.response;
 
+import com.sloway.app.payment.point.common.PointDealType;
+import com.sloway.app.payment.point.common.PointStatus;
 import com.sloway.app.payment.point.entity.PointEntity;
 import lombok.Builder;
 import lombok.Getter;
 
-// TODO: 포인트 응답 DTO
+import java.time.LocalDateTime;
+
 @Getter
 @Builder
 public class PointResDto {
 
-    // TODO: 응답 필드 정의
+    private Long no;
+    private Long memberNo;
+    private Long payNo;
+    private Integer amount;
+    private PointDealType dealType;
+    private LocalDateTime expiredAt;
+    private PointStatus status;
+    private LocalDateTime createdAt;
+    private LocalDateTime modifiedAt;
+
 
     public static PointResDto from(PointEntity entity) {
-        // TODO: 빌더로 매핑
-        return null;
+        return PointResDto.builder()
+                .no(entity.getNo())
+                .memberNo(entity.getMemberNo())
+                .payNo(entity.getPayNo())
+                .amount(entity.getAmount())
+                .dealType(entity.getDealType())
+                .expiredAt(entity.getExpiredAt())
+                .status(entity.getStatus())
+                .createdAt(entity.getCreatedAt())
+                .modifiedAt(entity.getModifiedAt())
+                .build();
     }
 }

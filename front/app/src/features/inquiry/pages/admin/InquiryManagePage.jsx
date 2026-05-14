@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import styled, { css } from 'styled-components';
+import PageLayout from '../../../../app/layouts/page/PageLayout';
 
 // ─── Mock 데이터 ───────────────────────────────────────────────────────────────
 // 백엔드 연동 시:
@@ -185,15 +186,10 @@ export default function InquiryManagePage() {
   };
 
   return (
-    <PageWrap>
-      {/* ── 페이지 헤더 ──────────────────────────────────────────────────── */}
-      <PageHeader>
-        <HeaderLeft>
-          <PageTitle>문의사항 관리</PageTitle>
-          <PageDesc>접수된 문의를 확인하고 답변을 등록하세요</PageDesc>
-        </HeaderLeft>
-      </PageHeader>
-
+    <PageLayout
+      title="문의사항 관리"
+      description="접수된 문의를 확인하고 답변을 등록하세요"
+    >
       <Divider />
 
       {/* ── 요약 카드 ────────────────────────────────────────────────────── */}
@@ -516,7 +512,7 @@ export default function InquiryManagePage() {
           </DetailPanel>
         )}
       </MainArea>
-    </PageWrap>
+    </PageLayout>
   );
 }
 

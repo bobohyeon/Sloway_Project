@@ -1,22 +1,43 @@
 package com.sloway.app.payment.refund.dto.response;
 
+import com.sloway.app.payment.refund.common.RefundRate;
+import com.sloway.app.payment.refund.common.RefundReason;
+import com.sloway.app.payment.refund.common.RefundStatus;
 import com.sloway.app.payment.refund.entity.RefundEntity;
 import lombok.Builder;
 import lombok.Getter;
 
-// TODO: 환불 응답 DTO
-//       참고: PayResDto 패턴 (static from 메서드 사용)
+import java.time.LocalDateTime;
+
 @Getter
 @Builder
 public class RefundResDto {
 
-    // TODO: 응답 필드 정의
-    //       - no, payNo, refundAmt, refundRate, refundReason
-    //       - status (RefundStatus)
-    //       - refundedAt, createdAt, modifiedAt
+    private Long no;
+    private Long payNo;
+    private Long rsvnNo;
+    private Long ucNo;
+    private Integer refundAmt;
+    private RefundRate refundRate;
+    private RefundReason refundReason;
+    private LocalDateTime refundedAt;
+    private RefundStatus status;
+    private LocalDateTime createdAt;
+    private LocalDateTime modifiedAt;
 
     public static RefundResDto from(RefundEntity entity) {
-        // TODO: 빌더로 매핑
-        return null;
+        return RefundResDto.builder()
+                .no(entity.getNo())
+                .payNo(entity.getPayNo())
+                .rsvnNo(entity.getRsvnNo())
+                .ucNo(entity.getUcNo())
+                .refundAmt(entity.getRefundAmt())
+                .refundRate(entity.getRefundRate())
+                .refundReason(entity.getRefundReason())
+                .refundedAt(entity.getRefundedAt())
+                .status(entity.getStatus())
+                .createdAt(entity.getCreatedAt())
+                .modifiedAt(entity.getModifiedAt())
+                .build();
     }
 }

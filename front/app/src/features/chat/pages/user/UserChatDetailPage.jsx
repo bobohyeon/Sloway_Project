@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect } from 'react';
 import styled, { css } from 'styled-components';
+import PageLayout from '../../../../app/layouts/page/PageLayout';
 
 // ─── Mock 데이터 ───────────────────────────────────────────────────────────────
 // 백엔드 연동 시:
@@ -101,7 +102,10 @@ export default function UserChatDetailPage() {
       id: Date.now(),
       senderId: 'me',
       text: trimmed,
-      time: new Date().toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit' }),
+      time: new Date().toLocaleTimeString('ko-KR', {
+        hour: '2-digit',
+        minute: '2-digit',
+      }),
       dateLabel: null,
     };
     setMessages((prev) => [...prev, newMsg]);
@@ -121,13 +125,7 @@ export default function UserChatDetailPage() {
   return (
     // 채팅 UI는 뷰포트 높이를 꽉 채워야 해서 flex column 레이아웃 필요
     // 부모 레이아웃에서 height: 100vh 혹은 100% 확보 필요
-    <ChatWrap>
-      {/* 페이지 헤더 */}
-      <PageHeader>
-        <PageTitle>채팅방</PageTitle>
-        <PageDesc>호스트와 실시간으로 소통하세요</PageDesc>
-      </PageHeader>
-
+    <PageLayout title="채팅방" description="호스트와 실시간으로 소통하세요">
       <Divider />
 
       {/* 뒤로가기 */}
@@ -161,9 +159,15 @@ export default function UserChatDetailPage() {
           </HostInfo>
 
           <HeaderActions>
-            <ActionIconBtn type="button" aria-label="예약 정보 보기">🗓</ActionIconBtn>
-            <ActionIconBtn type="button" aria-label="신고하기">🚩</ActionIconBtn>
-            <ActionIconBtn type="button" aria-label="더보기">···</ActionIconBtn>
+            <ActionIconBtn type="button" aria-label="예약 정보 보기">
+              🗓
+            </ActionIconBtn>
+            <ActionIconBtn type="button" aria-label="신고하기">
+              🚩
+            </ActionIconBtn>
+            <ActionIconBtn type="button" aria-label="더보기">
+              ···
+            </ActionIconBtn>
           </HeaderActions>
         </ChatHeader>
 
@@ -195,7 +199,10 @@ export default function UserChatDetailPage() {
 
               {msg.senderId === 'host' ? (
                 <HostRow>
-                  <MiniAvatar style={{ background: MOCK_ROOM.avatarBg }} aria-hidden="true">
+                  <MiniAvatar
+                    style={{ background: MOCK_ROOM.avatarBg }}
+                    aria-hidden="true"
+                  >
                     {MOCK_ROOM.avatarEmoji}
                   </MiniAvatar>
                   <HostBubbleWrap>
@@ -206,7 +213,9 @@ export default function UserChatDetailPage() {
               ) : (
                 <MyRow>
                   <MyBubbleWrap>
-                    <BubbleTime style={{ textAlign: 'right' }}>나 · {msg.time}</BubbleTime>
+                    <BubbleTime style={{ textAlign: 'right' }}>
+                      나 · {msg.time}
+                    </BubbleTime>
                     <MyBubble>{msg.text}</MyBubble>
                   </MyBubbleWrap>
                 </MyRow>
@@ -218,8 +227,12 @@ export default function UserChatDetailPage() {
 
         {/* 입력 바 */}
         <InputBar>
-          <InputIconBtn type="button" aria-label="이미지 첨부">🖼</InputIconBtn>
-          <InputIconBtn type="button" aria-label="파일 첨부">📎</InputIconBtn>
+          <InputIconBtn type="button" aria-label="이미지 첨부">
+            🖼
+          </InputIconBtn>
+          <InputIconBtn type="button" aria-label="파일 첨부">
+            📎
+          </InputIconBtn>
           <MessageInput
             ref={inputRef}
             placeholder="메시지 입력..."
@@ -239,7 +252,7 @@ export default function UserChatDetailPage() {
           </SendBtn>
         </InputBar>
       </ChatContainer>
-    </ChatWrap>
+    </PageLayout>
   );
 }
 
@@ -259,7 +272,9 @@ const ChatWrap = styled.div`
   }
 `;
 
-const PageHeader = styled.div`margin-bottom: var(--space-4);`;
+const PageHeader = styled.div`
+  margin-bottom: var(--space-4);
+`;
 
 const PageTitle = styled.h1`
   font-family: var(--font-display);
@@ -281,14 +296,18 @@ const Divider = styled.hr`
   margin: 0 0 var(--space-3) 0;
 `;
 
-const BackRow = styled.div`margin-bottom: var(--space-3);`;
+const BackRow = styled.div`
+  margin-bottom: var(--space-3);
+`;
 
 const BackBtn = styled.button`
   font-size: 0.85rem;
   color: var(--gray-500);
   cursor: pointer;
   transition: color 140ms;
-  &:hover { color: var(--gray-800); }
+  &:hover {
+    color: var(--gray-800);
+  }
 `;
 
 /* 채팅 컨테이너 — 내부에서 독립 스크롤 */
@@ -337,7 +356,10 @@ const OnlineDot = styled.span`
   border: 2px solid var(--white);
 `;
 
-const HostInfo = styled.div`flex: 1; min-width: 0;`;
+const HostInfo = styled.div`
+  flex: 1;
+  min-width: 0;
+`;
 
 const HostName = styled.p`
   display: flex;
@@ -377,7 +399,9 @@ const ActionIconBtn = styled.button`
   color: var(--gray-500);
   cursor: pointer;
   transition: background 140ms;
-  &:hover { background: var(--gray-100); }
+  &:hover {
+    background: var(--gray-100);
+  }
 `;
 
 const ReservationBar = styled.div`
@@ -386,7 +410,7 @@ const ReservationBar = styled.div`
   justify-content: space-between;
   padding: 10px 20px;
   background: var(--cream, #f4efe6);
-  border-bottom: 1px solid rgba(168,184,159,0.2);
+  border-bottom: 1px solid rgba(168, 184, 159, 0.2);
   font-size: 0.8rem;
   color: var(--gray-600);
 `;
@@ -397,15 +421,21 @@ const ReservationInfo = styled.div`
   gap: 6px;
 `;
 
-const ResvIcon = styled.span`font-size: 0.85rem;`;
+const ResvIcon = styled.span`
+  font-size: 0.85rem;
+`;
 
-const Dot = styled.span`color: var(--gray-400);`;
+const Dot = styled.span`
+  color: var(--gray-400);
+`;
 
 const ResvDetailLink = styled.a`
   font-size: 0.85rem;
   color: var(--gray-400);
   cursor: pointer;
-  &:hover { color: var(--gray-700); }
+  &:hover {
+    color: var(--gray-700);
+  }
 `;
 
 /* 메시지 영역 — 이 div 만 독립 스크롤 */
@@ -433,7 +463,7 @@ const DateDivider = styled.div`
 const DateLabel = styled.span`
   font-size: 0.75rem;
   color: var(--gray-400);
-  background: rgba(0,0,0,0.05);
+  background: rgba(0, 0, 0, 0.05);
   padding: 3px 12px;
   border-radius: var(--radius-full);
 `;
@@ -525,7 +555,9 @@ const InputIconBtn = styled.button`
   justify-content: center;
   border-radius: var(--radius-md);
   transition: background 140ms;
-  &:hover { background: var(--gray-100); }
+  &:hover {
+    background: var(--gray-100);
+  }
 `;
 
 const MessageInput = styled.input`
@@ -541,8 +573,12 @@ const MessageInput = styled.input`
   outline: none;
   transition: border-color 150ms;
 
-  &:focus { border-color: var(--sage); }
-  &::placeholder { color: var(--gray-400); }
+  &:focus {
+    border-color: var(--sage);
+  }
+  &::placeholder {
+    color: var(--gray-400);
+  }
 `;
 
 const SendBtn = styled.button`

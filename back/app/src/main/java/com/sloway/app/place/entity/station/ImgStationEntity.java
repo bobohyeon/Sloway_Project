@@ -26,4 +26,11 @@ public class ImgStationEntity {
     @Column(nullable = false)
     private int sort;
 
+    public static ImgStationEntity from(StationEntity stationEntity, String currentUrl, int sort){
+        return ImgStationEntity.builder()
+                .stationEntity(stationEntity)
+                .currentUrl(currentUrl)
+                .sort(sort)
+                .build();
+    }
 }

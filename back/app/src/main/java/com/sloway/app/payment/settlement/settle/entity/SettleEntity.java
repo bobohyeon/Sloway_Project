@@ -1,5 +1,6 @@
 package com.sloway.app.payment.settlement.settle.entity;
 
+import com.sloway.app.common.entity.BaseEntity;
 import com.sloway.app.payment.settlement.settle.common.SettleStatus;
 import jakarta.persistence.*;
 import lombok.*;
@@ -13,7 +14,7 @@ import java.time.LocalDateTime;
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @AllArgsConstructor(access = AccessLevel.PRIVATE)
 @Builder
-public class SettleEntity {
+public class SettleEntity extends BaseEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
