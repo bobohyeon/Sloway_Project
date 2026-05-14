@@ -15,6 +15,7 @@ public class ImgPlaceEntity {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long no;
 
+    @Setter
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "PLACE_NO", nullable = false)
     private PlaceEntity placeEntity;

@@ -223,7 +223,7 @@ function InsertFeeComponent({
     { key: 'friPrice', label: '금' },
     { key: 'satPrice', label: '토' },
     { key: 'sunPrice', label: '일' },
-    { key: 'holidayPrice', label: '공휴일' },
+    { key: 'holPrice', label: '공휴일' },
   ];
 
   // 예외 기간 추가 함수
@@ -242,7 +242,7 @@ function InsertFeeComponent({
           friPrice: '',
           satPrice: '',
           sunPrice: '',
-          holidayPrice: '',
+          holPrice: '',
         },
       ],
     });

@@ -1,7 +1,12 @@
 package com.sloway.app.place.entity.place;
 
+import com.sloway.app.common.entity.BaseEntity;
 import jakarta.persistence.*;
 import lombok.*;
+import org.springframework.web.multipart.MultipartFile;
+
+import java.util.ArrayList;
+import java.util.List;
 
 @Entity
 @Table(name = "PLACE")
@@ -9,7 +14,7 @@ import lombok.*;
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @AllArgsConstructor(access = AccessLevel.PRIVATE)
 @Getter
-public class PlaceEntity {
+public class PlaceEntity extends BaseEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -36,18 +41,31 @@ public class PlaceEntity {
 
     //경도
     @Column(length = 17, nullable = false)
-    private String longtitude;
+    private String longitude;
 
     @Enumerated(EnumType.STRING)
     @Column(length = 1, nullable = false)
     @Builder.Default
     private PlaceStatus status = PlaceStatus.I;
 
-    @Column(length = 1, nullable = false)
+    @Column(nullable = false)
     @Builder.Default
     private int viewCnt = 0;
 
-    private void updateTitleAndContent(String title, String content){
+    // 이미지 연관관계 추가
+    // cascade = CascadeType.ALL: Place 저장 시 이미지도 같이 저장
+    @Builder.Default
+    @OneToMany(mappedBy = "placeEntity", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<ImgPlaceEntity> images = new ArrayList<>();
+
+    public void setImages(List<ImgPlaceEntity> images) {
+        this.images = images;
+        for (ImgPlaceEntity img : images) {
+            img.setPlaceEntity(this);
+        }
+    }
+
+    public void updateTitleAndContent(String title, String content){
         this.title = title;
         this.content = content;
     }

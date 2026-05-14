@@ -18,7 +18,7 @@ public class BaseEntity {
     @Column(nullable = false , updatable = false)
     protected LocalDateTime createdAt;
 
-    protected LocalDateTime updatedAt;
+    protected LocalDateTime modifiedAt;
 
     @PrePersist
     public void prePersist(){
@@ -28,7 +28,7 @@ public class BaseEntity {
 
     @PreUpdate
     public void preUpdate(){
-        this.updatedAt = LocalDateTime.now();
+        this.modifiedAt = LocalDateTime.now();
     }
 
     public void delete() {

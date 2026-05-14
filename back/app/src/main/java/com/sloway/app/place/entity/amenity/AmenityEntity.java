@@ -23,4 +23,11 @@ public class AmenityEntity {
     @Builder.Default
     private AmenityCategory category = AmenityCategory.C;
 
+    @Column(length = 1 , nullable = false)
+    @Builder.Default
+    protected String delYn = "N";
+
+    public void deleteAmenity(Long no){
+        this.delYn = "N".equals(this.delYn) ? "Y" : "N";
+    }
 }
