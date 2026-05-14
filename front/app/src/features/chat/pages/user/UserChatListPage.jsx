@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import styled from 'styled-components';
+import PageLayout from '../../../../app/layouts/page/PageLayout';
 
 // ─── Mock 데이터 (백엔드 연동 시 GET /api/chats?tab= 로 대체) ─────────────────
 const MOCK_CHAT_ROOMS = [
@@ -71,7 +72,8 @@ export default function UserChatListPage() {
 
   // 탭 + 검색 필터 — 백엔드 연동 시 쿼리 파라미터로 이동
   const filtered = MOCK_CHAT_ROOMS.filter((room) => {
-    const matchTab = activeTab === '전체' || (activeTab === '안읽음' && room.unreadCount > 0);
+    const matchTab =
+      activeTab === '전체' || (activeTab === '안읽음' && room.unreadCount > 0);
     const matchSearch =
       !searchKeyword ||
       room.hostName.includes(searchKeyword) ||
@@ -79,16 +81,14 @@ export default function UserChatListPage() {
     return matchTab && matchSearch;
   });
 
-  const totalUnread = MOCK_CHAT_ROOMS.reduce((acc, r) => acc + r.unreadCount, 0);
+  const totalUnread = MOCK_CHAT_ROOMS.reduce(
+    (acc, r) => acc + r.unreadCount,
+    0
+  );
   const unreadCount = MOCK_CHAT_ROOMS.filter((r) => r.unreadCount > 0).length;
 
   return (
-    <PageWrap>
-      <PageHeader>
-        <PageTitle>1:1 채팅</PageTitle>
-        <PageDesc>호스트와 나눈 대화를 확인하세요</PageDesc>
-      </PageHeader>
-
+    <PageLayout title="1:1 채팅" description="호스트와 나눈 대화를 확인하세요">
       <Divider />
 
       <ToolRow>
@@ -146,7 +146,9 @@ export default function UserChatListPage() {
 
               <RoomContent>
                 <RoomTop>
-                  <RoomName $unread={room.unreadCount > 0}>{room.hostName}</RoomName>
+                  <RoomName $unread={room.unreadCount > 0}>
+                    {room.hostName}
+                  </RoomName>
                   <RoomTime>{room.timeLabel}</RoomTime>
                 </RoomTop>
                 <SpaceName>{room.spaceName}</SpaceName>
@@ -156,7 +158,9 @@ export default function UserChatListPage() {
               </RoomContent>
 
               {room.unreadCount > 0 && (
-                <UnreadBadge aria-label={`읽지 않은 메시지 ${room.unreadCount}개`}>
+                <UnreadBadge
+                  aria-label={`읽지 않은 메시지 ${room.unreadCount}개`}
+                >
                   {room.unreadCount}
                 </UnreadBadge>
               )}
@@ -164,7 +168,7 @@ export default function UserChatListPage() {
           ))}
         </RoomList>
       )}
-    </PageWrap>
+    </PageLayout>
   );
 }
 
@@ -176,34 +180,6 @@ export default function UserChatListPage() {
   부모에 height:100vh + overflow:auto가 있으면 스크롤바가 컨테이너 안에 갇힙니다.
   → 부모를 min-height:100vh 로 바꾸고 overflow 제거하세요.
 */
-const PageWrap = styled.div`
-  max-width: 860px;
-  width: 100%;
-  margin: 0 auto;
-  padding: var(--space-6) var(--space-6);
-
-  @media (max-width: 768px) {
-    padding: var(--space-4);
-  }
-`;
-
-const PageHeader = styled.div`
-  margin-bottom: var(--space-4);
-`;
-
-const PageTitle = styled.h1`
-  font-family: var(--font-display);
-  font-size: 1.5rem;
-  font-weight: 600;
-  color: var(--gray-800);
-  letter-spacing: -0.02em;
-  margin-bottom: 4px;
-`;
-
-const PageDesc = styled.p`
-  font-size: 0.88rem;
-  color: var(--gray-400);
-`;
 
 const Divider = styled.hr`
   border: none;
@@ -317,7 +293,9 @@ const RoomCard = styled.div`
   border: 1px solid var(--gray-200);
   border-radius: var(--radius-lg);
   cursor: pointer;
-  transition: box-shadow 150ms ease, border-color 150ms ease;
+  transition:
+    box-shadow 150ms ease,
+    border-color 150ms ease;
 
   &:hover {
     border-color: var(--gray-300);
@@ -418,6 +396,16 @@ const EmptyWrap = styled.div`
   gap: var(--space-2);
 `;
 
-const EmptyIcon = styled.span`font-size: 2.5rem; margin-bottom: var(--space-2);`;
-const EmptyTitle = styled.p`font-size: 1rem; font-weight: 600; color: var(--gray-700);`;
-const EmptyDesc = styled.p`font-size: 0.85rem; color: var(--gray-400);`;
+const EmptyIcon = styled.span`
+  font-size: 2.5rem;
+  margin-bottom: var(--space-2);
+`;
+const EmptyTitle = styled.p`
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--gray-700);
+`;
+const EmptyDesc = styled.p`
+  font-size: 0.85rem;
+  color: var(--gray-400);
+`;
