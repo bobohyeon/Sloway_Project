@@ -1,6 +1,6 @@
-package com.sloway.app.settlement.entity;
+package com.sloway.app.settlement.fee.entity;
 
-import com.sloway.app.settlement.common.PlaceType;
+import com.sloway.app.settlement.fee.common.PlaceType;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;

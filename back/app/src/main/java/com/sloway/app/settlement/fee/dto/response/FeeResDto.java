@@ -1,7 +1,7 @@
-package com.sloway.app.settlement.dto.response;
+package com.sloway.app.settlement.fee.dto.response;
 
-import com.sloway.app.settlement.common.PlaceType;
-import com.sloway.app.settlement.entity.FeeEntity;
+import com.sloway.app.settlement.fee.common.PlaceType;
+import com.sloway.app.settlement.fee.entity.FeeEntity;
 import lombok.Builder;
 import lombok.Getter;
 

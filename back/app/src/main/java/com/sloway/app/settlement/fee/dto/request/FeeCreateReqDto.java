@@ -1,7 +1,7 @@
-package com.sloway.app.settlement.dto.request;
+package com.sloway.app.settlement.fee.dto.request;
 
-import com.sloway.app.settlement.common.PlaceType;
-import com.sloway.app.settlement.entity.FeeEntity;
+import com.sloway.app.settlement.fee.common.PlaceType;
+import com.sloway.app.settlement.fee.entity.FeeEntity;
 import lombok.Getter;
 
 import java.time.LocalDateTime;

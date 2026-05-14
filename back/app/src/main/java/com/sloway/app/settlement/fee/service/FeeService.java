@@ -1,9 +1,9 @@
-package com.sloway.app.settlement.service;
+package com.sloway.app.settlement.fee.service;
 
-import com.sloway.app.settlement.dto.request.FeeCreateReqDto;
-import com.sloway.app.settlement.dto.response.FeeResDto;
-import com.sloway.app.settlement.entity.FeeEntity;
-import com.sloway.app.settlement.repository.FeeRepository;
+import com.sloway.app.settlement.fee.dto.request.FeeCreateReqDto;
+import com.sloway.app.settlement.fee.dto.response.FeeResDto;
+import com.sloway.app.settlement.fee.entity.FeeEntity;
+import com.sloway.app.settlement.fee.repository.FeeRepository;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
