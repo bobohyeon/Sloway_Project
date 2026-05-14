@@ -33,6 +33,22 @@ import HostProfilePage from './features/account/pages/host/HostProfilePage';
 import HostProfileEditPage from './features/account/pages/host/HostProfileEditPage';
 import HostWithdrawPage from './features/account/pages/host/HostWithdrawPage';
 
+// ── 일반회원 — 호스트 신청 ───────────────────────
+import HostApplyPage from './features/account/pages/user/HostApplyPage';
+import HostStatusPage from './features/account/pages/user/HostStatusPage';
+
+// ── 관리자 — 회원 관리 ──────────────────────────
+import MemberListPage from './features/account/pages/admin/MemberListPage';
+import MemberDetailPage from './features/account/pages/admin/MemberDetailPage';
+
+// ── 관리자 — 호스트 신청 검토 ────────────────────
+import HostApplyListPage from './features/account/pages/admin/HostApplyListPage';
+import HostApplyDetailPage from './features/account/pages/admin/HostApplyDetailPage';
+
+// ── 관리자 — 호스트 자격 관리 ────────────────────
+import HostListPage from './features/account/pages/admin/HostListPage';
+import HostDetailPage from './features/account/pages/admin/HostDetailPage';
+
 // ── 공간 (호스트) ─────────────────────────────────────────
 import SpaceListPage from './features/place/pages/host/list/SpaceListPage';
 import InsertSpacePage from './features/place/pages/host/insert/InsertSpacePage';
@@ -54,6 +70,7 @@ import MapPage from './features/searchPlace/map/pages/user/MapPage';
 import StayDetailPage from './features/searchPlace/placeDetail/pages/common/StayDetailPage';
 import WorkstayDetailPage from './features/searchPlace/placeDetail/pages/common/WorkstayDetailPage';
 import OfficeDetailPage from './features/searchPlace/placeDetail/pages/common/OfficeDetailPage';
+import RoomListPage from './features/searchPlace/placeList/pages/user/RoomListPage';
 
 // ── 메인 ─────────────────────────────────────────────────
 import MainPage from './features/main/pages/MainPage';
@@ -203,6 +220,7 @@ function App() {
       <Route path="/workstays/:id" element={<WorkstayDetailPage />} />
       <Route path="/coworking-offices/:id" element={<OfficeDetailPage />} />
       <Route path="/review/:id" element={<ReviewDetailPage />} />
+      <Route path="/spaces/:spaceId/rooms" element={<RoomListPage />} />
 
       {/* ════════════════════════════════════════════
           결제 진행 페이지 (헤더·사이드nav·푸터 없음)
@@ -254,11 +272,8 @@ function App() {
         <Route path="/user/password" element={<ChangePasswordPage />} />
         <Route path="/user/withdraw" element={<WithdrawPage />} />
         {/* 호스트 신청 */}
-        <Route path="/user/host/apply" element={<Todo label="호스트 신청" />} />
-        <Route
-          path="/user/host/status"
-          element={<Todo label="호스트 신청 현황" />}
-        />
+        <Route path="/user/host/apply" element={<HostApplyPage />} />
+        <Route path="/user/host/status" element={<HostStatusPage />} />
         {/* 예약 */}
         <Route path="/user/reservation" element={<RsvnListPage />} />
         <Route
@@ -394,22 +409,13 @@ function App() {
         {/* 대시보드 */}
         <Route path="/admin/dashboard" element={<AdminDashboard />} />
         {/* 회원 관리 */}
-        <Route path="/admin/members" element={<Todo label="회원 목록" />} />
-        <Route path="/admin/members/:id" element={<Todo label="회원 상세" />} />
+        <Route path="/admin/members" element={<MemberListPage />} />
+        <Route path="/admin/members/:id" element={<MemberDetailPage />} />
         {/* 호스트 관리 */}
-        <Route
-          path="/admin/host/apply"
-          element={<Todo label="호스트 신청 목록" />}
-        />
-        <Route
-          path="/admin/host/apply/:id"
-          element={<Todo label="호스트 신청 상세" />}
-        />
-        <Route path="/admin/host/list" element={<Todo label="호스트 목록" />} />
-        <Route
-          path="/admin/host/list/:id"
-          element={<Todo label="호스트 상세" />}
-        />
+        <Route path="/admin/host/apply" element={<HostApplyListPage />} />
+        <Route path="/admin/host/apply/:id" element={<HostApplyDetailPage />} />
+        <Route path="/admin/host/list" element={<HostListPage />} />
+        <Route path="/admin/host/list/:hostId" element={<HostDetailPage />} />
         {/* 공간 검수 */}
         <Route path="/admin/space/review" element={<SpaceApprovalPage />} />
         <Route
