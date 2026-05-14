@@ -53,7 +53,6 @@ public class PlaceEntity extends BaseEntity {
     private int viewCnt = 0;
 
     // 이미지 연관관계 추가
-    // cascade = CascadeType.ALL: Place 저장 시 이미지도 같이 저장
     @Builder.Default
     @OneToMany(mappedBy = "placeEntity", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<ImgPlaceEntity> images = new ArrayList<>();
