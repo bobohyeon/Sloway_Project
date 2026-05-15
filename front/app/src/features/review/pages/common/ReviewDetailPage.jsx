@@ -5,6 +5,7 @@ import { BackLink, COLOR } from '../../../rsvn/components/user/RsvnStyled';
 
 const DUMMY = {
   id: 1,
+  isMine: true, // 본인 리뷰 여부 — 백엔드 연결 시 로그인 유저와 비교
   name: '민정',
   avatar: '민',
   avatarColor: '#A8B89F',
@@ -12,6 +13,7 @@ const DUMMY = {
   usedDate: '2026.04.18 ~ 2026.04.20',
   space: '청평 숲속 파인뷰 스테이',
   spaceType: '워크앤스테이',
+  spaceId: 1,
   scores: [
     { label: '종합 만족도', val: 5 },
     { label: '업무 환경', val: 5 },
@@ -62,8 +64,14 @@ const SpaceTag = styled.span`
 const ReviewerRow = styled.div`
   display: flex;
   align-items: center;
-  gap: 12px;
+  justify-content: space-between;
   margin-bottom: 16px;
+`;
+
+const ReviewerLeft = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 12px;
 `;
 
 const Avatar = styled.div`
@@ -77,6 +85,39 @@ const Avatar = styled.div`
   font-weight: 700;
   font-size: 16px;
   color: #fff;
+`;
+
+const MyActionBtns = styled.div`
+  display: flex;
+  gap: 8px;
+`;
+
+const EditBtn = styled.button`
+  padding: 6px 14px;
+  border-radius: 6px;
+  border: 1px solid ${COLOR.gray200};
+  background: #fff;
+  font-size: 12px;
+  font-family: 'Noto Sans KR', sans-serif;
+  cursor: pointer;
+  &:hover {
+    border-color: ${COLOR.sage};
+    color: ${COLOR.green};
+  }
+`;
+
+const DeleteBtn = styled.button`
+  padding: 6px 14px;
+  border-radius: 6px;
+  border: 1px solid #fcc;
+  background: #fff;
+  font-size: 12px;
+  color: ${COLOR.red};
+  font-family: 'Noto Sans KR', sans-serif;
+  cursor: pointer;
+  &:hover {
+    background: #fff0f0;
+  }
 `;
 
 const ScoreGrid = styled.div`
@@ -204,12 +245,29 @@ function ReviewDetailPage() {
     setHelpCount((c) => (helped ? c - 1 : c + 1));
   };
 
+  const handleDelete = () => {
+    const ok = window.confirm(
+      '리뷰를 삭제하시겠어요?\n삭제한 리뷰는 복구할 수 없습니다.'
+    );
+    if (ok) navigate('/user/review');
+  };
+
+  const goSpace = () => {
+    const path =
+      DUMMY.spaceType === '워크앤스테이'
+        ? `/workstays/${DUMMY.spaceId}`
+        : DUMMY.spaceType === '오피스'
+          ? `/coworking-offices/${DUMMY.spaceId}`
+          : `/accommodations/${DUMMY.spaceId}`;
+    navigate(path);
+  };
+
   return (
     <Page>
       <BackLink onClick={() => navigate(-1)}>← 뒤로</BackLink>
 
       {/* 공간 정보 */}
-      <SpaceChip onClick={() => navigate(-1)}>
+      <SpaceChip onClick={goSpace}>
         <SpaceTag>{DUMMY.spaceType}</SpaceTag>
         <span style={{ fontSize: 13, fontWeight: 600 }}>{DUMMY.space}</span>
         <span
@@ -219,15 +277,27 @@ function ReviewDetailPage() {
         </span>
       </SpaceChip>
 
-      {/* 작성자 */}
+      {/* 작성자 + 수정/삭제 버튼 */}
       <ReviewerRow>
-        <Avatar $color={DUMMY.avatarColor}>{DUMMY.avatar}</Avatar>
-        <div>
-          <div style={{ fontSize: 15, fontWeight: 700 }}>{DUMMY.name}</div>
-          <div style={{ fontSize: 12, color: COLOR.gray400 }}>
-            작성일 {DUMMY.date} · 이용일 {DUMMY.usedDate}
+        <ReviewerLeft>
+          <Avatar $color={DUMMY.avatarColor}>{DUMMY.avatar}</Avatar>
+          <div>
+            <div style={{ fontSize: 15, fontWeight: 700 }}>{DUMMY.name}</div>
+            <div style={{ fontSize: 12, color: COLOR.gray400 }}>
+              작성일 {DUMMY.date} · 이용일 {DUMMY.usedDate}
+            </div>
           </div>
-        </div>
+        </ReviewerLeft>
+
+        {/* 본인 리뷰일 때만 표시 */}
+        {DUMMY.isMine && (
+          <MyActionBtns>
+            <EditBtn onClick={() => navigate(`/user/review/edit/${DUMMY.id}`)}>
+              ✏️ 수정
+            </EditBtn>
+            <DeleteBtn onClick={handleDelete}>🗑 삭제</DeleteBtn>
+          </MyActionBtns>
+        )}
       </ReviewerRow>
 
       {/* 항목별 평점 */}
@@ -265,9 +335,12 @@ function ReviewDetailPage() {
         <HelpfulBtn $active={helped} onClick={toggleHelp}>
           👍 도움돼요 {helpCount}
         </HelpfulBtn>
-        <ReportBtn onClick={() => navigate('/user/review/report')}>
-          🚩 신고
-        </ReportBtn>
+        {/* 본인 리뷰면 신고 버튼 숨김 */}
+        {!DUMMY.isMine && (
+          <ReportBtn onClick={() => navigate('/user/review/report')}>
+            🚩 신고
+          </ReportBtn>
+        )}
       </MetaRow>
 
       {/* 호스트 답글 */}
