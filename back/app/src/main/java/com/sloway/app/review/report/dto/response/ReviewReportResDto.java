@@ -13,7 +13,7 @@ import java.time.LocalDateTime;
 public class ReviewReportResDto {
 
     private Long no;
-    private Long userNo;
+    private Long memberNo;
     private Long reviewNo;
     private ReviewReportReasonType reasonType;
     private String reasonDetail;
@@ -25,7 +25,7 @@ public class ReviewReportResDto {
     public static ReviewReportResDto from(ReviewReportEntity entity){
         return ReviewReportResDto.builder()
                 .no(entity.getNo())
-                .userNo(entity.getUserNo())
+                .memberNo(entity.getMemberNo().getNo())
                 .reviewNo(entity.getReviewNo().getNo())
                 .reasonType(entity.getReasonType())
                 .reasonDetail(entity.getReasonDetail())

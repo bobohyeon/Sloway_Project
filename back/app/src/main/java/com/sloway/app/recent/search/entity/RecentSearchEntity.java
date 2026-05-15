@@ -1,5 +1,6 @@
 package com.sloway.app.recent.search.entity;
 
+import com.sloway.app.member.entity.MemberEntity;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -17,13 +18,14 @@ public class RecentSearchEntity {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long no;
 
-    @Column
-    private Long memberNo;
+    @JoinColumn(name = "member_no", nullable = false)
+    @ManyToOne(fetch = FetchType.LAZY)
+    private MemberEntity memberNo;
 
     @Column(length = 200, name = "keyword")
     private String keyword;
 
-    @Column(name = "search_at")
+    @Column(name = "searched_at")
     private LocalDateTime searchedAt;
 
     @PrePersist

@@ -1,5 +1,6 @@
 package com.sloway.app.recent.place.entity;
 
+import com.sloway.app.member.entity.MemberEntity;
 import com.sloway.app.place.entity.place.PlaceEntity;
 import jakarta.persistence.*;
 import lombok.*;
@@ -22,8 +23,9 @@ public class RecentPlaceEntity {
     @ManyToOne(fetch = FetchType.LAZY)
     private PlaceEntity placeNo;
 
-    @Column(name = "user_no", nullable = false)
-    private Long userNo;
+    @JoinColumn(name = "member_no", nullable = false)
+    @ManyToOne(fetch = FetchType.LAZY)
+    private MemberEntity memberNo;
 
     @Column(name = "view_at", nullable = false)
     private LocalDateTime viewAt;
