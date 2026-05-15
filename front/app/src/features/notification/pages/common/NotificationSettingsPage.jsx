@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import styled, { css } from 'styled-components';
+import PageLayout from '../../../../app/layouts/page/PageLayout';
 
 // ─── 알림 채널 타입 ───────────────────────────────────────────────────────────
 // 백엔드 연동 시 PUT /api/notifications/settings 바디 스펙과 키 이름 맞출 것
@@ -185,11 +186,11 @@ export default function NotificationSettingsPage() {
   };
 
   return (
-    <Wrap>
-      <PageHeader>
-        <PageTitle>알림 설정</PageTitle>
-        <PageDesc>받고 싶은 알림만 선택하실 수 있어요</PageDesc>
-      </PageHeader>
+    <PageLayout
+      title="알림 설정"
+      description="받고 싶은 알림만 선택하실 수 있어요"
+      maxWidth={800}
+    >
 
       {/* 방해금지 시간대 */}
       <SectionCard>
@@ -314,7 +315,7 @@ export default function NotificationSettingsPage() {
           설정 저장
         </SaveBtn>
       </FooterActions>
-    </Wrap>
+    </PageLayout>
   );
 }
 
@@ -338,35 +339,6 @@ function Toggle({ checked, onChange, disabled, 'aria-label': ariaLabel }) {
 }
 
 // ─── Styled Components ────────────────────────────────────────────────────────
-
-const Wrap = styled.div`
-  padding: var(--space-6);
-  max-width: 640px;
-  margin: 0 auto;
-
-  @media (max-width: 768px) {
-    padding: var(--space-4);
-  }
-`;
-
-const PageHeader = styled.div`
-  margin-bottom: var(--space-5);
-`;
-
-const PageTitle = styled.h1`
-  font-family: var(--font-display);
-  font-size: 1.5rem;
-  font-weight: 600;
-  color: var(--gray-800);
-  letter-spacing: -0.02em;
-  margin-bottom: 4px;
-`;
-
-const PageDesc = styled.p`
-  font-size: 0.88rem;
-  color: var(--gray-400);
-`;
-
 const SectionCard = styled.div`
   background: var(--white);
   border: 1px solid var(--gray-200);

@@ -125,19 +125,13 @@ export default function UserChatDetailPage() {
   return (
     // 채팅 UI는 뷰포트 높이를 꽉 채워야 해서 flex column 레이아웃 필요
     // 부모 레이아웃에서 height: 100vh 혹은 100% 확보 필요
-    <PageLayout title="채팅방" description="호스트와 실시간으로 소통하세요">
+    <PageLayout
+      title="채팅방"
+      description="호스트와 실시간으로 소통하세요"
+      backTo="/user/chat"
+      backLabel="채팅 목록"
+    >
       <Divider />
-
-      {/* 뒤로가기 */}
-      <BackRow>
-        <BackBtn
-          type="button"
-          // onClick={() => navigate('/chats')}
-          aria-label="채팅 목록으로 돌아가기"
-        >
-          ← 채팅 목록
-        </BackBtn>
-      </BackRow>
 
       {/* 채팅 컨테이너 */}
       <ChatContainer>
@@ -294,20 +288,6 @@ const Divider = styled.hr`
   border: none;
   border-top: 1px solid var(--gray-200);
   margin: 0 0 var(--space-3) 0;
-`;
-
-const BackRow = styled.div`
-  margin-bottom: var(--space-3);
-`;
-
-const BackBtn = styled.button`
-  font-size: 0.85rem;
-  color: var(--gray-500);
-  cursor: pointer;
-  transition: color 140ms;
-  &:hover {
-    color: var(--gray-800);
-  }
 `;
 
 /* 채팅 컨테이너 — 내부에서 독립 스크롤 */

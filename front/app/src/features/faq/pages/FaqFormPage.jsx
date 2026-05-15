@@ -1,6 +1,7 @@
 import { useState, useCallback } from 'react';
 import styled from 'styled-components';
 import { useNavigate, useParams } from 'react-router-dom';
+import PageLayout from '../../../app/layouts/page/PageLayout';
 import { Button, Modal, Card } from '../../pay_shared/components';
 
 // ─── 수정 모드 Mock 데이터 (백엔드 연동 시 GET /api/admin/faqs/:id 로 대체) ──
@@ -85,15 +86,13 @@ export default function FaqFormPage({ isEdit = false }) {
   };
 
   return (
-    <Wrap>
-      <PageHeader>
-        <div>
-          <PageTitle>{pageTitle}</PageTitle>
-          <PageDesc>
-            {isEdit ? `FAQ #${id}를 수정합니다.` : '새 FAQ를 등록합니다.'}
-          </PageDesc>
-        </div>
-      </PageHeader>
+    <PageLayout
+      title={pageTitle}
+      description={isEdit ? `FAQ #${id}를 수정합니다.` : '새 FAQ를 등록합니다.'}
+      backTo="/admin/faq"
+      backLabel="FAQ 관리"
+      maxWidth={1200}
+    >
 
       <FormLayout>
         {/* 좌측 본문 */}
@@ -268,37 +267,11 @@ export default function FaqFormPage({ isEdit = false }) {
           작성 중인 내용이 저장되지 않습니다. 정말 나가시겠습니까?
         </ModalText>
       </Modal>
-    </Wrap>
+    </PageLayout>
   );
 }
 
 // ─── Styled Components ───────────────────────────────────────────────────────
-
-const Wrap = styled.div`
-  padding: var(--space-6);
-  max-width: 100%;
-  @media (max-width: 768px) {
-    padding: var(--space-4);
-  }
-`;
-
-const PageHeader = styled.div`
-  margin-bottom: var(--space-6);
-`;
-
-const PageTitle = styled.h1`
-  font-family: var(--font-display);
-  font-size: 1.5rem;
-  font-weight: 600;
-  color: var(--gray-800);
-  letter-spacing: -0.02em;
-  margin-bottom: 4px;
-`;
-
-const PageDesc = styled.p`
-  font-size: 0.88rem;
-  color: var(--gray-400);
-`;
 
 const FormLayout = styled.div`
   display: grid;

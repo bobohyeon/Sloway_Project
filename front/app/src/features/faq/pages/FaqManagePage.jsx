@@ -157,7 +157,7 @@ export default function FaqManagePage() {
             <Button size="sm" variant="secondary" onClick={handleSearch}>
               검색
             </Button>
-            <Button onClick={() => navigate('/admin/faqs/new')}>
+            <Button onClick={() => navigate('/admin/faq/form')}>
               + FAQ 등록
             </Button>
           </SearchGroup>
@@ -190,7 +190,7 @@ export default function FaqManagePage() {
             title="등록된 FAQ가 없습니다"
             description="자주 묻는 질문을 등록해 보세요."
             action={
-              <Button onClick={() => navigate('/admin/faqs/new')}>
+              <Button onClick={() => navigate('/admin/faq/form')}>
                 FAQ 등록
               </Button>
             }
@@ -249,7 +249,7 @@ export default function FaqManagePage() {
                       </Td>
                       <Td>
                         <QuestionText
-                          onClick={() => navigate(`/admin/faqs/${faq.id}/edit`)}
+                          onClick={() => navigate(`/admin/faq/form/${faq.id}`)}
                         >
                           {faq.question}
                         </QuestionText>
@@ -273,7 +273,7 @@ export default function FaqManagePage() {
                             size="sm"
                             variant="ghost"
                             onClick={() =>
-                              navigate(`/admin/faqs/${faq.id}/edit`)
+                              navigate(`/admin/faq/form/${faq.id}`)
                             }
                           >
                             수정
