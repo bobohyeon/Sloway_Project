@@ -205,7 +205,6 @@ function InsertCoworkingFeeComponent({ formData, setFormData, prev, next }) {
     const newException = {
       startDate: '',
       endDate: '',
-      hottimeYn: 'Y',
       prices: {},
     };
     setFormData((prev) => ({
