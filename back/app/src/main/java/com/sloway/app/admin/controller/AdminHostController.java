@@ -1,4 +1,4 @@
 package com.sloway.app.admin.controller;
 
-public class AdminController {
+public class AdminHostController {
 }
