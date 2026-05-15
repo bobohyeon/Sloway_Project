@@ -1,5 +1,6 @@
 package com.sloway.app.review.helpful.entity;
 
+import com.sloway.app.member.entity.MemberEntity;
 import com.sloway.app.review.review.entity.ReviewEntity;
 import jakarta.persistence.*;
 import lombok.*;
@@ -18,8 +19,9 @@ public class HelpfulEntity {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long no;
 
-    @Column(nullable = false, name = "user_no")
-    private Long userNo;
+    @JoinColumn(name = "member_no", nullable = false)
+    @ManyToOne(fetch = FetchType.LAZY)
+    private MemberEntity memberNo;
 
     @JoinColumn(name = "review_no", nullable = false)
     @ManyToOne(fetch = FetchType.LAZY)

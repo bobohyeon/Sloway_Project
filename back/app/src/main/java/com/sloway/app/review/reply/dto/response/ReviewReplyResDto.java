@@ -20,7 +20,7 @@ public class ReviewReplyResDto {
         return ReviewReplyResDto.builder()
                 .no(entity.getNo())
                 .reviewNo(entity.getReviewNo().getNo())
-                .hostNo(entity.getHostNo())
+                .hostNo(entity.getHostNo().getNo())
                 .content(entity.getContent())
                 .createdAt(entity.getCreatedAt())
                 .build();

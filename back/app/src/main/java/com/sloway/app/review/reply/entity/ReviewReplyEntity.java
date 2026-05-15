@@ -1,5 +1,6 @@
 package com.sloway.app.review.reply.entity;
 
+import com.sloway.app.host.entity.HostEntity;
 import com.sloway.app.review.review.entity.ReviewEntity;
 import jakarta.persistence.*;
 import lombok.*;
@@ -24,7 +25,7 @@ public class ReviewReplyEntity {
 
     @JoinColumn(name = "host_no")
     @ManyToOne(fetch = FetchType.LAZY)
-    private Long hostNo;
+    private HostEntity hostNo;
 
     @Column(columnDefinition = "TEXT")
     private String content;
