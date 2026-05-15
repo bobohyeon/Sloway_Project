@@ -7,6 +7,7 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public enum PointStatus {
 
+    WAIT("적립대기"),
     SAVE("적립확정"),
     USED("사용완료"),
     EXPIRATION("만료"),
