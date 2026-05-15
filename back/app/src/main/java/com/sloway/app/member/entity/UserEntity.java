@@ -16,7 +16,7 @@ import lombok.NoArgsConstructor;
  * 같은 사람이 호스트로도 가입 가능 (User와 Host에 각각 행, 같은 memberNo).
  */
 @Entity
-@Table(name = "USER")
+@Table(name = "USERS")
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @AllArgsConstructor(access = AccessLevel.PRIVATE)
