@@ -1,7 +1,5 @@
 package com.sloway.app.place.entity.place;
 
-import com.sloway.app.place.entity.station.ImgStationEntity;
-import com.sloway.app.place.entity.station.StationEntity;
 import jakarta.persistence.*;
 import lombok.*;
 

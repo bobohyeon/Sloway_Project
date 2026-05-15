@@ -7,7 +7,7 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public enum AmenityCategory {
 
-    O("OFFICE"), W("WORKSTAY"), S("STATION"), C("COMMON");
+    O("OFFICE"), W("WORK_STAY"), S("STATION"), C("COMMON");
 
     private final String code;
 }
