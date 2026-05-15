@@ -30,7 +30,7 @@ function InsertWorkPage() {
     friPrice: '',
     satPrice: '',
     sunPrice: '',
-    holidayPrice: '',
+    holPrice: '',
     exceptionPeriods: [],
     images: [],
   });

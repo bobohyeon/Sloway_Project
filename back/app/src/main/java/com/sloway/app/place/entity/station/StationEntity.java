@@ -3,7 +3,6 @@ package com.sloway.app.place.entity.station;
 import com.sloway.app.common.entity.BaseEntity;
 import com.sloway.app.place.dto.request.station.StationUpdateReqDto;
 import com.sloway.app.place.entity.amenity.station.StationAmenityEntity;
-import com.sloway.app.place.entity.place.ImgPlaceEntity;
 import com.sloway.app.place.entity.place.PlaceEntity;
 import jakarta.persistence.*;
 import lombok.*;
@@ -101,10 +100,6 @@ public class StationEntity extends BaseEntity {
         for (StationExceptionPeriodEntity period : periods) {
             period.setStationEntity(this);
         }
-    }
-    public void updateTitleAndContent(String title, String content) {
-        this.title = title;
-        this.content = content;
     }
 
     public void updateInfo(StationUpdateReqDto dto) {

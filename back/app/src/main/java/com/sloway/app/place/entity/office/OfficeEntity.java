@@ -3,10 +3,7 @@ package com.sloway.app.place.entity.office;
 import com.sloway.app.common.entity.BaseEntity;
 import com.sloway.app.place.dto.request.office.OfficeUpdateReqDto;
 import com.sloway.app.place.entity.amenity.office.OfficeAmenityEntity;
-import com.sloway.app.place.entity.amenity.station.StationAmenityEntity;
 import com.sloway.app.place.entity.place.PlaceEntity;
-import com.sloway.app.place.entity.station.ImgStationEntity;
-import com.sloway.app.place.entity.station.StationExceptionPeriodEntity;
 import jakarta.persistence.*;
 import lombok.*;
 

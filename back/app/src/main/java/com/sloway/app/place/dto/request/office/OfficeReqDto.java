@@ -1,6 +1,5 @@
 package com.sloway.app.place.dto.request.office;
 
-import com.sloway.app.place.dto.request.station.StationReqDto;
 import com.sloway.app.place.entity.amenity.AmenityEntity;
 import com.sloway.app.place.entity.amenity.office.OfficeAmenityEntity;
 import com.sloway.app.place.entity.office.OfficeEntity;

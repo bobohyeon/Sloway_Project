@@ -9,8 +9,6 @@ import com.sloway.app.place.entity.office.ImgOfficeEntity;
 import com.sloway.app.place.entity.office.OfficeEntity;
 import com.sloway.app.place.entity.office.OfficePeriodEntity;
 import com.sloway.app.place.entity.place.PlaceEntity;
-import com.sloway.app.place.entity.station.ImgStationEntity;
-import com.sloway.app.place.entity.station.StationEntity;
 import com.sloway.app.place.repository.amenity.AmenityRepository;
 import com.sloway.app.place.repository.office.ImgOfficeRepository;
 import com.sloway.app.place.repository.office.OfficeRepository;
