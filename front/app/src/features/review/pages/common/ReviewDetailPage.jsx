@@ -1,7 +1,8 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import styled from 'styled-components';
-import { BackLink, COLOR } from '../../../rsvn/components/user/RsvnStyled';
+import PageLayout from '../../../../app/layouts/page/PageLayout';
+import { COLOR } from '../../../rsvn/components/user/RsvnStyled';
 
 const DUMMY = {
   id: 1,
@@ -29,13 +30,6 @@ const DUMMY = {
     text: '감사합니다! 다음에도 좋은 시간 보내러 오세요. 언제든 환영합니다 🌲',
   },
 };
-
-const Page = styled.div`
-  max-width: 720px;
-  margin: 0 auto;
-  padding: 32px 24px;
-  font-family: 'Noto Sans KR', sans-serif;
-`;
 
 const SpaceChip = styled.div`
   display: flex;
@@ -263,8 +257,7 @@ function ReviewDetailPage() {
   };
 
   return (
-    <Page>
-      <BackLink onClick={() => navigate(-1)}>← 뒤로</BackLink>
+    <PageLayout maxWidth={720}>
 
       {/* 공간 정보 */}
       <SpaceChip onClick={goSpace}>
@@ -352,7 +345,7 @@ function ReviewDetailPage() {
           <ReplyText>{DUMMY.reply.text}</ReplyText>
         </ReplyBox>
       )}
-    </Page>
+    </PageLayout>
   );
 }
 

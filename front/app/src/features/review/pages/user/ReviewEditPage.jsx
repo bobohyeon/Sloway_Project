@@ -1,11 +1,9 @@
 import { useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import styled, { keyframes } from 'styled-components';
+import styled from 'styled-components';
+import PageLayout from '../../../../app/layouts/page/PageLayout';
 import RsvnStatusBadge from '../../../rsvn/components/user/RsvnStatusBadge';
 import {
-  PageTitle,
-  PageSub,
-  BackLink,
   BtnPrimary,
   BtnOutline,
   COLOR,
@@ -16,18 +14,6 @@ import {
   Req,
   Textarea,
 } from '../../components/user/ReviewStyled';
-
-const fadeInUp = keyframes`
-  from { opacity: 0; transform: translateY(10px); }
-  to   { opacity: 1; transform: translateY(0); }
-`;
-
-const Page = styled.div`
-  max-width: 960px;
-  margin: 0 auto;
-  padding: 32px 24px;
-  animation: ${fadeInUp} 480ms ease-out both;
-`;
 
 const SCORE_ITEMS = [
   { icon: '🌟', label: '종합 만족도', desc: '전반적인 만족도는 어떠셨나요?' },
@@ -162,10 +148,13 @@ function ReviewEditPage() {
   };
 
   return (
-    <Page>
-      <PageTitle>리뷰 수정</PageTitle>
-      <PageSub>작성한 리뷰를 수정하세요</PageSub>
-      <BackLink onClick={() => navigate(-1)}>← 뒤로</BackLink>
+    <PageLayout
+      title="리뷰 수정"
+      description="작성한 리뷰를 수정하세요"
+      backTo="/user/review"
+      backLabel="내 리뷰"
+      maxWidth={800}
+    >
 
       {/* 공간 정보 */}
       <FormBox>
@@ -292,10 +281,10 @@ function ReviewEditPage() {
       </FormBox>
 
       <BottomBtns>
-        <BtnOutline onClick={() => navigate(-1)}>취소</BtnOutline>
+        <BtnOutline onClick={() => navigate('/user/review')}>취소</BtnOutline>
         <BtnPrimary onClick={handleSubmit}>수정 완료</BtnPrimary>
       </BottomBtns>
-    </Page>
+    </PageLayout>
   );
 }
 
