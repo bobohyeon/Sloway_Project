@@ -195,6 +195,7 @@ import UserChatDetailPage from './features/chat/pages/user/UserChatDetailPage';
 // ── 채팅 (호스트) ─────────────────────────────────────────
 import HostChatListPage from './features/chat/pages/host/HostChatListPage';
 import HostChatDetailPage from './features/chat/pages/host/HostChatDetailPage';
+import ReviewWritePage from './features/review/pages/user/ReviewWritePage';
 
 // ── 임시 플레이스홀더 ─────────────────────────────────────
 const Todo = ({ label }) => (
@@ -297,6 +298,7 @@ function App() {
         <Route path="/user/wishlist" element={<WishListPage />} />
         <Route path="/user/recent" element={<RecentPlacePage />} />
         <Route path="/user/review" element={<MyReviewPage />} />
+        <Route path="/user/review/write" element={<ReviewWritePage />} />
         <Route path="/user/review/report" element={<ReviewReportPage />} />
         <Route path="/user/inquiry" element={<InquiryListPage />} />
         <Route path="/user/inquiry/form" element={<InquiryFormPage />} />
