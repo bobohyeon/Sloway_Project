@@ -22,7 +22,8 @@ public class ReviewReplyEntity {
     @ManyToOne(fetch = FetchType.LAZY)
     private ReviewEntity reviewNo;
 
-    @Column(nullable = false, name = "host_no") // 추후 수정 예정
+    @JoinColumn(name = "host_no")
+    @ManyToOne(fetch = FetchType.LAZY)
     private Long hostNo;
 
     @Column(columnDefinition = "TEXT")

@@ -1,5 +1,6 @@
 package com.sloway.app.reservation.rsvn.entity;
 
+import com.sloway.app.member.entity.MemberEntity;
 import com.sloway.app.place.entity.office.OfficeEntity;
 import com.sloway.app.place.entity.station.StationEntity;
 import com.sloway.app.place.entity.workStay.WorkStayEntity;
@@ -20,8 +21,9 @@ public class RsvnEntity {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long no;
 
-    @Column
-    private Long userNo; //추후 수정 예정
+    @JoinColumn(name = "member_no", nullable = false)
+    @ManyToOne(fetch = FetchType.LAZY)
+    private MemberEntity memberNo;
 
     @JoinColumn(name = "office_no")
     @ManyToOne(fetch = FetchType.LAZY)
