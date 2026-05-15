@@ -196,6 +196,7 @@ import UserChatDetailPage from './features/chat/pages/user/UserChatDetailPage';
 import HostChatListPage from './features/chat/pages/host/HostChatListPage';
 import HostChatDetailPage from './features/chat/pages/host/HostChatDetailPage';
 import ReviewWritePage from './features/review/pages/user/ReviewWritePage';
+import ReviewEditPage from './features/review/pages/user/ReviewEditPage';
 
 // ── 임시 플레이스홀더 ─────────────────────────────────────
 const Todo = ({ label }) => (
@@ -220,7 +221,6 @@ function App() {
       <Route path="/accommodations/:id" element={<StayDetailPage />} />
       <Route path="/workstays/:id" element={<WorkstayDetailPage />} />
       <Route path="/coworking-offices/:id" element={<OfficeDetailPage />} />
-      <Route path="/review/:id" element={<ReviewDetailPage />} />
       <Route path="/spaces/:spaceId/rooms" element={<RoomListPage />} />
 
       {/* ════════════════════════════════════════════
@@ -299,7 +299,9 @@ function App() {
         <Route path="/user/recent" element={<RecentPlacePage />} />
         <Route path="/user/review" element={<MyReviewPage />} />
         <Route path="/user/review/write" element={<ReviewWritePage />} />
+        <Route path="/user/review/edit/:id" element={<ReviewEditPage />} />
         <Route path="/user/review/report" element={<ReviewReportPage />} />
+        <Route path="/review/:id" element={<ReviewDetailPage />} />
         <Route path="/user/inquiry" element={<InquiryListPage />} />
         <Route path="/user/inquiry/form" element={<InquiryFormPage />} />
         <Route path="/user/inquiry/:id" element={<InquiryDetailPage />} />

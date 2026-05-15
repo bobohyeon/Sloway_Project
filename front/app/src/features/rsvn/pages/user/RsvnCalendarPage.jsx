@@ -320,9 +320,8 @@ function RsvnCalendarPage() {
           </ToggleBtn>
         </ViewToggle>
       }
-      maxWidth={960}
+      maxWidth={1200}
     >
-
       <StatCards>
         <StatCard>
           <StatLabel>이번 달 예약</StatLabel>
