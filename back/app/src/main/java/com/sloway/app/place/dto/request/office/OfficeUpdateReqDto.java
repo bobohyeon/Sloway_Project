@@ -1,6 +1,5 @@
 package com.sloway.app.place.dto.request.office;
 
-import com.sloway.app.place.dto.request.station.StationReqDto;
 import com.sloway.app.place.entity.amenity.AmenityEntity;
 import com.sloway.app.place.entity.amenity.office.OfficeAmenityEntity;
 import com.sloway.app.place.entity.office.OfficeEntity;
@@ -16,14 +15,15 @@ import java.util.stream.Collectors;
 
 @Getter
 @Setter
-public class OfficeReqDto {
+public class OfficeUpdateReqDto {
+    private Long no;
     private Long placeNo;
     private String title;
     private String content;
     private int basePeople;
-    private List<AmenityDto> facilityList;
-    private List<OfficePeriodDto> officePeriods;
-    private List<OfficeExceptionPeriodDto> exceptionPeriods;
+    private List<OfficeReqDto.AmenityDto> facilityList;
+    private List<OfficeReqDto.OfficePeriodDto> officePeriods;
+    private List<OfficeReqDto.OfficeExceptionPeriodDto> exceptionPeriods;
 
 
     @Getter
@@ -103,3 +103,4 @@ public class OfficeReqDto {
         return office;
     }
 }
+

@@ -1,9 +1,17 @@
 package com.sloway.app.place.entity.office;
 
 import com.sloway.app.common.entity.BaseEntity;
+import com.sloway.app.place.dto.request.office.OfficeUpdateReqDto;
+import com.sloway.app.place.entity.amenity.office.OfficeAmenityEntity;
+import com.sloway.app.place.entity.amenity.station.StationAmenityEntity;
 import com.sloway.app.place.entity.place.PlaceEntity;
+import com.sloway.app.place.entity.station.ImgStationEntity;
+import com.sloway.app.place.entity.station.StationExceptionPeriodEntity;
 import jakarta.persistence.*;
 import lombok.*;
+
+import java.util.ArrayList;
+import java.util.List;
 
 @Entity
 @Table(name = "OFFICE")
@@ -30,8 +38,35 @@ public class OfficeEntity extends BaseEntity {
     @Column(nullable = false)
     private int cnt;
 
-    private void updateTitleAndContent(String title, String content){
-        this.title = title;
-        this.content = content;
+    @Builder.Default
+    @OneToMany(mappedBy = "officeEntity", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<OfficePeriodEntity> officePeriodEntities = new ArrayList<>();
+
+    @Builder.Default
+    @OneToMany(mappedBy = "officeEntity", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<OfficeAmenityEntity> officeAmenityEntities = new ArrayList<>();
+
+    @Builder.Default
+    @OneToMany(mappedBy = "officeEntity", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<ImgOfficeEntity> images = new ArrayList<>();
+
+    public void setAmenities(List<OfficeAmenityEntity> amenities) {
+        this.officeAmenityEntities = amenities;
+        for (OfficeAmenityEntity amenity : amenities) {
+            amenity.setOfficeEntity(this);
+        }
+    }
+
+    public void setOfficePeriods(List<OfficePeriodEntity> periods){
+        this.officePeriodEntities = periods;
+        for(OfficePeriodEntity period : periods){
+            period.setOfficeEntity(this);
+        }
+    }
+
+    public void updateInfo(OfficeUpdateReqDto dto) {
+        this.title = dto.getTitle();
+        this.content = dto.getContent();
+        this.cnt = dto.getBasePeople();
     }
 }

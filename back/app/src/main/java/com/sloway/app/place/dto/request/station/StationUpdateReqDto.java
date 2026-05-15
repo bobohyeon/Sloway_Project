@@ -22,6 +22,7 @@ public class StationUpdateReqDto {
     private int maxPeople;
     private int basePeople;
     private int rooms;
+    private int chargeAdd;
     private LocalDateTime checkIn;
     private LocalDateTime checkOut;
     private List<AmenityDto> facilityList;
