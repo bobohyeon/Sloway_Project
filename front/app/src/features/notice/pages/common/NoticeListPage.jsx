@@ -98,11 +98,11 @@ export default function NoticeListPage() {
               <NoticeRow
                 key={`pinned-${notice.id}`}
                 $pinned
-                onClick={() => navigate(`/user/notice/${notice.id}`)}
+                onClick={() => navigate(`/notices/${notice.id}`)}
                 role="button"
                 tabIndex={0}
                 onKeyDown={(e) =>
-                  e.key === 'Enter' && navigate(`/user/notice/${notice.id}`)
+                  e.key === 'Enter' && navigate(`/notices/${notice.id}`)
                 }
                 aria-label={`공지: ${notice.title}`}
               >
@@ -142,11 +142,11 @@ export default function NoticeListPage() {
           paged.map((notice) => (
             <NoticeRow
               key={notice.id}
-              onClick={() => navigate(`/user/notice/${notice.id}`)}
+              onClick={() => navigate(`/notices/${notice.id}`)}
               role="button"
               tabIndex={0}
               onKeyDown={(e) =>
-                e.key === 'Enter' && navigate(`/user/notice/${notice.id}`)
+                e.key === 'Enter' && navigate(`/notices/${notice.id}`)
               }
               aria-label={notice.title}
             >

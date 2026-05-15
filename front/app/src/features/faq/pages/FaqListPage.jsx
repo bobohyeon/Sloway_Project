@@ -204,39 +204,13 @@ export default function FaqListPage() {
           <BannerTitle>원하는 답변을 찾지 못하셨나요?</BannerTitle>
           <BannerDesc>1:1 문의를 통해 직접 문의해 주세요.</BannerDesc>
         </BannerText>
-        <ContactLink href="/inquiries/new">문의하기 →</ContactLink>
+        <ContactLink href="/user/inquiry/form">문의하기 →</ContactLink>
       </ContactBanner>
     </PageLayout>
   );
 }
 
 // ─── Styled Components ───────────────────────────────────────────────────────
-
-const Wrap = styled.div`
-  padding: var(--space-6);
-  max-width: 100%;
-  @media (max-width: 768px) {
-    padding: var(--space-4);
-  }
-`;
-
-const PageHeader = styled.div`
-  margin-bottom: var(--space-5);
-`;
-
-const PageTitle = styled.h1`
-  font-family: var(--font-display);
-  font-size: 1.5rem;
-  font-weight: 600;
-  color: var(--gray-800);
-  letter-spacing: -0.02em;
-  margin-bottom: 4px;
-`;
-
-const PageDesc = styled.p`
-  font-size: 0.88rem;
-  color: var(--gray-400);
-`;
 
 const SearchBar = styled.div`
   display: flex;

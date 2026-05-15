@@ -464,9 +464,9 @@ function App() {
         <Route path="/admin/inquiry/:id" element={<InquiryDetailPage />} />
         <Route path="/admin/notice" element={<NoticeManagePage />} />
         <Route path="/admin/notice/form" element={<NoticeFormPage />} />
-        <Route path="/admin/notice/:id" element={<NoticeDetailPage />} />
         <Route path="/admin/faq" element={<FaqManagePage />} />
         <Route path="/admin/faq/form" element={<FaqFormPage />} />
+        <Route path="/admin/faq/form/:id" element={<FaqFormPage isEdit />} />
       </Route>
 
       {/* 404 */}

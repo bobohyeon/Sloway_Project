@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import styled from 'styled-components';
 import PageLayout from '../../../../app/layouts/page/PageLayout';
 
@@ -67,6 +68,7 @@ const TAB_OPTIONS = [
 ];
 
 export default function UserChatListPage() {
+  const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState('전체');
   const [searchKeyword, setSearchKeyword] = useState('');
 
@@ -133,11 +135,11 @@ export default function UserChatListPage() {
             <RoomCard
               key={room.id}
               $unread={room.unreadCount > 0}
-              // onClick={() => navigate(`/chats/${room.id}`)}
+              onClick={() => navigate(`/user/chat/${room.id}`)}
               role="button"
               tabIndex={0}
               aria-label={`${room.hostName}과의 채팅${room.unreadCount > 0 ? `, 읽지 않은 메시지 ${room.unreadCount}개` : ''}`}
-              onKeyDown={(e) => e.key === 'Enter' && undefined}
+              onKeyDown={(e) => e.key === 'Enter' && navigate(`/user/chat/${room.id}`)}
             >
               <AvatarWrap style={{ background: room.avatarBg }}>
                 <AvatarEmoji aria-hidden="true">{room.avatarEmoji}</AvatarEmoji>

@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect } from 'react';
 import styled from 'styled-components';
+import PageLayout from '../../../../app/layouts/page/PageLayout';
 
 // ─── Mock 데이터 ───────────────────────────────────────────────────────────────
 // 백엔드 연동 시:
@@ -108,7 +109,10 @@ export default function HostChatDetailPage() {
       id: Date.now(),
       senderId: 'me',
       text: trimmed,
-      time: new Date().toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit' }),
+      time: new Date().toLocaleTimeString('ko-KR', {
+        hour: '2-digit',
+        minute: '2-digit',
+      }),
       dateLabel: null,
     };
     setMessages((prev) => [...prev, newMsg]);
@@ -133,27 +137,21 @@ export default function HostChatDetailPage() {
   const statusLabel = STATUS_LABEL[MOCK_ROOM.reservationStatus];
 
   return (
-    <ChatWrap>
-      <PageHeader>
-        <PageTitle>채팅방</PageTitle>
-        <PageDesc>게스트와 실시간으로 소통하세요</PageDesc>
-      </PageHeader>
-
+    <PageLayout
+      title="채팅방"
+      description="게스트와 실시간으로 소통하세요"
+      backTo="/host/chat"
+      backLabel="채팅 목록"
+    >
       <Divider />
-
-      <BackRow>
-        <BackBtn
-          type="button"
-          aria-label="채팅 목록으로 돌아가기"
-        >
-          ← 채팅 목록
-        </BackBtn>
-      </BackRow>
 
       <ChatContainer>
         {/* 상단 게스트 정보 바 */}
         <ChatHeader>
-          <GuestAvatar style={{ background: MOCK_ROOM.avatarBg }} aria-hidden="true">
+          <GuestAvatar
+            style={{ background: MOCK_ROOM.avatarBg }}
+            aria-hidden="true"
+          >
             {MOCK_ROOM.avatarInitial}
           </GuestAvatar>
 
@@ -166,9 +164,15 @@ export default function HostChatDetailPage() {
           </GuestInfo>
 
           <HeaderActions>
-            <ActionIconBtn type="button" aria-label="예약 상세 보기">🗓</ActionIconBtn>
-            <ActionIconBtn type="button" aria-label="타이머 설정">⏱</ActionIconBtn>
-            <ActionIconBtn type="button" aria-label="더보기">···</ActionIconBtn>
+            <ActionIconBtn type="button" aria-label="예약 상세 보기">
+              🗓
+            </ActionIconBtn>
+            <ActionIconBtn type="button" aria-label="타이머 설정">
+              ⏱
+            </ActionIconBtn>
+            <ActionIconBtn type="button" aria-label="더보기">
+              ···
+            </ActionIconBtn>
           </HeaderActions>
         </ChatHeader>
 
@@ -190,7 +194,9 @@ export default function HostChatDetailPage() {
               <span>정산 예상 {MOCK_ROOM.reservation.estimatedAmount}</span>
             </ResvItem>
           </ReservationItems>
-          <ResvDetailLink aria-label="예약 상세 보기">→ 예약 상세</ResvDetailLink>
+          <ResvDetailLink aria-label="예약 상세 보기">
+            → 예약 상세
+          </ResvDetailLink>
         </ReservationBar>
 
         {/* 메시지 영역 */}
@@ -205,7 +211,10 @@ export default function HostChatDetailPage() {
 
               {msg.senderId === 'guest' ? (
                 <GuestRow>
-                  <MiniAvatar style={{ background: MOCK_ROOM.avatarBg }} aria-hidden="true">
+                  <MiniAvatar
+                    style={{ background: MOCK_ROOM.avatarBg }}
+                    aria-hidden="true"
+                  >
                     {MOCK_ROOM.avatarInitial}
                   </MiniAvatar>
                   <GuestBubbleWrap>
@@ -216,7 +225,9 @@ export default function HostChatDetailPage() {
               ) : (
                 <HostRow>
                   <HostBubbleWrap>
-                    <BubbleTime style={{ textAlign: 'right' }}>집주인 · {msg.time}</BubbleTime>
+                    <BubbleTime style={{ textAlign: 'right' }}>
+                      집주인 · {msg.time}
+                    </BubbleTime>
                     <HostBubble>{msg.text}</HostBubble>
                   </HostBubbleWrap>
                 </HostRow>
@@ -246,8 +257,12 @@ export default function HostChatDetailPage() {
 
         {/* 입력 바 */}
         <InputBar>
-          <InputIconBtn type="button" aria-label="이미지 첨부">🖼</InputIconBtn>
-          <InputIconBtn type="button" aria-label="파일 첨부">📎</InputIconBtn>
+          <InputIconBtn type="button" aria-label="이미지 첨부">
+            🖼
+          </InputIconBtn>
+          <InputIconBtn type="button" aria-label="파일 첨부">
+            📎
+          </InputIconBtn>
           <MessageInput
             ref={inputRef}
             placeholder="메시지 입력..."
@@ -267,54 +282,16 @@ export default function HostChatDetailPage() {
           </SendBtn>
         </InputBar>
       </ChatContainer>
-    </ChatWrap>
+    </PageLayout>
   );
 }
 
 // ─── Styled Components ────────────────────────────────────────────────────────
-
-const ChatWrap = styled.div`
-  max-width: 860px;
-  width: 100%;
-  margin: 0 auto;
-  padding: var(--space-6) var(--space-6) 0;
-  display: flex;
-  flex-direction: column;
-
-  @media (max-width: 768px) {
-    padding: var(--space-4) var(--space-4) 0;
-  }
-`;
-
-const PageHeader = styled.div`margin-bottom: var(--space-4);`;
-
-const PageTitle = styled.h1`
-  font-family: var(--font-display);
-  font-size: 1.5rem;
-  font-weight: 600;
-  color: var(--gray-800);
-  letter-spacing: -0.02em;
-  margin-bottom: 4px;
-`;
-
-const PageDesc = styled.p`font-size: 0.88rem; color: var(--gray-400);`;
-
 const Divider = styled.hr`
   border: none;
   border-top: 1px solid var(--gray-200);
   margin: 0 0 var(--space-3) 0;
 `;
-
-const BackRow = styled.div`margin-bottom: var(--space-3);`;
-
-const BackBtn = styled.button`
-  font-size: 0.85rem;
-  color: var(--gray-500);
-  cursor: pointer;
-  transition: color 140ms;
-  &:hover { color: var(--gray-800); }
-`;
-
 const ChatContainer = styled.div`
   display: flex;
   flex-direction: column;
@@ -349,7 +326,10 @@ const GuestAvatar = styled.div`
   color: var(--white);
 `;
 
-const GuestInfo = styled.div`flex: 1; min-width: 0;`;
+const GuestInfo = styled.div`
+  flex: 1;
+  min-width: 0;
+`;
 
 const GuestNameRow = styled.p`
   display: flex;
@@ -392,7 +372,9 @@ const ActionIconBtn = styled.button`
   color: var(--gray-500);
   cursor: pointer;
   transition: background 140ms;
-  &:hover { background: var(--gray-100); }
+  &:hover {
+    background: var(--gray-100);
+  }
 `;
 
 const ReservationBar = styled.div`
@@ -422,9 +404,13 @@ const ResvItem = styled.span`
   gap: 4px;
 `;
 
-const ResvIcon = styled.span`font-size: 0.8rem;`;
+const ResvIcon = styled.span`
+  font-size: 0.8rem;
+`;
 
-const ResvDot = styled.span`color: var(--gray-400);`;
+const ResvDot = styled.span`
+  color: var(--gray-400);
+`;
 
 const ResvDetailLink = styled.a`
   font-size: 0.8rem;
@@ -432,7 +418,9 @@ const ResvDetailLink = styled.a`
   cursor: pointer;
   white-space: nowrap;
   font-weight: 500;
-  &:hover { text-decoration: underline; }
+  &:hover {
+    text-decoration: underline;
+  }
 `;
 
 const MessageArea = styled.div`
@@ -459,7 +447,7 @@ const DateDivider = styled.div`
 const DateLabel = styled.span`
   font-size: 0.75rem;
   color: var(--gray-400);
-  background: rgba(0,0,0,0.05);
+  background: rgba(0, 0, 0, 0.05);
   padding: 3px 12px;
   border-radius: var(--radius-full);
 `;
@@ -543,7 +531,9 @@ const QuickReplyBar = styled.div`
   background: var(--white);
   overflow-x: auto;
   scrollbar-width: none;
-  &::-webkit-scrollbar { display: none; }
+  &::-webkit-scrollbar {
+    display: none;
+  }
 `;
 
 const QuickLabel = styled.span`
@@ -597,7 +587,9 @@ const InputIconBtn = styled.button`
   justify-content: center;
   border-radius: var(--radius-md);
   transition: background 140ms;
-  &:hover { background: var(--gray-100); }
+  &:hover {
+    background: var(--gray-100);
+  }
 `;
 
 const MessageInput = styled.input`
@@ -613,8 +605,12 @@ const MessageInput = styled.input`
   outline: none;
   transition: border-color 150ms;
 
-  &:focus { border-color: #c07040; }
-  &::placeholder { color: var(--gray-400); }
+  &:focus {
+    border-color: #c07040;
+  }
+  &::placeholder {
+    color: var(--gray-400);
+  }
 `;
 
 const SendBtn = styled.button`
