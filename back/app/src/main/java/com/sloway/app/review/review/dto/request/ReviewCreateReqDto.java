@@ -1,10 +1,9 @@
 package com.sloway.app.review.review.dto.request;
 
-import com.sloway.app.review.review.entity.ReviewEntity;
 import lombok.Getter;
 
 @Getter
-public class ReviewReqDto {
+public class ReviewCreateReqDto {
 
     private Long rsvnNo;
     private Integer scoreTotal;
