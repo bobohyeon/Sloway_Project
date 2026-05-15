@@ -21,7 +21,7 @@ public class RsvnEntity {
     private Long no;
 
     @Column
-    private Long userNo; //추후 수정
+    private Long userNo; //추후 수정 예정
 
     @JoinColumn(name = "office_no")
     @ManyToOne(fetch = FetchType.LAZY)

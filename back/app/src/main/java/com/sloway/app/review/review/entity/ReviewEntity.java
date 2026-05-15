@@ -19,7 +19,7 @@ public class ReviewEntity extends BaseEntity {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long no;
 
-    @JoinColumn(name = "rsvn_no")
+    @JoinColumn(name = "rsvn_no", nullable = false)
     @ManyToOne(fetch = FetchType.LAZY)
     private RsvnEntity rsvnNo;
 
