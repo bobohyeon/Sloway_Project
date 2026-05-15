@@ -12,7 +12,7 @@ public class ReviewCreateReqDto {
     private Integer scoreFocus;
     private String content;
 
-    //service에서 공간타입 변환 후 사용하기
+    //service에서 RsvnEntity로 변환 후 사용하기
 //    public ReviewEntity toEntity(){
 //        return ReviewEntity.builder()
 //                .rsvnNo(rsvnNo)
