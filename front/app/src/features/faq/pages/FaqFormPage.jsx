@@ -78,7 +78,7 @@ export default function FaqFormPage({ isEdit = false }) {
       // isEdit ? PUT /api/admin/faqs/:id : POST /api/admin/faqs
       // body: { question, answer, category, order, status }
       await new Promise((r) => setTimeout(r, 600));
-      navigate('/admin/faqs');
+      navigate('/admin/faq');
     } finally {
       setIsSaving(false);
     }
@@ -258,7 +258,7 @@ export default function FaqFormPage({ isEdit = false }) {
             <Button variant="secondary" onClick={() => setCancelModal(false)}>
               계속 작성
             </Button>
-            <Button variant="danger" onClick={() => navigate('/admin/faqs')}>
+            <Button variant="danger" onClick={() => navigate('/admin/faq')}>
               나가기
             </Button>
           </>
