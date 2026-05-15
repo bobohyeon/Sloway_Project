@@ -18,10 +18,12 @@ public class OfficeAmenityEntity {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long no;
 
+    @Setter
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "OFFICE_NO", nullable = false)
     private OfficeEntity officeEntity;
 
+    @Setter
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "AMENITY_NO", nullable = false)
     private AmenityEntity amenityEntity;
