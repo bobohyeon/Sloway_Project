@@ -255,7 +255,7 @@ export default function NoticeManagePage() {
                           )}
                           <TitleText
                             onClick={() =>
-                              navigate(`/user/notice/${notice.id}`)
+                              navigate(`/notices/${notice.id}`)
                             }
                           >
                             {notice.title}
