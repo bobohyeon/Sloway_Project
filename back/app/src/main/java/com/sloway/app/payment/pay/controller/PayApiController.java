@@ -33,8 +33,8 @@ public class PayApiController {
     }
 
     @GetMapping("/{no}")
-    public ResponseEntity<PayResDto> findPayById(@PathVariable Long no){
-        PayResDto payResDto = payService.findPayById(no);
+    public ResponseEntity<PayResDto> findPayByNo(@PathVariable Long no){
+        PayResDto payResDto = payService.findPayByNo(no);
         return ResponseEntity.ok(payResDto);
     }
 

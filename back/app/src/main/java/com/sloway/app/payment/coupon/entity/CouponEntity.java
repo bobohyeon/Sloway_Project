@@ -47,12 +47,18 @@ public class CouponEntity extends BaseEntity {
     private Long payNo;
 
     public void useCoupon(Long payNo) {
+        if (this.status != CouponStatus.AVAILABLE) {
+            throw new IllegalStateException("사용 가능한 쿠폰이 아닙니다.");
+        }
         this.usedAt = LocalDateTime.now();
         this.payNo = payNo;
         this.status = CouponStatus.USED;
     }
-
+    
     public void expireCoupon() {
+        if (this.status == CouponStatus.EXPIRED) {
+            throw new IllegalStateException("사용 불가능한 쿠폰입니다");
+        }
         this.status = CouponStatus.EXPIRED;
     }
 }
