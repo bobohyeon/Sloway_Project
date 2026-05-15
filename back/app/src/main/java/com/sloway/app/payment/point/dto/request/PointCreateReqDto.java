@@ -17,7 +17,7 @@ public class PointCreateReqDto {
                 .payNo(payNo)
                 .memberNo(memberNo)
                 .dealType(dealType)
-                .status(PointStatus.WAIT)
+                .status(PointStatus.SAVE)
                 .build();
     }
 }
