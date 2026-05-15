@@ -11,15 +11,12 @@ import java.time.LocalDateTime;
 @Getter
 public class SettleCreateReqDto {
 
-
-    private Long no;
     private Long hostNo;
     private LocalDate settleStartDate;
     private LocalDate settleEndDate;
 
     public SettleEntity toEntity() {
         return SettleEntity.builder()
-                .no(no)
                 .hostNo(hostNo)
                 .settleStartDate(settleStartDate)
                 .settleEndDate(settleEndDate)

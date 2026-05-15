@@ -23,7 +23,7 @@ public class CouponCreateReqDto {
                 .dcValue(dcValue)
                 .memberNo(memberNo)
                 .expiredAt(expiredAt)
-                .status(CouponStatus.CREATED)
+                .status(CouponStatus.AVAILABLE)
                 .build();
     }
 }

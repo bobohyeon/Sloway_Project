@@ -12,6 +12,7 @@ import java.time.LocalDateTime;
 @Builder
 public class SettleResDto {
 
+    private Long no;
     private LocalDate settleStartDate;
     private LocalDate settleEndDate;
     private Long hostNo;
@@ -28,6 +29,7 @@ public class SettleResDto {
 
     public static SettleResDto from(SettleEntity entity) {
         return SettleResDto.builder()
+                .no(entity.getNo())
                 .settleStartDate(entity.getSettleStartDate())
                 .settleEndDate(entity.getSettleEndDate())
                 .hostNo(entity.getHostNo())
