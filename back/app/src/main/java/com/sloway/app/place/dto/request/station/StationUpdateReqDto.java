@@ -2,12 +2,10 @@ package com.sloway.app.place.dto.request.station;
 
 import com.sloway.app.place.entity.amenity.AmenityEntity;
 import com.sloway.app.place.entity.amenity.station.StationAmenityEntity;
-import com.sloway.app.place.entity.place.PlaceEntity;
 import com.sloway.app.place.entity.station.StationEntity;
 import com.sloway.app.place.entity.station.StationExceptionPeriodEntity;
 import lombok.Getter;
 import lombok.Setter;
-import org.springframework.web.multipart.MultipartFile;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -22,6 +20,7 @@ public class StationUpdateReqDto {
     private int maxPeople;
     private int basePeople;
     private int rooms;
+    private int chargeAdd;
     private LocalDateTime checkIn;
     private LocalDateTime checkOut;
     private List<AmenityDto> facilityList;

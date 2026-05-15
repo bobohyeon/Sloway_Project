@@ -11,26 +11,12 @@ function InsertCoworkingPage() {
   const [step, setStep] = useState(1);
 
   const [formData, setFormData] = useState({
+    placeNo: '',
     title: '',
-    address: '',
-    detailAddress: '',
     content: '',
-    latitude: null,
-    longitude: null,
-    maxPeople: '',
     basePeople: '',
-    rooms: '',
-    checkIn: '',
-    checkOut: '',
     facilities: [],
-    monPrice: '',
-    tuePrice: '',
-    wedPrice: '',
-    thuPrice: '',
-    friPrice: '',
-    satPrice: '',
-    sunPrice: '',
-    holidayPrice: '',
+    officePeriods: [],
     exceptionPeriods: [],
     images: [],
   });

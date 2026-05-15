@@ -52,8 +52,16 @@ public class BlackOutEntity {
         this.createdAt = LocalDateTime.now();
     }
 
-    public void update(){
-
+    public void editBlackOut(String title, String memo, BlackOutReasonType reasonType,
+                             LocalDateTime startDate, LocalDateTime endDate,
+                             LocalDateTime startTime, LocalDateTime endTime) {
+        this.title = title;
+        this.memo = memo;
+        this.reasonType = reasonType;
+        this.startDate = startDate;
+        this.endDate = endDate;
+        this.startTime = startTime;
+        this.endTime = endTime;
     }
 
 }

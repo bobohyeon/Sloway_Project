@@ -33,9 +33,9 @@ public class PayService {
         return payRepository.findAll().stream().map(PayResDto::from).toList();
     }
 
-    public PayResDto findPayById(Long id) {
-        PayEntity entity = payRepository.findById(id)
-                .orElseThrow(() -> new EntityNotFoundException("Pay not found with id " + id));
+    public PayResDto findPayByNo(Long no) {
+        PayEntity entity = payRepository.findById(no)
+                .orElseThrow(() -> new EntityNotFoundException("결제 정보를 조회할 수 없습니다."));
         return PayResDto.from(entity);
     }
 

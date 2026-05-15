@@ -25,4 +25,11 @@ public class ImgWorkStayEntity {
     @Column(nullable = false)
     private int sort;
 
+    public static ImgWorkStayEntity from(WorkStayEntity savedEntity, String url, int sortValue) {
+        return ImgWorkStayEntity.builder()
+                .workStayEntity(savedEntity)
+                .currentUrl(url)
+                .sort(sortValue)
+                .build();
+    }
 }

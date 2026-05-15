@@ -45,19 +45,18 @@ public class PointEntity extends BaseEntity {
             throw new IllegalStateException("적립 대기상태에서만 적립확정 가능");
         }
         this.status = PointStatus.SAVE;
-
     }
 
     public void expire() {
         if (this.status != PointStatus.WAIT && this.status != PointStatus.SAVE) {
-            throw new IllegalStateException("WAIT 또는 SAVE 상태만 만료 가능합니다.");
+            throw new IllegalStateException("WAIT 이거나 SAVE 상태만 만료 가능합니다.");
         }
         this.status = PointStatus.EXPIRATION;
     }
 
     public void cancel() {
         if (this.status != PointStatus.WAIT && this.status != PointStatus.SAVE) {
-            throw new IllegalStateException("WAIT 또는 SAVE 상태만 취소 가능합니다.");
+            throw new IllegalStateException("WAIT 이거나 SAVE 상태만 취소 가능합니다.");
         }
         this.status = PointStatus.CANCEL;
     }

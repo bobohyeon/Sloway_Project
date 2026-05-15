@@ -25,4 +25,11 @@ public class ImgOfficeEntity {
     @Column(nullable = false)
     private int sort;
 
+    public static ImgOfficeEntity from(OfficeEntity office, String url, int sortValue) {
+        return ImgOfficeEntity.builder()
+                .officeEntity(office)
+                .currentUrl(url)
+                .sort(sortValue)
+                .build();
+    }
 }

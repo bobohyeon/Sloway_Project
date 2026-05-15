@@ -17,10 +17,12 @@ public class WorkOfficeAmenityEntity {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long no;
 
+    @Setter
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "WORK_OFFICE_NO", nullable = false)
     private WorkOfficeEntity workOfficeEntity;
 
+    @Setter
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "AMENITY_NO", nullable = false)
     private AmenityEntity amenityEntity;

@@ -72,11 +72,6 @@ function SpaceDetailPage() {
   };
 
   // 3. 탭 구성 (상세 페이지 내에서도 '전체' 개수 표시용)
-
-  const handleBack = () => {
-    navigate('/host/space/list'); // 목록 페이지로 이동 로직
-  };
-
   const handleCardClick = (unitId) => {
     const basePath = {
       STATION: 'lodging',
@@ -91,7 +86,7 @@ function SpaceDetailPage() {
     <SpaceDetailLayout
       title={`${placeInfo.name} ${getTypeLabel(placeInfo.type)} 목록`}
       description={`등록된 ${getTypeLabel(placeInfo.type)}를 관리하고 정보를 수정하세요.`}
-      onBack={handleBack}
+      onBack={'/host/space/list'}
     >
       <SpaceDetailComponent
         data={units}

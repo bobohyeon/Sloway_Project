@@ -17,6 +17,7 @@ public class OfficePeriodEntity {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long no;
 
+    @Setter
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "OFFICE_NO", nullable = false)
     private OfficeEntity officeEntity;
@@ -26,6 +27,9 @@ public class OfficePeriodEntity {
 
     @Column(length = 1, nullable = false)
     private String dayOfWeek;
+
+    @Column
+    private LocalDateTime startTime;
 
     @Column
     private LocalDateTime exceptionStartDate;

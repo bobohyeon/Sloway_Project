@@ -1,5 +1,8 @@
 package com.sloway.app.payment.point.service;
 
+import com.sloway.app.payment.point.dto.request.PointCreateReqDto;
+import com.sloway.app.payment.point.dto.response.PointResDto;
+import com.sloway.app.payment.point.entity.PointEntity;
 import com.sloway.app.payment.point.repository.PointRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -20,6 +23,12 @@ import org.springframework.transaction.annotation.Transactional;
 public class PointService {
 
     private final PointRepository pointRepository;
+    
+    @Transactional
+    public PointResDto createPoint(PointCreateReqDto reqDto) {
+        PointEntity entity = reqDto.toEntity();
+        return PointResDto.from(pointRepository.save(entity));
+    }
 
     // TODO: createPoint(PointCreateReqDto reqDto) — @Transactional
 

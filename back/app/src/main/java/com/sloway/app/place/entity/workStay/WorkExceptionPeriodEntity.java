@@ -17,6 +17,7 @@ public class WorkExceptionPeriodEntity {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long no;
 
+    @Setter
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "WORK_NO", nullable = false)
     private WorkStayEntity workStayEntity;

@@ -152,7 +152,7 @@ export default function NoticeManagePage() {
             <Button size="sm" variant="secondary" onClick={handleSearch}>
               검색
             </Button>
-            <Button onClick={() => navigate('/admin/notices/new')}>
+            <Button onClick={() => navigate('/admin/notice/form')}>
               + 공지사항 등록
             </Button>
           </SearchGroup>
@@ -255,7 +255,7 @@ export default function NoticeManagePage() {
                           )}
                           <TitleText
                             onClick={() =>
-                              navigate(`/user/notice/${notice.id}`)
+                              navigate(`/notices/${notice.id}`)
                             }
                           >
                             {notice.title}

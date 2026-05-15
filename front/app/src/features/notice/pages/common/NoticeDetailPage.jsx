@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import styled from 'styled-components';
 import { useNavigate, useParams } from 'react-router-dom';
+import PageLayout from '../../../../app/layouts/page/PageLayout';
 import { Badge, Button, Card } from '../../../pay_shared/components';
 
 // ─── Mock 데이터 (백엔드 연동 시 GET /api/notices/:id 로 대체) ───────────────
@@ -56,7 +57,7 @@ export default function NoticeDetailPage() {
   const notice = MOCK_NOTICE;
 
   return (
-    <Wrap>
+    <PageLayout maxWidth={800}>
       {/* 브레드크럼 */}
       <Breadcrumb>
         <BreadcrumbBtn onClick={() => navigate('/notices')}>
@@ -138,20 +139,11 @@ export default function NoticeDetailPage() {
           ← 목록으로
         </Button>
       </BackBtn>
-    </Wrap>
+    </PageLayout>
   );
 }
 
 // ─── Styled Components ───────────────────────────────────────────────────────
-
-const Wrap = styled.div`
-  padding: var(--space-6);
-  max-width: 100%;
-
-  @media (max-width: 768px) {
-    padding: var(--space-4);
-  }
-`;
 
 const Breadcrumb = styled.nav`
   display: flex;

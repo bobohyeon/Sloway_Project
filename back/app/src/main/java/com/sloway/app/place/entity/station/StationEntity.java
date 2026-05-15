@@ -1,8 +1,8 @@
 package com.sloway.app.place.entity.station;
 
 import com.sloway.app.common.entity.BaseEntity;
+import com.sloway.app.place.dto.request.station.StationUpdateReqDto;
 import com.sloway.app.place.entity.amenity.station.StationAmenityEntity;
-import com.sloway.app.place.entity.place.ImgPlaceEntity;
 import com.sloway.app.place.entity.place.PlaceEntity;
 import jakarta.persistence.*;
 import lombok.*;
@@ -101,9 +101,23 @@ public class StationEntity extends BaseEntity {
             period.setStationEntity(this);
         }
     }
-    public void updateTitleAndContent(String title, String content) {
-        this.title = title;
-        this.content = content;
-    }
 
+    public void updateInfo(StationUpdateReqDto dto) {
+        this.title = dto.getTitle();
+        this.content = dto.getContent();
+        this.cnt = dto.getBasePeople();
+        this.maxCnt = dto.getMaxPeople();
+        this.rooms = dto.getRooms();
+        this.chargeAdd = dto.getChargeAdd(); // 추가 인원 요금 등 필드 확인 필요
+        this.checkinTime = dto.getCheckIn();
+        this.checkoutTime = dto.getCheckOut();
+        this.monPrice = dto.getMonPrice();
+        this.tuePrice = dto.getTuePrice();
+        this.wedPrice = dto.getWedPrice();
+        this.thuPrice = dto.getThuPrice();
+        this.friPrice = dto.getFriPrice();
+        this.satPrice = dto.getSatPrice();
+        this.sunPrice = dto.getSunPrice();
+        this.holPrice = dto.getHolPrice();
+    }
 }

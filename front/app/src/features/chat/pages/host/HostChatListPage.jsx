@@ -1,5 +1,7 @@
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import styled from 'styled-components';
+import PageLayout from '../../../../app/layouts/page/PageLayout';
 
 // ─── Mock 데이터 (백엔드 연동 시 GET /api/host/chats?tab= 로 대체) ──────────
 // 호스트 뷰: 게스트 이름 + 예약 상태 + 긴급 여부가 추가됨
@@ -88,6 +90,7 @@ const TAB_OPTIONS = [
 ];
 
 export default function HostChatListPage() {
+  const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState('전체');
   const [searchKeyword, setSearchKeyword] = useState('');
 
@@ -113,11 +116,11 @@ export default function HostChatListPage() {
   };
 
   return (
-    <PageWrap>
-      <PageHeader>
-        <PageTitle>1:1 채팅</PageTitle>
-        <PageDesc>게스트와 나눈 대화를 관리하세요</PageDesc>
-      </PageHeader>
+    <PageLayout
+      title="1:1 채팅"
+      description="게스트와 나눈 대화를 관리하세요"
+      maxWidth={860}
+    >
 
       <Divider />
 
@@ -164,11 +167,11 @@ export default function HostChatListPage() {
                 key={room.id}
                 $unread={room.unreadCount > 0}
                 $urgent={room.isUrgent}
-                // onClick={() => navigate(`/host/chats/${room.id}`)}
+                onClick={() => navigate(`/host/chat/${room.id}`)}
                 role="button"
                 tabIndex={0}
                 aria-label={`${room.guestName} 게스트 채팅${room.isUrgent ? ', 긴급' : ''}${room.unreadCount > 0 ? `, 읽지 않은 메시지 ${room.unreadCount}개` : ''}`}
-                onKeyDown={(e) => e.key === 'Enter' && undefined}
+                onKeyDown={(e) => e.key === 'Enter' && navigate(`/host/chat/${room.id}`)}
               >
                 {/* 게스트 아바타 — 이름 첫 글자 */}
                 <GuestAvatar style={{ background: room.avatarBg }} aria-hidden="true">
@@ -207,35 +210,11 @@ export default function HostChatListPage() {
           })}
         </RoomList>
       )}
-    </PageWrap>
+    </PageLayout>
   );
 }
 
 // ─── Styled Components ────────────────────────────────────────────────────────
-
-const PageWrap = styled.div`
-  max-width: 860px;
-  width: 100%;
-  margin: 0 auto;
-  padding: var(--space-6);
-
-  @media (max-width: 768px) {
-    padding: var(--space-4);
-  }
-`;
-
-const PageHeader = styled.div`margin-bottom: var(--space-4);`;
-
-const PageTitle = styled.h1`
-  font-family: var(--font-display);
-  font-size: 1.5rem;
-  font-weight: 600;
-  color: var(--gray-800);
-  letter-spacing: -0.02em;
-  margin-bottom: 4px;
-`;
-
-const PageDesc = styled.p`font-size: 0.88rem; color: var(--gray-400);`;
 
 const Divider = styled.hr`
   border: none;

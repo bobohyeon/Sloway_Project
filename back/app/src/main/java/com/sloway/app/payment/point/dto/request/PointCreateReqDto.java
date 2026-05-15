@@ -10,14 +10,12 @@ public class PointCreateReqDto {
 
     private Long payNo;
     private Long memberNo;
-    private Integer amount;
     private PointDealType dealType;
 
     public PointEntity toEntity() {
         return PointEntity.builder()
                 .payNo(payNo)
                 .memberNo(memberNo)
-                .amount(amount)
                 .dealType(dealType)
                 .status(PointStatus.WAIT)
                 .build();

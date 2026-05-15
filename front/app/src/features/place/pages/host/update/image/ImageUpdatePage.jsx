@@ -25,12 +25,6 @@ const SaveButton = styled.button`
 `;
 
 function ImageUpdatePage() {
-  const navigate = useNavigate();
-  const handleBack = () => {
-    console.log('목록으로 이동');
-    navigate(`/host/space/list`);
-  };
-
   const handleSave = () => {
     alert('변경 검수 요청이 완료되었습니다.');
   };
@@ -39,7 +33,7 @@ function ImageUpdatePage() {
     <ImageUpdateLayout
       title="공간 이미지 관리"
       subtitle="대표 이미지와 추가 이미지를 관리하세요"
-      onBack={handleBack}
+      onBack={`/host/space/list`}
     >
       {/* 2. 이미지 업로드 가이드 */}
       <ImageUploadGuide />

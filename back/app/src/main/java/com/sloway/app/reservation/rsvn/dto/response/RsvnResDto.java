@@ -12,7 +12,7 @@ import java.time.LocalDateTime;
 public class RsvnResDto {
 
     private Long no;
-    private Long userNo;
+    private Long memberNo;
     private Long officeNo;
     private Long stationNo;
     private Long workStayNo;
@@ -27,7 +27,7 @@ public class RsvnResDto {
     public static RsvnResDto from(RsvnEntity entity){
         return RsvnResDto.builder()
                 .no(entity.getNo())
-                .userNo(entity.getUserNo())
+                .memberNo(entity.getMemberNo().getNo())
                 .officeNo(entity.getOfficeNo() != null ? entity.getOfficeNo().getNo() : null)
                 .stationNo(entity.getStationNo() != null ? entity.getStationNo().getNo() : null)
                 .workStayNo(entity.getWorkStayNo() != null ? entity.getWorkStayNo().getNo() : null)

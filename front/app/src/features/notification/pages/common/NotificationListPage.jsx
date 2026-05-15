@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import styled, { css } from 'styled-components';
+import PageLayout from '../../../../app/layouts/page/PageLayout';
 
 // ─── 타입 정의 (백엔드 연동 시 API 응답 스펙에 맞게 수정) ────────────────────
 /**
@@ -178,12 +179,11 @@ export default function NotificationListPage() {
   const isRead = (n) => n.isRead || readIds.has(n.id);
 
   return (
-    <Wrap>
-      {/* 헤더 */}
-      <PageHeader>
-        <PageTitle>알림 내역</PageTitle>
-        <PageDesc>놓친 알림이 있는지 확인하세요</PageDesc>
-      </PageHeader>
+    <PageLayout
+      title="알림 내역"
+      description="놓친 알림이 있는지 확인하세요"
+      maxWidth={1200}
+    >
 
       <Divider />
 
@@ -302,40 +302,11 @@ export default function NotificationListPage() {
           </PageBtn>
         </Pagination>
       )}
-    </Wrap>
+    </PageLayout>
   );
 }
 
 // ─── Styled Components ────────────────────────────────────────────────────────
-
-const Wrap = styled.div`
-  padding: var(--space-6);
-  max-width: 860px;
-  margin: 0 auto;
-
-  @media (max-width: 768px) {
-    padding: var(--space-4);
-  }
-`;
-
-const PageHeader = styled.div`
-  margin-bottom: var(--space-4);
-`;
-
-const PageTitle = styled.h1`
-  font-family: var(--font-display);
-  font-size: 1.5rem;
-  font-weight: 600;
-  color: var(--gray-800);
-  letter-spacing: -0.02em;
-  margin-bottom: 4px;
-`;
-
-const PageDesc = styled.p`
-  font-size: 0.88rem;
-  color: var(--gray-400);
-`;
-
 const Divider = styled.hr`
   border: none;
   border-top: 1px solid var(--gray-200);

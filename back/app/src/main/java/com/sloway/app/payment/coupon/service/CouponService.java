@@ -1,13 +1,18 @@
 package com.sloway.app.payment.coupon.service;
 
+import com.sloway.app.payment.coupon.dto.request.CouponCreateReqDto;
+import com.sloway.app.payment.coupon.dto.response.CouponResDto;
+import com.sloway.app.payment.coupon.entity.CouponEntity;
 import com.sloway.app.payment.coupon.repository.CouponRepository;
+import com.sloway.app.payment.pay.repository.PayRepository;
+import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-// TODO: 쿠폰 서비스
-//       메서드 컨벤션: createCoupon / findCouponAll / findCouponById / useCoupon
+import java.util.List;
+
 @Service
 @Transactional(readOnly = true)
 @RequiredArgsConstructor
@@ -15,12 +20,31 @@ import org.springframework.transaction.annotation.Transactional;
 public class CouponService {
 
     private final CouponRepository couponRepository;
+    private final PayRepository payRepository;
 
-    // TODO: createCoupon(...) — 쿠폰 발급
+    @Transactional
+    public CouponResDto createCoupon(CouponCreateReqDto reqDto) {
+        CouponEntity entity = reqDto.toEntity();
+        return CouponResDto.from(couponRepository.save(entity));
+    }
 
-    // TODO: findCouponAll() / findCouponById(Long id)
+    public List<CouponResDto> findCouponAll() {
+        List<CouponResDto> couponList = couponRepository.findAll().stream().map(CouponResDto::from).toList();
+        return couponList;
+    }
 
-    // TODO: useCoupon(Long couponNo, Long payNo)
-    //       - Pay 결제 시 호출되어 쿠폰 사용 처리
-    //       - 학습 로그 결정 (옵션 A): 본체 로직은 Coupon 도메인 만들 때 채움
+    public CouponResDto findCouponByNo(Long no) {
+        CouponEntity couponEntity = couponRepository.findById(no)
+                .orElseThrow(() -> new EntityNotFoundException("쿠폰을 조회할 수 없습니다."));
+        return CouponResDto.from(couponEntity);
+    }
+
+    @Transactional
+    public void useCoupon(Long couponNo, Long payNo) {
+        CouponEntity couponEntity = couponRepository.findById(couponNo)
+                .orElseThrow(() -> new EntityNotFoundException("쿠폰을 조회할 수 없습니다."));
+        payRepository.findById(payNo)
+                .orElseThrow(() -> new EntityNotFoundException("결제가 올바르지 않습니다."));
+        couponEntity.useCoupon(payNo);
+    }
 }
