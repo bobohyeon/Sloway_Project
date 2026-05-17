@@ -19,12 +19,12 @@ import java.util.List;
 public class PayApiController {
 
     private final PayService payService;
-//
-//    @PostMapping
-//    public ResponseEntity<PayResDto> createPay(@RequestBody PayCreateReqDto reqDto){
-//        PayResDto payResDto = payService.createPay(reqDto);
-//        return ResponseEntity.status(HttpStatus.CREATED).body(payResDto);
-//    }
+
+    @PostMapping
+    public ResponseEntity<PayResDto> createPay(@RequestBody PayCreateReqDto reqDto){
+        PayResDto payResDto = payService.createPay(reqDto);
+        return ResponseEntity.status(HttpStatus.CREATED).body(payResDto);
+    }
 
     @GetMapping
     public ResponseEntity<List<PayResDto>> findPayAll(){
