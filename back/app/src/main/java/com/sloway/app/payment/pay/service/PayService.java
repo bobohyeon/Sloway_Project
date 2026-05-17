@@ -20,14 +20,14 @@ import java.util.UUID;
 public class PayService {
 
     private final PayRepository payRepository;
-
-    @Transactional
-    public PayResDto createPay(PayCreateReqDto reqDto) {
-        PayEntity entity = reqDto.toEntity();
-        String fakeTid = createFakeTid();
-        entity.completeAsLevel1(fakeTid);
-        return PayResDto.from(payRepository.save(entity));
-    }
+//
+//    @Transactional
+//    public PayResDto createPay(PayCreateReqDto reqDto) {
+//        PayEntity entity = reqDto.toEntity();
+//        String fakeTid = createFakeTid();
+//        entity.completeAsLevel1(fakeTid);
+//        return PayResDto.from(payRepository.save(entity));
+//    }
 
     public List<PayResDto> findPayAll() {
         return payRepository.findAll().stream().map(PayResDto::from).toList();

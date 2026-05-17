@@ -29,12 +29,12 @@ public class PointService {
 
     private final PointRepository pointRepository;
     private final PayRepository payRepository;
-    
-    @Transactional
-    public PointResDto createPoint(PointCreateReqDto reqDto) {
-        PointEntity entity = reqDto.toEntity();
-        return PointResDto.from(pointRepository.save(entity));
-    }
+//
+//    @Transactional
+//    public PointResDto createPoint(PointCreateReqDto reqDto) {
+//        PointEntity entity = reqDto.toEntity();
+//        return PointResDto.from(pointRepository.save(entity));
+//    }
 
     // TODO: createPoint(PointCreateReqDto reqDto) — @Transactional
 
