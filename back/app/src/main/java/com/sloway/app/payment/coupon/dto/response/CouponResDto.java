@@ -13,6 +13,7 @@ import java.time.LocalDateTime;
 public class CouponResDto {
 
     private Long no;
+    private Long payNo;
     private CouponStatus status;
     private String couponName;
     private CouponDcType dcType;
@@ -23,8 +24,6 @@ public class CouponResDto {
     private LocalDateTime createdAt;
     private LocalDateTime modifiedAt;
     private String delYn;
-    private Long payNo;
-
 
 
     public static CouponResDto from(CouponEntity entity) {
@@ -34,10 +33,10 @@ public class CouponResDto {
                 .couponName(entity.getCouponName())
                 .dcType(entity.getDcType())
                 .dcValue(entity.getDcValue())
-                .memberNo(entity.getMemberNo())
+                .memberNo(entity.getMemberNo().getNo())
                 .expiredAt(entity.getExpiredAt())
                 .usedAt(entity.getUsedAt())
-                .payNo(entity.getPayNo())
+                .payNo(entity.getPayNo() == null ? null : entity.getPayNo().getNo())
                 .createdAt(entity.getCreatedAt())
                 .modifiedAt(entity.getModifiedAt())
                 .delYn(entity.getDelYn())

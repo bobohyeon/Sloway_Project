@@ -27,11 +27,11 @@ public class PayResDto {
     private LocalDateTime modifiedAt;
     private LocalDateTime approvedAt;
 
-    public static PayResDto from(PayEntity entity){
+    public static PayResDto from(PayEntity entity) {
         return PayResDto.builder()
                 .no(entity.getNo())
-                .rsvnNo(entity.getRsvnNo())
-                .ucNo(entity.getUcNo())
+                .rsvnNo(entity.getRsvnNo().getNo())
+                .ucNo(entity.getUcNo() == null ? null : entity.getUcNo().getNo())
                 .tid(entity.getTid())
                 .method(entity.getMethod())
                 .status(entity.getStatus())

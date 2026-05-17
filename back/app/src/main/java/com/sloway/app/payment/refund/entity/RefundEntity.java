@@ -1,9 +1,12 @@
 package com.sloway.app.payment.refund.entity;
 
 import com.sloway.app.common.entity.BaseEntity;
+import com.sloway.app.payment.coupon.entity.CouponEntity;
+import com.sloway.app.payment.pay.entity.PayEntity;
 import com.sloway.app.payment.refund.common.RefundRate;
 import com.sloway.app.payment.refund.common.RefundReason;
 import com.sloway.app.payment.refund.common.RefundStatus;
+import com.sloway.app.reservation.rsvn.entity.RsvnEntity;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -21,14 +24,17 @@ public class RefundEntity extends BaseEntity {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long no;
 
-    @Column
-    private Long payNo;
+    @JoinColumn(name = "PAY_NO", nullable = false)
+    @ManyToOne(fetch = FetchType.LAZY)
+    private PayEntity payNo;
 
-    @Column
-    private Long rsvnNo;
+    @JoinColumn(name = "RSVN_NO", nullable = false)
+    @ManyToOne(fetch = FetchType.LAZY)
+    private RsvnEntity rsvnNo;
 
-    @Column
-    private Long ucNo;
+    @JoinColumn(name = "UC_NO")
+    @ManyToOne(fetch = FetchType.LAZY)
+    private CouponEntity ucNo;
 
     @Column
     private Integer refundAmt;
