@@ -20,7 +20,7 @@ public class RefundResDto {
     private Integer refundAmt;
     private RefundRate refundRate;
     private RefundReason refundReason;
-    private LocalDateTime refundedAt;
+    private LocalDateTime requestedAt;
     private RefundStatus status;
     private LocalDateTime createdAt;
     private LocalDateTime modifiedAt;
@@ -28,13 +28,13 @@ public class RefundResDto {
     public static RefundResDto from(RefundEntity entity) {
         return RefundResDto.builder()
                 .no(entity.getNo())
-                .payNo(entity.getPayNo())
-                .rsvnNo(entity.getRsvnNo())
-                .ucNo(entity.getUcNo())
+                .payNo(entity.getPayNo().getNo())
+                .rsvnNo(entity.getRsvnNo().getNo())
+                .ucNo(entity.getUcNo() == null ? null : entity.getUcNo().getNo())
                 .refundAmt(entity.getRefundAmt())
                 .refundRate(entity.getRefundRate())
                 .refundReason(entity.getRefundReason())
-                .refundedAt(entity.getRefundedAt())
+                .requestedAt(entity.getRequestedAt())
                 .status(entity.getStatus())
                 .createdAt(entity.getCreatedAt())
                 .modifiedAt(entity.getModifiedAt())

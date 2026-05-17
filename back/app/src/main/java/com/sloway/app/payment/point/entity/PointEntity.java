@@ -1,6 +1,8 @@
 package com.sloway.app.payment.point.entity;
 
 import com.sloway.app.common.entity.BaseEntity;
+import com.sloway.app.member.entity.MemberEntity;
+import com.sloway.app.payment.pay.entity.PayEntity;
 import com.sloway.app.payment.point.common.PointDealType;
 import com.sloway.app.payment.point.common.PointStatus;
 import jakarta.persistence.*;
@@ -20,11 +22,13 @@ public class PointEntity extends BaseEntity {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long no;
 
-    @Column
-    private Long memberNo;
+    @JoinColumn(name = "MEMBER_NO", nullable = false)
+    @ManyToOne(fetch = FetchType.LAZY)
+    private MemberEntity memberNo;
 
-    @Column
-    private Long payNo;
+    @JoinColumn(name = "PAY_NO", nullable = false)
+    @ManyToOne(fetch = FetchType.LAZY)
+    private PayEntity payNo;
 
     @Column
     private Integer amount;

@@ -19,12 +19,12 @@ public class PointApiController {
     private final PointService pointService;
 
     // TODO: POST /api/payment/point — createPoint 핸들러
-    @PostMapping
-    public ResponseEntity<PointResDto> createPoint(@RequestBody PointCreateReqDto reqDto){
-        PointResDto pointResDto = pointService.createPoint(reqDto);
-        return ResponseEntity.status(HttpStatus.CREATED).body(pointResDto);
-    }
-
+//    @PostMapping
+//    public ResponseEntity<PointResDto> createPoint(@RequestBody PointCreateReqDto reqDto){
+//        PointResDto pointResDto = pointService.createPoint(reqDto);
+//        return ResponseEntity.status(HttpStatus.CREATED).body(pointResDto);
+//    }
+//
 
     // TODO: GET /api/payment/point — findPointAll 핸들러
 

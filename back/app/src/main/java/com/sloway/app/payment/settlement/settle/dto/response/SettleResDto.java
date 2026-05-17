@@ -32,7 +32,7 @@ public class SettleResDto {
                 .no(entity.getNo())
                 .settleStartDate(entity.getSettleStartDate())
                 .settleEndDate(entity.getSettleEndDate())
-                .hostNo(entity.getHostNo())
+                .hostNo(entity.getHostNo().getNo())
                 .totalAmt(entity.getTotalAmt())
                 .feeAmt(entity.getFeeAmt())
                 .refundAmt(entity.getRefundAmt())

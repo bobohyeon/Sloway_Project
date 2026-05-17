@@ -4,6 +4,7 @@ import com.sloway.app.payment.coupon.dto.request.CouponCreateReqDto;
 import com.sloway.app.payment.coupon.dto.response.CouponResDto;
 import com.sloway.app.payment.coupon.entity.CouponEntity;
 import com.sloway.app.payment.coupon.repository.CouponRepository;
+import com.sloway.app.payment.pay.entity.PayEntity;
 import com.sloway.app.payment.pay.repository.PayRepository;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
@@ -21,12 +22,12 @@ public class CouponService {
 
     private final CouponRepository couponRepository;
     private final PayRepository payRepository;
-
-    @Transactional
-    public CouponResDto createCoupon(CouponCreateReqDto reqDto) {
-        CouponEntity entity = reqDto.toEntity();
-        return CouponResDto.from(couponRepository.save(entity));
-    }
+//
+//    @Transactional
+//    public CouponResDto createCoupon(CouponCreateReqDto reqDto) {
+//        CouponEntity entity = reqDto.toEntity();
+//        return CouponResDto.from(couponRepository.save(entity));
+//    }
 
     public List<CouponResDto> findCouponAll() {
         List<CouponResDto> couponList = couponRepository.findAll().stream().map(CouponResDto::from).toList();
@@ -43,8 +44,8 @@ public class CouponService {
     public void useCoupon(Long couponNo, Long payNo) {
         CouponEntity couponEntity = couponRepository.findById(couponNo)
                 .orElseThrow(() -> new EntityNotFoundException("쿠폰을 조회할 수 없습니다."));
-        payRepository.findById(payNo)
+        PayEntity payEntity = payRepository.findById(payNo)
                 .orElseThrow(() -> new EntityNotFoundException("결제가 올바르지 않습니다."));
-        couponEntity.useCoupon(payNo);
+        couponEntity.useCoupon(payEntity);
     }
 }

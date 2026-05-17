@@ -1,6 +1,7 @@
 package com.sloway.app.payment.settlement.settle.entity;
 
 import com.sloway.app.common.entity.BaseEntity;
+import com.sloway.app.host.entity.HostEntity;
 import com.sloway.app.payment.settlement.settle.common.SettleStatus;
 import jakarta.persistence.*;
 import lombok.*;
@@ -26,8 +27,9 @@ public class SettleEntity extends BaseEntity {
     @Column
     private LocalDate settleEndDate;
 
-    @Column
-    private Long hostNo;
+    @JoinColumn(name = "HOST_NO", nullable = false)
+    @ManyToOne(fetch = FetchType.LAZY)
+    private HostEntity hostNo;
 
     @Column
     private Integer totalAmt;
@@ -47,7 +49,6 @@ public class SettleEntity extends BaseEntity {
 
     @Column
     private LocalDateTime settledAt;
-
 
     @Column
     private LocalDateTime invoicedAt;
