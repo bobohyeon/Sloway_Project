@@ -22,12 +22,12 @@ public class CouponService {
 
     private final CouponRepository couponRepository;
     private final PayRepository payRepository;
-
-    @Transactional
-    public CouponResDto createCoupon(CouponCreateReqDto reqDto) {
-        CouponEntity entity = reqDto.toEntity();
-        return CouponResDto.from(couponRepository.save(entity));
-    }
+//
+//    @Transactional
+//    public CouponResDto createCoupon(CouponCreateReqDto reqDto) {
+//        CouponEntity entity = reqDto.toEntity();
+//        return CouponResDto.from(couponRepository.save(entity));
+//    }
 
     public List<CouponResDto> findCouponAll() {
         List<CouponResDto> couponList = couponRepository.findAll().stream().map(CouponResDto::from).toList();
