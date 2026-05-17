@@ -21,19 +21,19 @@ public class PayApiController {
     private final PayService payService;
 
     @PostMapping
-    public ResponseEntity<PayResDto> createPay(@RequestBody PayCreateReqDto reqDto){
+    public ResponseEntity<PayResDto> createPay(@RequestBody PayCreateReqDto reqDto) {
         PayResDto payResDto = payService.createPay(reqDto);
         return ResponseEntity.status(HttpStatus.CREATED).body(payResDto);
     }
 
     @GetMapping
-    public ResponseEntity<List<PayResDto>> findPayAll(){
+    public ResponseEntity<List<PayResDto>> findPayAll() {
         List<PayResDto> payAll = payService.findPayAll();
         return ResponseEntity.ok(payAll);
     }
 
     @GetMapping("/{no}")
-    public ResponseEntity<PayResDto> findPayByNo(@PathVariable Long no){
+    public ResponseEntity<PayResDto> findPayByNo(@PathVariable Long no) {
         PayResDto payResDto = payService.findPayByNo(no);
         return ResponseEntity.ok(payResDto);
     }

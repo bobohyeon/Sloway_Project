@@ -48,7 +48,7 @@ public class RefundEntity extends BaseEntity {
     private RefundReason refundReason;
 
     @Column
-    private LocalDateTime refundedAt;
+    private LocalDateTime requestedAt;
 
     @Column
     @Enumerated(EnumType.STRING)
@@ -66,7 +66,6 @@ public class RefundEntity extends BaseEntity {
             throw new IllegalStateException("환불 승인 상태가 아닙니다.");
         }
         this.status = RefundStatus.COMPLETED;
-        this.refundedAt = LocalDateTime.now();
     }
 
     public void failedRefund() {

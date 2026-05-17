@@ -34,7 +34,7 @@ public class PayService {
 
         CouponEntity coupon = null;
         if (reqDto.getUcNo() != null) {
-            coupon = couponRepository.findById(reqDto.getUcNo()).orElseThrow(() -> new EntityNotFoundException("쿠폰 정보를 조회할 수 없습니다.ㄹ"));
+            coupon = couponRepository.findById(reqDto.getUcNo()).orElseThrow(() -> new EntityNotFoundException("쿠폰 정보를 조회할 수 없습니다."));
         }
 
         PayEntity entity = reqDto.toEntity(rsvn, coupon);

@@ -20,7 +20,7 @@ public class RefundResDto {
     private Integer refundAmt;
     private RefundRate refundRate;
     private RefundReason refundReason;
-    private LocalDateTime refundedAt;
+    private LocalDateTime requestedAt;
     private RefundStatus status;
     private LocalDateTime createdAt;
     private LocalDateTime modifiedAt;
@@ -34,7 +34,7 @@ public class RefundResDto {
                 .refundAmt(entity.getRefundAmt())
                 .refundRate(entity.getRefundRate())
                 .refundReason(entity.getRefundReason())
-                .refundedAt(entity.getRefundedAt())
+                .requestedAt(entity.getRequestedAt())
                 .status(entity.getStatus())
                 .createdAt(entity.getCreatedAt())
                 .modifiedAt(entity.getModifiedAt())
