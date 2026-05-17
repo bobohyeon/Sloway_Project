@@ -7,6 +7,8 @@ import com.sloway.app.payment.refund.entity.RefundEntity;
 import com.sloway.app.reservation.rsvn.entity.RsvnEntity;
 import lombok.Getter;
 
+import java.time.LocalDateTime;
+
 @Getter
 public class RefundCreateReqDto {
 
@@ -20,6 +22,7 @@ public class RefundCreateReqDto {
                 .payNo(payEntity)
                 .rsvnNo(rsvnEntity)
                 .refundReason(refundReason)
+                .requestedAt(LocalDateTime.now())
                 .status(RefundStatus.REQUESTED)
                 .build();
     }
