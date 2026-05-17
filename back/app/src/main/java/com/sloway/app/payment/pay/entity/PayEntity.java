@@ -1,8 +1,10 @@
 package com.sloway.app.payment.pay.entity;
 
 import com.sloway.app.common.entity.BaseEntity;
+import com.sloway.app.payment.coupon.entity.CouponEntity;
 import com.sloway.app.payment.pay.common.PayMethod;
 import com.sloway.app.payment.pay.common.PayStatus;
+import com.sloway.app.reservation.rsvn.entity.RsvnEntity;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
@@ -24,8 +26,13 @@ public class PayEntity extends BaseEntity {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long no;
 
-    private Long rsvnNo;
-    private Long ucNo;
+    @JoinColumn(name = "RSVN_NO", nullable = false)
+    @ManyToOne(fetch = FetchType.LAZY)
+    private RsvnEntity rsvnNo;
+
+    @JoinColumn(name = "UC_NO")
+    @ManyToOne(fetch = FetchType.LAZY)
+    private CouponEntity ucNo;
 
     @Column(length = 60)
     private String tid;

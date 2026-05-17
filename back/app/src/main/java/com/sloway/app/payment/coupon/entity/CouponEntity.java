@@ -1,8 +1,10 @@
 package com.sloway.app.payment.coupon.entity;
 
 import com.sloway.app.common.entity.BaseEntity;
+import com.sloway.app.member.entity.MemberEntity;
 import com.sloway.app.payment.coupon.common.CouponDcType;
 import com.sloway.app.payment.coupon.common.CouponStatus;
+import com.sloway.app.payment.pay.entity.PayEntity;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -34,8 +36,9 @@ public class CouponEntity extends BaseEntity {
     @Column
     private Integer dcValue;
 
-    @Column
-    private Long memberNo;
+    @JoinColumn(name = "MEMBER_NO", nullable = false)
+    @ManyToOne(fetch = FetchType.LAZY)
+    private MemberEntity memberNo;
 
     @Column
     private LocalDateTime expiredAt;
@@ -43,18 +46,19 @@ public class CouponEntity extends BaseEntity {
     @Column
     private LocalDateTime usedAt;
 
-    @Column
-    private Long payNo;
+    @JoinColumn(name = "PAY_NO")
+    @ManyToOne(fetch = FetchType.LAZY)
+    private PayEntity payNo;
 
-    public void useCoupon(Long payNo) {
+    public void useCoupon(PayEntity payEntity) {
         if (this.status != CouponStatus.AVAILABLE) {
             throw new IllegalStateException("사용 가능한 쿠폰이 아닙니다.");
         }
         this.usedAt = LocalDateTime.now();
-        this.payNo = payNo;
+        this.payNo = payEntity;
         this.status = CouponStatus.USED;
     }
-    
+
     public void expireCoupon() {
         if (this.status == CouponStatus.EXPIRED) {
             throw new IllegalStateException("사용 불가능한 쿠폰입니다");

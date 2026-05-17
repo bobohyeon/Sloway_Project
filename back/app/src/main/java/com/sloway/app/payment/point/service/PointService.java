@@ -1,5 +1,7 @@
 package com.sloway.app.payment.point.service;
 
+import com.sloway.app.payment.pay.entity.PayEntity;
+import com.sloway.app.payment.pay.repository.PayRepository;
 import com.sloway.app.payment.point.dto.request.PointCreateReqDto;
 import com.sloway.app.payment.point.dto.response.PointResDto;
 import com.sloway.app.payment.point.entity.PointEntity;
@@ -8,6 +10,9 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.util.Collections;
+import java.util.List;
 
 // TODO: 포인트 서비스
 //       메서드 컨벤션: createPoint / findPointAll / findPointById
@@ -23,6 +28,7 @@ import org.springframework.transaction.annotation.Transactional;
 public class PointService {
 
     private final PointRepository pointRepository;
+    private final PayRepository payRepository;
     
     @Transactional
     public PointResDto createPoint(PointCreateReqDto reqDto) {
