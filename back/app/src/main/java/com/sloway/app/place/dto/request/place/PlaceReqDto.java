@@ -17,7 +17,7 @@ public class PlaceReqDto {
     private String longitude;
 
     public PlaceEntity toEntity(){
-        PlaceEntity place = PlaceEntity.builder()
+        return PlaceEntity.builder()
                 .type(type)
                 .title(title)
                 .content(content)
@@ -26,6 +26,5 @@ public class PlaceReqDto {
                 .latitude(latitude)
                 .longitude(longitude)
                 .build();
-        return place;
     }
 }

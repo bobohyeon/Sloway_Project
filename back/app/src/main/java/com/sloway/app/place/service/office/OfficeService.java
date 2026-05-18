@@ -13,6 +13,7 @@ import com.sloway.app.place.repository.amenity.AmenityRepository;
 import com.sloway.app.place.repository.office.ImgOfficeRepository;
 import com.sloway.app.place.repository.office.OfficeRepository;
 import com.sloway.app.place.repository.place.PlaceRepository;
+import com.sloway.app.place.service.hostPlace.HostPlaceService;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -35,10 +36,11 @@ public class OfficeService {
     private final OfficeRepository officeRepository;
     private final AmenityRepository amenityRepository;
     private final ImgOfficeRepository imgOfficeRepository;
+    private final HostPlaceService hostPlaceService;
 
     //저장
     @Transactional
-    public void saveOffice(OfficeReqDto dto, List<MultipartFile> files, List<ImgSortReqDto> sortList) {
+    public void saveOffice(OfficeReqDto dto, List<MultipartFile> files, List<ImgSortReqDto> sortList, Long hostNo) {
         //부모 테이블 엔티티 조회
         PlaceEntity place = placeRepository.findByNo(dto.getPlaceNo())
                 .orElseThrow(() -> new EntityNotFoundException("[OFFICE-210] Place Not Found For Save Office"));
@@ -51,7 +53,12 @@ public class OfficeService {
 
         //Office 저장을 위한 헨티티 변환
         OfficeEntity entity = dto.toEntity(place, amenityEntities);
+
+        //Office 저장
         OfficeEntity office = officeRepository.save(entity);
+
+        //검수 등록
+        hostPlaceService.insertHostPlace("C", hostNo, office.getNo());
 
         //이미지 aws로 수정
         List<String> dummyUrls = files.stream()

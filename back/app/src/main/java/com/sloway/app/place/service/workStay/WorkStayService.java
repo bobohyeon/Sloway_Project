@@ -20,6 +20,7 @@ import com.sloway.app.place.repository.workStay.WorkStayRepository;
 import com.sloway.app.place.repository.workStay.ImgWorkStayRepository;
 import com.sloway.app.place.repository.workStay.workOffice.ImgWorkOfficeRepository;
 import com.sloway.app.place.repository.workStay.workOffice.WorkOfficeRepository;
+import com.sloway.app.place.service.hostPlace.HostPlaceService;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -43,6 +44,7 @@ public class WorkStayService {
     private final AmenityRepository amenityRepository;
     private final ImgWorkStayRepository imgWorkStayRepository;
     private final ImgWorkOfficeRepository imgWorkOfficeRepository;
+    private final HostPlaceService hostPlaceService;
 
     @Transactional
     public void saveWorkStay(
@@ -51,7 +53,8 @@ public class WorkStayService {
             List<MultipartFile> files,
             List<MultipartFile> officeFiles,
             List<ImgSortReqDto> sortList,
-            List<ImgSortReqDto> officeSortList) {
+            List<ImgSortReqDto> officeSortList,
+            Long hostNo) {
 
         //부모 테이블 엔티티 조회
         PlaceEntity place = placeRepository.findByNo(dto.getPlaceNo())
@@ -72,8 +75,13 @@ public class WorkStayService {
         //workStay 저장을 위한 엔티티 변환
         WorkStayEntity entity = dto.toEntity(place,amenityEntities);
         WorkStayEntity savedEntity = workStayRepository.save(entity);
+
+        //workOffice저장
         WorkOfficeEntity officeEntity = officeDto.toEntity(savedEntity,officeAmenityEntities);
         WorkOfficeEntity savedOfficeEntity = workOfficeRepository.save(officeEntity);
+
+        //검수 저장
+        hostPlaceService.insertHostPlace("W",hostNo, savedEntity.getNo());
 
         //이미지 aws로 수정
         List<String> dummyUrls = files.stream()
