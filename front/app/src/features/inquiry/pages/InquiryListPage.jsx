@@ -9,6 +9,7 @@ import {
   Tabs,
   Card,
 } from '../../pay_shared/components';
+import PageLayout from '../../../app/layouts/page/PageLayout';
 
 // ─── Mock 데이터 (백엔드 연동 시 GET /api/inquiries?status=&page= 로 대체) ──
 // 실무: 본인 문의만 조회 → JWT 토큰의 userId 기반으로 서버에서 필터링
@@ -22,8 +23,8 @@ const MOCK_INQUIRIES = Array.from({ length: 14 }, (_, i) => ({
     '호스트와 채팅이 안 돼요',
   ][i % 5],
   category: ['예약·결제', '취소·환불', '계정', '서비스 이용', '기타'][i % 5],
-  // answered: 답변 완료 / pending: 답변 대기 / processing: 처리 중
-  status: ['answered', 'pending', 'processing'][i % 3],
+  // answered: 답변 완료 / pending: 답변 대기
+  status: ['answered', 'pending'][i % 2],
   hasAnswer: i % 3 === 0,
   createdAt: `2026.0${(i % 5) + 1}.${String((i % 28) + 1).padStart(2, '0')}`,
   answeredAt:
@@ -35,7 +36,6 @@ const MOCK_INQUIRIES = Array.from({ length: 14 }, (_, i) => ({
 const STATUS_MAP = {
   answered: { label: '답변 완료', variant: 'success' },
   pending: { label: '답변 대기', variant: 'muted' },
-  processing: { label: '처리 중', variant: 'warning' },
 };
 
 const TAB_ITEMS = [
@@ -44,11 +44,6 @@ const TAB_ITEMS = [
     label: '답변 대기',
     value: 'pending',
     count: MOCK_INQUIRIES.filter((i) => i.status === 'pending').length,
-  },
-  {
-    label: '처리 중',
-    value: 'processing',
-    count: MOCK_INQUIRIES.filter((i) => i.status === 'processing').length,
   },
   {
     label: '답변 완료',
@@ -71,18 +66,15 @@ export default function InquiryListPage() {
   const paged = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
 
   return (
-    <Wrap>
-      {/* 헤더 */}
-      <PageHeader>
-        <div>
-          <PageTitle>내 문의사항</PageTitle>
-          <PageDesc>등록한 문의사항과 답변을 확인하세요.</PageDesc>
-        </div>
+    <PageLayout
+      title="내 문의사항"
+      description="등록한 문의사항과 답변을 확인하세요"
+      actions={
         <Button onClick={() => navigate('/user/inquiry/form')}>
           + 문의하기
         </Button>
-      </PageHeader>
-
+      }
+    >
       {/* 탭 */}
       <TabWrap>
         <Tabs
@@ -151,7 +143,7 @@ export default function InquiryListPage() {
           window.scrollTo(0, 0);
         }}
       />
-    </Wrap>
+    </PageLayout>
   );
 }
 
