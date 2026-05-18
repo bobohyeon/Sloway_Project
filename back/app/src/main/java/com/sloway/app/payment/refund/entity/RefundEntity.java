@@ -10,6 +10,7 @@ import com.sloway.app.reservation.rsvn.entity.RsvnEntity;
 import jakarta.persistence.*;
 import lombok.*;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 @Entity
@@ -36,8 +37,8 @@ public class RefundEntity extends BaseEntity {
     @ManyToOne(fetch = FetchType.LAZY)
     private CouponEntity ucNo;
 
-    @Column
-    private Integer refundAmt;
+    @Column(precision = 19, scale = 0)
+    private BigDecimal refundAmt;
 
     @Column
     @Enumerated(EnumType.STRING)
@@ -75,7 +76,7 @@ public class RefundEntity extends BaseEntity {
         this.status = RefundStatus.FAILED;
     }
 
-    public void applyRefund(RefundRate rate, int refundAmt) {
+    public void applyRefund(RefundRate rate, BigDecimal refundAmt) {
         this.refundRate = rate;
         this.refundAmt = refundAmt;
     }
