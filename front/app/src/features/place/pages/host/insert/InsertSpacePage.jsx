@@ -4,6 +4,7 @@ import InsertSpaceStateComponent from '../../../components/host/insert/InsertSpa
 import InsertSpaceLayout from '../../../layouts/host/insert/InsertSpaceLayout';
 import InsertSpaceImageComponent from '../../../components/host/insert/InsertSpaceImageComponent';
 import InsertSpaceCheckComponent from '../../../components/host/insert/InsertSpaceCheckComponent';
+import { useNavigate } from 'react-router-dom';
 
 function InsertSpacePage() {
   const [step, setStep] = useState(1);
@@ -34,11 +35,6 @@ function InsertSpacePage() {
     }));
   };
 
-  const handleSubmit = () => {
-    console.log('최종 제출 데이터:', formData);
-    alert('검수 신청이 완료되었습니다!');
-  };
-
   // 현재 단계에 맞는 컴포넌트를 반환하는 함수
   const renderStepComponent = () => {
     switch (step) {
@@ -66,7 +62,6 @@ function InsertSpacePage() {
           <InsertSpaceCheckComponent
             formData={formData}
             prev={() => setStep(2)}
-            onSubmit={handleSubmit}
           />
         );
       default:

@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import styled from 'styled-components';
 
 const FormCard = styled.div`
@@ -133,11 +134,33 @@ const SubmitButton = styled.button`
   transition: background 0.2s;
 `;
 
-function InsertSpaceCheckComponent({ formData, prev, onSubmit }) {
+function InsertSpaceCheckComponent({ formData, prev }) {
   const [agreed, setAgreed] = useState({
     info: false,
     terms: false,
   });
+
+  const navigate = useNavigate();
+
+  const TYPE_MAPPING = {
+    WORK_STAY: { text: '워크스테이 등록 신청으로', path: 'workstay' },
+    STATION: { text: '숙소 등록 신청으로', path: 'lodging' },
+    OFFICE: { text: '오피스 등록 신청으로', path: 'coworking' },
+  };
+  const handleSubmit = () => {
+    //공간 등록하는 api hook으로 데이터 저장 후 이동하도록 설계
+
+    // 안전장치: 매핑 데이터가 존재하는지 확인
+    const currentConfig = TYPE_MAPPING[formData.type];
+    console.log(currentConfig);
+
+    if (currentConfig) {
+      navigate(`/host/${currentConfig.path}`);
+    } else {
+      console.warn('Unknown type received:', formData.type);
+      alert('올바르지 않은 신청 타입입니다.');
+    }
+  };
 
   const isAllAgreed = agreed.info && agreed.terms;
 
@@ -197,8 +220,8 @@ function InsertSpaceCheckComponent({ formData, prev, onSubmit }) {
 
       <ButtonGroup>
         <PrevButton onClick={prev}>이전</PrevButton>
-        <SubmitButton disabled={!isAllAgreed} onClick={onSubmit}>
-          검수 신청하기
+        <SubmitButton disabled={!isAllAgreed} onClick={handleSubmit}>
+          {TYPE_MAPPING[formData.type]?.text || '검수 신청하기'}
         </SubmitButton>
       </ButtonGroup>
     </FormCard>
