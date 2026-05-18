@@ -28,7 +28,7 @@ const MOCK_INQUIRIES = Array.from({ length: 18 }, (_, i) => ({
     '기타',
     '예약·결제',
   ][i % 6],
-  status: ['answered', 'pending', 'processing'][i % 3],
+  status: ['answered', 'pending'][i % 2],
   userName: ['김민지', '이준호', '박서연', '최재원', '윤하은'][i % 5],
   userEmail: [
     'mj@test.com',
@@ -57,11 +57,7 @@ const STATUS_CONFIG = {
     bg: 'rgba(180,180,180,0.12)',
     color: 'var(--gray-500)',
   },
-  processing: {
-    label: '처리 중',
-    bg: 'rgba(230,160,60,0.12)',
-    color: '#b87000',
-  },
+
   answered: {
     label: '답변 완료',
     bg: 'rgba(80,170,100,0.12)',
@@ -77,10 +73,9 @@ const CATEGORY_OPTIONS = [
   '서비스 이용',
   '기타',
 ];
-const STATUS_OPTIONS = ['전체', '답변 대기', '처리 중', '답변 완료'];
+const STATUS_OPTIONS = ['전체', '답변 대기', '답변 완료'];
 const STATUS_VALUE_MAP = {
   '답변 대기': 'pending',
-  '처리 중': 'processing',
   '답변 완료': 'answered',
 };
 
@@ -118,7 +113,6 @@ export default function InquiryManagePage() {
   const counts = {
     total: localData.length,
     pending: localData.filter((i) => i.status === 'pending').length,
-    processing: localData.filter((i) => i.status === 'processing').length,
     answered: localData.filter((i) => i.status === 'answered').length,
   };
 
@@ -201,7 +195,6 @@ export default function InquiryManagePage() {
             value: counts.pending,
             color: 'var(--gray-400)',
           },
-          { label: '처리 중', value: counts.processing, color: '#b87000' },
           { label: '답변 완료', value: counts.answered, color: '#2e7d4f' },
         ].map(({ label, value, color }) => (
           <SummaryCard key={label}>
@@ -394,7 +387,6 @@ export default function InquiryManagePage() {
                   aria-label="문의 상태 변경"
                 >
                   <option value="pending">답변 대기</option>
-                  <option value="processing">처리 중</option>
                   <option value="answered">답변 완료</option>
                 </StatusSelect>
                 <CloseBtn
@@ -736,7 +728,7 @@ const Th = styled.th`
   font-size: 0.78rem;
   font-weight: 600;
   color: var(--gray-500);
-  text-align: left;
+  text-align: center;
   white-space: nowrap;
 `;
 
