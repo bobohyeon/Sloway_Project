@@ -7,6 +7,7 @@ import com.sloway.app.place.entity.place.ImgPlaceEntity;
 import com.sloway.app.place.entity.place.PlaceEntity;
 import com.sloway.app.place.repository.place.ImgPlaceRepository;
 import com.sloway.app.place.repository.place.PlaceRepository;
+import com.sloway.app.place.service.hostPlace.HostPlaceService;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -26,13 +27,14 @@ public class PlaceService {
 
     private final PlaceRepository placeRepository;
     private final ImgPlaceRepository imgPlaceRepository;
+    private final HostPlaceService hostPlaceService;
 
     @Transactional
-    public void savePlace(PlaceReqDto dto, List<MultipartFile> files, List<ImgSortReqDto> sortList) {
+    public void savePlace(PlaceReqDto dto, List<MultipartFile> files, List<ImgSortReqDto> sortList, Long hostNo) {
         PlaceEntity place = dto.toEntity();
 
         PlaceEntity placeEntity = placeRepository.save(place);
-
+        hostPlaceService.insertHostPlace("P",hostNo, place.getNo());
         // 이미지 aws로 수정
         List<String> dummyUrls = files.stream()
                 .map(img -> "https://temp-bucket.s3.amazonaws.com/temp_"

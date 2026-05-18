@@ -10,6 +10,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -30,9 +31,10 @@ public class WorkStayApiController {
             @RequestPart("files") List<MultipartFile> files,
             @RequestPart("officeFiles") List<MultipartFile> officeFiles,
             @RequestPart("sortList") List<ImgSortReqDto> sortList,
-            @RequestPart("officeSortList") List<ImgSortReqDto> officeSortList) {
+            @RequestPart("officeSortList") List<ImgSortReqDto> officeSortList,
+            @AuthenticationPrincipal Long hostNo) {
 
-        workStayService.saveWorkStay(dto, officeDto, files, officeFiles,sortList, officeSortList);
+        workStayService.saveWorkStay(dto, officeDto, files, officeFiles,sortList, officeSortList, hostNo);
 
         return ResponseEntity
                 .status(HttpStatus.CREATED)
