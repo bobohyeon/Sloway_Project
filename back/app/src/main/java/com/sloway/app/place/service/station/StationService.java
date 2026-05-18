@@ -13,6 +13,7 @@ import com.sloway.app.place.repository.amenity.AmenityRepository;
 import com.sloway.app.place.repository.place.PlaceRepository;
 import com.sloway.app.place.repository.station.ImgStationRepository;
 import com.sloway.app.place.repository.station.StationRepository;
+import com.sloway.app.place.service.hostPlace.HostPlaceService;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -34,10 +35,11 @@ public class StationService {
     private final AmenityRepository amenityRepository;
     private final StationRepository stationRepository;
     private final ImgStationRepository imgStationRepository;
+    private final HostPlaceService hostPlaceService;
 
     //저장
     @Transactional
-    public void saveStation(StationReqDto dto, List<MultipartFile> files, List<ImgSortReqDto> sortList) {
+    public void saveStation(StationReqDto dto, List<MultipartFile> files, List<ImgSortReqDto> sortList, Long hostNo) {
         //부모테이블 엔티티조회
         PlaceEntity place = placeRepository.findByNo(dto.getPlaceNo())
                 .orElseThrow(() -> new EntityNotFoundException("[PLACE-210] Place Not Found For Save Station"));
@@ -50,7 +52,12 @@ public class StationService {
 
         //Station 저장을 위한 엔티티변환(편의시설 함께 저장)
         StationEntity entity = dto.toEntity(place, amenityEntities);
+
+        //Station 저장
         StationEntity station = stationRepository.save(entity);
+
+        //검수 등록
+        hostPlaceService.insertHostPlace("S",hostNo,station.getNo());
 
         // 이미지 aws로 수정
         List<String> dummyUrls = files.stream()

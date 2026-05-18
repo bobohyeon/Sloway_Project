@@ -1,5 +1,7 @@
 package com.sloway.app.place.controller.like;
 
+import com.sloway.app.place.dto.response.like.LikeRespDto;
+import com.sloway.app.place.entity.like.LikeEntity;
 import com.sloway.app.place.service.like.LikeService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -7,6 +9,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 @RestController
 @RequiredArgsConstructor
@@ -32,5 +36,13 @@ public class LikeApiController {
         return ResponseEntity
                 .status(HttpStatus.OK)
                 .build();
+    }
+
+    @GetMapping
+    public ResponseEntity<List<LikeRespDto>> likeList(@AuthenticationPrincipal Long userNo){
+        List<LikeRespDto> list = likeService.likeList(userNo);
+        return ResponseEntity
+                .status(HttpStatus.OK)
+                .body(list);
     }
 }
