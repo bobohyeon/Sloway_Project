@@ -32,7 +32,7 @@ public class PlaceApiController {
             @AuthenticationPrincipal Long hostNo) {
 
         // userNo값 필요 파라미터 추가예정
-        placeService.savePlace(dto, files, sortList, hostNo);
+        placeService.savePlace(dto, files, sortList, Long.valueOf(1));
 
         return ResponseEntity
                 .status(HttpStatus.CREATED)

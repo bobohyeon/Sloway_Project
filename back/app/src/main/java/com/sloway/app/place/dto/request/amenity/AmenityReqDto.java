@@ -11,12 +11,18 @@ import lombok.RequiredArgsConstructor;
 public class AmenityReqDto {
 
     private String name;
-    private String category;
+    private String commonYn;
+    private String workStayYn;
+    private String officeYn;
+    private String stationYn;
 
     public AmenityEntity toEntity(){
         return AmenityEntity.builder()
                 .name(name)
-                .category(AmenityCategory.valueOf(category))
+                .commonYn(commonYn)
+                .workStayYn(workStayYn)
+                .officeYn(officeYn)
+                .stationYn(stationYn)
                 .build();
     }
 }

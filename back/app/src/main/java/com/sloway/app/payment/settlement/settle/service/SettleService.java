@@ -1,14 +1,16 @@
 package com.sloway.app.payment.settlement.settle.service;
 
+import com.sloway.app.host.repository.HostRepository;
+import com.sloway.app.payment.pay.repository.PayRepository;
+import com.sloway.app.payment.refund.common.RefundRate;
+import com.sloway.app.payment.refund.repository.RefundRepository;
+import com.sloway.app.payment.settlement.fee.repository.FeeRepository;
 import com.sloway.app.payment.settlement.settle.repository.SettleRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-// TODO: 정산 서비스 — 시나리오 B (관리자 수동 트리거, Level 1)
-//       메서드 컨벤션: createSettle / findSettleAll / findSettleByNo
-//       (find* 는 도메인명 접두 + By + No, Refund/Point 와 통일)
 @Service
 @Transactional(readOnly = true)
 @RequiredArgsConstructor
@@ -17,18 +19,10 @@ public class SettleService {
 
     private final SettleRepository settleRepository;
 
-    // TODO: 의존성 추가 (final 필드 + @RequiredArgsConstructor 자동 주입)
-    //       - HostRepository      ← HostEntity 조회용 (★ 주의: 빈 인터페이스 상태! 아래 설명 참고)
-    //       - PayRepository       ← 기간 내 완료 결제 합산
-    //       - RefundRepository    ← 기간 내 환불 합산
-    //       - (선택) FeeRepository ← 공간 타입별 수수료 정책 — 옵션 B 가는 경우만
-    //
-    //       ★ HostRepository 결함:
-    //          현재 `public interface HostRepository {}` 만 박혀있음 (JpaRepository extends 안 함).
-    //          MemberRepository 결함과 동일 상황. 옵션:
-    //            (i) 카톡 오준호 — Host 도메인 담당자에게 정정 요청
-    //           (ii) 본인이 임시로 `extends JpaRepository<HostEntity, Long>` 1줄 추가 (RsvnRepository 패턴)
-    //          → 본인 시간 압박이면 (ii) 임시 처리 후 카톡 공유 권장.
+    private final HostRepository hostRepository;
+    private final PayRepository payRepository;
+    private final RefundRepository refundRepository;
+    private final FeeRepository feeRepository;
 
     // ─────────────────────────────────────────────────────────────────
     // TODO: createSettle(SettleCreateReqDto reqDto) — 시나리오 B (관리자 수동)
