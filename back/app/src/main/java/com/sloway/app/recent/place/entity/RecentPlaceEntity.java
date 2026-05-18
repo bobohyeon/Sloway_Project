@@ -34,4 +34,5 @@ public class RecentPlaceEntity {
     public void prePersist(){
         this.viewAt = LocalDateTime.now();
     }
+
 }
