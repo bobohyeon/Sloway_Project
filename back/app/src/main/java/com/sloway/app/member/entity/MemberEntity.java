@@ -48,7 +48,7 @@ public class MemberEntity extends BaseEntity {
     private String imgUrl;
 
     @Enumerated(EnumType.STRING)
-    @Column(length = 20, nullable = false)
+    @Column(length = 1, nullable = false)
     private MemberStatus status;
 
     /** 이메일 인증 시각 (NULL = 미인증) */
