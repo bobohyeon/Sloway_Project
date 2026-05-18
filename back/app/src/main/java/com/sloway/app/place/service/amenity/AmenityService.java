@@ -29,7 +29,7 @@ public class AmenityService {
     @Transactional
     public void deleteAmenity(Long no) {
         AmenityEntity amenity = amenityRepository.findById(no)
-                .orElseThrow(()-> new EntityNotFoundException("[AMENITY-291]Amenity Not Found For Delete");
+                .orElseThrow(()-> new EntityNotFoundException("[AMENITY-291]Amenity Not Found For Delete"));
 
         amenity.deleteAmenity(no);
     }
