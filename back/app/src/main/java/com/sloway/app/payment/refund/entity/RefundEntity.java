@@ -75,7 +75,7 @@ public class RefundEntity extends BaseEntity {
         this.status = RefundStatus.FAILED;
     }
 
-    public void applyRefund(RefundRate rate, Integer refundAmt) {
+    public void applyRefund(RefundRate rate, int refundAmt) {
         this.refundRate = rate;
         this.refundAmt = refundAmt;
     }
