@@ -198,6 +198,9 @@ import HostChatDetailPage from './features/chat/pages/host/HostChatDetailPage';
 import ReviewWritePage from './features/review/pages/user/ReviewWritePage';
 import ReviewEditPage from './features/review/pages/user/ReviewEditPage';
 
+// ── 편의시설(관리자) ──────────────────────────────────────
+import AmenityPage from './features/approval/pages/admin/AmenityPage';
+
 // ── 임시 플레이스홀더 ─────────────────────────────────────
 const Todo = ({ label }) => (
   <div style={{ padding: 40, fontSize: 18, color: '#888' }}>
@@ -426,6 +429,8 @@ function App() {
           path="/admin/space/review/:id"
           element={<SpaceApprovalDetailPage />}
         />
+        {/* 편의시설 관리 */}
+        <Route path="/admin/amenity" element={<AmenityPage />} />
         {/* 예약·리뷰 */}
         <Route path="/admin/reservation" element={<AdminRsvnListPage />} />
         <Route
@@ -466,7 +471,10 @@ function App() {
         <Route path="/admin/inquiry/:id" element={<InquiryDetailPage />} />
         <Route path="/admin/notice" element={<NoticeManagePage />} />
         <Route path="/admin/notice/form" element={<NoticeFormPage />} />
-        <Route path="/admin/notice/form/:id" element={<NoticeFormPage isEdit />} />
+        <Route
+          path="/admin/notice/form/:id"
+          element={<NoticeFormPage isEdit />}
+        />
         <Route path="/admin/faq" element={<FaqManagePage />} />
         <Route path="/admin/faq/form" element={<FaqFormPage />} />
         <Route path="/admin/faq/form/:id" element={<FaqFormPage isEdit />} />

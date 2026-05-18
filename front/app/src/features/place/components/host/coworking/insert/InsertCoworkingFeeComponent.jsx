@@ -1,7 +1,7 @@
 import React from 'react';
 import styled from 'styled-components';
 
-// --- Styled Components (기존 유지 및 추가) ---
+// --- Styled Components ---
 
 const FormCard = styled.div`
   background: white;
@@ -191,13 +191,54 @@ function InsertCoworkingFeeComponent({ formData, setFormData, prev, next }) {
   // 1. 평상시 요금 변경 핸들러
   const handleBasePriceChange = (dayKey, hour, value) => {
     if (value !== '' && !/^\d+$/.test(value)) return;
-    setFormData((prev) => ({
-      ...prev,
-      officePeriods: {
-        ...prev.officePeriods,
-        [dayKey]: { ...(prev.officePeriods?.[dayKey] || {}), [hour]: value },
-      },
-    }));
+
+    setFormData((prev) => {
+      const currentOfficePeriods = prev.officePeriods || {};
+
+      const isFirstInput = dayKey === '1' && hour === '00:00';
+      const prevFirstValue = currentOfficePeriods['1']?.['00:00'] || '';
+
+      // 월요일 00:00을 입력하고 있는 상황일 때 실시간 추적 동기화 검증
+      if (isFirstInput) {
+        let isSyncState = true;
+
+        for (const day of dayList) {
+          for (const h of hourList) {
+            const currentVal = currentOfficePeriods[day.key]?.[h] || '';
+            // 다른 칸 중 단 하나라도 이전 '월요일 00:00' 값과 다르거나, 비어있지 않다면 사용자가 개별 수정한 것임
+            if (currentVal !== prevFirstValue && currentVal !== '') {
+              isSyncState = false;
+              break;
+            }
+          }
+          if (!isSyncState) break;
+        }
+
+        // 동기화 가능한 상태라면 10000 단위를 연타하더라도 다 같이 복사됨
+        if (isSyncState) {
+          const bulkOfficePeriods = {};
+          dayList.forEach((day) => {
+            bulkOfficePeriods[day.key] = {};
+            hourList.forEach((h) => {
+              bulkOfficePeriods[day.key][h] = value;
+            });
+          });
+          return {
+            ...prev,
+            officePeriods: bulkOfficePeriods,
+          };
+        }
+      }
+
+      // 개별 입력 또는 동기화가 풀린 이후 상태 처리
+      return {
+        ...prev,
+        officePeriods: {
+          ...currentOfficePeriods,
+          [dayKey]: { ...(currentOfficePeriods[dayKey] || {}), [hour]: value },
+        },
+      };
+    });
   };
 
   // 2. 예외 기간(성수기) 추가
@@ -221,14 +262,59 @@ function InsertCoworkingFeeComponent({ formData, setFormData, prev, next }) {
     dayKey = null,
     hour = null
   ) => {
-    const updated = [...formData.exceptionPeriods];
-    if (dayKey && hour) {
-      if (!updated[index].prices[dayKey]) updated[index].prices[dayKey] = {};
-      updated[index].prices[dayKey][hour] = value;
-    } else {
-      updated[index][field] = value;
-    }
-    setFormData((prev) => ({ ...prev, exceptionPeriods: updated }));
+    if (dayKey && hour && value !== '' && !/^\d+$/.test(value)) return;
+
+    setFormData((prev) => {
+      const updatedExceptionPeriods = [...(prev.exceptionPeriods || [])];
+      const currentException = { ...updatedExceptionPeriods[index] };
+
+      if (dayKey && hour) {
+        const isFirstInput = dayKey === '1' && hour === '00:00';
+        const currentPrices = currentException.prices || {};
+        const prevFirstValue = currentPrices['1']?.['00:00'] || '';
+
+        // 성수기 내의 월요일 00:00 입력 추적 검증
+        if (isFirstInput) {
+          let isSyncState = true;
+
+          for (const day of dayList) {
+            for (const h of hourList) {
+              const currentVal = currentPrices[day.key]?.[h] || '';
+              if (currentVal !== prevFirstValue && currentVal !== '') {
+                isSyncState = false;
+                break;
+              }
+            }
+            if (!isSyncState) break;
+          }
+
+          if (isSyncState) {
+            const bulkPrices = {};
+            dayList.forEach((day) => {
+              bulkPrices[day.key] = {};
+              hourList.forEach((h) => {
+                bulkPrices[day.key][h] = value;
+              });
+            });
+            currentException.prices = bulkPrices;
+            updatedExceptionPeriods[index] = currentException;
+            return { ...prev, exceptionPeriods: updatedExceptionPeriods };
+          }
+        }
+
+        // 성수기 내의 다른 칸 개별 수정 모드
+        const updatedPrices = { ...currentPrices };
+        if (!updatedPrices[dayKey]) updatedPrices[dayKey] = {};
+        updatedPrices[dayKey][hour] = value;
+        currentException.prices = updatedPrices;
+      } else {
+        // 날짜 인풋 변경 처리
+        currentException[field] = value;
+      }
+
+      updatedExceptionPeriods[index] = currentException;
+      return { ...prev, exceptionPeriods: updatedExceptionPeriods };
+    });
   };
 
   const removeException = (index) => {

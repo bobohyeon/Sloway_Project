@@ -139,7 +139,6 @@ const SpaceApprovalDetailPage = () => {
             </p>
           </div>
           <ButtonGroup>
-            <ActionButton>운영 중지</ActionButton>
             <ActionButton>반려</ActionButton>
             <ActionButton
               $primary

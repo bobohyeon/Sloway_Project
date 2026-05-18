@@ -18,10 +18,18 @@ public class AmenityEntity {
     @Column(length = 30, nullable = false)
     private String name;
 
-    @Enumerated(EnumType.STRING)
-    @Column(length = 1, nullable = false)
+    @Column(length = 1 , nullable = false)
     @Builder.Default
-    private AmenityCategory category = AmenityCategory.C;
+    protected String commonYn = "N";
+
+    @Column(length = 1 , nullable = false)
+    protected String workStayYn = "N";
+
+    @Column(length = 1 , nullable = false)
+    protected String officeYn = "N";
+
+    @Column(length = 1 , nullable = false)
+    protected String stationYn = "N";
 
     @Column(length = 1 , nullable = false)
     @Builder.Default
