@@ -15,6 +15,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
@@ -40,7 +42,11 @@ public class RefundService {
 
         RefundEntity entity = reqDto.toEntity(pay, rsvn);
         RefundRate rate = refundRate(entity);
-        int refundAmt = (pay.getFinalAmt() * rate.getRate()) / 100;
+        BigDecimal finalAmt = BigDecimal.valueOf(pay.getFinalAmt());
+        BigDecimal rateBd  = BigDecimal.valueOf(rate.getRate());
+        BigDecimal divisor = BigDecimal.valueOf(100);
+
+        BigDecimal refundAmt = finalAmt.multiply(rateBd).divide(divisor, 0, RoundingMode.DOWN);
         entity.applyRefund(rate, refundAmt);
         refundRepository.save(entity);
         return RefundResDto.from(entity);

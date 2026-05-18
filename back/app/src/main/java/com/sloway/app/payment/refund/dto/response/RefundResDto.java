@@ -7,6 +7,7 @@ import com.sloway.app.payment.refund.entity.RefundEntity;
 import lombok.Builder;
 import lombok.Getter;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 @Getter
@@ -17,7 +18,7 @@ public class RefundResDto {
     private Long payNo;
     private Long rsvnNo;
     private Long ucNo;
-    private Integer refundAmt;
+    private BigDecimal refundAmt;
     private RefundRate refundRate;
     private RefundReason refundReason;
     private LocalDateTime requestedAt;
