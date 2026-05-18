@@ -1,26 +1,23 @@
 package com.sloway.app.payment.point.service;
 
+import com.sloway.app.member.entity.MemberEntity;
+import com.sloway.app.member.repository.MemberRepository;
 import com.sloway.app.payment.pay.entity.PayEntity;
 import com.sloway.app.payment.pay.repository.PayRepository;
-import com.sloway.app.payment.point.dto.request.PointCreateReqDto;
+import com.sloway.app.payment.point.dto.request.PointSaveReqDto;
+import com.sloway.app.payment.point.dto.request.PointUseReqDto;
 import com.sloway.app.payment.point.dto.response.PointResDto;
 import com.sloway.app.payment.point.entity.PointEntity;
 import com.sloway.app.payment.point.repository.PointRepository;
+import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.Collections;
+import java.time.LocalDateTime;
 import java.util.List;
 
-// TODO: 포인트 서비스
-//       메서드 컨벤션: createPoint / findPointAll / findPointById
-//       부가 메서드: savePoint(적립), usePoint(사용), expirePoint(만료)
-//       정책 검증:
-//         - 사용 시 최소 1,000P 검증
-//         - 사용 시 결제액의 30% 초과 검증
-//         - 적립은 결제 완료 + 7일 후 확정 (@Scheduled 활용 가능)
 @Service
 @Transactional(readOnly = true)
 @RequiredArgsConstructor
@@ -29,19 +26,64 @@ public class PointService {
 
     private final PointRepository pointRepository;
     private final PayRepository payRepository;
-//
-//    @Transactional
-//    public PointResDto createPoint(PointCreateReqDto reqDto) {
-//        PointEntity entity = reqDto.toEntity();
-//        return PointResDto.from(pointRepository.save(entity));
-//    }
+    private final MemberRepository memberRepository;
 
-    // TODO: createPoint(PointCreateReqDto reqDto) — @Transactional
+    public List<PointResDto> findPointAll() {
+        return pointRepository.findAll().stream().map(PointResDto::from).toList();
+    }
 
-    // TODO: findPointAll() / findPointById(Long id)
+    public PointResDto findPointByNo(Long no) {
+        PointEntity pointEntity = pointRepository.findById(no)
+                .orElseThrow(() -> new EntityNotFoundException("포인트 정보를 조회할 수 없습니다."));
 
-    // TODO: savePoint(...) — 적립 (status = 대기, 7일 후 확정 예약)
+        return PointResDto.from(pointEntity);
+    }
 
-    // TODO: usePoint(...) — 사용 (정책 검증 후 음수 row 생성 또는 적립 row 차감)
-    // TODO: Rich()  — 유효기간 계산
+    @Transactional
+    public PointResDto savePoint(PointSaveReqDto reqDto) {
+        PayEntity payEntity = payRepository.findById(reqDto.getPayNo())
+                .orElseThrow(() -> new EntityNotFoundException("결제 정보를 조회할 수 없습니다."));
+
+        MemberEntity memberEntity = memberRepository.findById(reqDto.getMemberNo())
+                .orElseThrow(() -> new EntityNotFoundException("회원 정보를 조회할 수 없습니다."));
+
+        int amount = (int) (payEntity.getFinalAmt() * 0.01);
+        LocalDateTime expiredAt = LocalDateTime.now().plusYears(1);
+
+        PointEntity entity = reqDto.toEntity(payEntity, memberEntity);
+        entity.applySaveAmount(amount, expiredAt);
+
+        return PointResDto.from(pointRepository.save(entity));
+    }
+
+    @Transactional
+    public PointResDto usePoint(PointUseReqDto reqDto) {
+
+        PayEntity payEntity = payRepository.findById(reqDto.getPayNo())
+                .orElseThrow(() -> new EntityNotFoundException("결제 정보를 조회할 수 없습니다."));
+
+        MemberEntity memberEntity = memberRepository.findById(reqDto.getMemberNo())
+                .orElseThrow(() -> new EntityNotFoundException("회원 정보를 조회할 수 없습니다."));
+
+        if (reqDto.getAmount() < 1000) {
+            throw new IllegalArgumentException("최소 1000P부터 사용 가능");
+        }
+        if (reqDto.getAmount() > payEntity.getFinalAmt() * 30 / 100) {
+            throw new IllegalArgumentException("결제금액의 30%까지만 사용 가능");
+        }
+
+        PointEntity entity = reqDto.toEntity(payEntity, memberEntity);
+
+        entity.applyUseAmount(-reqDto.getAmount());
+        return PointResDto.from(pointRepository.save(entity));
+    }
+
+    @Transactional
+    public PointResDto expirePoint(Long no) {
+        PointEntity pointEntity = pointRepository.findById(no)
+                .orElseThrow(() -> new EntityNotFoundException("조회할 수 없습니다."));
+
+        pointEntity.expire();
+        return PointResDto.from(pointEntity);
+    }
 }

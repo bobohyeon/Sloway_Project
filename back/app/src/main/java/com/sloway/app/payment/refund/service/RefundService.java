@@ -3,7 +3,6 @@ package com.sloway.app.payment.refund.service;
 import com.sloway.app.payment.pay.entity.PayEntity;
 import com.sloway.app.payment.pay.repository.PayRepository;
 import com.sloway.app.payment.refund.common.RefundRate;
-import com.sloway.app.payment.refund.common.RefundStatus;
 import com.sloway.app.payment.refund.dto.request.RefundCreateReqDto;
 import com.sloway.app.payment.refund.dto.response.RefundResDto;
 import com.sloway.app.payment.refund.entity.RefundEntity;
@@ -40,6 +39,9 @@ public class RefundService {
                 .orElseThrow(() -> new EntityNotFoundException("예약 정보를 조회할 수 없습니다."));
 
         RefundEntity entity = reqDto.toEntity(pay, rsvn);
+        RefundRate rate = refundRate(entity);
+        int refundAmt = (pay.getFinalAmt() * rate.getRate()) / 100;
+        entity.applyRefund(rate, refundAmt);
         refundRepository.save(entity);
         return RefundResDto.from(entity);
     }
@@ -54,21 +56,21 @@ public class RefundService {
     }
 
 
-    private RefundRate refundRate(RefundEntity entity){
+    private RefundRate refundRate(RefundEntity entity) {
         LocalDateTime checkIn = entity.getRsvnNo().getCheckIn();
         LocalDateTime requestedAt = entity.getRequestedAt();
-        long between = ChronoUnit.DAYS.between(requestedAt.toLocalDate(),checkIn.toLocalDate());
+        long between = ChronoUnit.DAYS.between(requestedAt.toLocalDate(), checkIn.toLocalDate());
 
-        if (between >= 7){
-             return RefundRate.WEEK;
-        }else if (between >= 4){
+        if (between >= 7) {
+            return RefundRate.WEEK;
+        } else if (between >= 4) {
             return RefundRate.FOURTOSIX;
-        }else if (between >= 2){
+        } else if (between >= 2) {
             return RefundRate.TWOTOTHREE;
-        }else if (between >= 1){
+        } else if (between >= 1) {
             return RefundRate.ONEDAY;
-        }else{
-            return  RefundRate.DDAY;
+        } else {
+            return RefundRate.DDAY;
         }
     }
 }

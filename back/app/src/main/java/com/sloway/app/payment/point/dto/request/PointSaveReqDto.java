@@ -9,17 +9,16 @@ import lombok.Getter;
 
 
 @Getter
-public class PointCreateReqDto {
+public class PointSaveReqDto {
 
     private Long payNo;
     private Long memberNo;
-    private PointDealType dealType;
 
     public PointEntity toEntity(PayEntity payEntity, MemberEntity memberEntity) {
         return PointEntity.builder()
                 .payNo(payEntity)
                 .memberNo(memberEntity)
-                .dealType(dealType)
+                .dealType(PointDealType.EARN)
                 .status(PointStatus.WAIT)
                 .build();
     }

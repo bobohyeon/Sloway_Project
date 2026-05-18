@@ -2,6 +2,7 @@ package com.sloway.app.place.service.like;
 
 import com.sloway.app.member.entity.UserEntity;
 import com.sloway.app.member.repository.UserRepository;
+import com.sloway.app.place.dto.response.like.LikeRespDto;
 import com.sloway.app.place.entity.like.LikeEntity;
 import com.sloway.app.place.entity.place.PlaceEntity;
 import com.sloway.app.place.repository.like.LikeRespository;
@@ -12,6 +13,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.List;
 import java.util.Optional;
 
 @Service
@@ -46,5 +48,9 @@ public class LikeService {
         UserEntity userEntity = userRepository.findById(userNo)
                 .orElseThrow(()->new EntityNotFoundException("[USER-312] User Not Found For Like Delete"));
 
+    }
+
+    public List<LikeRespDto> likeList(Long userNo) {
+        return likeRespository.findLikeByUserId(userNo);
     }
 }

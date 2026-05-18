@@ -2,6 +2,7 @@ import { useState, useCallback } from 'react';
 import styled from 'styled-components';
 import { useNavigate, useParams } from 'react-router-dom';
 import { Button, Modal, Card } from '../../pay_shared/components';
+import PageLayout from '../../../app/layouts/page/PageLayout';
 // ─── 수정 모드 Mock (백엔드 연동 시 GET /api/inquiries/:id 로 대체) ──────────
 // 실무: 본인 문의만 수정 가능 → 서버에서 userId 검증 필수
 // 수정은 "답변 대기" 상태일 때만 가능 (처리 중/완료 시 수정 불가)
@@ -84,10 +85,7 @@ export default function InquiryFormPage({ isEdit = false }) {
   // ─── 수정 불가 상태 안내 ──────────────────────────────────────────────────
   if (isEdit && !isEditable) {
     return (
-      <Wrap>
-        <PageHeader>
-          <PageTitle>문의사항 수정</PageTitle>
-        </PageHeader>
+      <PageLayout title="문의사항 수정">
         <BlockedCard padded elevated>
           <BlockedIcon aria-hidden="true">🔒</BlockedIcon>
           <BlockedTitle>수정할 수 없는 문의입니다</BlockedTitle>
@@ -100,7 +98,7 @@ export default function InquiryFormPage({ isEdit = false }) {
             목록으로
           </Button>
         </BlockedCard>
-      </Wrap>
+      </PageLayout>
     );
   }
 
