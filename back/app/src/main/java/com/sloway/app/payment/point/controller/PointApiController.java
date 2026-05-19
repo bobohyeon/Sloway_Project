@@ -33,7 +33,7 @@ public class PointApiController {
         return ResponseEntity.status(HttpStatus.CREATED).body(pointResDto);
     }
 
-    @PutMapping("/{no}/expire")
+    @PatchMapping("/{no}/expire")
     public ResponseEntity<PointResDto> expirePoint(@PathVariable Long no){
         PointResDto resDto = pointService.expirePoint(no);
         return ResponseEntity.ok(resDto);
