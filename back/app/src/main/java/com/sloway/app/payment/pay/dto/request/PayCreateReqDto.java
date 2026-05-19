@@ -12,11 +12,12 @@ public class PayCreateReqDto {
 
     private Long rsvnNo;
     private Long ucNo;
+    private Integer usedPoint;
     private PayMethod method;
     private Integer baseAmt;
     private Integer addAmt;
 
-    public PayEntity toEntity(RsvnEntity rsvnEntity,CouponEntity couponEntity) {
+    public PayEntity toEntity(RsvnEntity rsvnEntity, CouponEntity couponEntity) {
         return PayEntity.builder()
                 .rsvnNo(rsvnEntity)
                 .ucNo(couponEntity)
@@ -25,7 +26,7 @@ public class PayCreateReqDto {
                 .addAmt(addAmt)
                 .finalAmt(baseAmt+addAmt)
                 .status(PayStatus.READY)
-                .usedPoint(0)
+                .usedPoint(usedPoint)
                 .dcAmt(0)
                 .build();
     }

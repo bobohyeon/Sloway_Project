@@ -8,6 +8,8 @@ import com.sloway.app.payment.pay.dto.request.PayCreateReqDto;
 import com.sloway.app.payment.pay.dto.response.PayResDto;
 import com.sloway.app.payment.pay.entity.PayEntity;
 import com.sloway.app.payment.pay.repository.PayRepository;
+import com.sloway.app.payment.point.entity.PointEntity;
+import com.sloway.app.payment.point.repository.PointRepository;
 import com.sloway.app.reservation.rsvn.entity.RsvnEntity;
 import com.sloway.app.reservation.rsvn.repository.RsvnRepository;
 import jakarta.persistence.EntityNotFoundException;
@@ -28,6 +30,7 @@ public class PayService {
     private final PayRepository payRepository;
     private final CouponRepository couponRepository;
     private final RsvnRepository rsvnRepository;
+    private final PointRepository pointRepository;
 
     @Transactional
     public PayResDto createPay(PayCreateReqDto payCreateReqDto) {
@@ -48,12 +51,15 @@ public class PayService {
                     .orElseThrow(() -> new EntityNotFoundException("쿠폰 정보를 조회할 수 없습니다."));
         }
 
+
+
         PayEntity entity = payCreateReqDto.toEntity(rsvn, coupon);
         payRepository.save(entity);
 
         if (coupon != null) {
             coupon.useCoupon(entity);
         }
+
 
         String fakeTid = createFakeTid();
         entity.completeAsLevel1(fakeTid);
@@ -73,5 +79,7 @@ public class PayService {
     private String createFakeTid() {
         return "FAKE_" + UUID.randomUUID().toString().substring(0, 12);
     }
+
+
 
 }
