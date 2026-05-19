@@ -1,8 +1,10 @@
 package com.sloway.app.payment.refund.entity;
 
 import com.sloway.app.common.entity.BaseEntity;
+import com.sloway.app.common.exception.CustomException;
 import com.sloway.app.payment.coupon.entity.CouponEntity;
 import com.sloway.app.payment.pay.entity.PayEntity;
+import com.sloway.app.payment.refund.common.RefundErrorCode;
 import com.sloway.app.payment.refund.common.RefundRate;
 import com.sloway.app.payment.refund.common.RefundReason;
 import com.sloway.app.payment.refund.common.RefundStatus;
@@ -57,28 +59,28 @@ public class RefundEntity extends BaseEntity {
 
     public void approveRefund() {
         if (this.status != RefundStatus.REQUESTED) {
-            throw new IllegalStateException("환불 요청 상태만 승인 가능");
+            throw new CustomException(RefundErrorCode.REFUND_NOT_REQUESTED);
         }
         this.status = RefundStatus.APPROVED;
     }
 
     public void completeRefund() {
         if (this.status != RefundStatus.APPROVED) {
-            throw new IllegalStateException("환불 승인 상태가 아닙니다.");
+            throw new CustomException(RefundErrorCode.REFUND_NOT_APPROVED);
         }
         this.status = RefundStatus.COMPLETED;
     }
 
     public void failedRefund() {
         if (this.status != RefundStatus.REQUESTED) {
-            throw new IllegalStateException("환불 요청 상태를 확인하세요.");
+            throw new CustomException(RefundErrorCode.REFUND_NOT_REQUESTED);
         }
         this.status = RefundStatus.FAILED;
     }
 
     public void applyRefund(RefundRate rate, BigDecimal refundAmt) {
         if (this.status != RefundStatus.REQUESTED) {
-            throw new IllegalStateException("환불 요청 상태에서만 환불 금액 적용가능");
+            throw new CustomException(RefundErrorCode.REFUND_NOT_REQUESTED);
         }
         this.refundRate = rate;
         this.refundAmt = refundAmt;
