@@ -13,7 +13,6 @@ public class PointRepositoryImpl implements PointRepositoryCustom {
     private static final QPointEntity qPointEntity = QPointEntity.pointEntity;
     private final JPAQueryFactory jpaQueryFactory;
 
-
     @Override
     public Integer sumByMemberAndStatus(Long memberNo, PointStatus status) {
         Integer point = jpaQueryFactory.select(qPointEntity.amount.sum().coalesce(0))

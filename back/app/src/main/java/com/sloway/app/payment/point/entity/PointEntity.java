@@ -1,9 +1,11 @@
 package com.sloway.app.payment.point.entity;
 
 import com.sloway.app.common.entity.BaseEntity;
+import com.sloway.app.common.exception.CustomException;
 import com.sloway.app.member.entity.MemberEntity;
 import com.sloway.app.payment.pay.entity.PayEntity;
 import com.sloway.app.payment.point.common.PointDealType;
+import com.sloway.app.payment.point.common.PointErrorCode;
 import com.sloway.app.payment.point.common.PointStatus;
 import jakarta.persistence.*;
 import lombok.*;
@@ -46,28 +48,28 @@ public class PointEntity extends BaseEntity {
 
     public void confirmEarn() {
         if (this.status != PointStatus.WAIT) {
-            throw new IllegalStateException("적립 대기상태에서만 적립확정 가능");
+            throw new CustomException(PointErrorCode.POINT_NOT_WAIT);
         }
         this.status = PointStatus.SAVE;
     }
 
     public void expire() {
         if (this.status != PointStatus.WAIT && this.status != PointStatus.SAVE) {
-            throw new IllegalStateException("WAIT 이거나 SAVE 상태만 만료 가능합니다.");
+            throw new CustomException(PointErrorCode.POINT_NOT_HOLDABLE);
         }
         this.status = PointStatus.EXPIRATION;
     }
 
     public void cancel() {
         if (this.status != PointStatus.WAIT && this.status != PointStatus.SAVE) {
-            throw new IllegalStateException("WAIT 이거나 SAVE 상태만 취소 가능합니다.");
+            throw new CustomException(PointErrorCode.POINT_NOT_HOLDABLE);
         }
         this.status = PointStatus.CANCEL;
     }
 
     public void applySaveAmount(int amount, LocalDateTime expiredAt) {
         if (this.status != PointStatus.WAIT) {
-            throw new IllegalStateException("적립대기 상태에서만 적립금액 설정 가능");
+            throw new CustomException(PointErrorCode.POINT_NOT_WAIT);
         }
         this.amount = amount;
         this.expiredAt = expiredAt;
@@ -75,7 +77,7 @@ public class PointEntity extends BaseEntity {
 
     public void applyUseAmount(Integer amount) {
         if (this.status != PointStatus.USED) {
-            throw new IllegalStateException("사용 상태에서만 사용금액 설정 가능");
+            throw new CustomException(PointErrorCode.POINT_NOT_USED);
         }
         this.amount = amount;
 
