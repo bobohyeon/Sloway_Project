@@ -21,8 +21,8 @@ public class FeeApiController {
     private final FeeService feeService;
 
     @PostMapping
-    public ResponseEntity<Void> createFee(@RequestBody FeeCreateReqDto reqDto) {
-        feeService.createFee(reqDto);
+    public ResponseEntity<Void> createFee(@RequestBody FeeCreateReqDto feeCreateReqDto) {
+        feeService.createFee(feeCreateReqDto);
         return ResponseEntity.status(HttpStatus.CREATED).build();
     }
 

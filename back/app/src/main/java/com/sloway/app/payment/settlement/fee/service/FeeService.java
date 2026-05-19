@@ -21,8 +21,8 @@ public class FeeService {
     private final FeeRepository feeRepository;
 
     @Transactional
-    public void createFee(FeeCreateReqDto reqDto) {
-        FeeEntity entity = reqDto.toEntity();
+    public void createFee(FeeCreateReqDto feeCreateReqDto) {
+        FeeEntity entity = feeCreateReqDto.toEntity();
         feeRepository.save(entity);
     }
 

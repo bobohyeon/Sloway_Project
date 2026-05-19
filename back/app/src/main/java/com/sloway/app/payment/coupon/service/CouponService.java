@@ -22,10 +22,10 @@ public class CouponService {
 
     private final CouponRepository couponRepository;
     private final PayRepository payRepository;
-//
+
 //    @Transactional
-//    public CouponResDto createCoupon(CouponCreateReqDto reqDto) {
-//        CouponEntity entity = reqDto.toEntity();
+//    public CouponResDto createCoupon(CouponCreateReqDto couponCreateReqDto) {
+//        CouponEntity entity = couponCreateReqDto.toEntity();
 //        return CouponResDto.from(couponRepository.save(entity));
 //    }
 

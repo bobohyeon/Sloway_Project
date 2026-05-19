@@ -19,10 +19,10 @@ import java.util.List;
 public class CouponApiController {
 
     private final CouponService couponService;
-//
+
 //    @PostMapping
-//    public ResponseEntity<CouponResDto> createCoupon(@RequestBody CouponCreateReqDto reqDto) {
-//        CouponResDto resDto = couponService.createCoupon(reqDto);
+//    public ResponseEntity<CouponResDto> createCoupon(@RequestBody CouponCreateReqDto couponCreateReqDto) {
+//        CouponResDto resDto = couponService.createCoupon(couponCreateReqDto);
 //        return ResponseEntity.status(HttpStatus.CREATED).body(resDto);
 //    }
 

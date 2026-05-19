@@ -21,8 +21,8 @@ public class RefundApiController {
     private final RefundService refundService;
 
     @PostMapping
-    public ResponseEntity<RefundResDto> createRefund(@RequestBody RefundCreateReqDto reqDto) {
-        RefundResDto resDto = refundService.createRefund(reqDto);
+    public ResponseEntity<RefundResDto> createRefund(@RequestBody RefundCreateReqDto refundCreateReqDto) {
+        RefundResDto resDto = refundService.createRefund(refundCreateReqDto);
         return ResponseEntity.status(HttpStatus.CREATED).body(resDto);
     }
 

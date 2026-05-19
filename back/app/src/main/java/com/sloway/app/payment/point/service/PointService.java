@@ -40,41 +40,41 @@ public class PointService {
     }
 
     @Transactional
-    public PointResDto savePoint(PointSaveReqDto reqDto) {
-        PayEntity payEntity = payRepository.findById(reqDto.getPayNo())
+    public PointResDto savePoint(PointSaveReqDto pointSaveReqDto) {
+        PayEntity payEntity = payRepository.findById(pointSaveReqDto.getPayNo())
                 .orElseThrow(() -> new EntityNotFoundException("결제 정보를 조회할 수 없습니다."));
 
-        MemberEntity memberEntity = memberRepository.findById(reqDto.getMemberNo())
+        MemberEntity memberEntity = memberRepository.findById(pointSaveReqDto.getMemberNo())
                 .orElseThrow(() -> new EntityNotFoundException("회원 정보를 조회할 수 없습니다."));
 
         int amount = (int) (payEntity.getFinalAmt() * 0.01);
         LocalDateTime expiredAt = LocalDateTime.now().plusYears(1);
 
-        PointEntity entity = reqDto.toEntity(payEntity, memberEntity);
+        PointEntity entity = pointSaveReqDto.toEntity(payEntity, memberEntity);
         entity.applySaveAmount(amount, expiredAt);
 
         return PointResDto.from(pointRepository.save(entity));
     }
 
     @Transactional
-    public PointResDto usePoint(PointUseReqDto reqDto) {
+    public PointResDto usePoint(PointUseReqDto pointSaveReqDto) {
 
-        PayEntity payEntity = payRepository.findById(reqDto.getPayNo())
+        PayEntity payEntity = payRepository.findById(pointSaveReqDto.getPayNo())
                 .orElseThrow(() -> new EntityNotFoundException("결제 정보를 조회할 수 없습니다."));
 
-        MemberEntity memberEntity = memberRepository.findById(reqDto.getMemberNo())
+        MemberEntity memberEntity = memberRepository.findById(pointSaveReqDto.getMemberNo())
                 .orElseThrow(() -> new EntityNotFoundException("회원 정보를 조회할 수 없습니다."));
 
-        if (reqDto.getAmount() < 1000) {
+        if (pointSaveReqDto.getAmount() < 1000) {
             throw new IllegalArgumentException("최소 1000P부터 사용 가능");
         }
-        if (reqDto.getAmount() > payEntity.getFinalAmt() * 30 / 100) {
+        if (pointSaveReqDto.getAmount() > payEntity.getFinalAmt() * 30 / 100) {
             throw new IllegalArgumentException("결제금액의 30%까지만 사용 가능");
         }
 
-        PointEntity entity = reqDto.toEntity(payEntity, memberEntity);
+        PointEntity entity = pointSaveReqDto.toEntity(payEntity, memberEntity);
 
-        entity.applyUseAmount(-reqDto.getAmount());
+        entity.applyUseAmount(-pointSaveReqDto.getAmount());
         return PointResDto.from(pointRepository.save(entity));
     }
 

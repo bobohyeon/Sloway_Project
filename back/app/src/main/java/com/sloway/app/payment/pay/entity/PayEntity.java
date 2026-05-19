@@ -1,7 +1,9 @@
 package com.sloway.app.payment.pay.entity;
 
 import com.sloway.app.common.entity.BaseEntity;
+import com.sloway.app.common.exception.CustomException;
 import com.sloway.app.payment.coupon.entity.CouponEntity;
+import com.sloway.app.payment.pay.common.PayErrorCode;
 import com.sloway.app.payment.pay.common.PayMethod;
 import com.sloway.app.payment.pay.common.PayStatus;
 import com.sloway.app.reservation.rsvn.entity.RsvnEntity;
@@ -57,6 +59,9 @@ public class PayEntity extends BaseEntity {
     private LocalDateTime approvedAt;
 
     public void completeAsLevel1(String tid) {
+        if(this.status != PayStatus.READY){
+            throw new CustomException(PayErrorCode.PAY_ALREADY_COMPLETED);
+        }
         this.tid = tid;
         this.status = PayStatus.COMPLETED;
         this.approvedAt = LocalDateTime.now();

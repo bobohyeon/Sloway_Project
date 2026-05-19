@@ -34,19 +34,19 @@ public class RefundService {
     private final RsvnRepository rsvnRepository;
 
     @Transactional
-    public RefundResDto createRefund(RefundCreateReqDto reqDto) {
+    public RefundResDto createRefund(RefundCreateReqDto refundCreateReqDto) {
 
-        PayEntity pay = payRepository.findById(reqDto.getPayNo())
+        PayEntity pay = payRepository.findById(refundCreateReqDto.getPayNo())
                 .orElseThrow(() -> new EntityNotFoundException("결제 정보를 조회할 수 없습니다."));
 
-        RsvnEntity rsvn = rsvnRepository.findById(reqDto.getRsvnNo())
+        RsvnEntity rsvn = rsvnRepository.findById(refundCreateReqDto.getRsvnNo())
                 .orElseThrow(() -> new EntityNotFoundException("예약 정보를 조회할 수 없습니다."));
 
-        RefundEntity entity = reqDto.toEntity(pay, rsvn);
+        RefundEntity entity = refundCreateReqDto.toEntity(pay, rsvn);
         RefundRate rate = refundRate(entity);
 
         if (RefundRate.DDAY == rate) {
-            log.warn("환불 기간 만료 : payNo:{},rsvnNo:{}", reqDto.getPayNo(),reqDto.getRsvnNo());
+            log.warn("환불 기간 만료 : payNo:{},rsvnNo:{}", refundCreateReqDto.getPayNo(),refundCreateReqDto.getRsvnNo());
             throw new CustomException(RefundErrorCode.REFUND_PERIOD_EXPIRED);
         }
 
