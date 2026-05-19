@@ -1,9 +1,13 @@
 package com.sloway.app.payment.point.service;
 
+import com.sloway.app.common.exception.CustomException;
 import com.sloway.app.member.entity.MemberEntity;
 import com.sloway.app.member.repository.MemberRepository;
 import com.sloway.app.payment.pay.entity.PayEntity;
 import com.sloway.app.payment.pay.repository.PayRepository;
+import com.sloway.app.payment.point.common.PointDealType;
+import com.sloway.app.payment.point.common.PointErrorCode;
+import com.sloway.app.payment.point.common.PointStatus;
 import com.sloway.app.payment.point.dto.request.PointSaveReqDto;
 import com.sloway.app.payment.point.dto.request.PointUseReqDto;
 import com.sloway.app.payment.point.dto.response.PointResDto;
@@ -95,4 +99,42 @@ public class PointService {
         pointEntity.confirmEarn();
         return PointResDto.from(pointEntity);
     }
+
+
+    @Transactional
+    public void usePointInternal(Long memberNo, Integer amount, PayEntity payEntity) {
+        if (amount < 1000) {
+            throw new CustomException(PointErrorCode.POINT_BELOW_MIN);
+        }
+
+        int dcAmtSafe = payEntity.getDcAmt() == null ? 0 : payEntity.getDcAmt();
+        int basisAmt = payEntity.getBaseAmt() + payEntity.getAddAmt() - dcAmtSafe;
+        int pointLimit = (basisAmt * 30) / 100;
+
+        if (amount > pointLimit) {
+            throw new CustomException(PointErrorCode.POINT_EXCEED_LIMIT);
+        }
+
+        MemberEntity memberEntity = memberRepository.findById(memberNo)
+                .orElseThrow(() -> new EntityNotFoundException("회원 정보를 조회할 수 없습니다."));
+
+        Integer currentPoint = pointRepository.sumByMemberAndStatus(memberNo, PointStatus.SAVE);
+
+        if (currentPoint < amount) {
+            throw new CustomException(PointErrorCode.POINT_INSUFFICIENT);
+        }
+
+        PointEntity entity = PointEntity.builder()
+                .memberNo(memberEntity)
+                .payNo(payEntity)
+                .amount(-amount)
+                .dealType(PointDealType.USE)
+                .status(PointStatus.USED)
+                .expiredAt(null)
+                .build();
+
+        pointRepository.save(entity);
+
+    }
+
 }
