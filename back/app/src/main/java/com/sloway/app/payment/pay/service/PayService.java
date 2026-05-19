@@ -2,6 +2,7 @@ package com.sloway.app.payment.pay.service;
 
 import com.sloway.app.common.exception.CustomException;
 import com.sloway.app.payment.coupon.common.CouponDcType;
+import com.sloway.app.payment.coupon.common.CouponErrorCode;
 import com.sloway.app.payment.coupon.entity.CouponEntity;
 import com.sloway.app.payment.coupon.repository.CouponRepository;
 import com.sloway.app.payment.pay.common.PayErrorCode;
@@ -50,7 +51,7 @@ public class PayService {
         CouponEntity coupon = null;
         if (payCreateReqDto.getUcNo() != null) {
             coupon = couponRepository.findById(payCreateReqDto.getUcNo())
-                    .orElseThrow(() -> new EntityNotFoundException("쿠폰 정보를 조회할 수 없습니다."));
+                    .orElseThrow(() -> new CustomException(CouponErrorCode.COUPON_NOT_FOUND));
         }
 
         int dcAmt = calculateDcAmt(coupon, payCreateReqDto.getBaseAmt());
