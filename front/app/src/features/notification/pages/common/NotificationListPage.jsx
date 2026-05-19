@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import styled, { css } from 'styled-components';
 import PageLayout from '../../../../app/layouts/page/PageLayout';
+import { useNavigate } from 'react-router-dom';
 
 // ─── 타입 정의 (백엔드 연동 시 API 응답 스펙에 맞게 수정) ────────────────────
 /**
@@ -128,6 +129,7 @@ const TYPE_BG = {
 const PAGE_SIZE = 8; // 백엔드 연동 시 서버 페이지 사이즈와 맞출 것
 
 export default function NotificationListPage() {
+  const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState('전체');
   // 읽음 상태는 로컬에서 낙관적 업데이트(Optimistic Update) 처리
   // 백엔드 연동 시: PATCH /api/notifications/:id/read 호출 후 실패 시 롤백
@@ -184,7 +186,6 @@ export default function NotificationListPage() {
       description="놓친 알림이 있는지 확인하세요"
       maxWidth={1200}
     >
-
       <Divider />
 
       {/* 탭 + 우측 액션 */}
@@ -212,6 +213,7 @@ export default function NotificationListPage() {
             type="button"
             onClick={() => {
               /* TODO: navigate to /notifications/settings */
+              navigate(`/user/notification/setting`);
             }}
             aria-label="알림 설정으로 이동"
           >

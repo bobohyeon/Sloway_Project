@@ -252,38 +252,6 @@ export default function UserChatDetailPage() {
 
 // ─── Styled Components ────────────────────────────────────────────────────────
 
-const ChatWrap = styled.div`
-  max-width: 860px;
-  width: 100%;
-  margin: 0 auto;
-  padding: var(--space-6) var(--space-6) 0;
-  /* 채팅 레이아웃: 부모가 height를 확보해야 MessageArea 스크롤이 동작합니다 */
-  display: flex;
-  flex-direction: column;
-
-  @media (max-width: 768px) {
-    padding: var(--space-4) var(--space-4) 0;
-  }
-`;
-
-const PageHeader = styled.div`
-  margin-bottom: var(--space-4);
-`;
-
-const PageTitle = styled.h1`
-  font-family: var(--font-display);
-  font-size: 1.5rem;
-  font-weight: 600;
-  color: var(--gray-800);
-  letter-spacing: -0.02em;
-  margin-bottom: 4px;
-`;
-
-const PageDesc = styled.p`
-  font-size: 0.88rem;
-  color: var(--gray-400);
-`;
-
 const Divider = styled.hr`
   border: none;
   border-top: 1px solid var(--gray-200);
@@ -302,6 +270,9 @@ const ChatContainer = styled.div`
   flex: 1;
   min-height: 0;
   margin-bottom: var(--space-6);
+
+  max-width: 600px;
+  align-self: center; /* 가운데 정렬 원하면 추가, 왼쪽 정렬이면 제거 */
 `;
 
 const ChatHeader = styled.div`
