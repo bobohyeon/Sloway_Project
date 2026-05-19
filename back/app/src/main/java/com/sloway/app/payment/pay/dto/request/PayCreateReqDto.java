@@ -17,7 +17,7 @@ public class PayCreateReqDto {
     private Integer baseAmt;
     private Integer addAmt;
 
-    public PayEntity toEntity(RsvnEntity rsvnEntity, CouponEntity couponEntity,Integer dcAmt , Integer finalAmt) {
+    public PayEntity toEntity(RsvnEntity rsvnEntity, CouponEntity couponEntity, Integer dcAmt, Integer finalAmt) {
         return PayEntity.builder()
                 .rsvnNo(rsvnEntity)
                 .ucNo(couponEntity)
