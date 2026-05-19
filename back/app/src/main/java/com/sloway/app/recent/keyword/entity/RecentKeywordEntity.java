@@ -1,4 +1,4 @@
-package com.sloway.app.recent.search.entity;
+package com.sloway.app.recent.keyword.entity;
 
 import com.sloway.app.member.entity.MemberEntity;
 import jakarta.persistence.*;
@@ -12,7 +12,7 @@ import java.time.LocalDateTime;
 @Builder
 @Table(name = "RECENT_SEARCH")
 @Entity
-public class RecentSearchEntity {
+public class RecentKeywordEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

@@ -1,4 +1,4 @@
-package com.sloway.app.recent.place.entity;
+package com.sloway.app.recent.viewed.entity;
 
 import com.sloway.app.member.entity.MemberEntity;
 import com.sloway.app.place.entity.place.PlaceEntity;
@@ -13,7 +13,7 @@ import java.time.LocalDateTime;
 @Builder
 @Table(name = "RECENT_PLACE")
 @Entity
-public class RecentPlaceEntity {
+public class RecentViewedEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -34,5 +34,4 @@ public class RecentPlaceEntity {
     public void prePersist(){
         this.viewAt = LocalDateTime.now();
     }
-
 }
