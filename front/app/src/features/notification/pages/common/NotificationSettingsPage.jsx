@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import styled, { css } from 'styled-components';
 import PageLayout from '../../../../app/layouts/page/PageLayout';
+import { useNavigate } from 'react-router-dom';
 
 // ─── 알림 채널 타입 ───────────────────────────────────────────────────────────
 // 백엔드 연동 시 PUT /api/notifications/settings 바디 스펙과 키 이름 맞출 것
@@ -149,11 +150,7 @@ const CHANNEL_LABELS = {
 };
 
 export default function NotificationSettingsPage() {
-  // 방해금지 시간대 — 백엔드 연동 시 별도 API 필드로 분리
-  const [dndEnabled, setDndEnabled] = useState(true);
-  const [dndStart, setDndStart] = useState('22:00');
-  const [dndEnd, setDndEnd] = useState('08:00');
-
+  const navigate = useNavigate();
   // 알림 설정 맵 — key: itemKey, value: { push, email, sms }
   const [settings, setSettings] = useState(buildInitialSettings);
 
@@ -173,16 +170,16 @@ export default function NotificationSettingsPage() {
   // 저장 — 백엔드 연동 시 PUT /api/notifications/settings 로 교체
   const handleSave = () => {
     const payload = {
-      dnd: { enabled: dndEnabled, start: dndStart, end: dndEnd },
       settings,
     };
     console.log('[저장 payload]', payload);
     // TODO: await api.put('/notifications/settings', payload)
     alert('설정이 저장됐습니다.');
+    navigate(`/user/notification`);
   };
 
   const handleCancel = () => {
-    // TODO: router.back() 또는 navigate(-1)
+    navigate(-1);
   };
 
   return (
@@ -191,51 +188,6 @@ export default function NotificationSettingsPage() {
       description="받고 싶은 알림만 선택하실 수 있어요"
       maxWidth={800}
     >
-
-      {/* 방해금지 시간대 */}
-      <SectionCard>
-        <DndHeader>
-          <DndInfo>
-            <DndTitle>🌙 방해금지 시간대</DndTitle>
-            <DndDesc>
-              설정한 시간에는 모든 알림을 제외하고 소리·진동이 자동적으로
-              일시중지
-            </DndDesc>
-          </DndInfo>
-          <Toggle
-            checked={dndEnabled}
-            onChange={() => setDndEnabled((v) => !v)}
-            aria-label="방해금지 시간대 켜기/끄기"
-          />
-        </DndHeader>
-
-        {dndEnabled && (
-          <DndTimeRow>
-            <TimeField>
-              <TimeLabel htmlFor="dnd-start">시작</TimeLabel>
-              <TimeInput
-                id="dnd-start"
-                type="time"
-                value={dndStart}
-                onChange={(e) => setDndStart(e.target.value)}
-                aria-label="방해금지 시작 시간"
-              />
-            </TimeField>
-            <TimeSeparator aria-hidden="true">~</TimeSeparator>
-            <TimeField>
-              <TimeLabel htmlFor="dnd-end">종료</TimeLabel>
-              <TimeInput
-                id="dnd-end"
-                type="time"
-                value={dndEnd}
-                onChange={(e) => setDndEnd(e.target.value)}
-                aria-label="방해금지 종료 시간"
-              />
-            </TimeField>
-          </DndTimeRow>
-        )}
-      </SectionCard>
-
       {/* 채널 헤더 범례 */}
       <ChannelLegend aria-hidden="true">
         <LegendSpacer />
@@ -345,73 +297,6 @@ const SectionCard = styled.div`
   border-radius: var(--radius-lg);
   padding: 20px;
   margin-bottom: var(--space-3);
-`;
-
-// ─── 방해금지 섹션 ────────────────────────────────────────────────────────────
-
-const DndHeader = styled.div`
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: var(--space-3);
-`;
-
-const DndInfo = styled.div``;
-
-const DndTitle = styled.p`
-  font-size: 0.92rem;
-  font-weight: 600;
-  color: var(--gray-800);
-  margin-bottom: 4px;
-`;
-
-const DndDesc = styled.p`
-  font-size: 0.78rem;
-  color: var(--gray-400);
-  line-height: 1.5;
-`;
-
-const DndTimeRow = styled.div`
-  display: flex;
-  align-items: center;
-  gap: var(--space-3);
-  margin-top: 16px;
-  padding-top: 16px;
-  border-top: 1px solid var(--gray-100);
-`;
-
-const TimeField = styled.div`
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-`;
-
-const TimeLabel = styled.label`
-  font-size: 0.75rem;
-  color: var(--gray-400);
-  font-weight: 500;
-`;
-
-const TimeInput = styled.input`
-  height: 38px;
-  padding: 0 12px;
-  font-size: 0.88rem;
-  border: 1px solid var(--gray-200);
-  border-radius: var(--radius-md);
-  background: var(--white);
-  color: var(--gray-800);
-  font-family: inherit;
-  outline: none;
-  cursor: pointer;
-
-  &:focus {
-    border-color: var(--sage);
-  }
-`;
-
-const TimeSeparator = styled.span`
-  color: var(--gray-400);
-  margin-top: 18px;
 `;
 
 // ─── 채널 범례 ────────────────────────────────────────────────────────────────

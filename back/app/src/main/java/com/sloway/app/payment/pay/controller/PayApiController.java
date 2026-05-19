@@ -21,8 +21,8 @@ public class PayApiController {
     private final PayService payService;
 
     @PostMapping
-    public ResponseEntity<PayResDto> createPay(@RequestBody PayCreateReqDto reqDto) {
-        PayResDto payResDto = payService.createPay(reqDto);
+    public ResponseEntity<PayResDto> createPay(@RequestBody PayCreateReqDto payCreateReqDto) {
+        PayResDto payResDto = payService.createPay(payCreateReqDto);
         return ResponseEntity.status(HttpStatus.CREATED).body(payResDto);
     }
 

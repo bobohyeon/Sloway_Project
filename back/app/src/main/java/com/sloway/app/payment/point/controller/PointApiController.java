@@ -22,20 +22,26 @@ public class PointApiController {
     private final PointService pointService;
 
     @PostMapping("/save")
-    public ResponseEntity<PointResDto> savePoint(@RequestBody PointSaveReqDto reqDto) {
-        PointResDto pointResDto = pointService.savePoint(reqDto);
+    public ResponseEntity<PointResDto> savePoint(@RequestBody PointSaveReqDto pointSaveReqDto) {
+        PointResDto pointResDto = pointService.savePoint(pointSaveReqDto);
         return ResponseEntity.status(HttpStatus.CREATED).body(pointResDto);
     }
 
     @PostMapping("/use")
-    public ResponseEntity<PointResDto> usePoint(@RequestBody PointUseReqDto reqDto) {
-        PointResDto pointResDto = pointService.usePoint(reqDto);
+    public ResponseEntity<PointResDto> usePoint(@RequestBody PointUseReqDto pointSaveReqDto) {
+        PointResDto pointResDto = pointService.usePoint(pointSaveReqDto);
         return ResponseEntity.status(HttpStatus.CREATED).body(pointResDto);
     }
 
-    @PutMapping("/{no}/expire")
+    @PatchMapping("/{no}/expire")
     public ResponseEntity<PointResDto> expirePoint(@PathVariable Long no){
         PointResDto resDto = pointService.expirePoint(no);
+        return ResponseEntity.ok(resDto);
+    }
+
+    @PatchMapping("/{no}/confirm")
+    public ResponseEntity<PointResDto> confirmEarnPoint(@PathVariable Long no){
+        PointResDto resDto = pointService.confirmEarnPoint(no);
         return ResponseEntity.ok(resDto);
     }
 

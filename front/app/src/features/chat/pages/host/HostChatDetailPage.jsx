@@ -77,19 +77,6 @@ const MOCK_MESSAGES = [
 
 // 빠른 답변 템플릿 — 백엔드 연동 시 GET /api/host/quick-replies 로 대체
 // 호스트가 직접 추가/수정 가능하도록 설정 페이지 연동 권장
-const QUICK_REPLIES = [
-  { id: 1, text: '환영합니다!' },
-  { id: 2, text: '체크인 안내' },
-  { id: 3, text: '주차 안내' },
-  { id: 4, text: '자주 묻는 질문' },
-];
-
-const STATUS_LABEL = {
-  pending: '승인 대기',
-  confirmed: '확정',
-  completed: '이용 완료',
-  cancelled: '취소',
-};
 
 export default function HostChatDetailPage() {
   const [messages, setMessages] = useState(MOCK_MESSAGES);
@@ -128,14 +115,6 @@ export default function HostChatDetailPage() {
     }
   };
 
-  // 빠른 답변 선택 시 input에 삽입
-  const handleQuickReply = (text) => {
-    setInputText(text);
-    inputRef.current?.focus();
-  };
-
-  const statusLabel = STATUS_LABEL[MOCK_ROOM.reservationStatus];
-
   return (
     <PageLayout
       title="채팅방"
@@ -156,10 +135,7 @@ export default function HostChatDetailPage() {
           </GuestAvatar>
 
           <GuestInfo>
-            <GuestNameRow>
-              {MOCK_ROOM.guestName}
-              <StatusPill>{statusLabel}</StatusPill>
-            </GuestNameRow>
+            <GuestNameRow>{MOCK_ROOM.guestName}</GuestNameRow>
             <SpaceName>📍 {MOCK_ROOM.spaceName}</SpaceName>
           </GuestInfo>
 
@@ -237,24 +213,6 @@ export default function HostChatDetailPage() {
           <div ref={messagesEndRef} />
         </MessageArea>
 
-        {/* 빠른 답변 바 — 호스트 전용 */}
-        <QuickReplyBar>
-          <QuickLabel aria-hidden="true">빠른 답글:</QuickLabel>
-          <QuickList role="list">
-            {QUICK_REPLIES.map((qr) => (
-              <QuickBtn
-                key={qr.id}
-                type="button"
-                role="listitem"
-                onClick={() => handleQuickReply(qr.text)}
-                aria-label={`빠른 답글: ${qr.text}`}
-              >
-                {qr.text}
-              </QuickBtn>
-            ))}
-          </QuickList>
-        </QuickReplyBar>
-
         {/* 입력 바 */}
         <InputBar>
           <InputIconBtn type="button" aria-label="이미지 첨부">
@@ -302,6 +260,10 @@ const ChatContainer = styled.div`
   flex: 1;
   min-height: 0;
   margin-bottom: var(--space-6);
+
+  max-width: 600px;
+  width: 100%;
+  align-self: center; /* 가운데 정렬 원하면 추가, 왼쪽 정렬이면 제거 */
 `;
 
 const ChatHeader = styled.div`
@@ -339,15 +301,6 @@ const GuestNameRow = styled.p`
   font-weight: 600;
   color: var(--gray-800);
   margin-bottom: 2px;
-`;
-
-const StatusPill = styled.span`
-  font-size: 0.72rem;
-  font-weight: 600;
-  color: #c07040;
-  background: rgba(192, 112, 64, 0.12);
-  padding: 2px 8px;
-  border-radius: var(--radius-full);
 `;
 
 const SpaceName = styled.p`
@@ -519,51 +472,6 @@ const HostBubble = styled.div`
   color: var(--white);
   line-height: 1.6;
   word-break: break-word;
-`;
-
-/* 빠른 답변 — 호스트 전용 */
-const QuickReplyBar = styled.div`
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 10px 16px;
-  border-top: 1px solid var(--gray-100);
-  background: var(--white);
-  overflow-x: auto;
-  scrollbar-width: none;
-  &::-webkit-scrollbar {
-    display: none;
-  }
-`;
-
-const QuickLabel = styled.span`
-  font-size: 0.75rem;
-  color: var(--gray-400);
-  flex-shrink: 0;
-  font-weight: 500;
-`;
-
-const QuickList = styled.div`
-  display: flex;
-  gap: 6px;
-`;
-
-const QuickBtn = styled.button`
-  padding: 5px 12px;
-  font-size: 0.78rem;
-  font-weight: 500;
-  color: #c07040;
-  border: 1px solid rgba(192, 112, 64, 0.3);
-  border-radius: var(--radius-full);
-  background: rgba(192, 112, 64, 0.06);
-  cursor: pointer;
-  white-space: nowrap;
-  transition: all 140ms;
-
-  &:hover {
-    background: rgba(192, 112, 64, 0.14);
-    border-color: #c07040;
-  }
 `;
 
 const InputBar = styled.div`

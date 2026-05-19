@@ -66,13 +66,19 @@ public class PointEntity extends BaseEntity {
     }
 
     public void applySaveAmount(int amount, LocalDateTime expiredAt) {
+        if (this.status != PointStatus.WAIT) {
+            throw new IllegalStateException("적립대기 상태에서만 적립금액 설정 가능");
+        }
         this.amount = amount;
         this.expiredAt = expiredAt;
     }
 
-
-    public void applyUseAmount(Integer amount){
+    public void applyUseAmount(Integer amount) {
+        if (this.status != PointStatus.USED) {
+            throw new IllegalStateException("사용 상태에서만 사용금액 설정 가능");
+        }
         this.amount = amount;
+
     }
 
 

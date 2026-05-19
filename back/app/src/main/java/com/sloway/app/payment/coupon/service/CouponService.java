@@ -1,5 +1,7 @@
 package com.sloway.app.payment.coupon.service;
 
+import com.sloway.app.member.entity.MemberEntity;
+import com.sloway.app.member.repository.MemberRepository;
 import com.sloway.app.payment.coupon.dto.request.CouponCreateReqDto;
 import com.sloway.app.payment.coupon.dto.response.CouponResDto;
 import com.sloway.app.payment.coupon.entity.CouponEntity;
@@ -22,12 +24,15 @@ public class CouponService {
 
     private final CouponRepository couponRepository;
     private final PayRepository payRepository;
-//
-//    @Transactional
-//    public CouponResDto createCoupon(CouponCreateReqDto reqDto) {
-//        CouponEntity entity = reqDto.toEntity();
-//        return CouponResDto.from(couponRepository.save(entity));
-//    }
+    private final MemberRepository memberRepository;
+
+    @Transactional
+    public CouponResDto createCoupon(CouponCreateReqDto couponCreateReqDto) {
+        MemberEntity memberEntity = memberRepository.findById(couponCreateReqDto.getMemberNo())
+                .orElseThrow(() -> new EntityNotFoundException("회원 정보를 조회할 수 없습니다."));
+        CouponEntity entity = couponCreateReqDto.toEntity(memberEntity);
+        return CouponResDto.from(couponRepository.save(entity));
+    }
 
     public List<CouponResDto> findCouponAll() {
         List<CouponResDto> couponList = couponRepository.findAll().stream().map(CouponResDto::from).toList();

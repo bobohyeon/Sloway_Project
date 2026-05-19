@@ -60,8 +60,8 @@ public class CouponEntity extends BaseEntity {
     }
 
     public void expireCoupon() {
-        if (this.status == CouponStatus.EXPIRED) {
-            throw new IllegalStateException("사용 불가능한 쿠폰입니다");
+        if (this.status != CouponStatus.AVAILABLE) {
+            throw new IllegalStateException("사용 가능한 쿠폰만 만료 처리 가능");
         }
         this.status = CouponStatus.EXPIRED;
     }

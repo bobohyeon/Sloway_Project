@@ -77,6 +77,9 @@ public class RefundEntity extends BaseEntity {
     }
 
     public void applyRefund(RefundRate rate, BigDecimal refundAmt) {
+        if (this.status != RefundStatus.REQUESTED) {
+            throw new IllegalStateException("환불 요청 상태에서만 환불 금액 적용가능");
+        }
         this.refundRate = rate;
         this.refundAmt = refundAmt;
     }

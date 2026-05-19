@@ -1,7 +1,9 @@
 package com.sloway.app.payment.refund.service;
 
+import com.sloway.app.common.exception.CustomException;
 import com.sloway.app.payment.pay.entity.PayEntity;
 import com.sloway.app.payment.pay.repository.PayRepository;
+import com.sloway.app.payment.refund.common.RefundErrorCode;
 import com.sloway.app.payment.refund.common.RefundRate;
 import com.sloway.app.payment.refund.dto.request.RefundCreateReqDto;
 import com.sloway.app.payment.refund.dto.response.RefundResDto;
@@ -32,18 +34,24 @@ public class RefundService {
     private final RsvnRepository rsvnRepository;
 
     @Transactional
-    public RefundResDto createRefund(RefundCreateReqDto reqDto) {
+    public RefundResDto createRefund(RefundCreateReqDto refundCreateReqDto) {
 
-        PayEntity pay = payRepository.findById(reqDto.getPayNo())
+        PayEntity pay = payRepository.findById(refundCreateReqDto.getPayNo())
                 .orElseThrow(() -> new EntityNotFoundException("결제 정보를 조회할 수 없습니다."));
 
-        RsvnEntity rsvn = rsvnRepository.findById(reqDto.getRsvnNo())
+        RsvnEntity rsvn = rsvnRepository.findById(refundCreateReqDto.getRsvnNo())
                 .orElseThrow(() -> new EntityNotFoundException("예약 정보를 조회할 수 없습니다."));
 
-        RefundEntity entity = reqDto.toEntity(pay, rsvn);
+        RefundEntity entity = refundCreateReqDto.toEntity(pay, rsvn);
         RefundRate rate = refundRate(entity);
+
+        if (RefundRate.DDAY == rate) {
+            log.warn("환불 기간 만료 : payNo:{},rsvnNo:{}", refundCreateReqDto.getPayNo(),refundCreateReqDto.getRsvnNo());
+            throw new CustomException(RefundErrorCode.REFUND_PERIOD_EXPIRED);
+        }
+
         BigDecimal finalAmt = BigDecimal.valueOf(pay.getFinalAmt());
-        BigDecimal rateBd  = BigDecimal.valueOf(rate.getRate());
+        BigDecimal rateBd = BigDecimal.valueOf(rate.getRate());
         BigDecimal divisor = BigDecimal.valueOf(100);
 
         BigDecimal refundAmt = finalAmt.multiply(rateBd).divide(divisor, 0, RoundingMode.DOWN);
@@ -57,7 +65,8 @@ public class RefundService {
     }
 
     public RefundResDto findRefundByNo(Long no) {
-        RefundEntity refundEntity = refundRepository.findById(no).orElseThrow(() -> new EntityNotFoundException("환불 정보를 조회할 수 없습니다."));
+        RefundEntity refundEntity = refundRepository.findById(no)
+                .orElseThrow(() -> new EntityNotFoundException("환불 정보를 조회할 수 없습니다."));
         return RefundResDto.from(refundEntity);
     }
 

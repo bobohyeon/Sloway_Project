@@ -82,11 +82,6 @@ export default function UserChatListPage() {
       room.spaceName.includes(searchKeyword);
     return matchTab && matchSearch;
   });
-
-  const totalUnread = MOCK_CHAT_ROOMS.reduce(
-    (acc, r) => acc + r.unreadCount,
-    0
-  );
   const unreadCount = MOCK_CHAT_ROOMS.filter((r) => r.unreadCount > 0).length;
 
   return (
@@ -139,7 +134,9 @@ export default function UserChatListPage() {
               role="button"
               tabIndex={0}
               aria-label={`${room.hostName}과의 채팅${room.unreadCount > 0 ? `, 읽지 않은 메시지 ${room.unreadCount}개` : ''}`}
-              onKeyDown={(e) => e.key === 'Enter' && navigate(`/user/chat/${room.id}`)}
+              onKeyDown={(e) =>
+                e.key === 'Enter' && navigate(`/user/chat/${room.id}`)
+              }
             >
               <AvatarWrap style={{ background: room.avatarBg }}>
                 <AvatarEmoji aria-hidden="true">{room.avatarEmoji}</AvatarEmoji>
@@ -273,6 +270,7 @@ const SearchInput = styled.input`
   color: var(--gray-800);
   background: transparent;
   outline: none;
+  border: none;
   font-family: inherit;
 
   &::placeholder {
