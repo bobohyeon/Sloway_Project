@@ -3,6 +3,7 @@ package com.sloway.app.payment.point.service;
 import com.sloway.app.common.exception.CustomException;
 import com.sloway.app.member.entity.MemberEntity;
 import com.sloway.app.member.repository.MemberRepository;
+import com.sloway.app.payment.pay.common.PayErrorCode;
 import com.sloway.app.payment.pay.entity.PayEntity;
 import com.sloway.app.payment.pay.repository.PayRepository;
 import com.sloway.app.payment.point.common.PointDealType;
@@ -38,15 +39,14 @@ public class PointService {
 
     public PointResDto findPointByNo(Long no) {
         PointEntity pointEntity = pointRepository.findById(no)
-                .orElseThrow(() -> new EntityNotFoundException("포인트 정보를 조회할 수 없습니다."));
-
+                .orElseThrow(() -> new CustomException(PointErrorCode.POINT_NOT_FOUND));
         return PointResDto.from(pointEntity);
     }
 
     @Transactional
     public PointResDto savePoint(PointSaveReqDto pointSaveReqDto) {
         PayEntity payEntity = payRepository.findById(pointSaveReqDto.getPayNo())
-                .orElseThrow(() -> new EntityNotFoundException("결제 정보를 조회할 수 없습니다."));
+                .orElseThrow(() -> new CustomException(PayErrorCode.PAY_NOT_FOUND));
 
         MemberEntity memberEntity = memberRepository.findById(pointSaveReqDto.getMemberNo())
                 .orElseThrow(() -> new EntityNotFoundException("회원 정보를 조회할 수 없습니다."));
@@ -64,16 +64,16 @@ public class PointService {
     public PointResDto usePoint(PointUseReqDto pointSaveReqDto) {
 
         PayEntity payEntity = payRepository.findById(pointSaveReqDto.getPayNo())
-                .orElseThrow(() -> new EntityNotFoundException("결제 정보를 조회할 수 없습니다."));
+                .orElseThrow(() -> new CustomException(PayErrorCode.PAY_NOT_FOUND));
 
         MemberEntity memberEntity = memberRepository.findById(pointSaveReqDto.getMemberNo())
                 .orElseThrow(() -> new EntityNotFoundException("회원 정보를 조회할 수 없습니다."));
 
         if (pointSaveReqDto.getAmount() < 1000) {
-            throw new IllegalArgumentException("최소 1000P부터 사용 가능");
+            throw new CustomException(PointErrorCode.POINT_BELOW_MIN);
         }
         if (pointSaveReqDto.getAmount() > payEntity.getFinalAmt() * 30 / 100) {
-            throw new IllegalArgumentException("결제금액의 30%까지만 사용 가능");
+            throw new CustomException(PointErrorCode.POINT_EXCEED_LIMIT);
         }
 
         PointEntity entity = pointSaveReqDto.toEntity(payEntity, memberEntity);
@@ -85,7 +85,7 @@ public class PointService {
     @Transactional
     public PointResDto expirePoint(Long no) {
         PointEntity pointEntity = pointRepository.findById(no)
-                .orElseThrow(() -> new EntityNotFoundException("조회할 수 없습니다."));
+                .orElseThrow(() -> new CustomException(PointErrorCode.POINT_NOT_FOUND));
 
         pointEntity.expire();
         return PointResDto.from(pointEntity);
@@ -94,7 +94,7 @@ public class PointService {
     @Transactional
     public PointResDto confirmEarnPoint(Long no) {
         PointEntity pointEntity = pointRepository.findById(no)
-                .orElseThrow(() -> new EntityNotFoundException("포인트 정보를 조회할 수 없습니다."));
+                .orElseThrow(() -> new CustomException(PointErrorCode.POINT_NOT_FOUND));
 
         pointEntity.confirmEarn();
         return PointResDto.from(pointEntity);
