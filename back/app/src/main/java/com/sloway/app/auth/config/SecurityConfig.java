@@ -3,17 +3,23 @@ package com.sloway.app.auth.config;
 
 import com.sloway.app.auth.filter.JwtAuthenticationFilter;
 import com.sloway.app.auth.filter.LoginFilter;
+import com.sloway.app.auth.service.AdminDetailsService;
+import com.sloway.app.auth.service.HostDetailService;
+import com.sloway.app.auth.service.UserDetailsServiceImpl;
 import com.sloway.app.auth.util.JwtUtil;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
-import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
+import org.springframework.security.authentication.ProviderManager;
+import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
+import org.springframework.security.core.userdetails.UserDetailsService;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.web.cors.CorsConfiguration;
@@ -37,20 +43,34 @@ import java.util.List;
 @RequiredArgsConstructor
 public class SecurityConfig {
 
-    private final AuthenticationConfiguration authenticationConfiguration;
     private final JwtUtil jwtUtil;
     private final ObjectMapper objectMapper;
+    private final UserDetailsServiceImpl userDetailsService;
+    private final HostDetailService hostDetailService;
+    private final AdminDetailsService adminDetailsService;
+    private final PasswordEncoder passwordEncoder;
 
 
-    @Bean
-    public AuthenticationManager authenticationManager() throws Exception {
-        return authenticationConfiguration.getAuthenticationManager();
+
+    private AuthenticationManager buildauthenticationManager(UserDetailsService uds) {
+        DaoAuthenticationProvider provider = new DaoAuthenticationProvider(uds);
+        provider.setPasswordEncoder(passwordEncoder);
+        return new ProviderManager(provider);
     }
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity hs) throws Exception {
-        LoginFilter loginFilter = new LoginFilter(authenticationManager(), objectMapper, jwtUtil);
-        loginFilter.setFilterProcessesUrl("/api/auth/login");
+        // 일반회원 로그인 필터
+        LoginFilter userLoginFilter = new LoginFilter(buildauthenticationManager(userDetailsService), objectMapper, jwtUtil);
+        userLoginFilter.setFilterProcessesUrl("/api/auth/login");
+
+        //호스트 로그인 필터
+        LoginFilter hostLoginFilter = new LoginFilter(buildauthenticationManager(hostDetailService), objectMapper, jwtUtil);
+        hostLoginFilter.setFilterProcessesUrl("/api/auth/host/login");
+
+        //관리자 로그인 필터
+        LoginFilter adminLoginFilter = new LoginFilter(buildauthenticationManager(adminDetailsService), objectMapper, jwtUtil);
+        adminLoginFilter.setFilterProcessesUrl("/api/auth/admin/login");
 
         hs
                 .csrf(AbstractHttpConfigurer::disable)
@@ -61,7 +81,9 @@ public class SecurityConfig {
                         auth -> auth
                                 .anyRequest().permitAll()
                 )
-                .addFilterAt(loginFilter, UsernamePasswordAuthenticationFilter.class)
+                .addFilterAt(userLoginFilter, UsernamePasswordAuthenticationFilter.class)
+                .addFilterBefore(hostLoginFilter,userLoginFilter.getClass())
+                .addFilterBefore(adminLoginFilter,userLoginFilter.getClass())
                 .addFilterBefore(new JwtAuthenticationFilter(jwtUtil), LoginFilter.class)
                 .cors(cors -> cors.configurationSource(new CorsConfigurationSource() {
                     @Override
