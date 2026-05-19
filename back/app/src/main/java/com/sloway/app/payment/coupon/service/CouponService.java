@@ -1,11 +1,14 @@
 package com.sloway.app.payment.coupon.service;
 
+import com.sloway.app.common.exception.CustomException;
 import com.sloway.app.member.entity.MemberEntity;
 import com.sloway.app.member.repository.MemberRepository;
+import com.sloway.app.payment.coupon.common.CouponErrorCode;
 import com.sloway.app.payment.coupon.dto.request.CouponCreateReqDto;
 import com.sloway.app.payment.coupon.dto.response.CouponResDto;
 import com.sloway.app.payment.coupon.entity.CouponEntity;
 import com.sloway.app.payment.coupon.repository.CouponRepository;
+import com.sloway.app.payment.pay.common.PayErrorCode;
 import com.sloway.app.payment.pay.entity.PayEntity;
 import com.sloway.app.payment.pay.repository.PayRepository;
 import jakarta.persistence.EntityNotFoundException;
@@ -15,6 +18,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+
 
 @Service
 @Transactional(readOnly = true)
@@ -41,16 +45,16 @@ public class CouponService {
 
     public CouponResDto findCouponByNo(Long no) {
         CouponEntity couponEntity = couponRepository.findById(no)
-                .orElseThrow(() -> new EntityNotFoundException("쿠폰을 조회할 수 없습니다."));
+                .orElseThrow(() -> new CustomException(CouponErrorCode.COUPON_NOT_FOUND));
         return CouponResDto.from(couponEntity);
     }
 
     @Transactional
     public void useCoupon(Long couponNo, Long payNo) {
         CouponEntity couponEntity = couponRepository.findById(couponNo)
-                .orElseThrow(() -> new EntityNotFoundException("쿠폰을 조회할 수 없습니다."));
+                .orElseThrow(() -> new CustomException(CouponErrorCode.COUPON_NOT_FOUND));
         PayEntity payEntity = payRepository.findById(payNo)
-                .orElseThrow(() -> new EntityNotFoundException("결제가 올바르지 않습니다."));
+                .orElseThrow(() -> new CustomException(PayErrorCode.PAY_NOT_FOUND));
         couponEntity.useCoupon(payEntity);
     }
 }
