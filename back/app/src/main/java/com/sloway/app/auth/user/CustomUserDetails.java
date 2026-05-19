@@ -23,6 +23,7 @@ public class CustomUserDetails implements UserDetails {
 
     private final Long memberNo;
     private final String email;
+    private final String password;
     private final MemberRole role;
 
     /**
@@ -33,6 +34,10 @@ public class CustomUserDetails implements UserDetails {
      *
      * 이렇게 해야 {@code hasRole("USER")} 같은 Spring 표준 매칭이 동작.
      */
+    public CustomUserDetails(Long memberNo, String email, MemberRole role) {
+        this(memberNo, email, null, role);
+    }
+
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
         return List.of(new SimpleGrantedAuthority("ROLE_" + role.getCode()));
@@ -44,7 +49,7 @@ public class CustomUserDetails implements UserDetails {
      */
     @Override
     public String getPassword() {
-        return null;
+        return password;
     }
 
     @Override
