@@ -86,4 +86,13 @@ public class PointService {
         pointEntity.expire();
         return PointResDto.from(pointEntity);
     }
+
+    @Transactional
+    public PointResDto confirmEarnPoint(Long no) {
+        PointEntity pointEntity = pointRepository.findById(no)
+                .orElseThrow(() -> new EntityNotFoundException("포인트 정보를 조회할 수 없습니다."));
+
+        pointEntity.confirmEarn();
+        return PointResDto.from(pointEntity);
+    }
 }
