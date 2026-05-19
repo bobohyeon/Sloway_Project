@@ -39,6 +39,12 @@ public class PointApiController {
         return ResponseEntity.ok(resDto);
     }
 
+    @PatchMapping("/{no}/confirm")
+    public ResponseEntity<PointResDto> confirmEarnPoint(@PathVariable Long no){
+        PointResDto resDto = pointService.confirmEarnPoint(no);
+        return ResponseEntity.ok(resDto);
+    }
+
     @GetMapping
     public ResponseEntity<List<PointResDto>> findPointAll() {
         List<PointResDto> pointList = pointService.findPointAll();
