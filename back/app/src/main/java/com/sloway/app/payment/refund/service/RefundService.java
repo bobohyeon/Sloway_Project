@@ -1,6 +1,7 @@
 package com.sloway.app.payment.refund.service;
 
 import com.sloway.app.common.exception.CustomException;
+import com.sloway.app.payment.pay.common.PayErrorCode;
 import com.sloway.app.payment.pay.entity.PayEntity;
 import com.sloway.app.payment.pay.repository.PayRepository;
 import com.sloway.app.payment.refund.common.RefundErrorCode;
@@ -37,7 +38,7 @@ public class RefundService {
     public RefundResDto createRefund(RefundCreateReqDto refundCreateReqDto) {
 
         PayEntity pay = payRepository.findById(refundCreateReqDto.getPayNo())
-                .orElseThrow(() -> new EntityNotFoundException("결제 정보를 조회할 수 없습니다."));
+                .orElseThrow(() -> new CustomException(PayErrorCode.PAY_NOT_FOUND));
 
         RsvnEntity rsvn = rsvnRepository.findById(refundCreateReqDto.getRsvnNo())
                 .orElseThrow(() -> new EntityNotFoundException("예약 정보를 조회할 수 없습니다."));
@@ -46,7 +47,7 @@ public class RefundService {
         RefundRate rate = refundRate(entity);
 
         if (RefundRate.DDAY == rate) {
-            log.warn("환불 기간 만료 : payNo:{},rsvnNo:{}", refundCreateReqDto.getPayNo(),refundCreateReqDto.getRsvnNo());
+            log.warn("환불 기간 만료 : payNo:{},rsvnNo:{}", refundCreateReqDto.getPayNo(), refundCreateReqDto.getRsvnNo());
             throw new CustomException(RefundErrorCode.REFUND_PERIOD_EXPIRED);
         }
 
@@ -66,7 +67,7 @@ public class RefundService {
 
     public RefundResDto findRefundByNo(Long no) {
         RefundEntity refundEntity = refundRepository.findById(no)
-                .orElseThrow(() -> new EntityNotFoundException("환불 정보를 조회할 수 없습니다."));
+                .orElseThrow(() -> new CustomException(RefundErrorCode.REFUND_NOT_FOUND));
         return RefundResDto.from(refundEntity);
     }
 
