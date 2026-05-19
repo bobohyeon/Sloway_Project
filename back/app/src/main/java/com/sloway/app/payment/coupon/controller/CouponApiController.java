@@ -20,11 +20,11 @@ public class CouponApiController {
 
     private final CouponService couponService;
 
-//    @PostMapping
-//    public ResponseEntity<CouponResDto> createCoupon(@RequestBody CouponCreateReqDto couponCreateReqDto) {
-//        CouponResDto resDto = couponService.createCoupon(couponCreateReqDto);
-//        return ResponseEntity.status(HttpStatus.CREATED).body(resDto);
-//    }
+    @PostMapping
+    public ResponseEntity<CouponResDto> createCoupon(@RequestBody CouponCreateReqDto couponCreateReqDto) {
+        CouponResDto resDto = couponService.createCoupon(couponCreateReqDto);
+        return ResponseEntity.status(HttpStatus.CREATED).body(resDto);
+    }
 
     @GetMapping
     public ResponseEntity<List<CouponResDto>> findCouponAll() {
