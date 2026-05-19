@@ -66,5 +66,9 @@ public class RsvnEntity {
         this.status = RsvnStatus.S;
     }
 
+    public void cancel(){
+        this.status = RsvnStatus.C;
+    }
+
 
 }
