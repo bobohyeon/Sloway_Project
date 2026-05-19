@@ -1,8 +1,10 @@
 package com.sloway.app.payment.coupon.entity;
 
 import com.sloway.app.common.entity.BaseEntity;
+import com.sloway.app.common.exception.CustomException;
 import com.sloway.app.member.entity.MemberEntity;
 import com.sloway.app.payment.coupon.common.CouponDcType;
+import com.sloway.app.payment.coupon.common.CouponErrorCode;
 import com.sloway.app.payment.coupon.common.CouponStatus;
 import com.sloway.app.payment.pay.entity.PayEntity;
 import jakarta.persistence.*;
@@ -52,7 +54,7 @@ public class CouponEntity extends BaseEntity {
 
     public void useCoupon(PayEntity payEntity) {
         if (this.status != CouponStatus.AVAILABLE) {
-            throw new IllegalStateException("사용 가능한 쿠폰이 아닙니다.");
+            throw new CustomException(CouponErrorCode.COUPON_NOT_AVAILABLE);
         }
         this.usedAt = LocalDateTime.now();
         this.payNo = payEntity;
@@ -61,7 +63,7 @@ public class CouponEntity extends BaseEntity {
 
     public void expireCoupon() {
         if (this.status != CouponStatus.AVAILABLE) {
-            throw new IllegalStateException("사용 가능한 쿠폰만 만료 처리 가능");
+            throw new CustomException(CouponErrorCode.COUPON_NOT_EXPIRABLE);
         }
         this.status = CouponStatus.EXPIRED;
     }
