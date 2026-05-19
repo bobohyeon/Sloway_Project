@@ -1,4 +1,4 @@
-package com.sloway.app.auth.dto.response;
+package com.sloway.app.member.dto.response;
 
 import com.sloway.app.member.entity.MemberEntity;
 import lombok.Builder;
