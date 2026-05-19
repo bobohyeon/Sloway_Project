@@ -17,17 +17,17 @@ public class PayCreateReqDto {
     private Integer baseAmt;
     private Integer addAmt;
 
-    public PayEntity toEntity(RsvnEntity rsvnEntity, CouponEntity couponEntity) {
+    public PayEntity toEntity(RsvnEntity rsvnEntity, CouponEntity couponEntity,Integer dcAmt , Integer finalAmt) {
         return PayEntity.builder()
                 .rsvnNo(rsvnEntity)
                 .ucNo(couponEntity)
                 .method(method)
                 .baseAmt(baseAmt)
                 .addAmt(addAmt)
-                .finalAmt(baseAmt+addAmt)
+                .finalAmt(finalAmt)
                 .status(PayStatus.READY)
                 .usedPoint(usedPoint)
-                .dcAmt(0)
+                .dcAmt(dcAmt)
                 .build();
     }
 }
