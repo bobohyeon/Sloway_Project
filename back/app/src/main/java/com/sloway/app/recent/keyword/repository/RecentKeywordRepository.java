@@ -11,13 +11,13 @@ public interface RecentKeywordRepository extends JpaRepository<RecentKeywordEnti
     // 본인 검색어 목록 조회
     List<RecentKeywordEntity> findByMemberNoOrderBySearchedAtDesc(MemberEntity memberNo);
 
-    // 본인 검색어 개수 조회
+    // 본인 검색어 갯수 조회
     Long countByMemberNo(MemberEntity memberNo);
 
     // 가장 오래된 검색어 조회 (후 삭제. service에서)
     List<RecentKeywordEntity> findTop1ByMemberNoOrderBySearchedAtAsc(MemberEntity memberNo);
 
-    //개별 삭제 메서드
+    //단건 삭제 메서드
     void deleteByNoAndMemberNo(Long no, MemberEntity memberNo);
 
     //전체 삭제 메서드
