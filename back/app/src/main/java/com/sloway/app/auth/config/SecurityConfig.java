@@ -66,11 +66,11 @@ public class SecurityConfig {
 
         //호스트 로그인 필터
         LoginFilter hostLoginFilter = new LoginFilter(buildauthenticationManager(hostDetailService), objectMapper, jwtUtil);
-        hostLoginFilter.setFilterProcessesUrl("/api/auth/host/login");
+        hostLoginFilter.setFilterProcessesUrl("/api/host/auth/login");
 
         //관리자 로그인 필터
         LoginFilter adminLoginFilter = new LoginFilter(buildauthenticationManager(adminDetailsService), objectMapper, jwtUtil);
-        adminLoginFilter.setFilterProcessesUrl("/api/auth/admin/login");
+        adminLoginFilter.setFilterProcessesUrl("/api/admin/auth/login");
 
         hs
                 .csrf(AbstractHttpConfigurer::disable)
