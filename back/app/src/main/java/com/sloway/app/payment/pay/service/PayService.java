@@ -1,7 +1,9 @@
 package com.sloway.app.payment.pay.service;
 
+import com.sloway.app.common.exception.CustomException;
 import com.sloway.app.payment.coupon.entity.CouponEntity;
 import com.sloway.app.payment.coupon.repository.CouponRepository;
+import com.sloway.app.payment.pay.common.PayErrorCode;
 import com.sloway.app.payment.pay.dto.request.PayCreateReqDto;
 import com.sloway.app.payment.pay.dto.response.PayResDto;
 import com.sloway.app.payment.pay.entity.PayEntity;
@@ -28,16 +30,25 @@ public class PayService {
     private final RsvnRepository rsvnRepository;
 
     @Transactional
-    public PayResDto createPay(PayCreateReqDto reqDto) {
+    public PayResDto createPay(PayCreateReqDto payCreateReqDto) {
 
-        RsvnEntity rsvn = rsvnRepository.findById(reqDto.getRsvnNo()).orElseThrow(() -> new EntityNotFoundException("예약 정보를 조회할 수 없습니다."));
-
-        CouponEntity coupon = null;
-        if (reqDto.getUcNo() != null) {
-            coupon = couponRepository.findById(reqDto.getUcNo()).orElseThrow(() -> new EntityNotFoundException("쿠폰 정보를 조회할 수 없습니다."));
+        if(payCreateReqDto.getBaseAmt() == null || payCreateReqDto.getBaseAmt() <= 0 ||
+                payCreateReqDto.getAddAmt() == null || payCreateReqDto.getAddAmt() < 0){
+            log.warn("결제 금액 이상치 baseAmt={}, addAmt={}", payCreateReqDto.getBaseAmt(),
+                    payCreateReqDto.getAddAmt());
+            throw new CustomException(PayErrorCode.PAY_AMOUNT_INVALID);
         }
 
-        PayEntity entity = reqDto.toEntity(rsvn, coupon);
+        RsvnEntity rsvn = rsvnRepository.findById(payCreateReqDto.getRsvnNo())
+                .orElseThrow(() -> new EntityNotFoundException("예약 정보를 조회할 수 없습니다."));
+
+        CouponEntity coupon = null;
+        if (payCreateReqDto.getUcNo() != null) {
+            coupon = couponRepository.findById(payCreateReqDto.getUcNo())
+                    .orElseThrow(() -> new EntityNotFoundException("쿠폰 정보를 조회할 수 없습니다."));
+        }
+
+        PayEntity entity = payCreateReqDto.toEntity(rsvn, coupon);
         payRepository.save(entity);
 
         if (coupon != null) {
@@ -55,7 +66,7 @@ public class PayService {
 
     public PayResDto findPayByNo(Long no) {
         PayEntity entity = payRepository.findById(no)
-                .orElseThrow(() -> new EntityNotFoundException("결제 정보를 조회할 수 없습니다."));
+                .orElseThrow(() ->  new CustomException(PayErrorCode.PAY_NOT_FOUND));
         return PayResDto.from(entity);
     }
 
