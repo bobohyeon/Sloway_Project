@@ -23,6 +23,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.stream.Stream;
 
 @Service
 @Transactional(readOnly = true)
@@ -125,6 +126,35 @@ public class PointService {
                 .orElseThrow(() -> new EntityNotFoundException("회원 정보를 조회할 수 없습니다."));
         Integer balance = pointRepository.sumByMemberAndStatus(memberNo, PointStatus.SAVE);
         return PointBalanceResDto.from(memberEntity, balance);
+    }
+
+    @Transactional
+    public void refundUsedPoint(PayEntity payEntity) {
+
+        MemberEntity member = memberRepository.findById(payEntity.getRsvnNo().getMemberNo().getNo())
+                .orElseThrow(() -> new EntityNotFoundException("회원 정보를 조회할 수 없습니다."));
+
+        List<PointEntity> pointList = pointRepository.findByPayAndDealType(payEntity.getNo(), PointDealType.USE);
+        int sumPoint = pointList.stream().mapToInt(PointEntity::getAmount).sum();
+        int returnPoint = Math.abs(sumPoint);
+        if (returnPoint == 0) return;
+        PointEntity entity = PointEntity.builder()
+                .memberNo(member)
+                .payNo(payEntity)
+                .amount(returnPoint)
+                .dealType(PointDealType.EARN)
+                .status(PointStatus.SAVE)
+                .expiredAt(LocalDateTime.now().plusYears(1))
+                .build();
+        pointRepository.save(entity);
+    }
+
+    @Transactional
+    public void cancelEarnedPoint(PayEntity payEntity) {
+        List<PointEntity> pointList = pointRepository.findByPayAndDealType(payEntity.getNo(), PointDealType.EARN);
+        pointList.stream()
+                .filter(p -> p.getStatus() == PointStatus.WAIT || p.getStatus() == PointStatus.SAVE)
+                .forEach(PointEntity::cancel);
     }
 
 }
