@@ -1,11 +1,13 @@
 package com.sloway.app.reservation.rsvn.controller;
 
+import com.sloway.app.auth.user.CustomUserDetails;
 import com.sloway.app.reservation.rsvn.dto.request.RsvnReqDto;
 import com.sloway.app.reservation.rsvn.dto.response.RsvnResDto;
 import com.sloway.app.reservation.rsvn.service.RsvnService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -19,8 +21,10 @@ public class RsvnController {
 
     //예약하기
     @PostMapping
-    public ResponseEntity<Void> save(@RequestBody RsvnReqDto dto, @RequestParam Long memberNo){
-        rsvnService.save(memberNo, dto);
+    public ResponseEntity<Void> save(@RequestBody RsvnReqDto dto,
+                                     @AuthenticationPrincipal CustomUserDetails userDetails
+    ){
+        rsvnService.save(userDetails.getMemberNo(), dto);
         return ResponseEntity
                 .status(HttpStatus.CREATED)
                 .build();
@@ -28,22 +32,28 @@ public class RsvnController {
 
     //내 예약 목록 조회
     @GetMapping
-    public ResponseEntity<List<RsvnResDto>> findAll(@RequestParam Long memberNo){
-        List<RsvnResDto> dtoList = rsvnService.findAll(memberNo);
+    public ResponseEntity<List<RsvnResDto>> findAll(
+            @AuthenticationPrincipal CustomUserDetails userDetails
+    ){
+        List<RsvnResDto> dtoList = rsvnService.findAll(userDetails.getMemberNo());
         return ResponseEntity.ok(dtoList);
     }
 
     //내 예약 정보 상세 조회
     @GetMapping("/{no}")
-    public ResponseEntity<RsvnResDto> findOne(@RequestParam Long memberNo, @PathVariable Long no){
-        RsvnResDto dto = rsvnService.findOne(memberNo,no);
+    public ResponseEntity<RsvnResDto> findOne(
+            @AuthenticationPrincipal CustomUserDetails userDetails
+            , @PathVariable Long no){
+        RsvnResDto dto = rsvnService.findOne(userDetails.getMemberNo(), no);
         return ResponseEntity.ok(dto);
     }
 
     //예약 취소
     @PostMapping("/{no}/cancel")
-    public ResponseEntity<Void> delete(@RequestParam Long memberNo, @PathVariable Long no){
-        rsvnService.cancel(memberNo, no);
+    public ResponseEntity<Void> delete(
+            @AuthenticationPrincipal CustomUserDetails userDetails
+            , @PathVariable Long no){
+        rsvnService.cancel(userDetails.getMemberNo(), no);
         return ResponseEntity.status(HttpStatus.NO_CONTENT).build();
     }
 }

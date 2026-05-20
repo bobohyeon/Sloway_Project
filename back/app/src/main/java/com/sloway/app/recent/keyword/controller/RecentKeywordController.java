@@ -32,7 +32,9 @@ public class RecentKeywordController {
 
     //최근 검색어 목록
     @GetMapping
-    public ResponseEntity<List<RecentKeywordResDto>> findAll(@AuthenticationPrincipal CustomUserDetails userDetails){
+    public ResponseEntity<List<RecentKeywordResDto>> findAll(
+            @AuthenticationPrincipal CustomUserDetails userDetails
+    ){
         List<RecentKeywordResDto> dtoList = recentKeywordService.findAll(userDetails.getMemberNo());
         return ResponseEntity
                 .ok(dtoList);
@@ -52,7 +54,9 @@ public class RecentKeywordController {
 
     //최근 검색어 전체 삭제
     @DeleteMapping
-    public ResponseEntity<Void> deleteAll(@AuthenticationPrincipal CustomUserDetails userDetails){
+    public ResponseEntity<Void> deleteAll(
+            @AuthenticationPrincipal CustomUserDetails userDetails
+    ){
         recentKeywordService.deleteAll(userDetails.getMemberNo());
         return ResponseEntity
                 .status(HttpStatus.NO_CONTENT)
