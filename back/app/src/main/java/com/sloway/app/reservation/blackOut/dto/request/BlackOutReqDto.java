@@ -1,5 +1,7 @@
 package com.sloway.app.reservation.blackOut.dto.request;
 
+import com.sloway.app.place.entity.place.PlaceEntity;
+import com.sloway.app.reservation.blackOut.entity.BlackOutEntity;
 import com.sloway.app.reservation.blackOut.entity.BlackOutReasonType;
 import lombok.Getter;
 
@@ -17,17 +19,16 @@ public class BlackOutReqDto {
     private LocalDateTime startTime;
     private LocalDateTime endTime;
 
-    //service에서 PlaceEntity 변환 후 사용하기
-//    public BlackOutEntity toEntity(){
-//        return BlackOutEntity.builder()
-//                .placeNo(placeNo)
-//                .title(title)
-//                .memo(memo)
-//                .reasonType(reasonType)
-//                .startDate(startDate)
-//                .endDate(endDate)
-//                .startTime(startTime)
-//                .endTime(endTime)
-//                .build();
-//    }
+    public BlackOutEntity toEntity(PlaceEntity placeNo){
+        return BlackOutEntity.builder()
+                .placeNo(placeNo)
+                .title(title)
+                .memo(memo)
+                .reasonType(reasonType)
+                .startDate(startDate)
+                .endDate(endDate)
+                .startTime(startTime)
+                .endTime(endTime)
+                .build();
+    }
 }

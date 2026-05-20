@@ -38,7 +38,7 @@ public class StationReqDto {
     @Getter
     @Setter
     public static class AmenityDto {
-        private int amenityNo;
+        private Long amenityNo;
     }
 
     @Getter

@@ -1,5 +1,7 @@
 package com.sloway.app.review.review.dto.request;
 
+import com.sloway.app.reservation.rsvn.entity.RsvnEntity;
+import com.sloway.app.review.review.entity.ReviewEntity;
 import lombok.Getter;
 
 @Getter
@@ -12,15 +14,14 @@ public class ReviewCreateReqDto {
     private Integer scoreFocus;
     private String content;
 
-    //service에서 RsvnEntity로 변환 후 사용하기
-//    public ReviewEntity toEntity(){
-//        return ReviewEntity.builder()
-//                .rsvnNo(rsvnNo)
-//                .scoreTotal(scoreTotal)
-//                .scoreOffice(scoreOffice)
-//                .scoreAmenity(scoreAmenity)
-//                .scoreFocus(scoreFocus)
-//                .content(content)
-//                .build();
-//    }
+    public ReviewEntity toEntity(RsvnEntity rsvnNo){
+        return ReviewEntity.builder()
+                .rsvnNo(rsvnNo)
+                .scoreTotal(scoreTotal)
+                .scoreOffice(scoreOffice)
+                .scoreAmenity(scoreAmenity)
+                .scoreFocus(scoreFocus)
+                .content(content)
+                .build();
+    }
 }

@@ -107,6 +107,11 @@ export default function NoticeManagePage() {
     <PageLayout
       title="공지사항 관리"
       description="공지사항을 등록하고 노출 순서를 관리합니다"
+      actions={
+        <Button onClick={() => navigate('/admin/notice/form')}>
+          + 공지사항 등록
+        </Button>
+      }
     >
       {/* 탭 */}
       <TabWrap>
@@ -151,9 +156,6 @@ export default function NoticeManagePage() {
             />
             <Button size="sm" variant="secondary" onClick={handleSearch}>
               검색
-            </Button>
-            <Button onClick={() => navigate('/admin/notice/form')}>
-              + 공지사항 등록
             </Button>
           </SearchGroup>
         </FilterRow>
@@ -224,9 +226,6 @@ export default function NoticeManagePage() {
                     <Th $w="110px" $center>
                       등록일
                     </Th>
-                    <Th $w="100px" $center>
-                      관리
-                    </Th>
                   </tr>
                 </thead>
                 <tbody>
@@ -254,9 +253,7 @@ export default function NoticeManagePage() {
                             </Badge>
                           )}
                           <TitleText
-                            onClick={() =>
-                              navigate(`/notices/${notice.id}`)
-                            }
+                            onClick={() => navigate(`/notices/${notice.id}`)}
                           >
                             {notice.title}
                           </TitleText>
@@ -283,19 +280,6 @@ export default function NoticeManagePage() {
                       </Td>
                       <Td $center $muted>
                         {notice.createdAt}
-                      </Td>
-                      <Td $center>
-                        <ActionGroup>
-                          <Button
-                            size="sm"
-                            variant="ghost"
-                            onClick={() =>
-                              navigate(`/admin/notice/form/${notice.id}`)
-                            }
-                          >
-                            수정
-                          </Button>
-                        </ActionGroup>
                       </Td>
                     </Tr>
                   ))}
@@ -556,12 +540,6 @@ const TitleText = styled.span`
     color: var(--sage);
     text-decoration: underline;
   }
-`;
-
-const ActionGroup = styled.div`
-  display: flex;
-  gap: 4px;
-  justify-content: center;
 `;
 
 const ModalText = styled.p`

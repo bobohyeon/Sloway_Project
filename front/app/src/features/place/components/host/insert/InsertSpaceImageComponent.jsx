@@ -128,12 +128,10 @@ const NextButton = styled.button`
   font-weight: 600;
   cursor: pointer;
 `;
-
 function InsertSpaceImageComponent({ formData, setFormData, prev, next }) {
   const fileInputRef = useRef(null);
   const [draggedIndex, setDraggedIndex] = useState(null);
 
-  // 이미지 업로드 로직 (JPG/JPEG 제한 포함)
   const handleImageUpload = (e) => {
     const files = Array.from(e.target.files);
     const allowedExtensions = ['jpg', 'jpeg'];
@@ -150,9 +148,11 @@ function InsertSpaceImageComponent({ formData, setFormData, prev, next }) {
       return;
     }
 
-    const newImages = filteredFiles.map((file) => ({
+    const currentLength = formData.images.length;
+    const newImages = filteredFiles.map((file, i) => ({
       file,
       preview: URL.createObjectURL(file),
+      sort: currentLength + i + 1, // 1, 2, 3... 형태로 정렬 가공 순서 부여
     }));
 
     setFormData((prev) => ({
@@ -162,8 +162,7 @@ function InsertSpaceImageComponent({ formData, setFormData, prev, next }) {
     e.target.value = '';
   };
 
-  // --- 드래그 앤 드롭 핸들러 ---
-
+  // --- 드래그 앤 드롭 핸들
   const onDragStart = (index) => {
     setDraggedIndex(index);
   };
@@ -174,12 +173,18 @@ function InsertSpaceImageComponent({ formData, setFormData, prev, next }) {
     const newImages = [...formData.images];
     const draggedItem = newImages[draggedIndex];
 
-    // 배열에서 삭제 후 새로운 위치에 삽입
+    // 배열 내 순서 변경 교체
     newImages.splice(draggedIndex, 1);
     newImages.splice(index, 0, draggedItem);
 
+    // 재배치된 배열의 인덱스 순서대로 sort 필드를 0부터 다시 일괄 갱신합니다.
+    const reorderedImages = newImages.map((img, idx) => ({
+      ...img,
+      sort: idx,
+    }));
+
     setDraggedIndex(index);
-    setFormData((prev) => ({ ...prev, images: newImages }));
+    setFormData((prev) => ({ ...prev, images: reorderedImages }));
   };
 
   const onDragEnd = () => {
@@ -187,10 +192,17 @@ function InsertSpaceImageComponent({ formData, setFormData, prev, next }) {
   };
 
   const removeImage = (index) => {
-    setFormData((prev) => ({
-      ...prev,
-      images: prev.images.filter((_, i) => i !== index),
-    }));
+    setFormData((prev) => {
+      const filtered = prev.images.filter((_, i) => i !== index);
+      const reordered = filtered.map((img, idx) => ({
+        ...img,
+        sort: idx,
+      }));
+      return {
+        ...prev,
+        images: reordered,
+      };
+    });
   };
 
   return (

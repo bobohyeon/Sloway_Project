@@ -4,6 +4,7 @@ import com.sloway.app.common.exception.CustomException;
 import com.sloway.app.member.entity.MemberEntity;
 import com.sloway.app.member.repository.MemberRepository;
 import com.sloway.app.payment.coupon.common.CouponErrorCode;
+import com.sloway.app.payment.coupon.common.CouponStatus;
 import com.sloway.app.payment.coupon.dto.request.CouponCreateReqDto;
 import com.sloway.app.payment.coupon.dto.response.CouponResDto;
 import com.sloway.app.payment.coupon.entity.CouponEntity;
@@ -49,6 +50,7 @@ public class CouponService {
         return CouponResDto.from(couponEntity);
     }
 
+
     @Transactional
     public void useCoupon(Long couponNo, Long payNo) {
         CouponEntity couponEntity = couponRepository.findById(couponNo)
@@ -56,5 +58,12 @@ public class CouponService {
         PayEntity payEntity = payRepository.findById(payNo)
                 .orElseThrow(() -> new CustomException(PayErrorCode.PAY_NOT_FOUND));
         couponEntity.useCoupon(payEntity);
+    }
+
+    public List<CouponResDto> findCouponsByMemberNo(Long no) {
+        MemberEntity memberEntity = memberRepository.findById(no)
+                .orElseThrow(() -> new EntityNotFoundException("회원 정보를 조회할 수 없습니다."));
+        List<CouponEntity> memberCouponList = couponRepository.findByMemberAndStatus(memberEntity.getNo(), CouponStatus.AVAILABLE);
+        return memberCouponList.stream().map(CouponResDto::from).toList();
     }
 }

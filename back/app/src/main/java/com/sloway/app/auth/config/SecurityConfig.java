@@ -35,8 +35,9 @@ import java.util.List;
  * <p>로그인을 Controller가 아닌 LoginFilter에서 처리.
  * AuthenticationManager가 UserDetailsServiceImpl + PasswordEncoder로 인증.
  *
- * <h3>데모 모드</h3>
- * 모든 요청 permitAll(). 운영 전환 시 requestMatchers로 권한별 제한.
+ * <h3>보안 정책</h3>
+ * URL 패턴별 권한 제어 (인증 담당이 단독 관리).
+ * 매트릭스 문서와 짝으로 유지. 새 API 추가 시 정책 수신 후 반영.
  */
 @Configuration
 @EnableWebSecurity
@@ -79,6 +80,16 @@ public class SecurityConfig {
                 .sessionManagement(s -> s.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(
                         auth -> auth
+                                // 로그인·가입
+                                .requestMatchers("/api/auth/**").permitAll()
+                                .requestMatchers("/api/host/auth/**").permitAll()
+                                .requestMatchers("/api/host/join/**").permitAll()
+                                .requestMatchers("/api/admin/auth/**").permitAll()
+                                // 권한별 보호 (URL 패턴으로 표현)
+                                .requestMatchers("/api/user/**").hasRole("USER")
+                                .requestMatchers("/api/host/**").hasRole("HOST")
+                                .requestMatchers("/api/admin/**").hasRole("ADMIN")
+                                // 나머지 — 점진 도입 단계, 다른 담당자 API 진행 위해 일단 공개
                                 .anyRequest().permitAll()
                 )
                 .addFilterAt(userLoginFilter, UsernamePasswordAuthenticationFilter.class)

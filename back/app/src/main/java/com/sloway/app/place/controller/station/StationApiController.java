@@ -29,9 +29,9 @@ public class StationApiController {
             @RequestPart("dto") StationReqDto dto,
             @RequestPart("files") List<MultipartFile> files,
             @RequestPart("sortList") List<ImgSortReqDto> sortList,
-            @AuthenticationPrincipal Long hostNo) {
+            @AuthenticationPrincipal Long memberNo) {
 
-        stationService.saveStation(dto, files, sortList, hostNo);
+        stationService.saveStation(dto, files, sortList,Long.valueOf(2));
 
         return ResponseEntity
                 .status(HttpStatus.CREATED)
