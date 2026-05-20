@@ -2,9 +2,13 @@ package com.sloway.app.reservation.rsvn.service;
 
 import com.sloway.app.member.entity.MemberEntity;
 import com.sloway.app.member.repository.MemberRepository;
+import com.sloway.app.place.entity.office.OfficeEntity;
+import com.sloway.app.place.entity.station.StationEntity;
+import com.sloway.app.place.entity.workStay.WorkStayEntity;
 import com.sloway.app.place.repository.office.OfficeRepository;
 import com.sloway.app.place.repository.station.StationRepository;
 import com.sloway.app.place.repository.workStay.WorkStayRepository;
+import com.sloway.app.reservation.ErrorCode;
 import com.sloway.app.reservation.rsvn.dto.request.RsvnReqDto;
 import com.sloway.app.reservation.rsvn.dto.response.RsvnResDto;
 import com.sloway.app.reservation.rsvn.entity.RsvnEntity;
@@ -16,7 +20,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
-import java.util.Optional;
 
 @Slf4j
 @RequiredArgsConstructor
@@ -33,31 +36,44 @@ public class RsvnService {
     @Transactional
     public void save(Long memberNo, RsvnReqDto dto){
         MemberEntity member = memberRepository.findById(memberNo).orElseThrow(()->
-                new EntityNotFoundException("회원을 찾을 수 없습니다")
+                new EntityNotFoundException(ErrorCode.MEMBER_NOT_FOUND.getMessage())
         );
 
-        if(dto.getOfficeNo() != null){
-            officeRepository.findById(dto.getOfficeNo());}
-        else if(dto.getWorkStayNo() != null) {
-            workStayRepository.findById(dto.getWorkStayNo());}
-        else if(dto.getStationNo() != null) {
-            stationRepository.findById(dto.getStationNo());
-        }
+        OfficeEntity office = null;
+        WorkStayEntity workStay = null;
+        StationEntity station = null;
 
+        if(dto.getOfficeNo() != null){
+            office = officeRepository.findById(dto.getOfficeNo()).orElseThrow(()->
+                    new EntityNotFoundException(ErrorCode.PLACE_NOT_FOUND.getMessage()));
+        }
+        else if(dto.getWorkStayNo() != null) {
+            workStay = workStayRepository.findById(dto.getWorkStayNo()).orElseThrow(()->
+                    new EntityNotFoundException(ErrorCode.PLACE_NOT_FOUND.getMessage()));
+        }
+        else if(dto.getStationNo() != null) {
+            station = stationRepository.findById(dto.getStationNo()).orElseThrow(()->
+                    new EntityNotFoundException(ErrorCode.PLACE_NOT_FOUND.getMessage()));
+        }
+        rsvnRepository.save(
         RsvnEntity.builder()
+                .memberNo(member)
+                .officeNo(office)
+                .workStayNo(workStay)
+                .stationNo(station)
                 .count(dto.getCount())
                 .amt(dto.getAmt())
                 .special(dto.getSpecial())
                 .checkIn(dto.getCheckIn())
                 .checkOut(dto.getCheckOut())
-
-                .build();
+                .build()
+        );
     }
 
     //내 예약 목록 조회
     public List<RsvnResDto> findAll(Long memberNo){
         MemberEntity member = memberRepository.findById(memberNo).orElseThrow(()->
-                new EntityNotFoundException("회원을 찾을 수 없습니다")
+                new EntityNotFoundException(ErrorCode.MEMBER_NOT_FOUND.getMessage())
         );
         return rsvnRepository.findByMemberNo(member)
                 .stream()
@@ -66,20 +82,25 @@ public class RsvnService {
     }
 
     //내 예약 상세 조회
-    public void findOne(Long memberNo, Long rsvnNo){
+    public RsvnResDto findOne(Long memberNo, Long rsvnNo){
         MemberEntity member = memberRepository.findById(memberNo).orElseThrow(()->
-                new EntityNotFoundException("회원을 찾을 수 없습니다")
+                new EntityNotFoundException(ErrorCode.MEMBER_NOT_FOUND.getMessage())
         );
-        Optional<RsvnEntity> entity = rsvnRepository.findByNoAndMemberNo(rsvnNo, member);
+        RsvnEntity entity = rsvnRepository.findByNoAndMemberNo(rsvnNo, member)
+                .orElseThrow(() -> new EntityNotFoundException(ErrorCode.RESERVATION_NOT_FOUND.getMessage()));
+
+        return RsvnResDto.from(entity);
 
     }
 
+    //내 예약 취소
     @Transactional
     public void cancel(Long memberNo, Long rsvnNo){
         MemberEntity member = memberRepository.findById(memberNo).orElseThrow(()->
-                new EntityNotFoundException("회원을 찾을 수 없습니다")
+                new EntityNotFoundException(ErrorCode.MEMBER_NOT_FOUND.getMessage())
         );
-        RsvnEntity entity = rsvnRepository.findByNoAndMemberNo(rsvnNo, member).orElseThrow(() -> new EntityNotFoundException("오류"));
+        RsvnEntity entity = rsvnRepository.findByNoAndMemberNo(rsvnNo, member)
+                .orElseThrow(() -> new EntityNotFoundException(ErrorCode.RESERVATION_NOT_FOUND.getMessage()));
         entity.cancel();
     }
 }
