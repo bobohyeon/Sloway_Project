@@ -67,4 +67,11 @@ public class CouponEntity extends BaseEntity {
         }
         this.status = CouponStatus.EXPIRED;
     }
+
+    public void returnCoupon() {
+        if (this.status != CouponStatus.USED) {
+            throw new CustomException(CouponErrorCode.COUPON_NOT_USED);
+        }
+        this.status = CouponStatus.RETURNED;
+    }
 }

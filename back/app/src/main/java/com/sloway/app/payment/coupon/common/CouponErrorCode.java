@@ -13,6 +13,7 @@ public enum CouponErrorCode implements ErrorCode {
     COUPON_NOT_AVAILABLE(HttpStatus.BAD_REQUEST, "사용 가능한 쿠폰이 아닙니다."),
     COUPON_NOT_EXPIRABLE(HttpStatus.BAD_REQUEST, "사용 가능한 쿠폰만 만료 처리 가능합니다."),
     COUPON_EXPIRED(HttpStatus.BAD_REQUEST, "만료된 쿠폰입니다."),
+    COUPON_NOT_USED(HttpStatus.BAD_REQUEST, "사용된 쿠폰만 회수 처리 가능합니다."),
     COUPON_ALREADY_USED(HttpStatus.CONFLICT, "이미 사용된 쿠폰입니다.");
 
     private final HttpStatus status;
