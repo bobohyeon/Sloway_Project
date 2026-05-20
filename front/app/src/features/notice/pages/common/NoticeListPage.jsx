@@ -27,6 +27,9 @@ const CATEGORY_OPTIONS = ['전체', '서비스', '이벤트', '점검', '기타'
 const PAGE_SIZE = 10;
 
 export default function NoticeListPage() {
+  // 1. state 추가
+  const [sortKey, setSortKey] = useState('createdAt');
+
   const navigate = useNavigate();
 
   const [category, setCategory] = useState('전체');
@@ -42,8 +45,18 @@ export default function NoticeListPage() {
     return matchCat && matchKw;
   });
 
-  const totalPages = Math.ceil(normal.length / PAGE_SIZE);
-  const paged = normal.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
+  // 2. normal 필터링 이후 sort 적용
+  const sorted = [...normal].sort((a, b) => {
+    if (sortKey === 'views') return b.views - a.views;
+    if (sortKey === 'title') return a.title.localeCompare(b.title, 'ko');
+    return b.createdAt.localeCompare(a.createdAt);
+  });
+
+  const totalPages = Math.ceil(sorted.length / PAGE_SIZE);
+  const paged = sorted.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
+
+  // const totalPages = Math.ceil(normal.length / PAGE_SIZE);
+  // const paged = normal.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
 
   const handleSearch = () => {
     setKeyword(inputKeyword);
@@ -75,18 +88,32 @@ export default function NoticeListPage() {
             </CategoryBtn>
           ))}
         </CategoryBtnGroup>
-        <SearchGroup>
-          <SearchInput
-            placeholder="검색어를 입력하세요"
-            value={inputKeyword}
-            onChange={(e) => setInputKeyword(e.target.value)}
-            onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
-            aria-label="공지사항 검색"
-          />
-          <SearchBtn type="button" onClick={handleSearch}>
-            검색
-          </SearchBtn>
-        </SearchGroup>
+        <RightControls>
+          <SortSelect
+            value={sortKey}
+            onChange={(e) => {
+              setSortKey(e.target.value);
+              setPage(1);
+            }}
+            aria-label="정렬 기준"
+          >
+            <option value="createdAt">최신순</option>
+            <option value="views">조회수순</option>
+            <option value="title">제목순</option>
+          </SortSelect>
+          <SearchGroup>
+            <SearchInput
+              placeholder="검색어를 입력하세요"
+              value={inputKeyword}
+              onChange={(e) => setInputKeyword(e.target.value)}
+              onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
+              aria-label="공지사항 검색"
+            />
+            <SearchBtn type="button" onClick={handleSearch}>
+              검색
+            </SearchBtn>
+          </SearchGroup>
+        </RightControls>
       </FilterRow>
 
       {/* 공지 목록 */}
@@ -389,4 +416,32 @@ const Divider = styled.div`
   height: 1px;
   background: var(--gray-200);
   margin: 0;
+`;
+
+const RightControls = styled.div`
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+`;
+
+const SortSelect = styled.select`
+  height: 36px;
+  padding: 0 28px 0 10px;
+  font-size: 0.82rem;
+  font-family: inherit;
+  color: var(--gray-700);
+  border: 1px solid var(--gray-200);
+  border-radius: var(--radius-md);
+  background: var(--white);
+  cursor: pointer;
+  outline: none;
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%23999'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 8px center;
+  transition: border-color 160ms;
+
+  &:focus {
+    border-color: var(--sage);
+  }
 `;
