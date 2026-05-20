@@ -2,6 +2,7 @@ package com.sloway.app.payment.point.controller;
 
 import com.sloway.app.payment.point.dto.request.PointSaveReqDto;
 import com.sloway.app.payment.point.dto.request.PointUseReqDto;
+import com.sloway.app.payment.point.dto.response.PointBalanceResDto;
 import com.sloway.app.payment.point.dto.response.PointResDto;
 import com.sloway.app.payment.point.service.PointService;
 import lombok.RequiredArgsConstructor;
@@ -34,13 +35,13 @@ public class PointApiController {
     }
 
     @PatchMapping("/{no}/expire")
-    public ResponseEntity<PointResDto> expirePoint(@PathVariable Long no){
+    public ResponseEntity<PointResDto> expirePoint(@PathVariable Long no) {
         PointResDto resDto = pointService.expirePoint(no);
         return ResponseEntity.ok(resDto);
     }
 
     @PatchMapping("/{no}/confirm")
-    public ResponseEntity<PointResDto> confirmEarnPoint(@PathVariable Long no){
+    public ResponseEntity<PointResDto> confirmEarnPoint(@PathVariable Long no) {
         PointResDto resDto = pointService.confirmEarnPoint(no);
         return ResponseEntity.ok(resDto);
     }
@@ -55,5 +56,11 @@ public class PointApiController {
     public ResponseEntity<PointResDto> findPointByNo(@PathVariable Long no) {
         PointResDto pointResDto = pointService.findPointByNo(no);
         return ResponseEntity.ok(pointResDto);
+    }
+
+    @GetMapping("/member/{no}/balance")
+    public ResponseEntity<PointBalanceResDto> findPointBalanceByMemberNo(@PathVariable Long no) {
+        PointBalanceResDto balance = pointService.findPointBalanceByMemberNo(no);
+        return ResponseEntity.ok(balance);
     }
 }
