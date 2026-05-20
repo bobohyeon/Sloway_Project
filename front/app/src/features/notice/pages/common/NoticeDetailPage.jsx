@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import styled from 'styled-components';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import PageLayout from '../../../../app/layouts/page/PageLayout';
 import { Badge, Button, Card } from '../../../pay_shared/components';
 
@@ -52,6 +52,8 @@ const MOCK_NEXT = { id: 0, title: null }; // 다음 없음
 export default function NoticeDetailPage() {
   const navigate = useNavigate();
   const { id } = useParams();
+  const location = useLocation();
+  const backPath = location.state?.from ?? '/admin/notice';
 
   // 백엔드 연동 시 useQuery(`/api/notices/${id}`)
   const notice = MOCK_NOTICE;
@@ -135,9 +137,23 @@ export default function NoticeDetailPage() {
 
       {/* 하단 버튼 */}
       <BackBtn>
-        <Button variant="secondary" onClick={() => navigate('/notices')}>
+        <Button variant="secondary" onClick={() => navigate(backPath)}>
           ← 목록으로
         </Button>
+        {/* 수정/삭제는 admin에서 접근했을 때만 노출 */}
+        {backPath.startsWith('/admin') && (
+          <RightActions>
+            <Button
+              variant="ghost"
+              onClick={() => navigate(`/admin/notice/form/${notice.id}`)}
+            >
+              수정
+            </Button>
+            <Button variant="danger" onClick={() => {}}>
+              삭제
+            </Button>
+          </RightActions>
+        )}
       </BackBtn>
     </PageLayout>
   );
@@ -273,4 +289,11 @@ const NavDivider = styled.div`
 
 const BackBtn = styled.div`
   display: flex;
+  align-items: center;
+  justify-content: space-between; /* ← 좌: 목록, 우: 수정/삭제 */
+`;
+
+const RightActions = styled.div`
+  display: flex;
+  gap: var(--space-2);
 `;
