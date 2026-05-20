@@ -37,4 +37,11 @@ public class CouponApiController {
         CouponResDto couponResDto = couponService.findCouponByNo(no);
         return ResponseEntity.ok(couponResDto);
     }
+
+    @GetMapping("/member/{no}")
+    public ResponseEntity<List<CouponResDto>> findCouponsByMemberNo(@PathVariable Long no) {
+        List<CouponResDto> couponResDto = couponService.findCouponsByMemberNo(no);
+        return ResponseEntity.ok(couponResDto);
+    }
 }
+

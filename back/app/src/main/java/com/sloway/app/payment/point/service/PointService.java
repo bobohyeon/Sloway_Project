@@ -11,6 +11,7 @@ import com.sloway.app.payment.point.common.PointErrorCode;
 import com.sloway.app.payment.point.common.PointStatus;
 import com.sloway.app.payment.point.dto.request.PointSaveReqDto;
 import com.sloway.app.payment.point.dto.request.PointUseReqDto;
+import com.sloway.app.payment.point.dto.response.PointBalanceResDto;
 import com.sloway.app.payment.point.dto.response.PointResDto;
 import com.sloway.app.payment.point.entity.PointEntity;
 import com.sloway.app.payment.point.repository.PointRepository;
@@ -47,16 +48,12 @@ public class PointService {
     public PointResDto savePoint(PointSaveReqDto pointSaveReqDto) {
         PayEntity payEntity = payRepository.findById(pointSaveReqDto.getPayNo())
                 .orElseThrow(() -> new CustomException(PayErrorCode.PAY_NOT_FOUND));
-
         MemberEntity memberEntity = memberRepository.findById(pointSaveReqDto.getMemberNo())
                 .orElseThrow(() -> new EntityNotFoundException("회원 정보를 조회할 수 없습니다."));
-
         int amount = (int) (payEntity.getFinalAmt() * 0.01);
         LocalDateTime expiredAt = LocalDateTime.now().plusYears(1);
-
         PointEntity entity = pointSaveReqDto.toEntity(payEntity, memberEntity);
         entity.applySaveAmount(amount, expiredAt);
-
         return PointResDto.from(pointRepository.save(entity));
     }
 
@@ -65,19 +62,15 @@ public class PointService {
 
         PayEntity payEntity = payRepository.findById(pointSaveReqDto.getPayNo())
                 .orElseThrow(() -> new CustomException(PayErrorCode.PAY_NOT_FOUND));
-
         MemberEntity memberEntity = memberRepository.findById(pointSaveReqDto.getMemberNo())
                 .orElseThrow(() -> new EntityNotFoundException("회원 정보를 조회할 수 없습니다."));
-
         if (pointSaveReqDto.getAmount() < 1000) {
             throw new CustomException(PointErrorCode.POINT_BELOW_MIN);
         }
         if (pointSaveReqDto.getAmount() > payEntity.getFinalAmt() * 30 / 100) {
             throw new CustomException(PointErrorCode.POINT_EXCEED_LIMIT);
         }
-
         PointEntity entity = pointSaveReqDto.toEntity(payEntity, memberEntity);
-
         entity.applyUseAmount(-pointSaveReqDto.getAmount());
         return PointResDto.from(pointRepository.save(entity));
     }
@@ -86,7 +79,6 @@ public class PointService {
     public PointResDto expirePoint(Long no) {
         PointEntity pointEntity = pointRepository.findById(no)
                 .orElseThrow(() -> new CustomException(PointErrorCode.POINT_NOT_FOUND));
-
         pointEntity.expire();
         return PointResDto.from(pointEntity);
     }
@@ -95,7 +87,6 @@ public class PointService {
     public PointResDto confirmEarnPoint(Long no) {
         PointEntity pointEntity = pointRepository.findById(no)
                 .orElseThrow(() -> new CustomException(PointErrorCode.POINT_NOT_FOUND));
-
         pointEntity.confirmEarn();
         return PointResDto.from(pointEntity);
     }
@@ -106,24 +97,18 @@ public class PointService {
         if (amount < 1000) {
             throw new CustomException(PointErrorCode.POINT_BELOW_MIN);
         }
-
         int dcAmtSafe = payEntity.getDcAmt() == null ? 0 : payEntity.getDcAmt();
         int basisAmt = payEntity.getBaseAmt() + payEntity.getAddAmt() - dcAmtSafe;
         int pointLimit = (basisAmt * 30) / 100;
-
         if (amount > pointLimit) {
             throw new CustomException(PointErrorCode.POINT_EXCEED_LIMIT);
         }
-
         MemberEntity memberEntity = memberRepository.findById(memberNo)
                 .orElseThrow(() -> new EntityNotFoundException("회원 정보를 조회할 수 없습니다."));
-
         Integer currentPoint = pointRepository.sumByMemberAndStatus(memberNo, PointStatus.SAVE);
-
         if (currentPoint < amount) {
             throw new CustomException(PointErrorCode.POINT_INSUFFICIENT);
         }
-
         PointEntity entity = PointEntity.builder()
                 .memberNo(memberEntity)
                 .payNo(payEntity)
@@ -132,9 +117,14 @@ public class PointService {
                 .status(PointStatus.USED)
                 .expiredAt(null)
                 .build();
-
         pointRepository.save(entity);
+    }
 
+    public PointBalanceResDto findPointBalanceByMemberNo(Long memberNo) {
+        MemberEntity memberEntity = memberRepository.findById(memberNo)
+                .orElseThrow(() -> new EntityNotFoundException("회원 정보를 조회할 수 없습니다."));
+        Integer balance = pointRepository.sumByMemberAndStatus(memberNo, PointStatus.SAVE);
+        return PointBalanceResDto.from(memberEntity, balance);
     }
 
 }
