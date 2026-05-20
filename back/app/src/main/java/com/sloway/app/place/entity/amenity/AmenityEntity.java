@@ -23,12 +23,15 @@ public class AmenityEntity {
     protected String commonYn = "N";
 
     @Column(length = 1 , nullable = false)
+    @Builder.Default
     protected String workStayYn = "N";
 
     @Column(length = 1 , nullable = false)
+    @Builder.Default
     protected String officeYn = "N";
 
     @Column(length = 1 , nullable = false)
+    @Builder.Default
     protected String stationYn = "N";
 
     @Column(length = 1 , nullable = false)

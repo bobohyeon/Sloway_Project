@@ -5,8 +5,7 @@ import Toggle from '../../components/admin/Toggle';
 // [가상 백엔드 API] 실제 프로젝트의 axios 통신 코드로 대체하세요.
 const updateAmenityApi = async (dto) => {
   try {
-    console.log('🚀 백엔드로 실시간 전송 중...', dto);
-    // await axios.put(`/api/amenity`, dto);
+    await axios.put(`/api/amenity`, dto);
   } catch (error) {
     console.error('실시간 전송 실패:', error);
   }

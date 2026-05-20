@@ -1,7 +1,10 @@
 import React from 'react';
 import styled from 'styled-components';
 import { useNavigate } from 'react-router-dom';
-import { FaHotel, FaBriefcase, FaLeaf } from 'react-icons/fa';
+import { FaHotel, FaBriefcase, FaLeaf, FaImage } from 'react-icons/fa';
+// 훅에서 선언해둔 한글 치환 매핑 테이블 가져오기
+import { STATUS_TEXT } from '../../../hooks/host/place/useSpaceList';
+
 const SpaceCard = styled.div`
   background: white;
   border-radius: 15px;
@@ -11,6 +14,7 @@ const SpaceCard = styled.div`
   align-items: center;
   margin-bottom: 10px;
   transition: all 0.2s ease-in-out;
+  cursor: pointer;
 
   &:hover {
     border-color: #768966;
@@ -18,17 +22,28 @@ const SpaceCard = styled.div`
   }
 `;
 
-const Thumbnail = styled.div`
+const ThumbnailArea = styled.div`
   width: 80px;
   height: 80px;
   border-radius: 12px;
   background-color: #f1f4ee;
+  margin-right: 24px;
+  flex-shrink: 0;
+  overflow: hidden;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 42px;
-  margin-right: 24px;
-  flex-shrink: 0;
+
+  img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  .fallback-icon {
+    font-size: 24px;
+    color: #bcaaa4;
+  }
 `;
 
 const ContentArea = styled.div`
@@ -36,6 +51,9 @@ const ContentArea = styled.div`
 
   .status-row {
     margin-bottom: 8px;
+    display: flex;
+    gap: 6px;
+    align-items: center;
   }
 
   h3 {
@@ -54,14 +72,37 @@ const ContentArea = styled.div`
   }
 `;
 
+// [수정] PENDING, APPROVED, REJECTED 상태별로 색상이 명확하게 분기되도록 리팩토링
 const StatusTag = styled.span`
   padding: 4px 12px;
   border-radius: 6px;
   font-size: 11px;
   font-weight: 600;
-  background: ${(props) => (props.$isPending ? '#f5f5f5' : '#76896610')};
-  color: ${(props) => (props.$isPending ? '#999' : '#768966')};
-  border: 1px solid ${(props) => (props.$isPending ? '#e0e0e0' : '#76896630')};
+  border: 1px solid;
+
+  ${({ $status }) => {
+    switch ($status) {
+      case 'PENDING': // 검수 대기 (그레이 계열)
+        return `
+          background: #f5f5f5;
+          color: #888888;
+          border-color: #e0e0e0;
+        `;
+      case 'REJECTED': // 반려됨 (붉은 계열)
+        return `
+          background: #ffebee;
+          color: #c62828;
+          border-color: #ffcdd2;
+        `;
+      case 'APPROVED': // 운영 중 (시그니처 그린 계열)
+      default:
+        return `
+          background: #76896610;
+          color: #768966;
+          border-color: #76896630;
+        `;
+    }
+  }}
 `;
 
 const RightArea = styled.div`
@@ -125,7 +166,6 @@ const TypeBadge = styled.span`
   border-radius: 6px;
   font-size: 11px;
   font-weight: 700;
-  margin-bottom: 8px;
   letter-spacing: -0.02em;
 
   ${({ $type }) => {
@@ -169,7 +209,6 @@ function SpaceListComponent({ data = [] }) {
   return (
     <>
       {data.map((space) => {
-        // 타입별 아이콘과 라벨 가져오기
         const { label, icon } = getTypeInfo(space.type);
 
         return (
@@ -177,34 +216,43 @@ function SpaceListComponent({ data = [] }) {
             key={space.id}
             onClick={() => navigate(`/host/space/${space.id}`)}
           >
-            <Thumbnail>{space.icon}</Thumbnail>
+            {/* [수정] S3 주소가 들어간 이미지 바인딩 처리 (없으면 대체 아이콘 노출) */}
+            <ThumbnailArea>
+              {space.thumbnail ? (
+                <img src={space.thumbnail} alt={space.title} />
+              ) : (
+                <FaImage className="fallback-icon" />
+              )}
+            </ThumbnailArea>
 
             <ContentArea>
-              {/* 배지 내부 구조 수정: 아이콘을 컴포넌트로 직접 넣음 */}
-              <TypeBadge $type={space.type}>
-                {icon}
-                {label}
-              </TypeBadge>
-
               <div className="status-row">
-                <StatusTag $isPending={space.status === '검수 대기'}>
-                  {space.status}
+                <TypeBadge $type={space.type}>
+                  {icon}
+                  {label}
+                </TypeBadge>
+
+                <StatusTag $status={space.status}>
+                  {STATUS_TEXT[space.status] || space.status}
                 </StatusTag>
               </div>
+
               <h3>{space.title}</h3>
               <div className="info-row">
                 <span>📍 {space.location}</span>
                 <span>
-                  ⭐ {space.rating} ({space.reviews})
+                  ⭐ {Number(space.rating).toFixed(1)} ({space.reviews}개)
                 </span>
-                <span>• 예약 {space.monthlyBookings}건</span>
+                <span>• 당월 예약 {space.monthlyBookings}건</span>
               </div>
             </ContentArea>
 
             <RightArea>
-              <div className="price-label">이용 금액</div>
+              <div className="price-label">최저 이용 금액</div>
               <div className="price-value">
-                {Number(space.price).toLocaleString()}원~
+                {space.price > 0
+                  ? `${Number(space.price).toLocaleString()}원~`
+                  : '가격 미등록'}
               </div>
               <div className="button-group">
                 <ActionButton

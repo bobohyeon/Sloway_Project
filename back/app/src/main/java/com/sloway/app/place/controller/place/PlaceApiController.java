@@ -3,6 +3,9 @@ package com.sloway.app.place.controller.place;
 import com.sloway.app.place.dto.request.sort.ImgSortReqDto;
 import com.sloway.app.place.dto.request.place.PlaceReqDto;
 import com.sloway.app.place.dto.request.place.PlaceUpdateReqDto;
+import com.sloway.app.place.dto.response.place.PlaceBriefRespDto;
+import com.sloway.app.place.dto.response.place.PlaceDetailListRespDto;
+import com.sloway.app.place.dto.response.place.PlaceListRespDto;
 import com.sloway.app.place.service.place.PlaceService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -75,5 +78,25 @@ public class PlaceApiController {
         return ResponseEntity
                 .status(HttpStatus.OK)
                 .build();
+    }
+
+    @GetMapping("/list/detail/{placeNo}")
+    public ResponseEntity<List<PlaceDetailListRespDto>> placeDetailList(@PathVariable Long placeNo, @AuthenticationPrincipal Long memberNo){
+        List<PlaceDetailListRespDto> placeList =placeService.placeDetailList(placeNo, Long.valueOf(2));
+        return ResponseEntity.ok(placeList);
+    }
+
+    @GetMapping("/list/brief/{placeNo}")
+    public ResponseEntity<PlaceBriefRespDto> placeBrief(@PathVariable Long placeNo){
+        PlaceBriefRespDto dto = placeService.placeBrief(placeNo);
+
+        return ResponseEntity.ok(dto);
+    }
+
+    @GetMapping("/list")
+    public ResponseEntity<List<PlaceListRespDto>> placeList(@AuthenticationPrincipal Long memberNo){
+        List<PlaceListRespDto> placeList = placeService.placeList(Long.valueOf(2));
+
+        return ResponseEntity.ok(placeList);
     }
 }

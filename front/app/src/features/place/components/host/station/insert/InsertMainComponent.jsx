@@ -80,10 +80,7 @@ function InsertMainComponent({
   handleChange,
   setStep,
   currentStep,
-  masterPlaces = [
-    { no: 1, title: '제주 돌담 호텔' },
-    { no: 2, title: '서귀포 펜션 마스터' },
-  ],
+  masterPlaces = [{ no: 2, title: '제주 돌담 호텔' }],
 }) {
   // 공간 선택 시 No와 Title을 동시에 저장하는 커스텀 핸들러
   const handlePlaceSelect = (e) => {

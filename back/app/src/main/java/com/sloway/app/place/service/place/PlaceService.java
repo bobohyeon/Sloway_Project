@@ -3,6 +3,9 @@ package com.sloway.app.place.service.place;
 import com.sloway.app.place.dto.request.sort.ImgSortReqDto;
 import com.sloway.app.place.dto.request.place.PlaceReqDto;
 import com.sloway.app.place.dto.request.place.PlaceUpdateReqDto;
+import com.sloway.app.place.dto.response.place.PlaceBriefRespDto;
+import com.sloway.app.place.dto.response.place.PlaceDetailListRespDto;
+import com.sloway.app.place.dto.response.place.PlaceListRespDto;
 import com.sloway.app.place.entity.place.ImgPlaceEntity;
 import com.sloway.app.place.entity.place.PlaceEntity;
 import com.sloway.app.place.repository.place.ImgPlaceRepository;
@@ -16,6 +19,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
@@ -101,5 +105,19 @@ public class PlaceService {
                 .toList();
 
         imgPlaceRepository.saveAll(newImages);
+    }
+
+    public List<PlaceDetailListRespDto> placeDetailList(Long placeNo,Long hostNo) {
+        return placeRepository.findPlaceDetailListByHostNo(placeNo,hostNo);
+    }
+
+    public PlaceBriefRespDto placeBrief(Long placeNo) {
+        PlaceEntity placeEntity = placeRepository.findByNo(placeNo)
+                .orElseThrow(()->new EntityNotFoundException("[PLACE-291]Place Not Found For Find Brief"));
+        return new PlaceBriefRespDto(placeEntity.getNo(), placeEntity.getTitle(), placeEntity.getType());
+    }
+
+    public List<PlaceListRespDto> placeList(Long hostNo) {
+        return placeRepository.findPlaceListByHostNo(hostNo);
     }
 }

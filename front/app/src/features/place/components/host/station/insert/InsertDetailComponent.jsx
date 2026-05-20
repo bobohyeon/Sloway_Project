@@ -1,5 +1,6 @@
 import React from 'react';
 import styled from 'styled-components';
+import { facilityList } from '../../../../hooks/host/place/useInsertStation';
 
 const FormCard = styled.div`
   background: white;
@@ -107,21 +108,6 @@ function InsertDetailComponent({
   prev,
   next,
 }) {
-  const facilityList = [
-    '주방',
-    '세탁기',
-    '건조기',
-    'WiFi',
-    '주차',
-    '어메니티',
-    'TV',
-    '에어컨',
-    '난방',
-    '금연',
-    '반려동물',
-    '바베큐',
-  ];
-
   return (
     <FormCard>
       <SectionTitle>공간 상세 정보</SectionTitle>
@@ -184,16 +170,23 @@ function InsertDetailComponent({
       <FormGroup style={{ marginTop: '20px' }}>
         <label>편의시설 (제공 항목을 모두 선택해주세요)</label>
         <CheckboxGrid>
-          {facilityList.map((item) => (
-            <CheckItem key={item}>
-              <input
-                type="checkbox"
-                checked={formData.facilities.includes(item)}
-                onChange={() => handleCheckChange(item)}
-              />
-              {item}
-            </CheckItem>
-          ))}
+          {facilityList.map((item) => {
+            // [수정 1] formData.facilities 배열 안에 현재 item.no와 일치하는 객체가 있는지 판별합니다.
+            const isChecked = formData.facilities.some(
+              (facility) => facility.amenityNo === item.no
+            );
+
+            return (
+              <CheckItem key={item.no}>
+                <input
+                  type="checkbox"
+                  checked={isChecked}
+                  onChange={() => handleCheckChange(item.no)}
+                />
+                {item.name}
+              </CheckItem>
+            );
+          })}
         </CheckboxGrid>
       </FormGroup>
 
