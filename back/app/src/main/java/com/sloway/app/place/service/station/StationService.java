@@ -46,7 +46,7 @@ public class StationService {
 
         //편의시설 정보 조회
         List<Long> amenityNos = dto.getFacilityList().stream()
-                .map(facility -> (long) facility.getAmenityNo())
+                .map(facility -> facility.getAmenityNo())
                 .collect(Collectors.toList());
         List<AmenityEntity> amenityEntities = amenityRepository.findAllByNoIn(amenityNos);
 

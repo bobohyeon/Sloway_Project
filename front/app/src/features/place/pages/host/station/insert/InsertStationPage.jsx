@@ -6,58 +6,18 @@ import InsertImageComponent from './../../../../components/host/station/insert/I
 import InsertCheckComponent from './../../../../components/host/station/insert/InsertCheckComponent';
 import InsertStationLayout from '../../../../layouts/host/station/insert/InsertStationLayout';
 import InsertStateComponent from './../../../../components/host/station/insert/InsertStateComponent';
+import useInsertStation from '../../../../hooks/host/place/useInsertStation';
 
 function InsertStationPage() {
-  const [step, setStep] = useState(1);
-
-  const [formData, setFormData] = useState({
-    // 1단계: 마스터 공간 선택 및 기본 정보
-    placeNo: '',
-    placeTitle: '',
-    title: '',
-    content: '',
-
-    // 2단계: 공간 상세
-    maxPeople: '',
-    basePeople: '',
-    rooms: '',
-    checkIn: '',
-    checkOut: '',
-    facilities: [],
-
-    // 3단계: 요금
-    monPrice: '',
-    tuePrice: '',
-    wedPrice: '',
-    thuPrice: '',
-    friPrice: '',
-    satPrice: '',
-    sunPrice: '',
-    holPrice: '',
-    exceptionPeriods: [],
-
-    // 4단계: 이미지
-    images: [],
-  });
-
-  const handleChange = (e) => {
-    const { name, value } = e.target;
-    setFormData((prev) => ({ ...prev, [name]: value }));
-  };
-
-  const handleCheckChange = (facility) => {
-    setFormData((prev) => ({
-      ...prev,
-      facilities: prev.facilities.includes(facility)
-        ? prev.facilities.filter((item) => item !== facility)
-        : [...prev.facilities, facility],
-    }));
-  };
-
-  const handleSubmit = () => {
-    console.log('최종 제출 데이터:', formData);
-    alert('검수 신청이 완료되었습니다!');
-  };
+  const {
+    step,
+    setStep,
+    formData,
+    setFormData,
+    handleChange,
+    handleCheckChange,
+    handleSubmit,
+  } = useInsertStation();
 
   // 현재 단계에 맞는 컴포넌트를 반환하는 함수
   const renderStepComponent = () => {

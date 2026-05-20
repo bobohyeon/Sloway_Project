@@ -28,7 +28,7 @@ const Card = styled.div`
 const ImageArea = styled.div`
   width: 100%;
   height: 180px;
-  background-color: #f1f4ee; /* 시안 배경색 */
+  background-color: #f1f4ee;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -84,7 +84,23 @@ const Content = styled.div`
   }
 `;
 
-// 타입에 따른 react-icons 반환 함수
+// [💡 추가] 데이터가 비어있을 때 노출할 센터링 문구 스타일
+const EmptyMessage = styled.div`
+  grid-column: 1 / -1; /* 그리드 전체 칸을 가로질러 채우기 */
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 60px 20px;
+  text-align: center;
+  color: #999;
+  font-size: 16px;
+  font-weight: 500;
+  background: #fafbfa;
+  border-radius: 20px;
+  border: 1px dashed #e2e8dd;
+`;
+
 const getTypeIcon = (type) => {
   switch (type) {
     case 'STATION':
@@ -98,13 +114,21 @@ const getTypeIcon = (type) => {
   }
 };
 
-function SpaceDetailComponent({ data, onCardClick }) {
+// 상위 페이지에서 넘겨받을 헬퍼 함수(getTypeLabel) 추가 적용이 가능하도록 구조 열어둠
+function SpaceDetailComponent({ data = [], onCardClick, typeLabel }) {
+  if (
+    !data ||
+    data.length === 0 ||
+    (data.length === 1 && !data[0].id && !data[0].title)
+  ) {
+    return <EmptyMessage>아직 등록된 {typeLabel}이(가) 없습니다.</EmptyMessage>;
+  }
+
   return (
     <Grid>
       {data.map((item) => (
         <Card key={item.id} onClick={() => onCardClick(item.id)}>
           <ImageArea>
-            {/* 썸네일 이미지가 있으면 이미지를 보여주고, 없으면 아이콘 노출 */}
             {item.thumbnail ? (
               <img src={item.thumbnail} alt={item.title} />
             ) : (
@@ -117,11 +141,11 @@ function SpaceDetailComponent({ data, onCardClick }) {
               등록일 {item.created_at || '2026.05.12'}
             </div>
 
-            <h3>{item.title}</h3>
+            <h3>{item.title || '이름 없음'}</h3>
 
             <div className="footer-row">
               <div className="rating">
-                <FaStar size={14} /> {item.rating}
+                <FaStar size={14} /> {item.rating || 0}
               </div>
             </div>
           </Content>

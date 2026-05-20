@@ -134,33 +134,16 @@ const SubmitButton = styled.button`
   transition: background 0.2s;
 `;
 
-function InsertSpaceCheckComponent({ formData, prev }) {
+function InsertSpaceCheckComponent({
+  formData,
+  prev,
+  handleSubmit,
+  TYPE_MAPPING,
+}) {
   const [agreed, setAgreed] = useState({
     info: false,
     terms: false,
   });
-
-  const navigate = useNavigate();
-
-  const TYPE_MAPPING = {
-    WORK_STAY: { text: '워크스테이 등록 신청으로', path: 'workstay' },
-    STATION: { text: '숙소 등록 신청으로', path: 'lodging' },
-    OFFICE: { text: '오피스 등록 신청으로', path: 'coworking' },
-  };
-  const handleSubmit = () => {
-    //공간 등록하는 api hook으로 데이터 저장 후 이동하도록 설계
-
-    // 안전장치: 매핑 데이터가 존재하는지 확인
-    const currentConfig = TYPE_MAPPING[formData.type];
-    console.log(currentConfig);
-
-    if (currentConfig) {
-      navigate(`/host/${currentConfig.path}`);
-    } else {
-      console.warn('Unknown type received:', formData.type);
-      alert('올바르지 않은 신청 타입입니다.');
-    }
-  };
 
   const isAllAgreed = agreed.info && agreed.terms;
 
@@ -172,6 +155,11 @@ function InsertSpaceCheckComponent({ formData, prev }) {
         <h3 style={{ fontSize: '15px', marginBottom: '20px' }}>
           등록 내용 요약
         </h3>
+
+        <SummaryItem>
+          <div className="label">공간유형</div>
+          <div className="value">{formData.type}</div>
+        </SummaryItem>
 
         <SummaryItem>
           <div className="label">공간명</div>
@@ -220,7 +208,15 @@ function InsertSpaceCheckComponent({ formData, prev }) {
 
       <ButtonGroup>
         <PrevButton onClick={prev}>이전</PrevButton>
-        <SubmitButton disabled={!isAllAgreed} onClick={handleSubmit}>
+        <SubmitButton
+          disabled={!isAllAgreed}
+          onClick={() => {
+            const insert = confirm('등록하시겠습니까?');
+            if (insert) {
+              handleSubmit();
+            }
+          }}
+        >
           {TYPE_MAPPING[formData.type]?.text || '검수 신청하기'}
         </SubmitButton>
       </ButtonGroup>
