@@ -83,6 +83,7 @@ public class SecurityConfig {
                                 // 로그인·가입
                                 .requestMatchers("/api/auth/**").permitAll()
                                 .requestMatchers("/api/host/auth/**").permitAll()
+                                .requestMatchers("/api/host/join/**").permitAll()
                                 .requestMatchers("/api/admin/auth/**").permitAll()
                                 // 권한별 보호 (URL 패턴으로 표현)
                                 .requestMatchers("/api/user/**").hasRole("USER")
