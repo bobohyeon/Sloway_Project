@@ -35,9 +35,10 @@ public class ReviewCustomRepositoryImpl implements ReviewCustomRepository {
                 .leftJoin(rsvn.workStayNo, workStay)
                 .where(
                         office.placeEntity.no.eq(placeNo.getNo())
-                        .or(station.placeEntity.no.eq(placeNo.getNo())
+                        .or(station.placeEntity.no.eq(placeNo.getNo()))
                         .or(workStay.placeEntity.no.eq(placeNo.getNo()))
-                        ))
+                        ,review.delYn.eq("N")
+                )
                 .fetch();
     }
 }
