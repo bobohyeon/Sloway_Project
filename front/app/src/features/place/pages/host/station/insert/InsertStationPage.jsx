@@ -6,7 +6,7 @@ import InsertImageComponent from './../../../../components/host/station/insert/I
 import InsertCheckComponent from './../../../../components/host/station/insert/InsertCheckComponent';
 import InsertStationLayout from '../../../../layouts/host/station/insert/InsertStationLayout';
 import InsertStateComponent from './../../../../components/host/station/insert/InsertStateComponent';
-import useInsertStation from '../../../../hooks/host/place/useInsertStation';
+import useInsertStation from '../../../../hooks/host/station/useInsertStation';
 
 function InsertStationPage() {
   const {

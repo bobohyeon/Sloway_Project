@@ -3,6 +3,7 @@ package com.sloway.app.place.service.place;
 import com.sloway.app.place.dto.request.sort.ImgSortReqDto;
 import com.sloway.app.place.dto.request.place.PlaceReqDto;
 import com.sloway.app.place.dto.request.place.PlaceUpdateReqDto;
+import com.sloway.app.place.dto.response.place.MasterPlaceRespDto;
 import com.sloway.app.place.dto.response.place.PlaceBriefRespDto;
 import com.sloway.app.place.dto.response.place.PlaceDetailListRespDto;
 import com.sloway.app.place.dto.response.place.PlaceListRespDto;
@@ -19,7 +20,6 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
-import java.util.Optional;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
@@ -119,5 +119,13 @@ public class PlaceService {
 
     public List<PlaceListRespDto> placeList(Long hostNo) {
         return placeRepository.findPlaceListByHostNo(hostNo);
+    }
+
+    public List<MasterPlaceRespDto> selectMasterPlaceList(String type, Long memberNo) {
+        return placeRepository.findMasterPlaceListByTypeAndMemberNo(type, memberNo);
+    }
+
+    public PlaceUpdateReqDto selectPlaceForUpdate(Long memberNo, Long no) {
+        return placeRepository.selectPlaceForUpdate(memberNo, no);
     }
 }

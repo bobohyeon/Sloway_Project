@@ -1,6 +1,6 @@
 import React from 'react';
 import styled from 'styled-components';
-import { facilityList } from '../../../../hooks/host/place/useInsertStation';
+import { facilityList } from '../../../../hooks/host/station/useInsertStation';
 
 const FormCard = styled.div`
   background: white;
@@ -19,7 +19,7 @@ const SectionTitle = styled.h2`
 
 const InputGrid = styled.div`
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(4, 1fr);
   gap: 20px;
   margin-bottom: 25px;
 `;
@@ -142,6 +142,15 @@ function InsertDetailComponent({
             onChange={handleChange}
           />
         </FormGroup>
+        <FormGroup>
+          <label>인원당 추가금액</label>
+          <input
+            name="chargeAdd"
+            placeholder="10000"
+            value={formData.chargeAdd}
+            onChange={handleChange}
+          />
+        </FormGroup>
       </InputGrid>
 
       <div
@@ -151,7 +160,7 @@ function InsertDetailComponent({
           <label>체크인 시각</label>
           <input
             name="checkIn"
-            placeholder="오후 3:00"
+            placeholder="15:00"
             value={formData.checkIn}
             onChange={handleChange}
           />
@@ -160,7 +169,7 @@ function InsertDetailComponent({
           <label>체크아웃 시각</label>
           <input
             name="checkOut"
-            placeholder="오전 11:00"
+            placeholder="11:00"
             value={formData.checkOut}
             onChange={handleChange}
           />

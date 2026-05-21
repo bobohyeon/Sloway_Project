@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import styled from 'styled-components';
+import { facilityList } from '../../../../hooks/host/coworking/useInsertCoworking';
 
 const FormCard = styled.div`
   background: white;
@@ -157,10 +158,31 @@ function InsertCoworkingCheckComponent({ formData, prev, onSubmit }) {
 
         <SummaryItem>
           <div className="label">편의시설</div>
-          <div className="value">
-            {formData.facilities.length > 0
-              ? formData.facilities.join(', ')
-              : '(선택한 편의시설 없음)'}
+          <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
+            {formData.facilities.length > 0 ? (
+              formData.facilities.map((f) => {
+                const target = facilityList.find(
+                  (item) => item.no === f.amenityNo
+                );
+                return target ? (
+                  <span
+                    key={f.amenityNo}
+                    style={{
+                      padding: '4px 10px',
+                      background: '#f1f4ee',
+                      color: '#768966',
+                      borderRadius: '20px',
+                      fontSize: '13px',
+                      fontWeight: '500',
+                    }}
+                  >
+                    {target.name}
+                  </span>
+                ) : null;
+              })
+            ) : (
+              <span style={{ color: '#aaa' }}>선택된 편의시설 없음</span>
+            )}
           </div>
         </SummaryItem>
 

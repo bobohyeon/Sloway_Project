@@ -14,6 +14,8 @@ const Container = styled.div`
   max-width: 1100px;
   display: flex;
   flex-direction: column;
+  height: 100%;
+  margin-bottom: 150px;
 `;
 
 const TabBar = styled.div`

@@ -4,6 +4,7 @@ import com.sloway.app.place.dto.request.sort.ImgSortReqDto;
 import com.sloway.app.place.dto.request.workStay.WorkStayReqDto;
 import com.sloway.app.place.dto.request.workStay.WorkUpdateDtoWrapper;
 import com.sloway.app.place.dto.request.workStay.workOffice.WorkOfficeReqDto;
+import com.sloway.app.place.dto.response.workStay.WorkStayImageListRespDto;
 import com.sloway.app.place.service.workStay.WorkStayService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -81,5 +82,12 @@ public class WorkStayApiController {
         return ResponseEntity
                 .status(HttpStatus.OK)
                 .build();
+    }
+
+    @GetMapping("/update/image/{no}")
+    public ResponseEntity<WorkStayImageListRespDto> selectImageList(@PathVariable Long no, @AuthenticationPrincipal Long memberNo){
+        WorkStayImageListRespDto dto = workStayService.selectImageList(no, Long.valueOf(2));
+
+        return ResponseEntity.ok(dto);
     }
 }

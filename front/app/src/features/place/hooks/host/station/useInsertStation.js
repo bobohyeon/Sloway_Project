@@ -44,7 +44,7 @@ export default function useInsertStation() {
     satPrice: '',
     sunPrice: '',
     holPrice: '',
-    exceptionPeriods: [], // 내부에 [{ startDate: 'YYYY-MM-DD', endDate: 'YYYY-MM-DD', ... }] 구조로 가정
+    exceptionPeriods: [],
 
     // 4단계: 이미지
     images: [],
@@ -95,18 +95,24 @@ export default function useInsertStation() {
   // 최종 폼 제출 (백엔드 Axios API 호출부)
   const handleSubmit = async () => {
     try {
+      // images가 비어있을 경우를 대비한 안전 가드
+      const currentImages = Array.isArray(formData.images)
+        ? formData.images
+        : [];
+
       // 1. 상태 분리 (exceptionPeriods도 구조분해로 따로 분리)
       const { images, facilities, exceptionPeriods, ...dto } = formData;
 
       // 2. 백엔드 DTO 규격에 맞추어 완벽 가공
       const formattedDto = {
         ...dto,
+        placeNo: Number(dto.placeNo), // 🛠️ placeNo가 간혹 String으로 넘어올 수 있으므로 숫자로 확실히 변환
         checkIn: convertToLocalDateTime(dto.checkIn),
         checkOut: convertToLocalDateTime(dto.checkOut),
 
         facilityList: facilities,
 
-        // 🛠️ [핵심 수정] exceptionPeriods 배열을 순회하며 startDate, endDate를 LocalDateTime 형태로 변환
+        // exceptionPeriods 배열을 순회하며 startDate, endDate를 LocalDateTime 형태로 변환
         exceptionPeriods: exceptionPeriods.map((period) => ({
           ...period,
           startDate: convertDateToLocalDateTime(period.startDate, false),
@@ -124,8 +130,18 @@ export default function useInsertStation() {
         holPrice: Number(dto.holPrice) || 0,
       };
 
-      const files = images.map((img) => img.file);
-      const sortList = images.map((img) => ({ sort: img.sort + 1 }));
+      // 🛠️ [핵심 수정] 파일 객체만 안전하게 매핑
+      const files = currentImages.map((img) => img.file);
+
+      // 🛠️ [핵심 수정] 이미지 객체 내부에 없는 img.sort 대신 배열의 index를 기반으로 sortList 자동 생성
+      const sortList = currentImages.map((_, index) => ({
+        sort: index + 1, // 첫 번째 이미지는 1, 두 번째는 2... 순서 보장
+      }));
+
+      // 디버깅용 콘솔 (전송 데이터 최종 확인용)
+      console.log('전송할 DTO:', formattedDto);
+      console.log(' 전송할 파일배열:', files);
+      console.log(' 생성된 순서배열:', sortList);
 
       const response = await registerStationInspection(
         formattedDto,
@@ -133,16 +149,19 @@ export default function useInsertStation() {
         sortList
       );
 
-      if (response.status === 201) {
+      // response나 response.status 검증 후 이동
+      if (
+        response &&
+        (response.status === 201 || response.status === 200 || response.data)
+      ) {
         alert('검수 신청이 완료되었습니다!');
         navigate('/host/space/list');
       }
     } catch (error) {
       console.error('숙소 등록 실패:', error);
-      alert('등록 중 오류가 발생했습니다.');
+      alert('등록 중 오류가 발생했습니다. 입력 정보를 다시 확인해주세요.');
     }
   };
-
   return {
     step,
     setStep,
