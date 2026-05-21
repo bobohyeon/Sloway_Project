@@ -59,7 +59,6 @@ public class RsvnEntity {
     @Column(columnDefinition = "CHAR(1)", nullable = false, name = "status")
     private RsvnStatus status;
 
-
     @PrePersist
     public void prePersist(){
         this.createdAt = LocalDateTime.now();
@@ -69,6 +68,8 @@ public class RsvnEntity {
     public void cancel(){
         this.status = RsvnStatus.C;
     }
+
+    public void reject(){this.status = RsvnStatus.R;}
 
 
 }
