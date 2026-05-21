@@ -46,52 +46,7 @@ const FieldGroup = styled.div`
   }
 `;
 
-const FlexRow = styled.div`
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 20px;
-`;
-
-const PriceLayout = styled.div`
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 15px;
-  background: #fcfcf9;
-  padding: 24px;
-  border-radius: 10px;
-`;
-
-const FacilityList = styled.div`
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
-  gap: 15px;
-`;
-
-const CheckItem = styled.label`
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  font-size: 14px;
-  cursor: pointer;
-  input {
-    width: 18px;
-    height: 18px;
-    accent-color: #768966;
-  }
-`;
-
-function SpaceEditFormComponent({ formData, handleChange, handleCheckChange }) {
-  const commonFacilities = [
-    'WiFi',
-    '주차 가능',
-    '에어컨',
-    '냉장고',
-    '주방',
-    '빔프로젝터',
-    '화이트보드',
-    '커피머신',
-  ];
-
+function SpaceEditFormComponent({ formData, handleChange }) {
   return (
     <>
       {/* 기본 정보 섹션 */}

@@ -71,13 +71,6 @@ public class RefundEntity extends BaseEntity {
         this.status = RefundStatus.COMPLETED;
     }
 
-    public void failedRefund() {
-        if (this.status != RefundStatus.REQUESTED) {
-            throw new CustomException(RefundErrorCode.REFUND_NOT_REQUESTED);
-        }
-        this.status = RefundStatus.FAILED;
-    }
-
     public void applyRefund(RefundRate rate, BigDecimal refundAmt) {
         if (this.status != RefundStatus.REQUESTED) {
             throw new CustomException(RefundErrorCode.REFUND_NOT_REQUESTED);

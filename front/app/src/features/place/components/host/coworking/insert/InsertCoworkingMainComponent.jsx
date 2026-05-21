@@ -1,6 +1,7 @@
 import React from 'react';
 import { FaLeaf } from 'react-icons/fa';
 import styled from 'styled-components';
+import useFetchMasterPlaces from '../../../../hooks/host/useFetchMasterPlace';
 
 const FormCard = styled.div`
   background: white;
@@ -80,11 +81,9 @@ function InsertCoworkingMainComponent({
   handleChange,
   setStep,
   currentStep,
-  masterPlaces = [
-    { no: 10, title: '성수 브릭스 타워' },
-    { no: 11, title: '강남 워크플렉스' },
-  ],
 }) {
+  const { isLoading, masterPlaces } = useFetchMasterPlaces();
+
   const handlePlaceSelect = (e) => {
     const selectedNo = e.target.value;
     const selectedTitle = e.target.options[e.target.selectedIndex].text;
@@ -111,15 +110,20 @@ function InsertCoworkingMainComponent({
           name="placeNo"
           value={formData.placeNo || ''}
           onChange={handlePlaceSelect}
+          disabled={isLoading} /* 로딩 중에는 셀렉트 박스 잠금 */
         >
           <option value="" disabled>
-            오피스가 위치한 공간을 선택하세요
+            {isLoading
+              ? '공간 목록을 불러오는 중입니다...'
+              : '등록할 오피스가 속한 공간을 선택하세요'}
           </option>
-          {masterPlaces.map((place) => (
-            <option key={place.no} value={place.no}>
-              {place.title}
-            </option>
-          ))}
+
+          {!isLoading &&
+            masterPlaces.map((place) => (
+              <option key={place.placeNo} value={place.placeNo}>
+                {place.title}
+              </option>
+            ))}
         </select>
       </FormGroup>
 

@@ -2,10 +2,13 @@ package com.sloway.app.payment.refund.service;
 
 import com.sloway.app.common.exception.CustomException;
 import com.sloway.app.payment.pay.common.PayErrorCode;
+import com.sloway.app.payment.pay.common.PayStatus;
 import com.sloway.app.payment.pay.entity.PayEntity;
 import com.sloway.app.payment.pay.repository.PayRepository;
+import com.sloway.app.payment.point.service.PointService;
 import com.sloway.app.payment.refund.common.RefundErrorCode;
 import com.sloway.app.payment.refund.common.RefundRate;
+import com.sloway.app.payment.refund.common.RefundStatus;
 import com.sloway.app.payment.refund.dto.request.RefundCreateReqDto;
 import com.sloway.app.payment.refund.dto.response.RefundResDto;
 import com.sloway.app.payment.refund.entity.RefundEntity;
@@ -33,32 +36,112 @@ public class RefundService {
     private final RefundRepository refundRepository;
     private final PayRepository payRepository;
     private final RsvnRepository rsvnRepository;
+    private final PointService pointService;
 
     @Transactional
     public RefundResDto createRefund(RefundCreateReqDto refundCreateReqDto) {
 
-        PayEntity pay = payRepository.findById(refundCreateReqDto.getPayNo())
+        PayEntity payEntity = payRepository.findById(refundCreateReqDto.getPayNo())
                 .orElseThrow(() -> new CustomException(PayErrorCode.PAY_NOT_FOUND));
+        if (payEntity.getStatus() != PayStatus.COMPLETED) {
+            throw new CustomException(PayErrorCode.PAY_NOT_COMPLETED);
+        }
 
+        if (payEntity.getFinalAmt() == null || payEntity.getFinalAmt() <= 0) {
+            throw new CustomException(RefundErrorCode.REFUND_AMOUNT_INVALID);
+        }
         RsvnEntity rsvn = rsvnRepository.findById(refundCreateReqDto.getRsvnNo())
                 .orElseThrow(() -> new EntityNotFoundException("예약 정보를 조회할 수 없습니다."));
 
-        RefundEntity entity = refundCreateReqDto.toEntity(pay, rsvn);
-        RefundRate rate = refundRate(entity);
+        RefundEntity refundEntity = refundCreateReqDto.toEntity(payEntity, rsvn);
+        RefundRate rate = refundRate(refundEntity);
+
+        boolean exists = refundRepository.existsByPayAndStatus(
+                payEntity.getNo(),
+                List.of(RefundStatus.REQUESTED,
+                        RefundStatus.APPROVED,
+                        RefundStatus.COMPLETED)
+        );
+
+        if (exists) {
+            log.warn("중복 환불 시도 : payNo={}", payEntity.getNo());
+            throw new CustomException(RefundErrorCode.REFUND_DUPLICATE);
+        }
 
         if (RefundRate.DDAY == rate) {
             log.warn("환불 기간 만료 : payNo:{},rsvnNo:{}", refundCreateReqDto.getPayNo(), refundCreateReqDto.getRsvnNo());
             throw new CustomException(RefundErrorCode.REFUND_PERIOD_EXPIRED);
         }
 
-        BigDecimal finalAmt = BigDecimal.valueOf(pay.getFinalAmt());
+        BigDecimal finalAmt = BigDecimal.valueOf(payEntity.getFinalAmt());
         BigDecimal rateBd = BigDecimal.valueOf(rate.getRate());
         BigDecimal divisor = BigDecimal.valueOf(100);
 
         BigDecimal refundAmt = finalAmt.multiply(rateBd).divide(divisor, 0, RoundingMode.DOWN);
-        entity.applyRefund(rate, refundAmt);
-        refundRepository.save(entity);
+        refundEntity.applyRefund(rate, refundAmt);
+        RefundEntity entity = refundRepository.save(refundEntity);
         return RefundResDto.from(entity);
+    }
+
+    @Transactional
+    public RefundResDto createRefundByHost(Long payNo) {
+        PayEntity payEntity = payRepository.findById(payNo)
+                .orElseThrow(() -> new CustomException(PayErrorCode.PAY_NOT_FOUND));
+
+        if (payEntity.getStatus() != PayStatus.COMPLETED) {
+            throw new CustomException(PayErrorCode.PAY_NOT_COMPLETED);
+        }
+
+        if (payEntity.getFinalAmt() == null || payEntity.getFinalAmt() <= 0) {
+            throw new CustomException(RefundErrorCode.REFUND_AMOUNT_INVALID);
+        }
+
+        boolean exists = refundRepository.existsByPayAndStatus(
+                payEntity.getNo(),
+                List.of(RefundStatus.REQUESTED,
+                        RefundStatus.APPROVED,
+                        RefundStatus.COMPLETED)
+        );
+
+        if (exists) {
+            log.warn("중복 환불 시도 : payNo={}", payEntity.getNo());
+            throw new CustomException(RefundErrorCode.REFUND_DUPLICATE);
+        }
+
+        RefundEntity refundEntity = RefundEntity.builder()
+                .payNo(payEntity)
+                .rsvnNo(payEntity.getRsvnNo())
+                .refundReason(null)
+                .requestedAt(LocalDateTime.now())
+                .status(RefundStatus.REQUESTED)
+                .build();
+
+        BigDecimal refundAmt = BigDecimal.valueOf(payEntity.getFinalAmt());
+
+        refundEntity.applyRefund(RefundRate.FULL, refundAmt);
+        RefundEntity entity = refundRepository.save(refundEntity);
+        return RefundResDto.from(entity);
+    }
+
+
+    @Transactional
+    public RefundResDto processRefund(Long refundNo) {
+        RefundEntity refundEntity = refundRepository.findById(refundNo)
+                .orElseThrow(() -> new CustomException(RefundErrorCode.REFUND_NOT_FOUND));
+
+        refundEntity.approveRefund();
+        PayEntity payEntity = refundEntity.getPayNo();
+
+        if (payEntity.getUcNo() != null) {
+            payEntity.getUcNo().returnCoupon();
+        }
+
+        pointService.refundUsedPoint(payEntity);
+        pointService.cancelEarnedPoint(payEntity);
+        payEntity.cancelPay();
+        refundEntity.completeRefund();
+
+        return RefundResDto.from(refundEntity);
     }
 
     public List<RefundResDto> findRefundAll() {
@@ -71,6 +154,10 @@ public class RefundService {
         return RefundResDto.from(refundEntity);
     }
 
+    public List<RefundResDto> findRefundsByMemberNo(Long memberNo) {
+        List<RefundEntity> refundEntityList = refundRepository.findByMember(memberNo);
+        return refundEntityList.stream().map(RefundResDto::from).toList();
+    }
 
     private RefundRate refundRate(RefundEntity entity) {
         LocalDateTime checkIn = entity.getRsvnNo().getCheckIn();

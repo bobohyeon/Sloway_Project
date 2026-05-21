@@ -25,7 +25,7 @@ public class OfficePeriodEntity {
     @Column(nullable = false)
     private int price;
 
-    @Column(length = 1, nullable = false)
+    @Column(length = 3, nullable = false)
     private String dayOfWeek;
 
     @Column

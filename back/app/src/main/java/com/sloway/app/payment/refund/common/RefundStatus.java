@@ -9,8 +9,7 @@ public enum RefundStatus {
 
     REQUESTED("환불 요청"),
     APPROVED("환불 승인"),
-    COMPLETED("환불 완료"),
-    FAILED("환불 실패");
+    COMPLETED("환불 완료");
 
     private final String label;
 }

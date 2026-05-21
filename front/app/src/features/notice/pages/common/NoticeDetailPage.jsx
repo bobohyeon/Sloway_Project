@@ -1,16 +1,13 @@
-import { useState } from 'react';
 import styled from 'styled-components';
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import PageLayout from '../../../../app/layouts/page/PageLayout';
-import { Badge, Button, Card } from '../../../pay_shared/components';
+import { Button, Card } from '../../../pay_shared/components';
 
 // ─── Mock 데이터 (백엔드 연동 시 GET /api/notices/:id 로 대체) ───────────────
 const MOCK_NOTICE = {
   id: 1,
   title: '[중요] 서비스 이용약관 변경 안내',
   category: '서비스',
-  isPinned: true,
-  isImportant: true,
   views: 312,
   createdAt: '2026.05.01',
   updatedAt: '2026.05.03',
@@ -72,21 +69,6 @@ export default function NoticeDetailPage() {
       <DetailCard padded elevated>
         {/* 제목 영역 */}
         <TitleArea>
-          <BadgeRow>
-            {notice.isPinned && (
-              <Badge size="sm" variant="sage">
-                📌 고정
-              </Badge>
-            )}
-            {notice.isImportant && (
-              <Badge size="sm" variant="warning">
-                중요
-              </Badge>
-            )}
-            <Badge size="sm" variant="muted">
-              {notice.category}
-            </Badge>
-          </BadgeRow>
           <NoticeTitle>{notice.title}</NoticeTitle>
           <MetaRow>
             <MetaItem>등록일 {notice.createdAt}</MetaItem>
@@ -198,13 +180,6 @@ const TitleArea = styled.div`
   padding-bottom: var(--space-5);
   border-bottom: 1px solid var(--gray-100);
   margin-bottom: var(--space-5);
-`;
-
-const BadgeRow = styled.div`
-  display: flex;
-  gap: 6px;
-  margin-bottom: var(--space-3);
-  flex-wrap: wrap;
 `;
 
 const NoticeTitle = styled.h1`

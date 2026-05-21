@@ -1,4 +1,4 @@
 package com.sloway.app.notice.repository;
 
-public interface NoticeCustomRepository {
+public interface NoticeRepositoryCustom {
 }

@@ -1,6 +1,7 @@
 import React from 'react';
 import styled from 'styled-components';
 import { FaBriefcase } from 'react-icons/fa';
+import useFetchMasterPlaces from './../../../../hooks/host/useFetchMasterPlace';
 
 const FormCard = styled.div`
   background: white;
@@ -80,11 +81,9 @@ function InsertWorkMainComponent({
   handleChange,
   setStep,
   currentStep,
-  masterPlaces = [
-    { no: 1, title: '제주 돌담 호텔' },
-    { no: 2, title: '서귀포 펜션 마스터' },
-  ],
 }) {
+  const { isLoading, masterPlaces } = useFetchMasterPlaces();
+
   // 공간 선택 시 No와 Title을 동시에 저장하는 커스텀 핸들러
   const handlePlaceSelect = (e) => {
     const selectedNo = e.target.value;
@@ -112,15 +111,19 @@ function InsertWorkMainComponent({
           name="placeNo"
           value={formData.placeNo || ''}
           onChange={handlePlaceSelect} // 커스텀 핸들러 사용
+          disabled={isLoading}
         >
           <option value="" disabled>
-            등록할 워크앤스테이가 속한 공간을 선택하세요
+            {isLoading
+              ? '공간 목록을 불러오는 중입니다...'
+              : '등록할 워크앤스테이가 속한 공간을 선택하세요'}
           </option>
-          {masterPlaces.map((place) => (
-            <option key={place.no} value={place.no}>
-              {place.title}
-            </option>
-          ))}
+          {!isLoading &&
+            masterPlaces.map((place) => (
+              <option key={place.no} value={place.placeNo}>
+                {place.title}
+              </option>
+            ))}
         </select>
       </FormGroup>
 

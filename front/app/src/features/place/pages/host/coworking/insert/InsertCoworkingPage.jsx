@@ -6,39 +6,19 @@ import InsertCoworkingMainComponent from '../../../../components/host/coworking/
 import InsertCoworkingDetailComponent from './../../../../components/host/coworking/insert/InsertCoworkingDetailComponent';
 import InsertCoworkingFeeComponent from './../../../../components/host/coworking/insert/InsertCoworkingFeeComponent';
 import InsertImageComponent from '../../../../components/host/station/insert/InsertImageComponent';
+import useInsertCoworking from './../../../../hooks/host/coworking/useInsertCoworking';
 
 function InsertCoworkingPage() {
-  const [step, setStep] = useState(1);
-
-  const [formData, setFormData] = useState({
-    placeNo: '',
-    title: '',
-    content: '',
-    basePeople: '',
-    facilities: [],
-    officePeriods: [],
-    exceptionPeriods: [],
-    images: [],
-  });
-
-  const handleChange = (e) => {
-    const { name, value } = e.target;
-    setFormData((prev) => ({ ...prev, [name]: value }));
-  };
-
-  const handleCheckChange = (facility) => {
-    setFormData((prev) => ({
-      ...prev,
-      facilities: prev.facilities.includes(facility)
-        ? prev.facilities.filter((item) => item !== facility)
-        : [...prev.facilities, facility],
-    }));
-  };
-
-  const handleSubmit = () => {
-    console.log('최종 제출 데이터:', formData);
-    alert('검수 신청이 완료되었습니다!');
-  };
+  // 공통 비즈니스 로직 쏙 빼오기
+  const {
+    step,
+    setStep,
+    formData,
+    setFormData,
+    handleChange,
+    handleCheckChange,
+    handleSubmit,
+  } = useInsertCoworking();
 
   // 현재 단계에 맞는 컴포넌트를 반환하는 함수
   const renderStepComponent = () => {

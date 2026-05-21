@@ -188,7 +188,7 @@ function InsertWorkCheckComponent({ formData, prev, onSubmit }) {
         </h3>
         <SummaryItem>
           <div className="label">수용 인원</div>
-          <div className="value">{formData.office?.peopleCnt || 0}명</div>
+          <div className="value">{formData.office?.cnt || 0}명</div>
         </SummaryItem>
       </SummaryBox>
 

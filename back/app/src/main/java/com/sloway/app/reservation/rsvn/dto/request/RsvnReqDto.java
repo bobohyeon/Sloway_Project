@@ -1,5 +1,6 @@
 package com.sloway.app.reservation.rsvn.dto.request;
 
+import com.sloway.app.payment.pay.common.PayMethod;
 import com.sloway.app.reservation.rsvn.entity.RsvnEntity;
 import lombok.Getter;
 
@@ -16,4 +17,9 @@ public class RsvnReqDto {
     private String special;
     private LocalDateTime checkIn;
     private LocalDateTime checkOut;
+
+    private Long ucNo;
+    private Integer usedPoint;
+    private PayMethod method;
+    private Integer addAmt;
 }
