@@ -17,6 +17,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Slf4j
@@ -34,6 +35,9 @@ public class ReviewService {
     public void save(Long memberNo, ReviewCreateReqDto reqDto){
         RsvnEntity rsvn = rsvnRepository.findById(reqDto.getRsvnNo())
                 .orElseThrow(()-> new CustomException(RsvnErrorCode.RESERVATION_NOT_FOUND));
+        if(LocalDateTime.now().isAfter(rsvn.getCheckOut().plusDays(14))){
+            throw new CustomException(ReviewErrorCode.REVIEW_PERIOD_EXPIRED);
+        }
         if(reviewRepository.findByRsvnNo(rsvn).isPresent()){
             throw new CustomException(ReviewErrorCode.ALREADY_REVIEWED);
         }
@@ -85,6 +89,6 @@ public class ReviewService {
         ReviewEntity entity = reviewRepository.findById(no)
                 .orElseThrow(()->new CustomException(ReviewErrorCode.REVIEW_NOT_FOUND));
 
-        reviewRepository.delete(entity);
+        entity.delete();
     }
 }
