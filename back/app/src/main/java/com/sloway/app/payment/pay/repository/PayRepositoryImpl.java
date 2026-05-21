@@ -26,4 +26,15 @@ public class PayRepositoryImpl implements PayRepositoryCustom {
                 .fetch();
         return payEntityList;
     }
+
+    @Override
+    public List<PayEntity> findByRsvn(Long rsvnNo) {
+        List<PayEntity> payEntityList = jpaQueryFactory
+                .selectFrom(qPayEntity)
+                .where(
+                        qPayEntity.rsvnNo.no.eq(rsvnNo)
+                )
+                .fetch();
+        return payEntityList;
+    }
 }
