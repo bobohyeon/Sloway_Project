@@ -1,6 +1,7 @@
 package com.sloway.app.reservation.rsvn.controller;
 
 import com.sloway.app.auth.user.CustomUserDetails;
+import com.sloway.app.payment.refund.common.RefundReason;
 import com.sloway.app.reservation.rsvn.dto.request.RsvnReqDto;
 import com.sloway.app.reservation.rsvn.dto.response.RsvnResDto;
 import com.sloway.app.reservation.rsvn.service.RsvnService;
@@ -52,8 +53,19 @@ public class RsvnController {
     @PostMapping("/{no}/cancel")
     public ResponseEntity<Void> delete(
             @AuthenticationPrincipal CustomUserDetails userDetails
-            , @PathVariable Long no){
-        rsvnService.cancel(userDetails.getMemberNo(), no);
+            , @PathVariable Long no
+            , @RequestParam RefundReason refundReason
+            ){
+        rsvnService.cancel(userDetails.getMemberNo(), no, refundReason);
+        return ResponseEntity.status(HttpStatus.NO_CONTENT).build();
+    }
+
+    //예약 거절
+    @PostMapping("/{no}/reject")
+    public ResponseEntity<Void> rejectByHost(
+            @PathVariable Long no, @RequestParam Long payNo)
+    {
+        rsvnService.rejectByHost(no,payNo);
         return ResponseEntity.status(HttpStatus.NO_CONTENT).build();
     }
 }
