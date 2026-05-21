@@ -5,9 +5,11 @@ import com.sloway.app.payment.pay.common.PayMethod;
 import com.sloway.app.payment.pay.common.PayStatus;
 import com.sloway.app.payment.pay.entity.PayEntity;
 import com.sloway.app.reservation.rsvn.entity.RsvnEntity;
+import lombok.Builder;
 import lombok.Getter;
 
 @Getter
+@Builder
 public class PayCreateReqDto {
 
     private Long rsvnNo;
