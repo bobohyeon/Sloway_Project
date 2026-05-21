@@ -6,4 +6,5 @@ import java.util.List;
 
 public interface PayRepositoryCustom {
     List<PayEntity> findByMember(Long memberNo);
+    List<PayEntity> findByRsvn(Long rsvnNo);
 }
