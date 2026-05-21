@@ -7,79 +7,22 @@ import InsertImageComponent from './../../../../components/host/station/insert/I
 import InsertWorkStateComponent from '../../../../components/host/workStay/insert/InsertWorkStateComponent';
 import InsertWorkLayout from '../../../../layouts/host/workStay/insert/InsertWorkLayout';
 import InsertWorkCheckComponent from './../../../../components/host/workStay/insert/InsertWorkCheckComponent';
+import useInsertWorkStay from '../../../../hooks/host/workStay/useInsertWorkStay';
 
 function InsertWorkPage() {
-  const [step, setStep] = useState(1);
-
-  // 1. 워크스테이(숙소) 데이터: 기간별/요일별 요금 포함
-  const [workData, setWorkData] = useState({
-    placeNo: '',
-    title: '',
-    content: '',
-    maxPeople: '',
-    basePeople: '',
-    rooms: '',
-    checkIn: '',
-    checkOut: '',
-    chargeAdd: '',
-    facilities: [],
-    monPrice: '',
-    tuePrice: '',
-    wedPrice: '',
-    thuPrice: '',
-    friPrice: '',
-    satPrice: '',
-    sunPrice: '',
-    holPrice: '',
-    exceptionPeriods: [],
-    images: [],
-  });
-
-  // 2. 오피스 데이터: 요금 관련 필드 제거
-  const [officeData, setOfficeData] = useState({
-    title: '',
-    content: '',
-    cnt: '', // 수용인원
-    facilities: [], // OFFICE_AMENITY
-    images: [],
-  });
-
-  const handleWorkChange = (e) => {
-    const { name, value } = e.target;
-    setWorkData((prev) => ({ ...prev, [name]: value }));
-  };
-
-  const handleOfficeChange = (e) => {
-    const { name, value } = e.target;
-    setOfficeData((prev) => ({ ...prev, [name]: value }));
-  };
-
-  const handleCheckChange = (facility) => {
-    setWorkData((prev) => ({
-      ...prev,
-      facilities: prev.facilities.includes(facility)
-        ? prev.facilities.filter((item) => item !== facility)
-        : [...prev.facilities, facility],
-    }));
-  };
-
-  const handleWorkCheckChange = (facility) => {
-    setOfficeData((prev) => ({
-      ...prev,
-      facilities: prev.facilities.includes(facility)
-        ? prev.facilities.filter((item) => item !== facility)
-        : [...prev.facilities, facility],
-    }));
-  };
-
-  const handleSubmit = () => {
-    const finalData = {
-      workStay: workData,
-      office: officeData, // 오피스는 요금 정보 없이 기본 정보와 이미지만 포함
-    };
-    console.log('최종 제출 데이터:', finalData);
-    alert('검수 신청이 완료되었습니다!');
-  };
+  const {
+    step,
+    setStep,
+    workData,
+    setWorkData,
+    officeData,
+    setOfficeData,
+    handleWorkChange,
+    handleOfficeChange,
+    handleCheckChange,
+    handleWorkCheckChange,
+    handleSubmit,
+  } = useInsertWorkStay();
 
   const renderStepComponent = () => {
     switch (step) {
@@ -104,7 +47,7 @@ function InsertWorkPage() {
             next={() => setStep(3)}
           />
         );
-      case 3: // 워크스테이 요금 설정 (숙소 비용은 필요)
+      case 3: // 워크스테이 요금 설정
         return (
           <InsertFeeComponent
             formData={workData}
@@ -131,10 +74,10 @@ function InsertWorkPage() {
             handleChange={handleOfficeChange}
             handleCheckChange={handleWorkCheckChange}
             prev={() => setStep(4)}
-            next={() => setStep(6)} // 요금 단계 없이 바로 이미지로 이동
+            next={() => setStep(6)}
           />
         );
-      case 6: // 오피스 이미지 등록 (비용 단계 생략)
+      case 6: // 오피스 이미지 등록
         return (
           <InsertImageComponent
             formData={officeData}

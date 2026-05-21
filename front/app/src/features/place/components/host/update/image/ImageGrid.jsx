@@ -1,5 +1,5 @@
-import React, { useRef, useState } from "react";
-import styled from "styled-components";
+import React, { useRef, useState } from 'react';
+import styled from 'styled-components';
 
 const GridWrapper = styled.div`
   background: white;
@@ -30,7 +30,7 @@ const ListGrid = styled.div`
 
 const ImageBox = styled.div`
   aspect-ratio: 4 / 3;
-  border: 1px solid ${(props) => (props.isMain ? "#d46a4f" : "#eee")};
+  border: 1px solid ${(props) => (props.isMain ? '#d46a4f' : '#eee')};
   border-radius: 10px;
   display: flex;
   flex-direction: column;
@@ -39,7 +39,7 @@ const ImageBox = styled.div`
   cursor: grab;
   overflow: hidden;
   position: relative;
-  background-color: ${(props) => (props.isMain ? "#fff9f7" : "#f1f4ee")};
+  background-color: ${(props) => (props.isMain ? '#fff9f7' : '#f1f4ee')};
   transition:
     transform 0.2s,
     box-shadow 0.2s;
@@ -139,61 +139,59 @@ const AddCard = styled.div`
   }
 `;
 
-function ImageGrid() {
+// 💡 부모 페이지와 부모 훅에서 이미지를 완전히 제어할 수 있도록 Props 수신 구조로 변경
+function ImageGrid({ images = [], setImages, title }) {
   const fileInputRef = useRef(null);
   const [draggedIndex, setDraggedIndex] = useState(null);
 
-  // 초기 더미 데이터 (실제 환경에서는 props나 state로 관리)
-  const [imageList, setImageList] = useState([
-    { id: 1, preview: "🌲", isIcon: true },
-    { id: 2, preview: "🛋️", isIcon: true },
-    { id: 3, preview: "🛏️", isIcon: true },
-  ]);
-
   const handleImageUpload = (e) => {
     const files = Array.from(e.target.files);
-    if (imageList.length + files.length > 10) {
-      alert("최대 10장까지 업로드 가능합니다.");
+    if (images.length + files.length > 10) {
+      alert('최대 10장까지 업로드 가능합니다.');
       return;
     }
 
+    // 💡 폼데이터 전송 프로세스를 위해 원본 file 객체를 구조화 데이터 안에 함께 심어줍니다.
     const newImages = files.map((file, index) => ({
-      id: Date.now() + index,
+      id: Date.now() + index + Math.random(), // 중복 키 보장 분기 가드
       preview: URL.createObjectURL(file),
+      file: file, // 👈 FormData.append 할 때 꺼내 쓸 실제 바이너리 파일
       isIcon: false,
     }));
 
-    setImageList((prev) => [...prev, ...newImages]);
-    e.target.value = "";
+    setImages((prev) => [...prev, ...newImages]);
+    e.target.value = '';
   };
 
   const onDragStart = (index) => setDraggedIndex(index);
 
   const onDragEnter = (index) => {
     if (draggedIndex === index) return;
-    const newList = [...imageList];
+    const newList = [...images];
     const draggedItem = newList[draggedIndex];
     newList.splice(draggedIndex, 1);
     newList.splice(index, 0, draggedItem);
     setDraggedIndex(index);
-    setImageList(newList);
+    setImages(newList);
   };
 
   const removeImage = (index) => {
-    setImageList((prev) => prev.filter((_, i) => i !== index));
+    setImages((prev) => prev.filter((_, i) => i !== index));
   };
 
   const setAsMain = (index) => {
-    const newList = [...imageList];
+    const newList = [...images];
     const selected = newList.splice(index, 1)[0];
     newList.unshift(selected);
-    setImageList(newList);
+    setImages(newList);
   };
 
   return (
     <GridWrapper>
       <GridHeader>
-        <h3>업로드된 이미지 ({imageList.length}/10)</h3>
+        <h3>
+          {title ? title : ''}업로드된 이미지 ({images.length}/10)
+        </h3>
         <span>드래그하여 순서를 변경하실 수 있어요</span>
       </GridHeader>
 
@@ -201,13 +199,13 @@ function ImageGrid() {
         type="file"
         multiple
         accept=".jpg, .jpeg, .png"
-        style={{ display: "none" }}
+        style={{ display: 'none' }}
         ref={fileInputRef}
         onChange={handleImageUpload}
       />
 
       <ListGrid>
-        {imageList.map((img, index) => (
+        {images.map((img, index) => (
           <ImageBox
             key={img.id}
             isMain={index === 0}
@@ -216,11 +214,11 @@ function ImageGrid() {
             onDragEnter={() => onDragEnter(index)}
             onDragEnd={() => setDraggedIndex(null)}
             onDragOver={(e) => e.preventDefault()}
-            className={draggedIndex === index ? "dragging" : ""}
+            className={draggedIndex === index ? 'dragging' : ''}
           >
             <OrderBadge>{index + 1}</OrderBadge>
             {img.isIcon ? (
-              <div style={{ fontSize: "40px" }}>{img.preview}</div>
+              <div style={{ fontSize: '40px' }}>{img.preview}</div>
             ) : (
               <img src={img.preview} alt={`space-${index}`} />
             )}
@@ -238,11 +236,11 @@ function ImageGrid() {
           </ImageBox>
         ))}
 
-        {imageList.length < 10 && (
+        {images.length < 10 && (
           <AddCard onClick={() => fileInputRef.current.click()}>
             <div className="plus">+</div>
             <span>이미지 추가</span>
-            <div style={{ fontSize: "11px" }}>{imageList.length}/10</div>
+            <div style={{ fontSize: '11px' }}>{images.length}/10</div>
           </AddCard>
         )}
       </ListGrid>

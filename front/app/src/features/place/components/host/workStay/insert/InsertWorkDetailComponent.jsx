@@ -18,7 +18,7 @@ const SectionTitle = styled.h2`
 
 const InputGrid = styled.div`
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(4, 1fr);
   gap: 20px;
   margin-bottom: 25px;
 `;
@@ -153,6 +153,15 @@ function InsertDetailComponent({
             name="rooms"
             placeholder="2개"
             value={formData.rooms}
+            onChange={handleChange}
+          />
+        </FormGroup>
+        <FormGroup>
+          <label>인원당 추가금액</label>
+          <input
+            name="chargeAdd"
+            placeholder="10000"
+            value={formData.chargeAdd}
             onChange={handleChange}
           />
         </FormGroup>

@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import styled from 'styled-components';
-import { facilityList } from '../../../../hooks/host/place/useInsertStation';
+import { facilityList } from '../../../../hooks/host/station/useInsertStation';
 
 const FormCard = styled.div`
   background: white;

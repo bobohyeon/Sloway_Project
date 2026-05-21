@@ -3,7 +3,7 @@ import styled from 'styled-components';
 import ImageUpdateLayout from '../../../../layouts/host/update/image/ImageUpdateLayout';
 import ImageUploadGuide from './../../../../components/host/update/image/ImageUploadGuide';
 import ImageGrid from './../../../../components/host/update/image/ImageGrid';
-import { useNavigate } from 'react-router-dom';
+import useImageUpdate from '../../../../hooks/host/useImageUpdate';
 
 const FooterAction = styled.div`
   display: flex;
@@ -25,9 +25,14 @@ const SaveButton = styled.button`
 `;
 
 function ImageUpdatePage() {
-  const handleSave = () => {
-    alert('변경 검수 요청이 완료되었습니다.');
-  };
+  const {
+    isWorkStay,
+    images,
+    setImages,
+    officeImages,
+    setOfficeImages,
+    handleSaveSubmit,
+  } = useImageUpdate();
 
   return (
     <ImageUpdateLayout
@@ -39,10 +44,18 @@ function ImageUpdatePage() {
       <ImageUploadGuide />
 
       {/* 3. 이미지 그리드 영역 */}
-      <ImageGrid />
+      <ImageGrid images={images} setImages={setImages} />
+
+      {isWorkStay && (
+        <ImageGrid
+          images={officeImages}
+          setImages={setOfficeImages}
+          title={'워크앤스테이 내 오피스의 '}
+        />
+      )}
 
       <FooterAction>
-        <SaveButton onClick={handleSave}>변경 검수 요청</SaveButton>
+        <SaveButton onClick={handleSaveSubmit}>변경 검수 요청</SaveButton>
       </FooterAction>
     </ImageUpdateLayout>
   );

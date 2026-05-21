@@ -3,6 +3,7 @@ package com.sloway.app.place.controller.place;
 import com.sloway.app.place.dto.request.sort.ImgSortReqDto;
 import com.sloway.app.place.dto.request.place.PlaceReqDto;
 import com.sloway.app.place.dto.request.place.PlaceUpdateReqDto;
+import com.sloway.app.place.dto.response.place.MasterPlaceRespDto;
 import com.sloway.app.place.dto.response.place.PlaceBriefRespDto;
 import com.sloway.app.place.dto.response.place.PlaceDetailListRespDto;
 import com.sloway.app.place.dto.response.place.PlaceListRespDto;
@@ -98,5 +99,19 @@ public class PlaceApiController {
         List<PlaceListRespDto> placeList = placeService.placeList(Long.valueOf(2));
 
         return ResponseEntity.ok(placeList);
+    }
+
+    @GetMapping("/master")
+    public ResponseEntity<List<MasterPlaceRespDto>> selectMasterPlaceList(@RequestParam("type") String type, @AuthenticationPrincipal Long memberNo){
+        List<MasterPlaceRespDto> placeList = placeService.selectMasterPlaceList(type, Long.valueOf(2));
+
+        return ResponseEntity.ok(placeList);
+    }
+
+    @GetMapping("/detail/update/{no}")
+    public ResponseEntity<PlaceUpdateReqDto> selectPlaceForUpdate(@AuthenticationPrincipal Long memberNo, @PathVariable Long no){
+        PlaceUpdateReqDto dto = placeService.selectPlaceForUpdate(Long.valueOf(2), no);
+
+        return ResponseEntity.ok(dto);
     }
 }

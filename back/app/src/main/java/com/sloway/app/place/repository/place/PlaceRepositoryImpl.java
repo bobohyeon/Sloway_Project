@@ -6,6 +6,8 @@ import com.querydsl.core.types.dsl.CaseBuilder; // CaseBuilder 임포트
 import com.querydsl.core.types.dsl.Expressions;
 import com.querydsl.jpa.JPAExpressions;
 import com.querydsl.jpa.impl.JPAQueryFactory;
+import com.sloway.app.place.dto.request.place.PlaceUpdateReqDto;
+import com.sloway.app.place.dto.response.place.MasterPlaceRespDto;
 import com.sloway.app.place.dto.response.place.PlaceDetailListRespDto;
 import com.sloway.app.place.dto.response.place.PlaceListRespDto;
 import lombok.RequiredArgsConstructor;
@@ -196,5 +198,41 @@ public class PlaceRepositoryImpl implements PlaceRepositoryCustom {
                         imgPlaceEntity.currentUrl
                 )
                 .fetch();
+    }
+
+    @Override
+    public List<MasterPlaceRespDto> findMasterPlaceListByTypeAndMemberNo(String type, Long memberNo) {
+        return queryFactory
+                .select(Projections.constructor(MasterPlaceRespDto.class,
+                        placeEntity.no,
+                        placeEntity.title,
+                        placeEntity.type
+                ))
+                .from(placeEntity)
+                .join(hostPlaceEntity).on(hostPlaceEntity.placeEntity.eq(placeEntity))
+                .where(
+                        placeEntity.delYn.eq("N"),
+                        placeEntity.type.eq(type),
+                        hostPlaceEntity.hostEntity.memberNo.eq(memberNo) // 본인 소유의 마스터 공간만 조회
+                )
+                .fetch();
+    }
+
+    @Override
+    public PlaceUpdateReqDto selectPlaceForUpdate(Long memberNo, Long no) {
+        return queryFactory
+                .select(Projections.constructor(PlaceUpdateReqDto.class,
+                        placeEntity.no,
+                        placeEntity.title,
+                        placeEntity.content
+                ))
+                .from(placeEntity)
+                .join(hostPlaceEntity).on(hostPlaceEntity.placeEntity.eq(placeEntity))
+                .where(
+                        placeEntity.delYn.eq("N"),
+                        placeEntity.no.eq(no),
+                        hostPlaceEntity.hostEntity.memberNo.eq(memberNo)
+                )
+                .fetchOne();
     }
 }
