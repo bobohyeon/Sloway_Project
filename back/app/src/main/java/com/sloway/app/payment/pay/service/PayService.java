@@ -106,6 +106,11 @@ public class PayService {
         return PayResDto.from(entity);
     }
 
+    public List<PayResDto> findPaysByMemberNo(Long memberNo){
+        List<PayEntity> payEntityList = payRepository.findByMember(memberNo);
+        return payEntityList.stream().map(PayResDto::from).toList();
+    }
+
     private String createFakeTid() {
         return "FAKE_" + UUID.randomUUID().toString().substring(0, 12);
     }
