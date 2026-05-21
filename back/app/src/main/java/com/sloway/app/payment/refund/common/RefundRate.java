@@ -10,7 +10,8 @@ public enum RefundRate {
     FOURTOSIX("4~6일", 70),
     TWOTOTHREE("2~3일", 50),
     ONEDAY("1일", 30),
-    DDAY("당일", 0);
+    DDAY("당일", 0),
+    FULL("면제", 100);
 
     private final String label;
     private final Integer rate;
