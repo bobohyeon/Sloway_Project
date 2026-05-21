@@ -21,8 +21,6 @@ const MOCK_NOTICES = Array.from({ length: 18 }, (_, i) => ({
       ? '[중요] 서비스 이용약관 변경 안내'
       : `공지사항 제목입니다 ${i + 1}번`,
   category: ['서비스', '이벤트', '점검', '기타'][i % 4],
-  isPinned: i < 2,
-  isImportant: i < 3,
   views: Math.floor(Math.random() * 500) + 10,
   createdAt: `2026.0${(i % 5) + 1}.${String((i % 28) + 1).padStart(2, '0')}`,
   exposureStart: `2026.0${(i % 5) + 1}.01`,
@@ -230,7 +228,7 @@ export default function NoticeManagePage() {
                 </thead>
                 <tbody>
                   {paged.map((notice) => (
-                    <Tr key={notice.id} $pinned={notice.isPinned}>
+                    <Tr key={notice.id}>
                       <Td>
                         <Checkbox
                           checked={selectedIds.includes(notice.id)}
@@ -247,11 +245,6 @@ export default function NoticeManagePage() {
                       </Td>
                       <Td>
                         <TitleCell>
-                          {notice.isImportant && (
-                            <Badge size="sm" variant="warning">
-                              중요
-                            </Badge>
-                          )}
                           <TitleText
                             onClick={() => navigate(`/notices/${notice.id}`)}
                           >
@@ -324,42 +317,6 @@ export default function NoticeManagePage() {
 }
 
 // ─── Styled Components ───────────────────────────────────────────────────────
-
-const Wrap = styled.div`
-  padding: var(--space-6);
-  max-width: 100%;
-
-  @media (max-width: 768px) {
-    padding: var(--space-4);
-  }
-`;
-
-const PageHeader = styled.div`
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: var(--space-4);
-  margin-bottom: var(--space-6);
-
-  @media (max-width: 600px) {
-    flex-direction: column;
-  }
-`;
-
-const PageTitle = styled.h1`
-  font-family: var(--font-display);
-  font-size: 1.5rem;
-  font-weight: 600;
-  color: var(--gray-800);
-  letter-spacing: -0.02em;
-  margin-bottom: 4px;
-`;
-
-const PageDesc = styled.p`
-  font-size: 0.88rem;
-  color: var(--gray-400);
-`;
-
 const TabWrap = styled.div`
   margin-bottom: var(--space-4);
 `;
@@ -503,8 +460,6 @@ const Th = styled.th`
 `;
 
 const Tr = styled.tr`
-  background: ${(p) =>
-    p.$pinned ? 'rgba(168, 184, 159, 0.05)' : 'transparent'};
   transition: background 120ms ease;
 
   &:hover {
