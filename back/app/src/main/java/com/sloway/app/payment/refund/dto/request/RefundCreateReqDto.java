@@ -5,13 +5,14 @@ import com.sloway.app.payment.refund.common.RefundReason;
 import com.sloway.app.payment.refund.common.RefundStatus;
 import com.sloway.app.payment.refund.entity.RefundEntity;
 import com.sloway.app.reservation.rsvn.entity.RsvnEntity;
-import lombok.Builder;
-import lombok.Getter;
+import lombok.*;
 
 import java.time.LocalDateTime;
 
 @Getter
 @Builder
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
+@AllArgsConstructor(access = AccessLevel.PRIVATE)
 public class RefundCreateReqDto {
 
     private Long payNo;

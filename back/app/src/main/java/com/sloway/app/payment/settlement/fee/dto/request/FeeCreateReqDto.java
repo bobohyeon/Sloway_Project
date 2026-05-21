@@ -2,11 +2,14 @@ package com.sloway.app.payment.settlement.fee.dto.request;
 
 import com.sloway.app.payment.settlement.fee.common.PlaceType;
 import com.sloway.app.payment.settlement.fee.entity.FeeEntity;
-import lombok.Getter;
+import lombok.*;
 
 import java.time.LocalDateTime;
 
 @Getter
+@Builder
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
+@AllArgsConstructor(access = AccessLevel.PRIVATE)
 public class FeeCreateReqDto {
 
     private PlaceType placeType;

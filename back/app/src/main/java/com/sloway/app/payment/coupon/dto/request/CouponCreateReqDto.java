@@ -4,11 +4,14 @@ import com.sloway.app.member.entity.MemberEntity;
 import com.sloway.app.payment.coupon.common.CouponDcType;
 import com.sloway.app.payment.coupon.common.CouponStatus;
 import com.sloway.app.payment.coupon.entity.CouponEntity;
-import lombok.Getter;
+import lombok.*;
 
 import java.time.LocalDateTime;
 
 @Getter
+@Builder
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
+@AllArgsConstructor(access = AccessLevel.PRIVATE)
 public class CouponCreateReqDto {
 
     private String couponName;
