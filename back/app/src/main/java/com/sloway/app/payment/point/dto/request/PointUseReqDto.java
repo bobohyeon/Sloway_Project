@@ -5,9 +5,12 @@ import com.sloway.app.payment.pay.entity.PayEntity;
 import com.sloway.app.payment.point.common.PointDealType;
 import com.sloway.app.payment.point.common.PointStatus;
 import com.sloway.app.payment.point.entity.PointEntity;
-import lombok.Getter;
+import lombok.*;
 
 @Getter
+@Builder
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
+@AllArgsConstructor(access = AccessLevel.PRIVATE)
 public class PointUseReqDto {
 
     private Long payNo;
