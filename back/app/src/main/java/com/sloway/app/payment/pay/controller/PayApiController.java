@@ -38,4 +38,9 @@ public class PayApiController {
         return ResponseEntity.ok(payResDto);
     }
 
+    @GetMapping("/member/{no}")
+    public ResponseEntity<List<PayResDto>> findPaysByMemberNo(@PathVariable Long no) {
+        List<PayResDto> payResDtoList = payService.findPaysByMemberNo(no);
+        return ResponseEntity.ok(payResDtoList);
+    }
 }
