@@ -10,8 +10,6 @@ const MOCK_NOTICE = {
   category: '서비스',
   content:
     '서비스 이용약관이 변경될 예정입니다. 자세한 내용은 본문을 확인해 주세요.',
-  isPinned: true,
-  isImportant: true,
   exposureStart: '2026-05-01',
   exposureEnd: '2026-12-31',
   hasExpireDate: true,
@@ -33,8 +31,6 @@ export default function NoticeFormPage({ isEdit = false }) {
         title: '',
         category: '서비스',
         content: '',
-        isPinned: false,
-        isImportant: false,
         exposureStart: '',
         exposureEnd: '',
         hasExpireDate: false,
@@ -85,7 +81,7 @@ export default function NoticeFormPage({ isEdit = false }) {
     try {
       // 백엔드 연동 시:
       // isEdit ? PUT /api/admin/notices/:id : POST /api/admin/notices
-      // body: { title, category, content, isPinned, isImportant, exposureStart, exposureEnd, status }
+      // body: { title, category, content, exposureStart, exposureEnd, status }
       await new Promise((r) => setTimeout(r, 800)); // mock delay
       navigate('/admin/notice');
     } finally {
@@ -97,15 +93,12 @@ export default function NoticeFormPage({ isEdit = false }) {
     <PageLayout
       title={pageTitle}
       description={
-        isEdit
-          ? `공지사항 #${id}를 수정합니다.`
-          : '새 공지사항을 작성합니다.'
+        isEdit ? `공지사항 #${id}를 수정합니다.` : '새 공지사항을 작성합니다.'
       }
       backTo="/admin/notice"
       backLabel="공지 관리"
       maxWidth={1200}
     >
-
       <FormLayout>
         {/* 좌측 본문 영역 */}
         <MainColumn>
@@ -203,25 +196,6 @@ export default function NoticeFormPage({ isEdit = false }) {
                   <span>미게시</span>
                 </RadioLabel>
               </RadioGroup>
-            </Field>
-
-            {/* 노출 옵션 */}
-            <Field>
-              <Label>노출 옵션</Label>
-              <CheckboxGroup>
-                <Checkbox
-                  label="상단 고정"
-                  checked={form.isPinned}
-                  onChange={(e) => handleChange('isPinned', e.target.checked)}
-                />
-                <Checkbox
-                  label="중요 공지 표시"
-                  checked={form.isImportant}
-                  onChange={(e) =>
-                    handleChange('isImportant', e.target.checked)
-                  }
-                />
-              </CheckboxGroup>
             </Field>
           </FormCard>
 
@@ -460,12 +434,6 @@ const Radio = styled.input`
   height: 16px;
   accent-color: var(--sage);
   cursor: pointer;
-`;
-
-const CheckboxGroup = styled.div`
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-2);
 `;
 
 const FieldBottom = styled.div`

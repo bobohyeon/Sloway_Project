@@ -7,6 +7,7 @@ import {
   EmptyState,
   Card,
 } from '../../../pay_shared/components';
+import PageLayout from '../../../../app/layouts/page/PageLayout';
 
 // ─── Mock 데이터 (백엔드 연동 시 GET /api/notices?page=&category=&keyword= 로 대체) ─
 const MOCK_NOTICES = Array.from({ length: 22 }, (_, i) => ({
@@ -16,9 +17,6 @@ const MOCK_NOTICES = Array.from({ length: 22 }, (_, i) => ({
       ? '[중요] 서비스 이용약관 변경 안내'
       : `공지사항 제목입니다 ${i + 1}번`,
   category: ['서비스', '이벤트', '점검', '기타'][i % 4],
-  isPinned: i < 2,
-  isImportant: i < 3,
-  isNew: i < 5, // 7일 이내 등록
   views: Math.floor(Math.random() * 500) + 10,
   createdAt: `2026.0${(i % 5) + 1}.${String((i % 28) + 1).padStart(2, '0')}`,
 }));
@@ -37,16 +35,14 @@ export default function NoticeListPage() {
   const [keyword, setKeyword] = useState('');
   const [page, setPage] = useState(1);
 
-  // 고정 공지 / 일반 공지 분리 (백엔드에서 isPinned 필드로 정렬 처리 권장)
-  const pinned = MOCK_NOTICES.filter((n) => n.isPinned);
-  const normal = MOCK_NOTICES.filter((n) => !n.isPinned).filter((n) => {
+  const filtered = MOCK_NOTICES.filter((n) => {
     const matchCat = category === '전체' || n.category === category;
     const matchKw = n.title.includes(keyword);
     return matchCat && matchKw;
   });
 
   // 2. normal 필터링 이후 sort 적용
-  const sorted = [...normal].sort((a, b) => {
+  const sorted = [...filtered].sort((a, b) => {
     if (sortKey === 'views') return b.views - a.views;
     if (sortKey === 'title') return a.title.localeCompare(b.title, 'ko');
     return b.createdAt.localeCompare(a.createdAt);
@@ -55,22 +51,16 @@ export default function NoticeListPage() {
   const totalPages = Math.ceil(sorted.length / PAGE_SIZE);
   const paged = sorted.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
 
-  // const totalPages = Math.ceil(normal.length / PAGE_SIZE);
-  // const paged = normal.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
-
   const handleSearch = () => {
     setKeyword(inputKeyword);
     setPage(1);
   };
 
   return (
-    <Wrap>
-      {/* 헤더 */}
-      <PageHeader>
-        <PageTitle>공지사항</PageTitle>
-        <PageDesc>서비스 관련 중요한 소식을 전해드립니다.</PageDesc>
-      </PageHeader>
-
+    <PageLayout
+      title="공지사항"
+      description="서비스 관련 중요한 소식을 전해드립니다."
+    >
       {/* 검색/카테고리 */}
       <FilterRow>
         <CategoryBtnGroup>
@@ -118,43 +108,6 @@ export default function NoticeListPage() {
 
       {/* 공지 목록 */}
       <NoticeCard elevated>
-        {/* 상단 고정 공지 */}
-        {pinned.length > 0 && (
-          <>
-            {pinned.map((notice) => (
-              <NoticeRow
-                key={`pinned-${notice.id}`}
-                $pinned
-                onClick={() => navigate(`/notices/${notice.id}`)}
-                role="button"
-                tabIndex={0}
-                onKeyDown={(e) =>
-                  e.key === 'Enter' && navigate(`/notices/${notice.id}`)
-                }
-                aria-label={`공지: ${notice.title}`}
-              >
-                <NoticeMeta>
-                  <PinnedBadge>📌 공지</PinnedBadge>
-                  {notice.isImportant && (
-                    <Badge size="sm" variant="warning">
-                      중요
-                    </Badge>
-                  )}
-                </NoticeMeta>
-                <NoticeTitle $pinned>{notice.title}</NoticeTitle>
-                <NoticeInfo>
-                  <Badge size="sm" variant="muted">
-                    {notice.category}
-                  </Badge>
-                  <NoticeDate>{notice.createdAt}</NoticeDate>
-                </NoticeInfo>
-              </NoticeRow>
-            ))}
-            <Divider />
-          </>
-        )}
-
-        {/* 일반 공지 */}
         {paged.length === 0 ? (
           <EmptyState
             icon="📋"
@@ -179,7 +132,6 @@ export default function NoticeListPage() {
             >
               <NoticeMeta>
                 <NoticeNum>{notice.id}</NoticeNum>
-                {notice.isNew && <NewBadge>NEW</NewBadge>}
               </NoticeMeta>
               <NoticeTitle>{notice.title}</NoticeTitle>
               <NoticeInfo>
@@ -202,39 +154,11 @@ export default function NoticeListPage() {
           window.scrollTo(0, 0);
         }}
       />
-    </Wrap>
+    </PageLayout>
   );
 }
 
 // ─── Styled Components ───────────────────────────────────────────────────────
-
-const Wrap = styled.div`
-  padding: var(--space-6);
-  max-width: 100%;
-
-  @media (max-width: 768px) {
-    padding: var(--space-4);
-  }
-`;
-
-const PageHeader = styled.div`
-  margin-bottom: var(--space-5);
-`;
-
-const PageTitle = styled.h1`
-  font-family: var(--font-display);
-  font-size: 1.5rem;
-  font-weight: 600;
-  color: var(--gray-800);
-  letter-spacing: -0.02em;
-  margin-bottom: 4px;
-`;
-
-const PageDesc = styled.p`
-  font-size: 0.88rem;
-  color: var(--gray-400);
-`;
-
 const FilterRow = styled.div`
   display: flex;
   align-items: center;
@@ -326,16 +250,13 @@ const NoticeRow = styled.div`
   padding: 16px 20px;
   cursor: pointer;
   transition: background 140ms ease;
-  background: ${(p) =>
-    p.$pinned ? 'rgba(168, 184, 159, 0.06)' : 'transparent'};
 
   &:not(:last-child) {
     border-bottom: 1px solid var(--gray-100);
   }
 
   &:hover {
-    background: ${(p) =>
-      p.$pinned ? 'rgba(168, 184, 159, 0.12)' : 'var(--gray-50, #fafaf9)'};
+    background: var(--gray-50, #fafaf9);
   }
 
   &:focus-visible {
@@ -361,25 +282,9 @@ const NoticeNum = styled.span`
   font-weight: 500;
 `;
 
-const PinnedBadge = styled.span`
-  font-size: 0.75rem;
-  font-weight: 600;
-  color: var(--sage);
-  white-space: nowrap;
-`;
-
-const NewBadge = styled.span`
-  font-size: 0.68rem;
-  font-weight: 700;
-  color: var(--white);
-  background: var(--sage);
-  padding: 1px 6px;
-  border-radius: var(--radius-full);
-`;
-
 const NoticeTitle = styled.span`
   font-size: 0.92rem;
-  font-weight: ${(p) => (p.$pinned ? '600' : '500')};
+  font-weight: 500;
   color: var(--gray-800);
   line-height: 1.4;
 
@@ -410,12 +315,6 @@ const ViewCount = styled.span`
   font-size: 0.75rem;
   color: var(--gray-300);
   white-space: nowrap;
-`;
-
-const Divider = styled.div`
-  height: 1px;
-  background: var(--gray-200);
-  margin: 0;
 `;
 
 const RightControls = styled.div`

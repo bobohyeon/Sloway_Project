@@ -238,7 +238,7 @@ export default function NoticeManagePage() {
                         />
                       </Td>
                       <Td $center $muted>
-                        {notice.isPinned ? '📌' : notice.id}
+                        {notice.id}
                       </Td>
                       <Td $center>
                         <Badge size="sm" variant="muted">
