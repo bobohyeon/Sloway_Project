@@ -37,4 +37,18 @@ public class RefundApiController {
         RefundResDto resDto = refundService.findRefundByNo(no);
         return ResponseEntity.ok(resDto);
     }
+
+    @PatchMapping("/{no}/process")
+    public ResponseEntity<RefundResDto> processRefund(@PathVariable Long no) {
+        RefundResDto resDto = refundService.processRefund(no);
+        return ResponseEntity.ok(resDto);
+    }
+
+    @GetMapping("/member/{no}")
+    public ResponseEntity<List<RefundResDto>> findRefundsByMemberNo(@PathVariable Long no) {
+        List<RefundResDto> resDtoList = refundService.findRefundsByMemberNo(no);
+        return ResponseEntity.ok(resDtoList);
+    }
 }
+
+
