@@ -132,7 +132,7 @@ public class RefundService {
         refundEntity.approveRefund();
         PayEntity payEntity = refundEntity.getPayNo();
 
-        if(payEntity.getUcNo() != null){
+        if (payEntity.getUcNo() != null) {
             payEntity.getUcNo().returnCoupon();
         }
 
@@ -154,6 +154,10 @@ public class RefundService {
         return RefundResDto.from(refundEntity);
     }
 
+    public List<RefundResDto> findRefundsByMemberNo(Long memberNo) {
+        List<RefundEntity> refundEntityList = refundRepository.findByMember(memberNo);
+        return refundEntityList.stream().map(RefundResDto::from).toList();
+    }
 
     private RefundRate refundRate(RefundEntity entity) {
         LocalDateTime checkIn = entity.getRsvnNo().getCheckIn();
