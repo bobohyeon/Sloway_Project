@@ -2,12 +2,12 @@ import api from '../../../../../app/api/axiosApi';
 
 // 1. 일반 공간 (Space)
 export async function fetchSpaceImages(no) {
-  const response = await api.get(`/space/update/image/${no}`);
+  const response = await api.get(`/place/update/image/${no}`);
   return response;
 }
 
 export async function updateSpaceImages(no, formData) {
-  const response = await api.put(`/space/update/image/${no}`, formData, {
+  const response = await api.put(`/place/update/image/${no}`, formData, {
     headers: {
       'Content-Type': 'multipart/form-data',
     },

@@ -66,7 +66,7 @@ export default function useImageUpdate() {
       const formDataToSend = new FormData();
 
       if (isWorkStay) {
-        // 🏡 1. 워크앤스테이 숙소 이미지 패킹
+        // 1. 워크앤스테이 숙소 이미지 패킹
         images.forEach((img) => {
           if (img.file) formDataToSend.append('files', img.file);
         });
@@ -96,7 +96,7 @@ export default function useImageUpdate() {
           })
         );
       } else {
-        // 🌲 일반 단독 공간 패킹 (기존 로직 확장)
+        // 일반 단독 공간 패킹 (기존 로직 확장)
         images.forEach((img) => {
           if (img.file) formDataToSend.append('files', img.file);
         });
