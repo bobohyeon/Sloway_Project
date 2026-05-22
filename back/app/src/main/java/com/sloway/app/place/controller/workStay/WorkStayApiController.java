@@ -1,6 +1,7 @@
 package com.sloway.app.place.controller.workStay;
 
 import com.sloway.app.place.dto.request.sort.ImgSortReqDto;
+import com.sloway.app.place.dto.request.sort.ImgUpdateSortReqDto;
 import com.sloway.app.place.dto.request.workStay.WorkStayReqDto;
 import com.sloway.app.place.dto.request.workStay.WorkUpdateDtoWrapper;
 import com.sloway.app.place.dto.request.workStay.workOffice.WorkOfficeReqDto;
@@ -29,8 +30,8 @@ public class WorkStayApiController {
     public ResponseEntity<Object> saveWorkStay(
             @RequestPart("dto") WorkStayReqDto dto,
             @RequestPart("officeDto") WorkOfficeReqDto officeDto,
-            @RequestPart("files") List<MultipartFile> files,
-            @RequestPart("officeFiles") List<MultipartFile> officeFiles,
+            @RequestPart(name = "files", required = false) List<MultipartFile> files,
+            @RequestPart(name = "officeFiles", required = false) List<MultipartFile> officeFiles,
             @RequestPart("sortList") List<ImgSortReqDto> sortList,
             @RequestPart("officeSortList") List<ImgSortReqDto> officeSortList,
             @AuthenticationPrincipal Long hostNo) {
@@ -61,10 +62,10 @@ public class WorkStayApiController {
     @PutMapping(value = "/update/image/{no}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<Object> updateImageWorkStay(
             @PathVariable Long no,
-            @RequestPart("files") List<MultipartFile> files,
-            @RequestPart("officeFiles") List<MultipartFile> officeFiles,
-            @RequestPart("sortList") List<ImgSortReqDto> sortList,
-            @RequestPart("officeSortList") List<ImgSortReqDto> officeSortList) {
+            @RequestPart(name = "files", required = false) List<MultipartFile> files,
+            @RequestPart(name = "officeFiles", required = false) List<MultipartFile> officeFiles,
+            @RequestPart("sortList") List<ImgUpdateSortReqDto> sortList,
+            @RequestPart("officeSortList") List<ImgUpdateSortReqDto> officeSortList) {
 
         workStayService.updateImageWorkStay(no, files, sortList, officeFiles, officeSortList);
 

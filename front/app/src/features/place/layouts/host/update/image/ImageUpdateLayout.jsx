@@ -12,6 +12,8 @@ const PageWrapper = styled.div`
 
 const Container = styled.div`
   width: 100%;
+  height: 100%;
+  margin-bottom: 250px;
   max-width: 1100px;
 `;
 
