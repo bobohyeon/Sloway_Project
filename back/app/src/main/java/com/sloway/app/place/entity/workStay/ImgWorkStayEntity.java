@@ -32,4 +32,8 @@ public class ImgWorkStayEntity {
                 .sort(sortValue)
                 .build();
     }
+
+    public void updateSort(int sort) {
+        this.sort = sort;
+    }
 }
