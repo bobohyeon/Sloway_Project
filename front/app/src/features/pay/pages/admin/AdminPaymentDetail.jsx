@@ -1,19 +1,163 @@
-// 관리자 결제 상세 페이지 — 도메인: Pay / 역할: ADMIN
-// 백엔드 API: ✅ GET /api/payment/pay/{no} (기존 종결)
-//            ✅ GET /api/payment/refund (전체 조회 — payNo 매칭으로 연관 환불 찾기)
-
 import { useEffect, useMemo, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import styled from 'styled-components';
-
 import PageLayout from '../../../../app/layouts/page/PageLayout';
 import { Badge, Button, Card, Section } from '../../../pay_shared/components';
 import { PaymentDetailCard } from '../../components/user/PaymentDetailCard';
 import { PaymentStatusBadge } from '../../components/user/PaymentStatusBadge';
 import { PriceBreakdown } from '../../components/user/PriceBreakdown';
-
 import { findPayByNo } from '../../api/payApi';
 import { findRefundAll } from '../../../refund/api/refundApi';
+
+const StatusRow = styled.div`
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  margin-bottom: var(--space-4);
+`;
+
+const PayIdMono = styled.span`
+  font-family: var(--font-mono);
+  font-size: 0.85rem;
+  color: var(--gray-400);
+`;
+
+const DetailGrid = styled.div`
+  display: grid;
+  grid-template-columns: 1.4fr 1fr;
+  gap: var(--space-4);
+  margin-bottom: var(--space-5);
+
+  @media (max-width: 1000px) {
+    grid-template-columns: 1fr;
+  }
+`;
+
+const MainColumn = styled.div``;
+
+const SideColumn = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+`;
+
+const InfoCard = styled(Card)``;
+
+const InfoHeader = styled.div`
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+`;
+
+const Avatar = styled.div`
+  width: 40px;
+  height: 40px;
+  background: var(--cream);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.2rem;
+`;
+
+const Main = styled.div`
+  flex: 1;
+`;
+
+const MainName = styled.div`
+  font-size: 0.95rem;
+  font-weight: 500;
+  color: var(--gray-800);
+  margin-bottom: 2px;
+`;
+
+const SubText = styled.div`
+  font-size: 0.78rem;
+  color: var(--gray-400);
+`;
+
+const Row = styled.div`
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 0.85rem;
+  padding: 6px 0;
+
+  & + & {
+    border-top: 1px dashed var(--gray-200);
+  }
+`;
+
+const Label = styled.span`
+  color: var(--gray-400);
+`;
+
+const Value = styled.span`
+  color: var(--gray-800);
+  font-weight: 500;
+`;
+
+const Mono = styled.span`
+  font-family: var(--font-mono);
+  font-size: 0.78rem;
+  color: var(--gray-800);
+  font-weight: 500;
+`;
+
+const Muted = styled.span`
+  color: var(--gray-400);
+  font-weight: 400;
+`;
+
+const RefundCard = styled(Card)`
+  cursor: pointer;
+  transition: all 200ms ease;
+
+  &:hover {
+    border-color: var(--sage);
+    transform: translateY(-1px);
+  }
+`;
+
+const RefundHeader = styled.div`
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-bottom: var(--space-2);
+  border-bottom: 1px dashed var(--gray-200);
+  margin-bottom: var(--space-2);
+`;
+
+const RefundIdMono = styled.span`
+  font-family: var(--font-mono);
+  font-size: 0.78rem;
+  color: var(--gray-600);
+`;
+
+const RefundFooter = styled.div`
+  margin-top: var(--space-3);
+  text-align: right;
+  font-size: 0.78rem;
+  color: var(--sage);
+  font-weight: 500;
+`;
+
+const Actions = styled.div`
+  display: flex;
+  justify-content: space-between;
+  gap: var(--space-3);
+  padding-top: var(--space-5);
+  border-top: 1px solid var(--gray-200);
+
+  @media (max-width: 640px) {
+    flex-direction: column-reverse;
+
+    & > button {
+      width: 100%;
+    }
+  }
+`;
 
 const STATUS_TO_UI = {
   READY: 'pending',
@@ -89,7 +233,6 @@ export default function AdminPaymentDetail() {
     if (!no) return;
     const load = async () => {
       try {
-        // 결제 + 환불 전체 병렬 조회 (환불 도메인에서 payNo 별 단건 API 부재 영역)
         const [payResDto, refundList] = await Promise.all([
           findPayByNo(no),
           findRefundAll(),
@@ -243,153 +386,3 @@ export default function AdminPaymentDetail() {
     </PageLayout>
   );
 }
-
-const StatusRow = styled.div`
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: var(--space-3);
-  margin-bottom: var(--space-4);
-`;
-
-const PayIdMono = styled.span`
-  font-family: var(--font-mono);
-  font-size: 0.85rem;
-  color: var(--gray-400);
-`;
-
-const DetailGrid = styled.div`
-  display: grid;
-  grid-template-columns: 1.4fr 1fr;
-  gap: var(--space-4);
-  margin-bottom: var(--space-5);
-
-  @media (max-width: 1000px) {
-    grid-template-columns: 1fr;
-  }
-`;
-
-const MainColumn = styled.div``;
-
-const SideColumn = styled.div`
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-3);
-`;
-
-const InfoCard = styled(Card)``;
-
-const InfoHeader = styled.div`
-  display: flex;
-  align-items: center;
-  gap: var(--space-3);
-`;
-
-const Avatar = styled.div`
-  width: 40px;
-  height: 40px;
-  background: var(--cream);
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 1.2rem;
-`;
-
-const Main = styled.div`
-  flex: 1;
-`;
-
-const MainName = styled.div`
-  font-size: 0.95rem;
-  font-weight: 500;
-  color: var(--gray-800);
-  margin-bottom: 2px;
-`;
-
-const SubText = styled.div`
-  font-size: 0.78rem;
-  color: var(--gray-400);
-`;
-
-const Row = styled.div`
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  font-size: 0.85rem;
-  padding: 6px 0;
-
-  & + & {
-    border-top: 1px dashed var(--gray-200);
-  }
-`;
-
-const Label = styled.span`
-  color: var(--gray-400);
-`;
-
-const Value = styled.span`
-  color: var(--gray-800);
-  font-weight: 500;
-`;
-
-const Mono = styled.span`
-  font-family: var(--font-mono);
-  font-size: 0.78rem;
-  color: var(--gray-800);
-  font-weight: 500;
-`;
-
-const Muted = styled.span`
-  color: var(--gray-400);
-  font-weight: 400;
-`;
-
-const RefundCard = styled(Card)`
-  cursor: pointer;
-  transition: all 200ms ease;
-
-  &:hover {
-    border-color: var(--sage);
-    transform: translateY(-1px);
-  }
-`;
-
-const RefundHeader = styled.div`
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding-bottom: var(--space-2);
-  border-bottom: 1px dashed var(--gray-200);
-  margin-bottom: var(--space-2);
-`;
-
-const RefundIdMono = styled.span`
-  font-family: var(--font-mono);
-  font-size: 0.78rem;
-  color: var(--gray-600);
-`;
-
-const RefundFooter = styled.div`
-  margin-top: var(--space-3);
-  text-align: right;
-  font-size: 0.78rem;
-  color: var(--sage);
-  font-weight: 500;
-`;
-
-const Actions = styled.div`
-  display: flex;
-  justify-content: space-between;
-  gap: var(--space-3);
-  padding-top: var(--space-5);
-  border-top: 1px solid var(--gray-200);
-
-  @media (max-width: 640px) {
-    flex-direction: column-reverse;
-
-    & > button {
-      width: 100%;
-    }
-  }
-`;

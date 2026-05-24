@@ -1,22 +1,37 @@
-// 관리자 결제 목록 페이지 — 도메인: Pay / 역할: ADMIN
-// 백엔드 API: ✅ GET /api/payment/pay (전체 조회, 기존 종결)
-// 관리자 영역 — 회원 검증 없음, 모든 결제 노출
-
 import { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import styled from 'styled-components';
-
 import PageLayout from '../../../../app/layouts/page/PageLayout';
 import { Button, EmptyState, Pagination } from '../../../pay_shared/components';
 import { SettlementStatCard } from '../../../settlement/components/host/SettlementStatCard';
 import { PaymentFilterBar } from '../../components/user/PaymentFilterBar';
 import { PaymentListItem } from '../../components/user/PaymentListItem';
-
 import { findPayAll } from '../../api/payApi';
+
+const StatGrid = styled.div`
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: var(--space-3);
+  margin-bottom: var(--space-5);
+
+  @media (max-width: 960px) {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  @media (max-width: 480px) {
+    grid-template-columns: 1fr;
+  }
+`;
+
+const List = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  margin-bottom: var(--space-5);
+`;
 
 const PAGE_SIZE = 10;
 
-// 백엔드 PayStatus → UI 키 (PaymentStatusBadge interface)
 const STATUS_TO_UI = {
   READY: 'pending',
   COMPLETED: 'completed',
@@ -67,7 +82,7 @@ const toPaymentForUI = (resDto) => {
     status: STATUS_TO_UI[resDto.status] ?? 'pending',
     method: methodInfo.label,
     methodIcon: methodInfo.icon,
-    emoji: '🏠', // 예약 도메인 미연동
+    emoji: '🏠',
     space: `예약 #${resDto.rsvnNo}`,
     paidAt: formatPaidAt(resDto.approvedAt ?? resDto.createdAt),
     amount: resDto.finalAmt ?? 0,
@@ -94,7 +109,6 @@ export default function AdminPaymentList() {
     load();
   }, []);
 
-  // 통계 — 전체 기간 기준 (탭/기간 필터와 분리, 관리자는 누적 수치 우선)
   const stats = useMemo(() => {
     const s = {
       total: pays.length,
@@ -115,7 +129,6 @@ export default function AdminPaymentList() {
     return s;
   }, [pays]);
 
-  // 탭 별 개수 (전체 기간 기준)
   const tabsWithCount = useMemo(() => {
     const counts = {
       all: pays.length,
@@ -126,7 +139,6 @@ export default function AdminPaymentList() {
     return TABS.map((t) => ({ ...t, count: counts[t.value] }));
   }, [pays, stats]);
 
-  // 탭 + 기간 필터 + 변환
   const filtered = useMemo(() => {
     const cutoff = periodToCutoffMs(selectedPeriod);
     return pays
@@ -240,25 +252,3 @@ export default function AdminPaymentList() {
     </PageLayout>
   );
 }
-
-const StatGrid = styled.div`
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: var(--space-3);
-  margin-bottom: var(--space-5);
-
-  @media (max-width: 960px) {
-    grid-template-columns: repeat(2, 1fr);
-  }
-
-  @media (max-width: 480px) {
-    grid-template-columns: 1fr;
-  }
-`;
-
-const List = styled.div`
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-3);
-  margin-bottom: var(--space-5);
-`;

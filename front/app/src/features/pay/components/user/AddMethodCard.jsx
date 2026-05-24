@@ -1,14 +1,4 @@
-import styled from 'styled-components'
-
-export function AddMethodCard({ onClick }) {
-  return (
-    <Wrap onClick={onClick}>
-      <Plus>+</Plus>
-      <Text>새 결제 수단 등록하기</Text>
-      <SubText>카드, 카카오페이, 네이버페이, 토스페이</SubText>
-    </Wrap>
-  )
-}
+import styled from 'styled-components';
 
 const Wrap = styled.button`
   display: flex;
@@ -29,7 +19,7 @@ const Wrap = styled.button`
     background: var(--cream);
     color: var(--gray-800);
   }
-`
+`;
 
 const Plus = styled.div`
   width: 44px;
@@ -48,14 +38,24 @@ const Plus = styled.div`
     background: var(--sage);
     color: var(--white);
   }
-`
+`;
 
 const Text = styled.div`
   font-size: 0.95rem;
   font-weight: 500;
-`
+`;
 
 const SubText = styled.div`
   font-size: 0.78rem;
   color: var(--gray-400);
-`
+`;
+
+export function AddMethodCard({ onClick }) {
+  return (
+    <Wrap onClick={onClick}>
+      <Plus>+</Plus>
+      <Text>새 결제 수단 등록하기</Text>
+      <SubText>카드, 카카오페이, 네이버페이, 토스페이</SubText>
+    </Wrap>
+  );
+}

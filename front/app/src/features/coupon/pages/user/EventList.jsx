@@ -1,7 +1,3 @@
-// 이벤트 목록 페이지 — 도메인: Coupon / 역할: USER
-// 백엔드 API: 🚫 별도 영역 없음 (이벤트 도메인 미진입 영역)
-// 본 페이지는 UI 시뮬레이션 영역 — 이벤트 도메인 신규 작성 시 본격 구현
-
 import PageLayout from '../../../../app/layouts/page/PageLayout';
 
 export default function EventList() {
