@@ -124,7 +124,7 @@ import AdminPaymentList from './features/pay/pages/admin/AdminPaymentList';
 import AdminPaymentDetail from './features/pay/pages/admin/AdminPaymentDetail';
 
 // ── 환불 (일반회원) ────────────────────────────────────────
-import BookingCancel from './features/refund/pages/user/BookingCancel';
+import RefundRequest from './features/refund/pages/user/RefundRequest';
 import RefundComplete from './features/refund/pages/user/RefundComplete';
 
 // ── 환불 (관리자) ─────────────────────────────────────────
@@ -290,12 +290,12 @@ function App() {
         <Route path="/user/payment/receipt" element={<CashReceipt />} />
         <Route path="/user/payment" element={<PaymentHistory />} />
         <Route path="/user/payment/method" element={<PaymentMethods />} />
-        <Route path="/user/payment/:id" element={<PaymentDetail />} />
+        <Route path="/user/payment/:no" element={<PaymentDetail />} />
         <Route path="/user/point" element={<PointHistory />} />
         <Route path="/event" element={<EventList />} />
         <Route path="/user/coupon" element={<MyCoupons />} />
         {/* 환불 */}
-        <Route path="/user/refund/request" element={<BookingCancel />} />
+        <Route path="/user/refund/request" element={<RefundRequest />} />
         <Route path="/user/refund/complete" element={<RefundComplete />} />
         {/* 활동 */}
         <Route path="/user/wishlist" element={<WishListPage />} />
@@ -392,7 +392,7 @@ function App() {
           element={<SettlementHistory />}
         />
         <Route
-          path="/host/settlement/history/:id"
+          path="/host/settlement/history/:no"
           element={<SettlementDetail />}
         />
         <Route
@@ -444,16 +444,16 @@ function App() {
         />
         {/* 결제·환불 */}
         <Route path="/admin/payment" element={<AdminPaymentList />} />
-        <Route path="/admin/payment/:id" element={<AdminPaymentDetail />} />
+        <Route path="/admin/payment/:no" element={<AdminPaymentDetail />} />
         <Route path="/admin/refund" element={<RefundList />} />
-        <Route path="/admin/refund/:id" element={<RefundDetail />} />
+        <Route path="/admin/refund/:no" element={<RefundDetail />} />
         {/* 정산·수수료 */}
         <Route
           path="/admin/settlement/host"
           element={<AdminSettlementList />}
         />
         <Route
-          path="/admin/settlement/host/:id"
+          path="/admin/settlement/host/:no"
           element={<AdminSettlementDetail />}
         />
         <Route

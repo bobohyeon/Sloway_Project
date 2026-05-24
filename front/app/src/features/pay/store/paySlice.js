@@ -1,12 +1,14 @@
 import { createSlice } from '@reduxjs/toolkit';
 
+const initialState = {
+  status: 'init',
+  result: null,
+  error: null,
+};
+
 const paySlice = createSlice({
   name: 'pay',
-  initialState: {
-    status: 'init',
-    result: null,
-    error: null,
-  },
+  initialState,
   reducers: {
     setStatus: (state, action) => {
       state.status = action.payload;
