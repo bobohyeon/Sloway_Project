@@ -1,49 +1,180 @@
-// 포인트 내역 페이지 — 도메인: Point / 역할: USER
-// 백엔드 API: ✅ GET /api/payment/point/member/{no}/balance (잔액, 어제 종결)
-//            ⏳ 내역 조회 API 영역 — 신규 작성 필요 (PointService.findPointsByMemberNo)
-// 의존: 회원 도메인 (로그인 완성 전까지 hardcoded)
-
 import { useEffect, useState } from 'react';
+import styled from 'styled-components';
 
 import PageLayout from '../../../../app/layouts/page/PageLayout';
-
 import { findPointBalanceByMemberNo } from '../../api/pointApi';
 
-// 임시 hardcoded (로그인 API 완성 전까지)
 const MEMBER_NO = 1;
 
-export default function PointHistory() {
-  // TODO 1: useState
-  //   - balance: 잔액 (Integer)
-  //   - histories: 적립/사용/만료 내역 (PointResDto[])
-  //   - filter: SAVE / USE / EXPIRATION 탭 필터
-  const [balance, setBalance] = useState(0);
-  const [histories, setHistories] = useState([]);
+const POLICIES = [
+  { label: '적립률', value: '결제 금액의 1%' },
+  { label: '적립 시점', value: '이용 완료 후 7일 뒤 확정' },
+  { label: '유효 기간', value: '적립일로부터 1년' },
+  { label: '최소 사용', value: '1,000P 이상' },
+  { label: '최대 사용', value: '결제 금액의 30%까지' },
+  { label: '환산 기준', value: '1P = 1원' },
+];
 
-  // TODO 2: 마운트 시점 잔액 + 내역 호출 (Promise.all 병렬)
-  //   - 내역 API 신규 작성 후 호출
+export default function PointHistory() {
+  const [balance, setBalance] = useState(0);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
   useEffect(() => {
     const load = async () => {
+      setLoading(true);
       try {
         const balanceResDto = await findPointBalanceByMemberNo(MEMBER_NO);
-        setBalance(balanceResDto.balance);
-        // TODO: findPointsByMemberNo(MEMBER_NO) 호출 + setHistories
+        setBalance(balanceResDto.balance ?? 0);
       } catch (err) {
-        console.error('포인트 내역 조회 실패', err);
+        console.error('포인트 잔액 조회 실패', err);
+        setError(err?.response?.data?.msg ?? err.message);
+      } finally {
+        setLoading(false);
       }
     };
     load();
   }, []);
 
   return (
-    <PageLayout title="포인트 내역" description="포인트 적립/사용 내역을 확인하세요">
-      {/* TODO 3: JSX */}
-      {/*   - PointBalance (balance 노출) */}
-      {/*   - PointExpiringSoon (만료 임박 영역) */}
-      {/*   - PointStatsRow (적립/사용 집계) */}
-      {/*   - PointPolicyNotice (정책 안내) */}
-      {/*   - Tabs (전체 / 적립 / 사용 / 만료) */}
-      {/*   - PointHistoryItem (histories.map) */}
+    <PageLayout
+      title="포인트 내역"
+      description="포인트 적립·사용 내역을 확인하세요"
+    >
+      <BalanceCard>
+        <BalanceLabel>보유 포인트</BalanceLabel>
+        <BalanceAmount>
+          {loading ? '불러오는 중…' : `${Number(balance).toLocaleString()}P`}
+        </BalanceAmount>
+        {error && <BalanceError>잔액을 불러오지 못했습니다 — {error}</BalanceError>}
+        <BalanceHint>1P = 1원으로 결제 시 사용할 수 있어요</BalanceHint>
+      </BalanceCard>
+
+      <Section>
+        <SectionTitle>포인트 정책</SectionTitle>
+        <PolicyTable>
+          {POLICIES.map((policy) => (
+            <PolicyRow key={policy.label}>
+              <PolicyLabel>{policy.label}</PolicyLabel>
+              <PolicyValue>{policy.value}</PolicyValue>
+            </PolicyRow>
+          ))}
+        </PolicyTable>
+      </Section>
+
+      <Section>
+        <SectionTitle>적립·사용 내역</SectionTitle>
+        <EmptyBox>
+          <EmptyIcon>📋</EmptyIcon>
+          <EmptyTitle>아직 표시할 내역이 없어요</EmptyTitle>
+          <EmptyDesc>
+            결제 후 적립이 시작되면 이 영역에서 적립·사용·만료 내역을 확인할 수
+            있어요.
+          </EmptyDesc>
+        </EmptyBox>
+      </Section>
     </PageLayout>
   );
 }
+
+const BalanceCard = styled.div`
+  background: var(--sage);
+  color: var(--white);
+  border-radius: var(--radius-lg);
+  padding: var(--space-8) var(--space-6);
+  text-align: center;
+  margin-bottom: var(--space-6);
+`;
+
+const BalanceLabel = styled.div`
+  font-size: 14px;
+  opacity: 0.85;
+  margin-bottom: var(--space-2);
+`;
+
+const BalanceAmount = styled.div`
+  font-size: 36px;
+  font-weight: 700;
+  letter-spacing: -0.5px;
+  margin-bottom: var(--space-2);
+`;
+
+const BalanceError = styled.div`
+  font-size: 13px;
+  background: rgba(255, 255, 255, 0.18);
+  border-radius: var(--radius-sm);
+  padding: var(--space-2) var(--space-3);
+  margin: var(--space-3) auto 0;
+  display: inline-block;
+`;
+
+const BalanceHint = styled.div`
+  font-size: 13px;
+  opacity: 0.8;
+  margin-top: var(--space-2);
+`;
+
+const Section = styled.section`
+  margin-bottom: var(--space-6);
+`;
+
+const SectionTitle = styled.h3`
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--gray800);
+  margin: 0 0 var(--space-3);
+`;
+
+const PolicyTable = styled.div`
+  background: var(--white);
+  border: 1px solid var(--gray200);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+`;
+
+const PolicyRow = styled.div`
+  display: flex;
+  padding: var(--space-3) var(--space-4);
+  border-bottom: 1px solid var(--gray100);
+  font-size: 14px;
+
+  &:last-child {
+    border-bottom: none;
+  }
+`;
+
+const PolicyLabel = styled.div`
+  flex: 0 0 120px;
+  color: var(--gray600);
+  font-weight: 500;
+`;
+
+const PolicyValue = styled.div`
+  flex: 1;
+  color: var(--gray800);
+`;
+
+const EmptyBox = styled.div`
+  background: var(--gray100);
+  border-radius: var(--radius-md);
+  padding: var(--space-10) var(--space-6);
+  text-align: center;
+`;
+
+const EmptyIcon = styled.div`
+  font-size: 40px;
+  margin-bottom: var(--space-3);
+`;
+
+const EmptyTitle = styled.div`
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--gray800);
+  margin-bottom: var(--space-2);
+`;
+
+const EmptyDesc = styled.div`
+  font-size: 13px;
+  color: var(--gray600);
+  line-height: 1.5;
+`;

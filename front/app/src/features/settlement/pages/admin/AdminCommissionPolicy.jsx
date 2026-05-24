@@ -1,8 +1,3 @@
-// 관리자 수수료 정책 페이지 — 도메인: Fee / 역할: ADMIN
-// 백엔드 API: ✅ GET /api/settlement/fee (전체 조회)
-//            ✅ POST /api/settlement/fee (신규 정책 등록)
-// 관리자 영역 — 수수료율 신규 등록 권한 (U/D 미진입, 명세서 기준 CRU)
-
 import { useEffect, useMemo, useState } from 'react';
 import styled from 'styled-components';
 
@@ -12,8 +7,7 @@ import { CommissionPolicyTable } from '../../components/host/CommissionPolicyTab
 
 import { createFee, findFeeAll } from '../../api/feeApi';
 
-// 백엔드 PlaceType → UI 노출 정보
-// 사용자 노출 명칭 (CLAUDE.md SSOT): STATION=숙소 / WORK_STAY=워크앤스테이 / OFFICE=코워킹오피스
+// 사용자 노출 명칭 SSOT — STATION=숙소 / WORK_STAY=워크앤스테이 / OFFICE=코워킹오피스
 const PLACE_TYPE_INFO = {
   STATION: {
     icon: '🏠',
@@ -45,7 +39,6 @@ const formatDate = (iso) => {
   return `${d.getFullYear()}.${pad(d.getMonth() + 1)}.${pad(d.getDate())}`;
 };
 
-// 백엔드 FeeResDto → CommissionPolicyTable prop 변환
 const toPolicyTableItem = (resDto) => {
   const info = PLACE_TYPE_INFO[resDto.placeType] ?? {
     icon: '📋',
@@ -67,7 +60,6 @@ export default function AdminCommissionPolicy() {
   const [modalOpen, setModalOpen] = useState(false);
   const [submitting, setSubmitting] = useState(false);
 
-  // 폼 영역
   const [formPlaceType, setFormPlaceType] = useState('STATION');
   const [formRate, setFormRate] = useState('');
   const [formStartAt, setFormStartAt] = useState('');
@@ -86,7 +78,7 @@ export default function AdminCommissionPolicy() {
     loadFees();
   }, []);
 
-  // 현재 적용 중인 정책만 활성 표시 (delYn=N 영역). 백엔드 자체 delYn 처리하므로 프론트는 단순 표시
+  // 적용 중 정책만 표시 (백엔드 delYn=N 영역)
   const policies = useMemo(
     () => fees.filter((f) => f.delYn !== 'Y').map(toPolicyTableItem),
     [fees]
@@ -112,7 +104,6 @@ export default function AdminCommissionPolicy() {
   const handleSubmit = async () => {
     if (submitting) return;
 
-    // 입력 검증
     const rateNum = Number(formRate);
     if (!formRate || Number.isNaN(rateNum) || rateNum < 0 || rateNum > 100) {
       alert('수수료율은 0 ~ 100 사이 숫자로 입력해주세요.');
@@ -125,7 +116,7 @@ export default function AdminCommissionPolicy() {
 
     setSubmitting(true);
     try {
-      // datetime-local 입력 → ISO 변환 (LocalDateTime 영역 매핑)
+      // datetime-local → ISO 변환 (백엔드 LocalDateTime 매핑)
       const reqDto = {
         placeType: formPlaceType,
         rate: rateNum,
@@ -133,7 +124,7 @@ export default function AdminCommissionPolicy() {
         endAt: formEndAt ? new Date(formEndAt).toISOString() : null,
       };
       await createFee(reqDto);
-      await loadFees(); // 등록 후 재조회
+      await loadFees();
       setModalOpen(false);
       resetForm();
       alert('수수료 정책이 등록됐습니다.');

@@ -1,7 +1,3 @@
-// 관리자 환불 관리 페이지 — 도메인: Refund / 역할: ADMIN
-// 백엔드 API: ✅ GET /api/payment/refund (전체 환불 조회, 어제 종결)
-// 의존: 회원·예약·공간 도메인 미연동 영역 — userName/spaceName/method placeholder
-
 import { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import styled from 'styled-components';
@@ -16,15 +12,13 @@ import { findRefundAll } from '../../api/refundApi';
 
 const PAGE_SIZE = 10;
 
-// 백엔드 RefundStatus → UI 상태 키 (RefundRequestCard interface)
-// REQUESTED / APPROVED = 사용자 시각 "처리 중", COMPLETED = 완료
+// REQUESTED / APPROVED = 사용자 시각 "처리 중" 단일 묶음
 const STATUS_TO_UI = {
   REQUESTED: 'processing',
   APPROVED: 'processing',
   COMPLETED: 'completed',
 };
 
-// 백엔드 RefundRate → 환불율 숫자
 const RATE_VALUE = {
   WEEK: 100,
   FOURTOSIX: 70,
@@ -34,7 +28,6 @@ const RATE_VALUE = {
   FULL: 100,
 };
 
-// "2026.05.22 14:30" 형식
 const formatDate = (iso) => {
   if (!iso) return '-';
   const d = new Date(iso);
@@ -44,22 +37,21 @@ const formatDate = (iso) => {
   )}:${pad(d.getMinutes())}`;
 };
 
-// 호스트 사유 환불 식별 — refundReason 이 null + refundRate 가 FULL
+// 호스트 거절 환불 식별 — refundReason null + refundRate FULL 조합 (메서드 시그니처 분기 영역)
 const isHostRejectedRefund = (refund) =>
   refund.refundReason === null && refund.refundRate === 'FULL';
 
-// 백엔드 RefundResDto → RefundRequestCard prop 형식 변환
-// 회원·예약·공간 정보는 placeholder (해당 도메인 API 미연동 영역, 추후 admin 전용 join API 박을지 결정)
+// 회원·예약·공간·결제수단·결제액은 별도 도메인/조회 영역 — 통합 단계에 join API 또는 N+1 회피 결정
 const toRefundCardItem = (refund) => {
   const refundAmtNumber = Number(refund.refundAmt ?? 0);
   return {
     id: refund.no,
     refundId: `RFD-${String(refund.no).padStart(6, '0')}`,
-    userName: `회원 #${refund.rsvnNo}`, // memberNo 미노출 → rsvnNo 임시
+    userName: `회원 #${refund.rsvnNo}`,
     spaceName: `예약 #${refund.rsvnNo}`,
     spaceEmoji: '🏠',
-    method: '-', // pay.method 별도 조회 필요 (N+1 회피)
-    paidAmount: refundAmtNumber, // pay.finalAmt 별도 조회 필요, 임시 환불액으로 표시
+    method: '-',
+    paidAmount: refundAmtNumber,
     refundAmount: refundAmtNumber,
     rate: RATE_VALUE[refund.refundRate] ?? 0,
     requestedAt: formatDate(refund.requestedAt ?? refund.createdAt),
@@ -92,7 +84,7 @@ export default function RefundList() {
     load();
   }, []);
 
-  // 통계 카드 — 전체 기간 기준 (탭 영역과 분리, 어드민은 누적 수치 우선)
+  // 통계 카드는 전체 기간 누적 — 탭/필터 영향 X
   const stats = useMemo(() => {
     const s = { total: refunds.length, processing: 0, completed: 0, hostRejected: 0 };
     refunds.forEach((r) => {
@@ -104,7 +96,6 @@ export default function RefundList() {
     return s;
   }, [refunds]);
 
-  // 탭 정의
   const tabs = [
     { value: 'all', label: '전체', count: stats.total },
     { value: 'processing', label: '처리 중', count: stats.processing },
@@ -112,7 +103,6 @@ export default function RefundList() {
     { value: 'host_rejected', label: '호스트거절', count: stats.hostRejected },
   ];
 
-  // 필터링 + 변환
   const filtered = useMemo(() => {
     return refunds
       .filter((r) => {
@@ -128,7 +118,6 @@ export default function RefundList() {
       .map(toRefundCardItem);
   }, [refunds, tab, search]);
 
-  // 페이지네이션
   const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
   const pageItems = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
 

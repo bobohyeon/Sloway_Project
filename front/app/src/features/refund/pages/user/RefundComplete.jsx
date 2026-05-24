@@ -1,7 +1,3 @@
-// 환불 신청 완료 페이지 — 도메인: Refund / 역할: USER
-// 진입 경로: RefundRequest → createRefund 성공 → navigate state 로 진입
-// 가드 2중 — 직접 URL 진입 또는 새로고침 시 state 휘발 → null 첫 렌더 차단 + 결제 내역으로 redirect
-
 import { useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import styled from 'styled-components';
@@ -11,14 +7,13 @@ import { Button, Card, Section } from '../../../pay_shared/components';
 import { ResultHeader } from '../../../pay/components/user/ResultHeader';
 import { RefundInfoCard } from '../../components/user/RefundInfoCard';
 
-// 백엔드 PayMethod → 환불 안내 메소드명·아이콘
 const METHOD_INFO = {
   KAKAOPAY: { name: '카카오페이', icon: '💬' },
   TOSSPAY: { name: '토스페이', icon: '🅣' },
   NAVERPAY: { name: '네이버페이', icon: '🇳' },
 };
 
-// 백엔드 RefundReason enum → 사용자 노출 label (백엔드 enum.label 과 동기화)
+// 백엔드 RefundReason enum.label 과 동기화 — 변경 시 양쪽 일치 필요
 const REASON_LABEL = {
   SCHEDULE: '일정이 변경됐어요',
   SPACE: '다른 공간으로 변경하려고요',
@@ -28,17 +23,15 @@ const REASON_LABEL = {
   ETC: '기타',
 };
 
-// 백엔드 RefundRate enum → 환불율 숫자
 const RATE_VALUE = {
   WEEK: 100,
   FOURTOSIX: 70,
   TWOTOTHREE: 50,
   ONEDAY: 30,
   DDAY: 0,
-  FULL: 100, // 호스트 사유 수수료 면제
+  FULL: 100, // 호스트 사유 수수료 면제 (WEEK 100 과 의미 분리)
 };
 
-// "2026.05.22 14:32" 형식
 const formatRequestedAt = (iso) => {
   if (!iso) return '-';
   const d = new Date(iso);
@@ -48,7 +41,7 @@ const formatRequestedAt = (iso) => {
   )}:${pad(d.getMinutes())}`;
 };
 
-// 예상 입금일 — 영업일 5일 가정 (주말 단순화: +7일)
+// 영업일 5일 가정 (주말 포함 단순화 = +7일)
 const formatExpectedDepositAt = (iso) => {
   if (!iso) return '-';
   const d = new Date(iso);
@@ -61,7 +54,6 @@ export default function RefundComplete() {
   const location = useLocation();
   const state = location.state;
 
-  // 가드 2중 패턴: 직접 URL 진입 시 결제 내역으로 redirect
   useEffect(() => {
     if (!state?.refund || !state?.pay) {
       navigate('/user/payment', { replace: true });

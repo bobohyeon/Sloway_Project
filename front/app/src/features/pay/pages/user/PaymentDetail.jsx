@@ -1,7 +1,3 @@
-// 결제 상세 페이지 — 도메인: Pay / 역할: USER
-// 백엔드 API: ✅ GET /api/payment/pay/{no} (기존 종결)
-// URL: /user/payment/:no — useParams 활용
-
 import { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import styled from 'styled-components';
@@ -14,7 +10,6 @@ import { PriceBreakdown } from '../../components/user/PriceBreakdown';
 
 import { findPayByNo } from '../../api/payApi';
 
-// 백엔드 PayStatus → PaymentStatusBadge 키 매핑 (PaymentHistory 와 동일)
 const STATUS_TO_UI = {
   READY: 'pending',
   COMPLETED: 'completed',
@@ -28,7 +23,6 @@ const METHOD_INFO = {
   NAVERPAY: { label: '네이버페이', icon: '💚', pg: '네이버페이' },
 };
 
-// "2026.05.22 14:30" 형식
 const formatPaidAt = (iso) => {
   if (!iso) return '-';
   const d = new Date(iso);
@@ -38,7 +32,6 @@ const formatPaidAt = (iso) => {
   )}:${pad(d.getMinutes())}`;
 };
 
-// PaymentDetailCard 가 기대하는 형식으로 변환
 const toDetailCardPayment = (resDto) => {
   const methodInfo = METHOD_INFO[resDto.method] ?? {
     label: resDto.method,
@@ -54,7 +47,7 @@ const toDetailCardPayment = (resDto) => {
   };
 };
 
-// PriceBreakdown items 빌더 — 0원/null 영역은 항목 자체 누락
+// 0원/null 항목은 표시에서 제외 — 사용자가 사용한 할인만 노출
 const buildPriceItems = (resDto) => {
   const items = [{ label: '기본 금액', amount: resDto.baseAmt ?? 0, type: 'normal' }];
   if (resDto.addAmt && resDto.addAmt > 0) {
@@ -69,7 +62,7 @@ const buildPriceItems = (resDto) => {
   return items;
 };
 
-// 적립 예정 포인트 — 정책: 결제액(finalAmt) 1%
+// 포인트 적립 정책: 결제액 1% (이용 완료 후 7일 뒤 확정)
 const calcEarnPoints = (finalAmt) =>
   finalAmt ? Math.floor(finalAmt * 0.01) : 0;
 
@@ -91,15 +84,15 @@ export default function PaymentDetail() {
     load();
   }, [no]);
 
-  if (!pay) return null; // 로딩 영역 — Skeleton 컴포넌트 추후 보강 가능
+  if (!pay) return null;
 
   const uiStatus = STATUS_TO_UI[pay.status] ?? 'pending';
-  const canRefund = pay.status === 'COMPLETED'; // 환불 요청은 결제 완료 상태에서만
+  // 환불 요청은 결제 완료 상태에서만 허용
+  const canRefund = pay.status === 'COMPLETED';
   const detailCardPayment = toDetailCardPayment(pay);
   const priceItems = buildPriceItems(pay);
 
   const handleRefundClick = () => {
-    // 환불 요청 페이지 진입 — /user/refund/request 등 (별도 페이지 추후 작성)
     navigate(`/user/refund/request?payNo=${pay.no}`);
   };
 

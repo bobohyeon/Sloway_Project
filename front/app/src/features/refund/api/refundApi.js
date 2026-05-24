@@ -20,7 +20,6 @@ export async function findRefundsByMemberNo(memberNo) {
   return resp.data;
 }
 
-// 관리자 환불 승인·완료 처리
 export async function processRefund(no) {
   const resp = await api.patch(`/payment/refund/${no}/process`);
   return resp.data;

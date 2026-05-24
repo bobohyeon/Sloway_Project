@@ -24,7 +24,6 @@ export const usePayAction = () => {
     dispatch(setError(null));
 
     try {
-      // 프론트 id ('kakao') → 백엔드 enum ('KAKAOPAY') 변환
       const method = toPayMethod(paymentMethod);
       if (!method) throw new Error('지원하지 않는 결제 수단입니다.');
 
@@ -42,7 +41,6 @@ export const usePayAction = () => {
       nav('/user/payment/complete');
       return payResDto;
     } catch (err) {
-      // axios 응답 메시지 우선, 없으면 Error.message
       const msg = err?.response?.data?.msg ?? err.message;
       dispatch(setError(msg));
       dispatch(setStatus('failed'));
