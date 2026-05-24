@@ -1,170 +1,170 @@
-import { useState } from 'react'
-import { useNavigate } from 'react-router-dom'
-import styled from 'styled-components'
+import { useEffect, useMemo, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import styled from 'styled-components';
+import PageLayout from '../../../../app/layouts/page/PageLayout';
+import { EmptyState } from '../../../pay_shared/components';
+import { PaymentFilterBar } from '../../components/user/PaymentFilterBar';
+import { PaymentListItem } from '../../components/user/PaymentListItem';
+import { findPaysByMemberNo } from '../../api/payApi';
 
-import PageLayout from '../../../../app/layouts/page/PageLayout'
-
-import { StatCard, EmptyState, Pagination, Button } from '../../../pay_shared/components'
-import { PaymentListItem } from '../../components/user/PaymentListItem'
-import { PaymentFilterBar } from '../../components/user/PaymentFilterBar'
-
-const PAYMENTS = [
-  {
-    id: 'PAY-20260424-847',
-    space: '청평 숲속 파인뷰 스테이',
-    emoji: '🌲',
-    method: '카카오페이',
-    methodIcon: '💬',
-    amount: 326500,
-    paidAt: '2026.04.24 14:32',
-    status: 'completed',
-  },
-  {
-    id: 'PAY-20260418-623',
-    space: '성수 브릭라운지',
-    emoji: '🧱',
-    method: '카카오페이',
-    methodIcon: '💬',
-    amount: 28000,
-    paidAt: '2026.04.18 09:14',
-    status: 'completed',
-  },
-  {
-    id: 'PAY-20260402-412',
-    space: '강릉 바다향 커먼워크',
-    emoji: '🌊',
-    method: '신용카드',
-    methodIcon: '💳',
-    amount: 28000,
-    paidAt: '2026.04.02 11:23',
-    status: 'completed',
-  },
-  {
-    id: 'PAY-20260320-218',
-    space: '남해 올리브 팜스테이',
-    emoji: '🫒',
-    method: '네이버페이',
-    methodIcon: 'N',
-    amount: 330000,
-    paidAt: '2026.03.20 20:45',
-    status: 'refunded',
-  },
-  {
-    id: 'PAY-20260215-185',
-    space: '성수 브릭라운지',
-    emoji: '🧱',
-    method: '토스페이',
-    methodIcon: 'T',
-    amount: 28000,
-    paidAt: '2026.02.15 15:30',
-    status: 'refunded',
-  },
-  {
-    id: 'PAY-20260110-088',
-    space: '양양 파도소리 빌라',
-    emoji: '🌅',
-    method: '카카오페이',
-    methodIcon: '💬',
-    amount: 240000,
-    paidAt: '2026.01.10 12:00',
-    status: 'failed',
-  },
-]
-
-export default function PaymentHistory() {
-  const nav = useNavigate()
-  const [tab, setTab] = useState('all')
-  const [period, setPeriod] = useState('month')
-  const [page, setPage] = useState(1)
-
-  const filtered = PAYMENTS.filter((p) => tab === 'all' || p.status === tab)
-
-  const totalCompleted = PAYMENTS.filter((p) => p.status === 'completed').reduce(
-    (s, p) => s + p.amount,
-    0
-  )
-  const totalRefunded = PAYMENTS.filter((p) => p.status === 'refunded').reduce(
-    (s, p) => s + p.amount,
-    0
-  )
-  const realPaid = totalCompleted - totalRefunded
-
-  const tabs = [
-    { value: 'all', label: '전체', count: PAYMENTS.length },
-    { value: 'completed', label: '결제 완료', count: PAYMENTS.filter((p) => p.status === 'completed').length },
-    { value: 'refunded', label: '환불', count: PAYMENTS.filter((p) => p.status === 'refunded').length },
-    { value: 'failed', label: '결제 실패', count: PAYMENTS.filter((p) => p.status === 'failed').length },
-  ]
-
-  return (
-    <PageLayout
-      title="결제 내역"
-      description="지금까지의 모든 결제 내역을 확인하실 수 있어요"
-      maxWidth={1200}
-    >
-
-      <StatGrid>
-        <StatCard label="총 결제" value={PAYMENTS.length} unit="건" icon="💳" />
-        <StatCard
-          label="결제 완료 금액"
-          value={totalCompleted.toLocaleString()}
-          unit="원"
-          icon="✓"
-          highlight
-        />
-        <StatCard label="환불 금액" value={totalRefunded.toLocaleString()} unit="원" icon="↩️" />
-        <StatCard label="실결제" value={realPaid.toLocaleString()} unit="원" icon="🌱" />
-      </StatGrid>
-
-      <PaymentFilterBar
-        tabs={tabs}
-        selectedTab={tab}
-        onTabChange={setTab}
-        selectedPeriod={period}
-        onPeriodChange={setPeriod}
-      />
-
-      {filtered.length === 0 ? (
-        <EmptyState
-          icon="🌱"
-          title="결제 내역이 없어요"
-          description="아직 이 카테고리에 해당하는 결제가 없습니다."
-          action={
-            <Button variant="primary" onClick={() => nav('/spaces/search')}>
-              공간 둘러보기
-            </Button>
-          }
-        />
-      ) : (
-        <List>
-          {filtered.map((p) => (
-            <PaymentListItem
-              key={p.id}
-              payment={p}
-              onClick={(payment) => nav(`/user/payment/${payment.id}`)}
-              onReceiptClick={(payment) => nav(`/user/payment/${payment.id}`)}
-            />
-          ))}
-        </List>
-      )}
-
-      <Pagination currentPage={page} totalPages={2} onChange={setPage} />
-    </PageLayout>
-  )
-}
-const StatGrid = styled.div`
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: var(--space-3);
-  margin-bottom: var(--space-6);
-
-  @media (max-width: 720px) {
-    grid-template-columns: repeat(2, 1fr);
-  }
-`
+const emptyTitleByTab = (tab) => {
+  if (tab === 'completed') return '결제 완료된 내역이 없어요';
+  if (tab === 'refunded') return '환불된 내역이 없어요';
+  if (tab === 'failed') return '결제 실패 내역이 없어요';
+  return '결제 내역이 없어요';
+};
 
 const List = styled.div`
   display: flex;
   flex-direction: column;
   gap: var(--space-3);
-`
+  margin-bottom: var(--space-6);
+`;
+
+const MEMBER_NO = 1;
+const STATUS_TO_UI = {
+  READY: 'pending',
+  COMPLETED: 'completed',
+  FAILED: 'failed',
+  CANCELED: 'refunded',
+};
+
+const METHOD_INFO = {
+  KAKAOPAY: { label: '카카오페이', icon: '💛' },
+  TOSSPAY: { label: '토스페이', icon: '💙' },
+  NAVERPAY: { label: '네이버페이', icon: '💚' },
+};
+
+const TABS = [
+  { value: 'all', label: '전체' },
+  { value: 'completed', label: '결제 완료' },
+  { value: 'refunded', label: '환불' },
+  { value: 'failed', label: '결제 실패' },
+];
+
+const periodToCutoffMs = (period) => {
+  const now = Date.now();
+  const day = 24 * 60 * 60 * 1000;
+  if (period === 'month') return now - 30 * day;
+  if (period === '3months') return now - 90 * day;
+  if (period === '6months') return now - 180 * day;
+  if (period === 'year') return now - 365 * day;
+  return 0; // 'all'
+};
+
+const formatPaidAt = (iso) => {
+  if (!iso) return '';
+  const d = new Date(iso);
+  const pad = (n) => String(n).padStart(2, '0');
+  return `${d.getFullYear()}.${pad(d.getMonth() + 1)}.${pad(d.getDate())} ${pad(
+    d.getHours()
+  )}:${pad(d.getMinutes())}`;
+};
+
+const toPaymentForUI = (resDto) => {
+  const methodInfo = METHOD_INFO[resDto.method] ?? {
+    label: resDto.method,
+    icon: '💳',
+  };
+  return {
+    no: resDto.no,
+    id: `PAY-${String(resDto.no).padStart(6, '0')}`,
+    status: STATUS_TO_UI[resDto.status] ?? 'pending',
+    method: methodInfo.label,
+    methodIcon: methodInfo.icon,
+    emoji: '🏠',
+    space: `예약 #${resDto.rsvnNo}`,
+    paidAt: formatPaidAt(resDto.approvedAt ?? resDto.createdAt),
+    amount: resDto.finalAmt ?? 0,
+  };
+};
+
+export default function PaymentHistory() {
+  const navigate = useNavigate();
+
+  const [pays, setPays] = useState([]);
+  const [selectedTab, setSelectedTab] = useState('all');
+  const [selectedPeriod, setSelectedPeriod] = useState('3months');
+
+  useEffect(() => {
+    const load = async () => {
+      try {
+        const list = await findPaysByMemberNo(MEMBER_NO);
+        setPays(list);
+      } catch (err) {
+        console.error('결제 내역 조회 실패', err);
+      }
+    };
+    load();
+  }, []);
+
+  const tabsWithCount = useMemo(() => {
+    const counts = { all: pays.length, completed: 0, refunded: 0, failed: 0 };
+    pays.forEach((p) => {
+      const key = STATUS_TO_UI[p.status];
+      if (key && counts[key] !== undefined) counts[key] += 1;
+    });
+    return TABS.map((t) => ({ ...t, count: counts[t.value] }));
+  }, [pays]);
+
+  const filteredPayments = useMemo(() => {
+    const cutoff = periodToCutoffMs(selectedPeriod);
+    return pays
+      .filter((p) => {
+        const uiStatus = STATUS_TO_UI[p.status];
+        if (selectedTab !== 'all' && uiStatus !== selectedTab) return false;
+        if (cutoff > 0) {
+          const created = new Date(p.createdAt).getTime();
+          if (created < cutoff) return false;
+        }
+        return true;
+      })
+      .map(toPaymentForUI);
+  }, [pays, selectedTab, selectedPeriod]);
+
+  const handleItemClick = (payment) => {
+    navigate(`/user/payment/${payment.no}`);
+  };
+
+  const handleReceiptClick = (payment) => {
+    alert(
+      `영수증 — PAY ${payment.no}\n(현금영수증/세금계산서 기능 통합 단계 진입 예정)`
+    );
+  };
+
+  return (
+    <PageLayout
+      title="결제 내역"
+      description="모든 결제 내역을 확인하세요"
+      backTo="/user/mypage"
+      backLabel="마이페이지"
+    >
+      <PaymentFilterBar
+        tabs={tabsWithCount}
+        selectedTab={selectedTab}
+        onTabChange={setSelectedTab}
+        selectedPeriod={selectedPeriod}
+        onPeriodChange={setSelectedPeriod}
+      />
+
+      {filteredPayments.length === 0 ? (
+        <EmptyState
+          icon="🧾"
+          title={emptyTitleByTab(selectedTab)}
+          description="다른 기간을 선택하거나 새로운 예약을 진행해보세요"
+        />
+      ) : (
+        <List>
+          {filteredPayments.map((payment) => (
+            <PaymentListItem
+              key={payment.no}
+              payment={payment}
+              onClick={handleItemClick}
+              onReceiptClick={handleReceiptClick}
+            />
+          ))}
+        </List>
+      )}
+    </PageLayout>
+  );
+}
