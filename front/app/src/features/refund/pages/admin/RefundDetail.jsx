@@ -1,10 +1,3 @@
-// 관리자 환불 상세 페이지 — 도메인: Refund / 역할: ADMIN
-// 백엔드 API:
-//   ✅ GET /api/payment/refund/{no} (단건 조회)
-//   ✅ GET /api/payment/pay/{no}    (결제 정보 join — 결제수단/finalAmt/tid)
-//   ✅ PATCH /api/payment/refund/{no}/process (환불 승인·완료 처리)
-// 진입 경로: AdminRefundList → 카드 클릭 → /admin/refund/:no
-
 import { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import styled from 'styled-components';
@@ -18,7 +11,6 @@ import { RefundStatusBanner } from '../../components/admin/RefundStatusBanner';
 import { findPayByNo } from '../../../pay/api/payApi';
 import { findRefundByNo, processRefund } from '../../api/refundApi';
 
-// 백엔드 RefundReason → 사용자 노출 label
 const REASON_LABEL = {
   SCHEDULE: '일정이 변경됐어요',
   SPACE: '다른 공간으로 변경하려고요',
@@ -28,7 +20,6 @@ const REASON_LABEL = {
   ETC: '기타',
 };
 
-// 백엔드 RefundRate → 환불율 숫자
 const RATE_VALUE = {
   WEEK: 100,
   FOURTOSIX: 70,
@@ -53,13 +44,11 @@ const formatDate = (iso) => {
   )}:${pad(d.getMinutes())}`;
 };
 
-// 백엔드 status → 화면 표시용 분기
 const isRequested = (status) => status === 'REQUESTED' || status === 'APPROVED';
 const isCompleted = (status) => status === 'COMPLETED';
 const isHostRejected = (refund) =>
   refund?.refundReason === null && refund?.refundRate === 'FULL';
 
-// 처리 이력 (RefundProcessHistory 형식)
 const buildProcessHistory = (refund) => {
   const requestedAt = formatDate(refund.requestedAt ?? refund.createdAt);
   const events = [
@@ -120,7 +109,6 @@ export default function RefundDetail() {
   const [memo, setMemo] = useState('');
   const [processing, setProcessing] = useState(false);
 
-  // 환불 + 결제 정보 함께 로드 (결제수단·tid·finalAmt 영역 필요)
   useEffect(() => {
     if (!no) return;
     const load = async () => {

@@ -1,8 +1,3 @@
-// 환불 요청 페이지 — 도메인: Refund / 역할: USER
-// 백엔드 API: ✅ POST /api/payment/refund (시연 종결) + ✅ GET /api/payment/pay/{no}
-// 진입 경로: PaymentDetail 의 "환불 요청" 버튼 → /user/refund/request?payNo=N
-// 환불율 계산: 백엔드 정책표(7+/4~6/2~3/1/DDAY)가 SSOT — 프론트 useRefundCalculation 은 사용자 안내용 추정값
-
 import { useEffect, useMemo, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import styled from 'styled-components';
@@ -18,7 +13,6 @@ import { useRefundCalculation } from '../../hooks/useRefundCalculation';
 import { findPayByNo } from '../../../pay/api/payApi';
 import { createRefund } from '../../api/refundApi';
 
-// 프론트 CancelReasonSelector ID → 백엔드 RefundReason enum 매핑
 const REASON_ID_TO_ENUM = {
   schedule: 'SCHEDULE',
   other_space: 'SPACE',
@@ -28,7 +22,6 @@ const REASON_ID_TO_ENUM = {
   etc: 'ETC',
 };
 
-// 결제수단 → 환불 안내 카드 정보
 const REFUND_METHOD_BY_PAY = {
   KAKAOPAY: {
     name: '카카오페이',
@@ -70,7 +63,6 @@ export default function RefundRequest() {
   const [agreed, setAgreed] = useState(false);
   const [submitting, setSubmitting] = useState(false);
 
-  // 결제 정보 조회
   useEffect(() => {
     if (!payNo) return;
     const load = async () => {
@@ -86,12 +78,11 @@ export default function RefundRequest() {
     load();
   }, [payNo, navigate]);
 
-  // 체크인 날짜 — Rsvn API 미연동 (김보현 도메인), 시연용 placeholder
-  // 추후 findRsvnByNo(pay.rsvnNo) 호출해서 실제 체크인 날짜 가져와야 함
+  // 체크인 날짜 — 예약 도메인(김보현) 미연동이라 placeholder (오늘+5일 = 50% 환불 안내)
   const checkInDate = useMemo(() => {
     if (!pay) return null;
     const d = new Date();
-    d.setDate(d.getDate() + 5); // 임시: 오늘+5일 (5일 전 = 50% 환불 안내)
+    d.setDate(d.getDate() + 5);
     return d.toISOString();
   }, [pay]);
 
@@ -100,7 +91,6 @@ export default function RefundRequest() {
     checkInDate: checkInDate ?? new Date().toISOString(),
   });
 
-  // 제출 가능 조건
   const canSubmit =
     pay &&
     refund.canRefund &&
@@ -119,7 +109,6 @@ export default function RefundRequest() {
         refundReason: REASON_ID_TO_ENUM[reason],
       };
       const refundResDto = await createRefund(reqDto);
-      // 결과 객체 + 결제 정보 + 사용자가 적은 상세사유까지 state 로 전달
       navigate('/user/refund/complete', {
         state: { refund: refundResDto, pay, reasonDetail },
       });
@@ -131,7 +120,7 @@ export default function RefundRequest() {
     }
   };
 
-  if (!pay) return null; // 결제 로딩 영역
+  if (!pay) return null;
 
   const refundMethod = REFUND_METHOD_BY_PAY[pay.method] ?? REFUND_METHOD_BY_PAY.KAKAOPAY;
 
