@@ -1,16 +1,20 @@
 package com.sloway.app.search.repository;
 
 import com.querydsl.core.types.OrderSpecifier;
+import com.querydsl.core.types.Projections;
 import com.querydsl.core.types.dsl.BooleanExpression;
 import com.querydsl.jpa.impl.JPAQueryFactory;
-import com.sloway.app.place.entity.place.PlaceEntity;
 import com.sloway.app.place.entity.place.QImgPlaceEntity;
 import com.sloway.app.place.entity.place.QPlaceEntity;
 import com.sloway.app.search.dto.RegionType;
 import com.sloway.app.search.dto.SortType;
 import com.sloway.app.search.dto.request.SearchReqDto;
+import com.sloway.app.search.dto.response.SearchResDto;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
+import com.querydsl.jpa.JPAExpressions;
+import com.querydsl.core.types.dsl.Expressions;
+
 
 import java.util.List;
 
@@ -24,16 +28,30 @@ public class SearchCustomRepositoryImpl implements SearchCustomRepository{
 
 
     @Override
-    public List<PlaceEntity> search(SearchReqDto dto) {
+    public List<SearchResDto> search(SearchReqDto dto) {
         return queryFactory
-                .selectFrom(p)
-                .distinct()
-                .leftJoin(p.images , i).fetchJoin()
-                .where(
-                        typeEq(dto.getPlaceType()),
-                        regionContains(dto.getRegion())
-                )
-                .orderBy(sortOrder(dto.getSort()))
+                .select(Projections.constructor(SearchResDto.class,
+                        p.no,
+                        p.title,
+                        p.type,
+                        p.address,
+                        JPAExpressions
+                                .select(i.currentUrl)
+                                .from(i)
+                                .where(i.placeEntity.eq(p), i.sort.eq((0)))
+                                .limit(1),
+                        // avgScore — 나중에 교체
+                        Expressions.nullExpression(Double.class),
+                        // basePrice — 나중에 교체
+                        Expressions.nullExpression(Integer.class),
+                        // remainCount — 날짜 선택 시 구현 예정
+                        Expressions.nullExpression(Integer.class),
+                        // available
+                        Expressions.nullExpression(Boolean.class)
+                ))
+                .from(p)
+                .where(typeEq(dto.getPlaceType()), regionContains(dto.getRegion()))
+                .orderBy(sortOrder((dto.getSort())))
                 .fetch()
                 ;
     }
@@ -53,7 +71,7 @@ public class SearchCustomRepositoryImpl implements SearchCustomRepository{
         return switch (sort){
             case POPULAR -> p.viewCnt.desc();
             case PRICE_ASC -> p.viewCnt.desc();
-            case PRICE_DESC -> p.viewCnt.asc();
+            case PRICE_DESC -> p.viewCnt.desc();
             case SCORE -> p.viewCnt.desc();
         };
     }
