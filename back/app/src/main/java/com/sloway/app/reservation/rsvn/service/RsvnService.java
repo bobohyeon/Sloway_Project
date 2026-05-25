@@ -23,6 +23,7 @@ import com.sloway.app.reservation.RsvnErrorCode;
 import com.sloway.app.reservation.rsvn.dto.request.RsvnReqDto;
 import com.sloway.app.reservation.rsvn.dto.response.RsvnResDto;
 import com.sloway.app.reservation.rsvn.entity.RsvnEntity;
+import com.sloway.app.reservation.rsvn.entity.RsvnStatus;
 import com.sloway.app.reservation.rsvn.repository.RsvnRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -66,7 +67,7 @@ public class RsvnService {
                     new CustomException(RsvnErrorCode.PLACE_NOT_FOUND));
         }
 
-        // rsvnRepository.save() 반환값을 RsvnEntity 변수로 받기
+
         RsvnEntity savedRsvn = rsvnRepository.save(
                 RsvnEntity.builder()
                         .memberNo(member)
@@ -123,6 +124,10 @@ public class RsvnService {
         );
         RsvnEntity entity = rsvnRepository.findByNoAndMemberNo(rsvnNo, member)
                 .orElseThrow(() -> new CustomException(RsvnErrorCode.RESERVATION_NOT_FOUND));
+
+        if((entity.getStatus().equals(RsvnStatus.C)) || (entity.getStatus().equals(RsvnStatus.R))){
+            throw new CustomException(RsvnErrorCode.ALREADY_CANCELLED);
+        }
         entity.cancel();
 
         List<PayEntity> pay = payRepository.findByRsvn(rsvnNo);
