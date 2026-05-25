@@ -5,6 +5,7 @@ import com.sloway.app.place.entity.place.PlaceEntity;
 import com.sloway.app.place.repository.place.PlaceRepository;
 import com.sloway.app.reservation.RsvnErrorCode;
 import com.sloway.app.reservation.rsvn.entity.RsvnEntity;
+import com.sloway.app.reservation.rsvn.entity.RsvnStatus;
 import com.sloway.app.reservation.rsvn.repository.RsvnRepository;
 import com.sloway.app.review.ReviewErrorCode;
 import com.sloway.app.review.review.dto.request.ReviewCreateReqDto;
@@ -35,6 +36,14 @@ public class ReviewService {
     public void save(Long memberNo, ReviewCreateReqDto reqDto){
         RsvnEntity rsvn = rsvnRepository.findById(reqDto.getRsvnNo())
                 .orElseThrow(()-> new CustomException(RsvnErrorCode.RESERVATION_NOT_FOUND));
+
+        if(!rsvn.getMemberNo().getNo().equals(memberNo)){
+            throw new CustomException(RsvnErrorCode.UNAUTHORIZED_ACCESS);
+        }
+        if(!rsvn.getStatus().equals(RsvnStatus.E)){
+            throw new CustomException(RsvnErrorCode.RESERVATION_NOT_COMPLETED);
+        }
+
         if(LocalDateTime.now().isAfter(rsvn.getCheckOut().plusDays(14))){
             throw new CustomException(ReviewErrorCode.REVIEW_PERIOD_EXPIRED);
         }
@@ -70,10 +79,12 @@ public class ReviewService {
 
     //리뷰 수정
     @Transactional
-    public void editReview(Long no, ReviewEditReqDto editReqDto){
+    public void editReview(Long memberNo, Long no, ReviewEditReqDto editReqDto){
         ReviewEntity entity = reviewRepository.findById(no)
                 .orElseThrow(()->new CustomException(ReviewErrorCode.REVIEW_NOT_FOUND));
-
+        if(!entity.getRsvnNo().getMemberNo().getNo().equals(memberNo)){
+            throw new CustomException(RsvnErrorCode.UNAUTHORIZED_ACCESS);
+        }
         entity.editReview(
                 editReqDto.getContent(),
                 editReqDto.getScoreTotal(),
@@ -85,9 +96,12 @@ public class ReviewService {
 
     //리뷰 삭제
     @Transactional
-    public void deleteReview(Long no){
+    public void deleteReview(Long memberNo, Long no){
         ReviewEntity entity = reviewRepository.findById(no)
                 .orElseThrow(()->new CustomException(ReviewErrorCode.REVIEW_NOT_FOUND));
+        if(!entity.getRsvnNo().getMemberNo().getNo().equals(memberNo)){
+            throw new CustomException(RsvnErrorCode.UNAUTHORIZED_ACCESS);
+        }
 
         entity.delete();
     }
