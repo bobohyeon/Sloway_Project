@@ -1,46 +1,41 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import styled from 'styled-components';
 import { useNavigate, useParams } from 'react-router-dom';
 import PageLayout from '../../../../app/layouts/page/PageLayout';
-import { Button, Checkbox, Modal, Card } from '../../../pay_shared/components';
+import { Button, Modal, Card } from '../../../pay_shared/components';
+import api from '../../../../app/api/axiosApi';
 
-// ─── 수정 모드 Mock 데이터 (백엔드 연동 시 useQuery(id)로 대체) ──────────────
-const MOCK_NOTICE = {
-  title: '[중요] 서비스 이용약관 변경 안내',
-  category: '서비스',
-  content:
-    '서비스 이용약관이 변경될 예정입니다. 자세한 내용은 본문을 확인해 주세요.',
-  exposureStart: '2026-05-01',
-  exposureEnd: '2026-12-31',
-  hasExpireDate: true,
-  status: 'active',
-};
+const CATEGORY_OPTIONS = [
+  { label: '서비스', value: 'SERVICE' },
+  { label: '이벤트', value: 'EVENT' },
+  { label: '점검', value: 'INSPECTION' },
+  { label: '기타', value: 'OTHER' },
+];
 
-const CATEGORY_OPTIONS = ['서비스', '이벤트', '점검', '기타'];
+const EMPTY_FORM = { title: '', category: 'SERVICE', content: '', status: 'ACTIVE' };
 
-// isEdit: true면 수정, false면 등록 모드
 export default function NoticeFormPage({ isEdit = false }) {
   const navigate = useNavigate();
-  const { id } = useParams(); // 수정 시 notice ID
+  const { id } = useParams();
   const pageTitle = isEdit ? '공지사항 수정' : '공지사항 등록';
 
-  // ─── 폼 상태 (백엔드 연동 시 useForm 또는 react-hook-form 도입 권장) ────
-  const initData = isEdit
-    ? MOCK_NOTICE
-    : {
-        title: '',
-        category: '서비스',
-        content: '',
-        exposureStart: '',
-        exposureEnd: '',
-        hasExpireDate: false,
-        status: 'active',
-      };
-
-  const [form, setForm] = useState(initData);
+  const [form, setForm] = useState(EMPTY_FORM);
   const [errors, setErrors] = useState({});
   const [cancelModal, setCancelModal] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
+
+  useEffect(() => {
+    if (isEdit && id) {
+      api.get(`/notice/${id}`).then(({ data }) => {
+        setForm({
+          title: data.title,
+          category: data.category,
+          content: data.content,
+          status: data.status,
+        });
+      });
+    }
+  }, [isEdit, id]);
 
   // ─── 필드 변경 핸들러 ─────────────────────────────────────────────────────
   const handleChange = useCallback(
@@ -59,15 +54,6 @@ export default function NoticeFormPage({ isEdit = false }) {
     if (form.title.trim().length > 100)
       errs.title = '제목은 100자 이내로 입력해 주세요.';
     if (!form.content.trim()) errs.content = '내용을 입력해 주세요.';
-    if (!form.exposureStart)
-      errs.exposureStart = '노출 시작일을 선택해 주세요.';
-    if (
-      form.hasExpireDate &&
-      form.exposureEnd &&
-      form.exposureEnd < form.exposureStart
-    ) {
-      errs.exposureEnd = '노출 종료일은 시작일 이후여야 합니다.';
-    }
     return errs;
   };
 
@@ -79,10 +65,12 @@ export default function NoticeFormPage({ isEdit = false }) {
     }
     setIsSaving(true);
     try {
-      // 백엔드 연동 시:
-      // isEdit ? PUT /api/admin/notices/:id : POST /api/admin/notices
-      // body: { title, category, content, exposureStart, exposureEnd, status }
-      await new Promise((r) => setTimeout(r, 800)); // mock delay
+      const payload = { title: form.title, content: form.content, category: form.category, status: form.status };
+      if (isEdit) {
+        await api.put(`/notice/${id}`, payload);
+      } else {
+        await api.post('/notice', payload);
+      }
       navigate('/admin/notice');
     } finally {
       setIsSaving(false);
@@ -164,8 +152,8 @@ export default function NoticeFormPage({ isEdit = false }) {
                 aria-label="카테고리 선택"
               >
                 {CATEGORY_OPTIONS.map((c) => (
-                  <option key={c} value={c}>
-                    {c}
+                  <option key={c.value} value={c.value}>
+                    {c.label}
                   </option>
                 ))}
               </Select>
@@ -179,9 +167,9 @@ export default function NoticeFormPage({ isEdit = false }) {
                   <Radio
                     type="radio"
                     name="status"
-                    value="active"
-                    checked={form.status === 'active'}
-                    onChange={() => handleChange('status', 'active')}
+                    value="ACTIVE"
+                    checked={form.status === 'ACTIVE'}
+                    onChange={() => handleChange('status', 'ACTIVE')}
                   />
                   <span>게시</span>
                 </RadioLabel>
@@ -189,57 +177,13 @@ export default function NoticeFormPage({ isEdit = false }) {
                   <Radio
                     type="radio"
                     name="status"
-                    value="inactive"
-                    checked={form.status === 'inactive'}
-                    onChange={() => handleChange('status', 'inactive')}
+                    value="INACTIVE"
+                    checked={form.status === 'INACTIVE'}
+                    onChange={() => handleChange('status', 'INACTIVE')}
                   />
                   <span>미게시</span>
                 </RadioLabel>
               </RadioGroup>
-            </Field>
-          </FormCard>
-
-          {/* 노출 기간 설정 */}
-          <FormCard padded elevated>
-            <SectionTitle>노출 기간</SectionTitle>
-
-            <Field>
-              <Label required>노출 시작일</Label>
-              <Input
-                type="date"
-                value={form.exposureStart}
-                onChange={(e) => handleChange('exposureStart', e.target.value)}
-                $error={!!errors.exposureStart}
-                aria-required="true"
-              />
-              {errors.exposureStart && (
-                <ErrorMsg>{errors.exposureStart}</ErrorMsg>
-              )}
-            </Field>
-
-            <Field>
-              <Label>
-                노출 종료일
-                <OptionalTag>선택</OptionalTag>
-              </Label>
-              <Checkbox
-                label="종료일 설정"
-                checked={form.hasExpireDate}
-                onChange={(e) =>
-                  handleChange('hasExpireDate', e.target.checked)
-                }
-              />
-              {form.hasExpireDate && (
-                <Input
-                  type="date"
-                  value={form.exposureEnd}
-                  onChange={(e) => handleChange('exposureEnd', e.target.value)}
-                  min={form.exposureStart}
-                  $error={!!errors.exposureEnd}
-                  style={{ marginTop: '8px' }}
-                />
-              )}
-              {errors.exposureEnd && <ErrorMsg>{errors.exposureEnd}</ErrorMsg>}
             </Field>
           </FormCard>
 
@@ -353,15 +297,6 @@ const Label = styled.label`
       color: #b85a4e;
       font-size: 0.75rem;
     }`}
-`;
-
-const OptionalTag = styled.span`
-  font-size: 0.72rem;
-  padding: 1px 6px;
-  background: var(--gray-100);
-  color: var(--gray-500);
-  border-radius: var(--radius-full);
-  font-weight: 500;
 `;
 
 const baseInputStyle = `

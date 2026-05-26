@@ -1,5 +1,7 @@
 package com.sloway.app.notice.repository;
 
+import com.querydsl.core.types.Order;
+import com.querydsl.core.types.OrderSpecifier;
 import com.querydsl.core.types.dsl.BooleanExpression;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import com.sloway.app.notice.entity.NoticeCategory;
@@ -10,6 +12,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.util.StringUtils;
 
 import java.util.List;
@@ -24,10 +27,12 @@ public class NoticeRepositoryImpl implements NoticeRepositoryCustom {
     public Page<NoticeEntity> findAllByCondition(
             NoticeCategory category, String keyword, NoticeStatus status, Pageable pageable) {
 
+        OrderSpecifier<?>[] orders = buildOrderSpecifiers(pageable.getSort());
+
         List<NoticeEntity> content = queryFactory
                 .selectFrom(q)
                 .where(categoryEq(category), keywordContains(keyword), statusEq(status))
-                .orderBy(q.createdAt.desc())
+                .orderBy(orders)
                 .offset(pageable.getOffset())
                 .limit(pageable.getPageSize())
                 .fetch();
@@ -39,6 +44,22 @@ public class NoticeRepositoryImpl implements NoticeRepositoryCustom {
                 .fetchOne();
 
         return new PageImpl<>(content, pageable, total == null ? 0 : total);
+    }
+
+    private OrderSpecifier<?>[] buildOrderSpecifiers(Sort sort) {
+        if (sort.isUnsorted()) {
+            return new OrderSpecifier[]{q.createdAt.desc()};
+        }
+        return sort.stream()
+                .map(o -> {
+                    Order dir = o.isAscending() ? Order.ASC : Order.DESC;
+                    return switch (o.getProperty()) {
+                        case "viewCount" -> new OrderSpecifier<>(dir, q.viewCount);
+                        case "title"     -> new OrderSpecifier<>(dir, q.title);
+                        default          -> new OrderSpecifier<>(dir, q.createdAt);
+                    };
+                })
+                .toArray(OrderSpecifier[]::new);
     }
 
     private BooleanExpression categoryEq(NoticeCategory category) {
