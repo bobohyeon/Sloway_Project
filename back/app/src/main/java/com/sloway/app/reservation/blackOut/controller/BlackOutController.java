@@ -1,11 +1,13 @@
 package com.sloway.app.reservation.blackOut.controller;
 
+import com.sloway.app.auth.user.CustomUserDetails;
 import com.sloway.app.reservation.blackOut.dto.request.BlackOutReqDto;
 import com.sloway.app.reservation.blackOut.dto.response.BlackOutResDto;
 import com.sloway.app.reservation.blackOut.service.BlackOutService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -31,14 +33,21 @@ public class BlackOutController {
     }
 
     @PutMapping("/{no}")
-    public ResponseEntity<Void> editBlackOut(@PathVariable Long no, @RequestBody BlackOutReqDto dto){
-        blackOutService.editBlackOut(no, dto);
+    public ResponseEntity<Void> editBlackOut(
+            @AuthenticationPrincipal CustomUserDetails userDetails,
+            @PathVariable Long no,
+            @RequestBody BlackOutReqDto dto
+    ){
+        blackOutService.editBlackOut(userDetails.getMemberNo(), no, dto);
         return ResponseEntity.status(HttpStatus.NO_CONTENT).build();
     }
 
     @DeleteMapping("/{no}")
-    public ResponseEntity<Void> deleteBlackOut(@PathVariable Long no){
-        blackOutService.deleteBlackOut(no);
+    public ResponseEntity<Void> deleteBlackOut(
+            @AuthenticationPrincipal CustomUserDetails userDetails,
+            @PathVariable Long no
+    ){
+        blackOutService.deleteBlackOut(userDetails.getMemberNo(), no);
         return ResponseEntity.status(HttpStatus.NO_CONTENT).build();
     }
 }

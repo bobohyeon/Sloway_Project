@@ -1,5 +1,6 @@
 package com.sloway.app.recent.viewed.service;
 
+import com.sloway.app.common.exception.CustomException;
 import com.sloway.app.member.entity.MemberEntity;
 import com.sloway.app.member.repository.MemberRepository;
 import com.sloway.app.place.entity.place.PlaceEntity;
@@ -7,7 +8,7 @@ import com.sloway.app.place.repository.place.PlaceRepository;
 import com.sloway.app.recent.viewed.dto.response.RecentViewedResDto;
 import com.sloway.app.recent.viewed.entity.RecentViewedEntity;
 import com.sloway.app.recent.viewed.repository.RecentViewedRepository;
-import jakarta.persistence.EntityNotFoundException;
+import com.sloway.app.reservation.RsvnErrorCode;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -28,9 +29,9 @@ public class RecentViewedService {
     @Transactional
     public void save(Long memberNo, Long placeNo){
         MemberEntity member = memberRepository.findById(memberNo)
-                        .orElseThrow(()-> new EntityNotFoundException("회원을 찾을 수 없습니다."));
+                        .orElseThrow(()-> new CustomException(RsvnErrorCode.MEMBER_NOT_FOUND));
         PlaceEntity place = placeRepository.findByNo(placeNo)
-                        .orElseThrow(()-> new EntityNotFoundException("해당 공간을 찾을 수 없습니다."));
+                        .orElseThrow(()-> new CustomException(RsvnErrorCode.PLACE_NOT_FOUND));
 
         //같은 공간 있으면 삭제
         boolean isTrue = recentViewedRepository.existsByMemberNoAndPlaceNo(member ,place);
@@ -57,7 +58,7 @@ public class RecentViewedService {
     //최근 본 공간 목록 조회
     public List<RecentViewedResDto> findAll(Long memberNo){
         MemberEntity member = memberRepository.findById(memberNo)
-                .orElseThrow(()-> new EntityNotFoundException("회원을 찾을 수 없습니다."));
+                .orElseThrow(()-> new CustomException(RsvnErrorCode.MEMBER_NOT_FOUND));
         return recentViewedRepository.findByMemberNoOrderByViewAtDesc(member)
                 .stream()
                 .map(RecentViewedResDto::from)
@@ -68,7 +69,7 @@ public class RecentViewedService {
     @Transactional
     public void deleteOne(Long no, Long memberNo){
         MemberEntity member = memberRepository.findById(memberNo)
-                .orElseThrow(()-> new EntityNotFoundException("회원을 찾을 수 없습니다."));
+                .orElseThrow(()-> new CustomException(RsvnErrorCode.MEMBER_NOT_FOUND));
 
         recentViewedRepository.deleteByNoAndMemberNo(no, member);
     }
@@ -77,7 +78,7 @@ public class RecentViewedService {
     @Transactional
     public void deleteAll(Long memberNo){
         MemberEntity member = memberRepository.findById(memberNo)
-                .orElseThrow(()-> new EntityNotFoundException("회원을 찾을 수 없습니다."));
+                .orElseThrow(()-> new CustomException(RsvnErrorCode.MEMBER_NOT_FOUND));
 
         recentViewedRepository.deleteByMemberNo(member);
     }

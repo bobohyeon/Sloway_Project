@@ -8,4 +8,5 @@ public interface HostPlaceRepository extends JpaRepository<HostPlaceEntity, Long
     boolean existsByHostEntityNoAndOfficeEntityNo(Long hostNo, Long officeNo);
     boolean  existsByHostEntityNoAndStationEntityNo(Long hostNo, Long stationNo);
     boolean  existsByHostEntityNoAndWorkStayEntityNo(Long hostNo, Long workStayNo);
+    boolean  existsByHostEntityNoAndPlaceEntityNo(Long hostNo, Long placeNo);
 }

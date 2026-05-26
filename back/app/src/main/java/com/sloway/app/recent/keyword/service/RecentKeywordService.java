@@ -1,11 +1,12 @@
 package com.sloway.app.recent.keyword.service;
 
+import com.sloway.app.common.exception.CustomException;
 import com.sloway.app.member.entity.MemberEntity;
 import com.sloway.app.member.repository.MemberRepository;
 import com.sloway.app.recent.keyword.dto.response.RecentKeywordResDto;
 import com.sloway.app.recent.keyword.entity.RecentKeywordEntity;
 import com.sloway.app.recent.keyword.repository.RecentKeywordRepository;
-import jakarta.persistence.EntityNotFoundException;
+import com.sloway.app.reservation.RsvnErrorCode;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -26,7 +27,7 @@ public class RecentKeywordService {
     @Transactional
     public void save(Long memberNo, String keyword) {
         MemberEntity member = memberRepository.findById(memberNo).orElseThrow(() ->
-                new EntityNotFoundException("회원을 찾을 수 없습니다")
+                new CustomException(RsvnErrorCode.MEMBER_NOT_FOUND)
         );
 
         // 같은키워드 있으면 확인 후 삭제
@@ -53,7 +54,7 @@ public class RecentKeywordService {
     //최근 검색어 목록 조회
     public List<RecentKeywordResDto> findAll(Long memberNo){
         MemberEntity member = memberRepository.findById(memberNo).orElseThrow(()->
-                new EntityNotFoundException("회원을 찾을 수 없습니다")
+                new CustomException(RsvnErrorCode.MEMBER_NOT_FOUND)
         );
 
         return recentKeywordRepository.findByMemberNoOrderBySearchedAtDesc(member)
@@ -66,7 +67,7 @@ public class RecentKeywordService {
     @Transactional
     public void deleteOne(Long memberNo, Long keywordNo){
         MemberEntity member = memberRepository.findById(memberNo).orElseThrow(()->
-                new EntityNotFoundException("회원을 찾을 수 없습니다")
+                new CustomException(RsvnErrorCode.MEMBER_NOT_FOUND)
         );
 
         recentKeywordRepository.deleteByNoAndMemberNo(keywordNo, member);
@@ -76,7 +77,7 @@ public class RecentKeywordService {
     @Transactional
     public void deleteAll(Long memberNo){
         MemberEntity member = memberRepository.findById(memberNo).orElseThrow(()->
-                new EntityNotFoundException("회원을 찾을 수 없습니다")
+                new CustomException(RsvnErrorCode.MEMBER_NOT_FOUND)
         );
 
         recentKeywordRepository.deleteByMemberNo(member);
