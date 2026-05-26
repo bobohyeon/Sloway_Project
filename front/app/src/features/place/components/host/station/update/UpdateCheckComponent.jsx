@@ -168,8 +168,8 @@ function UpdateCheckComponent({ formData, prev, onSubmit }) {
         <SummaryItem>
           <div className="label">편의시설</div>
           <div className="value">
-            {formData.facilities && formData.facilities.length > 0
-              ? formData.facilities.join(', ')
+            {formData.facilityNames && formData.facilityNames.length > 0
+              ? formData.facilityNames.join(', ')
               : '(선택한 편의시설 없음)'}
           </div>
         </SummaryItem>

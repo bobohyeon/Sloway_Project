@@ -1,7 +1,7 @@
 import React from 'react';
 import styled from 'styled-components';
 import { FaHotel } from 'react-icons/fa';
-import useFetchMasterPlaces from '../../../../hooks/host/useFetchMasterPlace';
+import useFetchMasterPlaces from './../../../../hooks/host/useFetchMasterPlace';
 
 const FormCard = styled.div`
   background: white;

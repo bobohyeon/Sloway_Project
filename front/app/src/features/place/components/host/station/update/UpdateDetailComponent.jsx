@@ -108,18 +108,18 @@ function UpdateDetailComponent({
   next,
 }) {
   const facilityList = [
-    '주방',
-    '세탁기',
-    '건조기',
-    'WiFi',
-    '주차',
-    '어메니티',
-    'TV',
-    '에어컨',
-    '난방',
-    '금연',
-    '반려동물',
-    '바베큐',
+    { no: 1, name: '주방' },
+    { no: 2, name: '세탁기' },
+    { no: 3, name: '건조기' },
+    { no: 4, name: 'WiFi' },
+    { no: 5, name: '주차' },
+    { no: 6, name: '어메니티' },
+    { no: 7, name: 'TV' },
+    { no: 8, name: '에어컨' },
+    { no: 9, name: '난방' },
+    { no: 10, name: '금연' },
+    { no: 11, name: '반려동물' },
+    { no: 12, name: '바베큐' },
   ];
 
   return (
@@ -185,13 +185,16 @@ function UpdateDetailComponent({
         <label>편의시설 (제공 항목을 모두 선택해주세요)</label>
         <CheckboxGrid>
           {facilityList.map((item) => (
-            <CheckItem key={item}>
+            // ✨ [수정 포인트 2] 고유 key값을 고유 ID인 item.no로 변경
+            <CheckItem key={item.no}>
               <input
                 type="checkbox"
-                checked={formData.facilities.includes(item)}
-                onChange={() => handleCheckChange(item)}
+                // ✨ [수정 포인트 3] formData.facilities 배열(숫자 리스트)에 포함되어 있는지 번호로 비교
+                checked={formData.facilities.includes(item.no)}
+                // ✨ [수정 포인트 4] 핸들러에 텍스트가 아닌 고유 번호(no)를 전달
+                onChange={() => handleCheckChange(item.no, item.name)}
               />
-              {item}
+              {item.name}
             </CheckItem>
           ))}
         </CheckboxGrid>

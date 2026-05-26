@@ -1,59 +1,33 @@
-import React, { useState } from 'react';
+import React from 'react';
+import { useParams } from 'react-router-dom'; // URL 등에서 stationNo를 추출한다고 가정
+
 import UpdateStationLayout from '../../../../layouts/host/station/update/UpdateStationLayout';
 import UpdateStateComponent from '../../../../components/host/station/update/UpdateStateComponent';
 import UpdateCheckComponent from '../../../../components/host/station/update/UpdateCheckComponent';
 import UpdateFeeComponent from '../../../../components/host/station/update/UpdateFeeComponent';
 import UpdateDetailComponent from '../../../../components/host/station/update/UpdateDetailComponent';
 import UpdateMainComponent from '../../../../components/host/station/update/UpdateMainComponent';
+import { useUpdateStation } from '../../../../hooks/host/station/useUpdateStation';
 
 function UpdateStationPage() {
-  const [step, setStep] = useState(1);
+  // 예시: 라우터 파라미터에서 stationNo를 가져오는 형태
+  const { id } = useParams();
 
-  const [formData, setFormData] = useState({
-    // 1단계: 마스터 공간 선택 및 기본 정보
-    placeNo: '',
-    placeTitle: '',
-    title: '',
-    content: '',
+  // 커스텀 훅 호출
+  const {
+    step,
+    setStep,
+    formData,
+    setFormData,
+    isLoading,
+    handleChange,
+    handleCheckChange,
+    handleSubmit,
+  } = useUpdateStation(id);
 
-    // 2단계: 공간 상세
-    maxPeople: '',
-    basePeople: '',
-    rooms: '',
-    checkIn: '',
-    checkOut: '',
-    facilities: [],
-
-    // 3단계: 요금
-    monPrice: '',
-    tuePrice: '',
-    wedPrice: '',
-    thuPrice: '',
-    friPrice: '',
-    satPrice: '',
-    sunPrice: '',
-    holidayPrice: '',
-    exceptionPeriods: [],
-  });
-
-  const handleChange = (e) => {
-    const { name, value } = e.target;
-    setFormData((prev) => ({ ...prev, [name]: value }));
-  };
-
-  const handleCheckChange = (facility) => {
-    setFormData((prev) => ({
-      ...prev,
-      facilities: prev.facilities.includes(facility)
-        ? prev.facilities.filter((item) => item !== facility)
-        : [...prev.facilities, facility],
-    }));
-  };
-
-  const handleSubmit = () => {
-    console.log('최종 제출 데이터:', formData);
-    alert('검수 신청이 완료되었습니다!');
-  };
+  if (isLoading) {
+    return <div>숙소 상세 정보를 불러오는 중입니다...</div>;
+  }
 
   // 현재 단계에 맞는 컴포넌트를 반환하는 함수
   const renderStepComponent = () => {
