@@ -1,59 +1,31 @@
-import React, { useState } from 'react';
+import React from 'react';
+import { useParams } from 'react-router-dom'; // URL에서 officeNo를 받기 위해 사용
 import UpdateCoworkingFeeComponent from '../../../../components/host/coworking/update/UpdateCoworkingFeeComponent';
 import UpdateCoworkingCheckComponent from '../../../../components/host/coworking/update/UpdateCoworkingCheckComponent';
 import UpdateStateComponent from '../../../../components/host/station/update/UpdateStateComponent';
 import UpdateCoworkingLayout from '../../../../layouts/host/coworking/update/UpdateCoworkingLayout';
 import UpdateMainComponent from '../../../../components/host/station/update/UpdateMainComponent';
 import UpdateCoworkingDetailComponent from './../../../../components/host/coworking/update/UpdateCoworkingDetailComponent';
+import useUpdateCoworking from '../../../../hooks/host/coworking/useUpdateCoworking';
 
 function UpdateCoworkingPage() {
-  const [step, setStep] = useState(1);
+  const { id } = useParams(); // URL 파라미터에서 ID 획득
+  const {
+    step,
+    setStep,
+    formData,
+    setFormData,
+    handleChange,
+    handlePriceChange,
+    handleCheckChange,
+    handleSubmit,
+  } = useUpdateCoworking(id);
 
-  const [formData, setFormData] = useState({
-    title: '',
-    address: '',
-    detailAddress: '',
-    content: '',
-    latitude: null,
-    longitude: null,
-    maxPeople: '',
-    basePeople: '',
-    rooms: '',
-    checkIn: '',
-    checkOut: '',
-    facilities: [],
-    monPrice: '',
-    tuePrice: '',
-    wedPrice: '',
-    thuPrice: '',
-    friPrice: '',
-    satPrice: '',
-    sunPrice: '',
-    holidayPrice: '',
-    exceptionPeriods: [],
-    images: [],
-  });
+  // 데이터가 아직 로드되지 않았을 때의 처리 (초기 로딩 방지)
+  if (!formData.title && !formData.placeNo) {
+    return <div>데이터를 불러오는 중입니다...</div>;
+  }
 
-  const handleChange = (e) => {
-    const { name, value } = e.target;
-    setFormData((prev) => ({ ...prev, [name]: value }));
-  };
-
-  const handleCheckChange = (facility) => {
-    setFormData((prev) => ({
-      ...prev,
-      facilities: prev.facilities.includes(facility)
-        ? prev.facilities.filter((item) => item !== facility)
-        : [...prev.facilities, facility],
-    }));
-  };
-
-  const handleSubmit = () => {
-    console.log('최종 제출 데이터:', formData);
-    alert('검수 신청이 완료되었습니다!');
-  };
-
-  // 현재 단계에 맞는 컴포넌트를 반환하는 함수
   const renderStepComponent = () => {
     switch (step) {
       case 1:
@@ -81,7 +53,7 @@ function UpdateCoworkingPage() {
           <UpdateCoworkingFeeComponent
             formData={formData}
             setFormData={setFormData}
-            handleChange={handleChange}
+            handlePriceChange={handlePriceChange} // 훅에서 넘겨준 핸들러 사용
             prev={() => setStep(2)}
             next={() => setStep(4)}
           />
@@ -91,7 +63,7 @@ function UpdateCoworkingPage() {
           <UpdateCoworkingCheckComponent
             formData={formData}
             prev={() => setStep(3)}
-            onSubmit={handleSubmit}
+            onSubmit={handleSubmit} // 훅의 handleSubmit 실행
           />
         );
       default:

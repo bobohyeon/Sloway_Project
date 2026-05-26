@@ -34,7 +34,6 @@ export default function useSpaceDetail() {
         fetchPlaceDetailList(id),
       ]);
 
-      // 백엔드 응답 구조(data)에 맞춰 데이터를 상태에 바인딩합니다.
       if (briefRes && briefRes.data) {
         setPlaceInfo({
           name: briefRes.data.title || briefRes.data.name, // 백엔드 DTO 필드명에 맞게 선택

@@ -22,61 +22,38 @@ export default function useInsertCoworking() {
   const [step, setStep] = useState(1);
 
   const [formData, setFormData] = useState({
-    // 1단계: 마스터 공간 선택 및 기본 정보
     placeNo: '',
     title: '',
     content: '',
-
-    // 2단계: 상세 정보
     basePeople: '',
     facilities: [],
-
-    // 3단계: 시간별 요금 & 예외 기간 요금
-    // 기본 요금 구조: { MON_00: 0, SUN_23: 0 ... }
-    hourlyPrices: {},
-
-    // 공휴일 요금 구조: { HOL_00: 0, HOL_01: 0 ... }
-    holidayPrices: {},
-
-    // 예외 기간 목록 구조:
-    // [{ startDate: 'YYYY-MM-DD', endDate: 'YYYY-MM-DD', dayOfWeek: 'mon', startTime: '00', price: 10000 }]
+    hourlyPrices: {}, // { MON_00: 0, ... }
+    holidayPrices: {}, // { HOL_00: 0, ... }
     exceptionPeriods: [],
-
-    // 4단계: 이미지
     images: [],
   });
 
-  // 일반 입력 필드 핸들러
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
-  // 평일/주말 시간별 요금 인풋 핸들러 (name="MON_00", name="SUN_23")
   const handlePriceChange = (e) => {
     const { name, value } = e.target;
     setFormData((prev) => ({
       ...prev,
-      hourlyPrices: {
-        ...prev.hourlyPrices,
-        [name]: Number(value) || 0,
-      },
+      hourlyPrices: { ...prev.hourlyPrices, [name]: Number(value) || 0 },
     }));
   };
 
-  // 공휴일 전용 시간별 요금 인풋 핸들러 (name="HOL_00", name="HOL_01")
   const handleHolidayPriceChange = (e) => {
     const { name, value } = e.target;
     setFormData((prev) => ({
       ...prev,
-      holidayPrices: {
-        ...prev.holidayPrices,
-        [name]: Number(value) || 0,
-      },
+      holidayPrices: { ...prev.holidayPrices, [name]: Number(value) || 0 },
     }));
   };
 
-  // 편의시설 체크박스 핸들러
   const handleCheckChange = (facilityNo) => {
     setFormData((prev) => {
       const isExist = prev.facilities.some(
@@ -91,92 +68,87 @@ export default function useInsertCoworking() {
     });
   };
 
-  // 날짜 가공 헬퍼: "YYYY-MM-DD" -> "YYYY-MM-DDT00:00:00"
   const convertDateToLocalDateTime = (dateStr, isEndDate = false) => {
     if (!dateStr) return null;
-    if (dateStr.includes('T')) return dateStr;
     return isEndDate ? `${dateStr}T23:59:59` : `${dateStr}T00:00:00`;
   };
 
-  // 시간 가공 헬퍼: "00" -> "2000-01-01T00:00:00"
   const convertTimeToLocalDateTime = (hourStr) => {
     const formattedHour = String(hourStr).padStart(2, '0');
     return `2000-01-01T${formattedHour}:00:00`;
   };
 
-  // 🛠️ 요일 문자열 포맷터: "MON" -> "mon", "HOL" -> "hol"로 바로 변환
   const formatDayOfWeek = (dayPrefix) => {
     if (!dayPrefix) return 'mon';
-    return dayPrefix.toLowerCase(); // 소문자 3자리 규격화
+    return dayPrefix.toLowerCase();
   };
 
-  // --- 핵심 데이터 가공 및 서버 제출 핸들러 ---
   const handleSubmit = async () => {
     try {
-      const currentImages = Array.isArray(formData.images)
-        ? formData.images
-        : [];
-      const {
-        images,
-        facilities,
-        hourlyPrices,
-        holidayPrices,
-        exceptionPeriods,
-        ...dto
-      } = formData;
+      // 1. 평상시 요금 데이터 변환 (officePeriods -> allOfficePeriods)
+      // formData.officePeriods 구조: { '1': { '00:00': 10000, ... }, '2': ... }
+      const finalOfficePeriods = [];
+      Object.entries(formData.officePeriods || {}).forEach(
+        ([dayKey, hours]) => {
+          Object.entries(hours).forEach(([hour, price]) => {
+            // dayKey '1'~'7'은 평일, '8'은 공휴일
+            const dayPrefix =
+              dayKey === '8'
+                ? 'hol'
+                : ['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun'][
+                    Number(dayKey) - 1
+                  ];
 
-      // 1. 기본 요일별 요금 리스트 생성 (officePeriods)
-      const basePeriods = Object.entries(hourlyPrices).map(([key, price]) => {
-        const [dayPrefix, hour] = key.split('_');
-        return {
-          startTime: convertTimeToLocalDateTime(hour),
-          price: Number(price) || 0,
-          dayOfWeek: formatDayOfWeek(dayPrefix), // 예: "mon", "tue"
-        };
-      });
-
-      // 2. 공휴일 요일별 요금 리스트 생성 후 officePeriods에 합산 (officePeriods)
-      const holidayPeriods = Object.entries(holidayPrices).map(
-        ([key, price]) => {
-          const [dayPrefix, hour] = key.split('_');
-          return {
-            startTime: convertTimeToLocalDateTime(hour),
-            price: Number(price) || 0,
-            dayOfWeek: formatDayOfWeek(dayPrefix), // 예: "hol"
-          };
+            finalOfficePeriods.push({
+              startTime: convertTimeToLocalDateTime(hour.split(':')[0]), // "00:00" -> "00" -> 변환
+              price: Number(price) || 0,
+              dayOfWeek: dayPrefix,
+            });
+          });
         }
       );
 
-      const finalOfficePeriods = [...basePeriods, ...holidayPeriods];
+      // 2. 예외 기간 요금 데이터 변환 (exceptionPeriods)
+      const formattedExceptionPeriods = (formData.exceptionPeriods || [])
+        .map((period) => {
+          const exceptionList = [];
+          Object.entries(period.prices || {}).forEach(([dayKey, hours]) => {
+            Object.entries(hours).forEach(([hour, price]) => {
+              const dayPrefix =
+                dayKey === '8'
+                  ? 'hol'
+                  : ['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun'][
+                      Number(dayKey) - 1
+                    ];
 
-      // 3. 예외 기간 스펙 가공
-      const formattedExceptionPeriods = exceptionPeriods.map((period) => ({
-        startTime: convertTimeToLocalDateTime(period.startTime || '00'),
-        price: Number(period.price) || 0,
-        dayOfWeek: formatDayOfWeek(period.dayOfWeek || 'mon'),
-        startDate: convertDateToLocalDateTime(period.startDate, false),
-        endDate: convertDateToLocalDateTime(period.endDate, true),
-      }));
+              exceptionList.push({
+                startTime: convertTimeToLocalDateTime(hour.split(':')[0]),
+                price: Number(price) || 0,
+                dayOfWeek: dayPrefix,
+                startDate: convertDateToLocalDateTime(period.startDate, false),
+                endDate: convertDateToLocalDateTime(period.endDate, true),
+              });
+            });
+          });
+          return exceptionList;
+        })
+        .flat(); // 중첩 배열을 평탄화
 
-      // 4. 최종 통합 Request DTO 빌드 (OfficeReqDto 스펙 일치)
+      // 3. 최종 DTO
       const formattedDto = {
-        placeNo: Number(dto.placeNo),
-        title: dto.title,
-        content: dto.content,
-        basePeople: Number(dto.basePeople) || 0,
-        facilityList: facilities,
+        placeNo: Number(formData.placeNo),
+        title: formData.title,
+        content: formData.content,
+        basePeople: Number(formData.basePeople) || 0,
+        facilityList: formData.facilities,
         officePeriods: finalOfficePeriods,
         exceptionPeriods: formattedExceptionPeriods,
       };
 
-      // 5. 멀티파트 파일 및 순서 리스트 생성
-      const files = currentImages.map((img) => img.file);
-      const sortList = currentImages.map((_, index) => ({
-        sort: index + 1,
-      }));
+      console.log('최종 전송 DTO:', JSON.stringify(formattedDto, null, 2));
 
-      // 최종 정제 데이터 확인용 디버깅 콘솔
-      console.log('📦 요일명 소문자 전환 완료 DTO:', formattedDto);
+      const files = formData.images.map((img) => img.file);
+      const sortList = formData.images.map((_, index) => ({ sort: index + 1 }));
 
       const response = await registerOfficeInspection(
         formattedDto,
@@ -184,16 +156,13 @@ export default function useInsertCoworking() {
         sortList
       );
 
-      if (
-        response &&
-        (response.status === 201 || response.status === 200 || response.data)
-      ) {
-        alert('검수 신청이 완료되었습니다!');
-        navigate('/host/space/list');
+      if (response.status === 201) {
+        alert('검수 신청이 완료되었습니다.');
+        navigate(`/host/space/list`);
       }
     } catch (error) {
-      console.error('오피스 등록 실패:', error);
-      alert('등록 중 오류가 발생했습니다. 입력 정보를 다시 확인해주세요.');
+      console.error('등록 실패:', error);
+      alert('등록 중 오류 발생.');
     }
   };
 

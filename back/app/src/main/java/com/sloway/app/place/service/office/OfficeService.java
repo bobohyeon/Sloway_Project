@@ -4,7 +4,9 @@ import com.sloway.app.place.dto.request.office.OfficeUpdateReqDto;
 import com.sloway.app.place.dto.request.office.OfficeReqDto;
 import com.sloway.app.place.dto.request.sort.ImgSortReqDto;
 import com.sloway.app.place.dto.request.sort.ImgUpdateSortReqDto;
+import com.sloway.app.place.dto.response.office.OfficeUpdateDetailReqDto;
 import com.sloway.app.place.dto.response.place.PlaceImgListRespDto;
+import com.sloway.app.place.dto.response.station.StationDetailRespDto;
 import com.sloway.app.place.entity.amenity.AmenityEntity;
 import com.sloway.app.place.entity.amenity.office.OfficeAmenityEntity;
 import com.sloway.app.place.entity.office.ImgOfficeEntity;
@@ -200,5 +202,13 @@ public class OfficeService {
 
     public PlaceImgListRespDto selectImageList(Long no, Long memberNo) {
         return officeRepository.selectImageList(no,memberNo);
+    }
+
+    public StationDetailRespDto selectOfficeDetailDashBoard(Long no, Long memberNo) {
+        return officeRepository.selectOfficeDetailDashBoard(no, memberNo);
+    }
+
+    public OfficeUpdateDetailReqDto selectOfficeForUpdate(Long no, Long memberNo) {
+        return officeRepository.selectOfficeForUpdate(no, memberNo);
     }
 }

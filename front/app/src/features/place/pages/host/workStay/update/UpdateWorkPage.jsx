@@ -1,134 +1,84 @@
-import React, { useState } from 'react';
-import UpdateFeeComponent from '../../../../components/host/station/update/UpdateFeeComponent';
-import UpdateWorkCheckComponent from '../../../../components/host/workStay/update/UpdateWorkCheckComponent';
+import React from 'react';
+import { useParams } from 'react-router-dom';
 import UpdateWorkLayout from '../../../../layouts/host/workStay/update/UpdateWorkLayout';
 import UpdateWorkStateComponent from '../../../../components/host/workStay/update/UpdateWorkStateComponent';
 import UpdateMainComponent from '../../../../components/host/station/update/UpdateMainComponent';
-import UpdateWorkOfficeDetailComponent from './../../../../components/host/workStay/update/UpdateWorkOfficeDetailComponent';
 import UpdateDetailComponent from '../../../../components/host/station/update/UpdateDetailComponent';
+import UpdateFeeComponent from '../../../../components/host/station/update/UpdateFeeComponent';
+import UpdateWorkOfficeDetailComponent from '../../../../components/host/workStay/update/UpdateWorkOfficeDetailComponent';
+import UpdateWorkCheckComponent from '../../../../components/host/workStay/update/UpdateWorkCheckComponent';
+import { useUpdateWorkStay } from '../../../../hooks/host/workStay/useUpdateWorkStay';
+
+// 방금 만든 커스텀 훅 가져오기
 
 function UpdateWorkPage() {
-  const [step, setStep] = useState(1);
+  const { id } = useParams();
 
-  // 1. 워크스테이(숙소) 데이터: 기간별/요일별 요금 포함
-  const [workData, setWorkData] = useState({
-    placeNo: '',
-    title: '',
-    content: '',
-    maxPeople: '',
-    basePeople: '',
-    rooms: '',
-    checkIn: '',
-    checkOut: '',
-    chargeAdd: '',
-    facilities: [],
-    monPrice: '',
-    tuePrice: '',
-    wedPrice: '',
-    thuPrice: '',
-    friPrice: '',
-    satPrice: '',
-    sunPrice: '',
-    holidayPrice: '',
-    exceptionPeriods: [],
-    images: [],
-  });
+  const {
+    step,
+    setStep,
+    formData,
+    setFormData,
+    isLoading,
+    handleChange,
+    handleOfficeChange,
+    handleCheckChange,
+    handleOfficeCheckChange,
+    handleSubmit,
+  } = useUpdateWorkStay(id);
 
-  // 2. 오피스 데이터: 요금 관련 필드 제거
-  const [officeData, setOfficeData] = useState({
-    title: '',
-    content: '',
-    cnt: '', // 수용인원
-    facilities: [], // OFFICE_AMENITY
-    images: [],
-  });
+  if (isLoading) {
+    return <div>워크앤스테이 상세 정보를 불러오는 중입니다...</div>;
+  }
 
-  const handleWorkChange = (e) => {
-    const { name, value } = e.target;
-    setWorkData((prev) => ({ ...prev, [name]: value }));
-  };
-
-  const handleOfficeChange = (e) => {
-    const { name, value } = e.target;
-    setOfficeData((prev) => ({ ...prev, [name]: value }));
-  };
-
-  const handleCheckChange = (facility) => {
-    setWorkData((prev) => ({
-      ...prev,
-      facilities: prev.facilities.includes(facility)
-        ? prev.facilities.filter((item) => item !== facility)
-        : [...prev.facilities, facility],
-    }));
-  };
-
-  const handleWorkCheckChange = (facility) => {
-    setOfficeData((prev) => ({
-      ...prev,
-      facilities: prev.facilities.includes(facility)
-        ? prev.facilities.filter((item) => item !== facility)
-        : [...prev.facilities, facility],
-    }));
-  };
-
-  const handleSubmit = () => {
-    const finalData = {
-      workStay: workData,
-      office: officeData, // 오피스는 요금 정보 없이 기본 정보와 이미지만 포함
-    };
-    console.log('최종 제출 데이터:', finalData);
-    alert('검수 신청이 완료되었습니다!');
-  };
-
+  // 렌더링 단계 제어 함수
   const renderStepComponent = () => {
     switch (step) {
-      case 1: // 워크스테이 기본 정보 입력
+      case 1: // 1단계: 워크스테이 기본 정보
         return (
           <UpdateMainComponent
-            formData={workData}
-            setFormData={setWorkData}
-            handleChange={handleWorkChange}
+            formData={formData}
+            setFormData={setFormData}
+            handleChange={handleChange}
             setStep={setStep}
             currentStep={step}
           />
         );
-      case 2: // 워크스테이 상세 정보 (인원, 방 수, 시설 등)
+      case 2: // 2단계: 워크스테이 상세 정보 및 편의시설 목록
         return (
           <UpdateDetailComponent
-            formData={workData}
-            handleChange={handleWorkChange}
-            setFormData={setWorkData}
-            handleCheckChange={handleCheckChange}
+            formData={formData}
+            handleChange={handleChange}
+            setFormData={setFormData}
+            handleCheckChange={handleCheckChange} // 워크스테이용 체크
             prev={() => setStep(1)}
             next={() => setStep(3)}
           />
         );
-      case 3: // 워크스테이 요금 설정 (숙소 비용은 필요)
+      case 3: // 3단계: 워크스테이 요금 및 예외기간 요금 설정
         return (
           <UpdateFeeComponent
-            formData={workData}
-            setFormData={setWorkData}
-            handleChange={handleWorkChange}
+            formData={formData}
+            setFormData={setFormData}
+            handleChange={handleChange}
             prev={() => setStep(2)}
             next={() => setStep(4)}
           />
         );
-
-      case 4: // 오피스 상세 정보 입력 (수용인원 등)
+      case 4: // 4단계: 1:1 연관 오피스 정보 및 오피스 전용 편의시설 ID 리스트
         return (
           <UpdateWorkOfficeDetailComponent
-            formData={officeData}
-            setFormData={setOfficeData}
-            handleChange={handleOfficeChange}
-            handleCheckChange={handleWorkCheckChange}
+            formData={formData.office} // 오피스 단건 객체 전달
+            handleChange={handleOfficeChange} // 오피스 전용 값 변경 핸들러
+            handleCheckChange={handleOfficeCheckChange} // 오피스 전용 리스트 체크 핸들러
             prev={() => setStep(3)}
             next={() => setStep(5)}
           />
         );
-      case 5:
+      case 5: // 5단계: 최종 입력값 확인 및 API 요청 제출
         return (
           <UpdateWorkCheckComponent
-            formData={{ ...workData, office: officeData }}
+            formData={formData} // 전체 통합된 객체 그대로 전송
             prev={() => setStep(4)}
             onSubmit={handleSubmit}
           />
