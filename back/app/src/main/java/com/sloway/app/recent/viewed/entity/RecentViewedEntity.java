@@ -23,7 +23,7 @@ public class RecentViewedEntity {
     @ManyToOne(fetch = FetchType.LAZY)
     private PlaceEntity placeNo;
 
-    @JoinColumn(name = "member_no", nullable = false)
+    @JoinColumn(name = "user_no", nullable = false)
     @ManyToOne(fetch = FetchType.LAZY)
     private MemberEntity memberNo;
 

@@ -21,7 +21,7 @@ public class RsvnEntity {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long no;
 
-    @JoinColumn(name = "member_no", nullable = false)
+    @JoinColumn(name = "user_no", nullable = false)
     @ManyToOne(fetch = FetchType.LAZY)
     private MemberEntity memberNo;
 

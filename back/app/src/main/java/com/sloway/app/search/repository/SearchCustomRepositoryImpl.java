@@ -7,12 +7,18 @@ import com.querydsl.core.types.dsl.BooleanExpression;
 import com.querydsl.core.types.dsl.NumberTemplate;
 import com.querydsl.jpa.JPQLQuery;
 import com.querydsl.jpa.impl.JPAQueryFactory;
+import com.sloway.app.place.entity.amenity.AmenityEntity;
+import com.sloway.app.place.entity.amenity.office.QOfficeAmenityEntity;
+import com.sloway.app.place.entity.amenity.station.QStationAmenityEntity;
+import com.sloway.app.place.entity.amenity.workStay.QWorkAmenityEntity;
+import com.sloway.app.place.entity.amenity.workStay.workOffice.QWorkOfficeAmenityEntity;
 import com.sloway.app.place.entity.office.QOfficeEntity;
 import com.sloway.app.place.entity.office.QOfficePeriodEntity;
 import com.sloway.app.place.entity.place.QImgPlaceEntity;
 import com.sloway.app.place.entity.place.QPlaceEntity;
 import com.sloway.app.place.entity.station.QStationEntity;
 import com.sloway.app.place.entity.workStay.QWorkStayEntity;
+import com.sloway.app.place.entity.workStay.workOffice.QWorkOfficeEntity;
 import com.sloway.app.reservation.rsvn.entity.QRsvnEntity;
 import com.sloway.app.reservation.rsvn.entity.RsvnStatus;
 import com.sloway.app.review.review.entity.QReviewEntity;
@@ -42,7 +48,13 @@ public class SearchCustomRepositoryImpl implements SearchCustomRepository{
     private static final QOfficeEntity o = QOfficeEntity.officeEntity;
     private static final QWorkStayEntity ws = QWorkStayEntity.workStayEntity;
     private static final QStationEntity st = QStationEntity.stationEntity;
+
     private static final QOfficePeriodEntity op = QOfficePeriodEntity.officePeriodEntity;
+    private static final QOfficeAmenityEntity oa = QOfficeAmenityEntity.officeAmenityEntity;
+    private static final QWorkAmenityEntity wa = QWorkAmenityEntity.workAmenityEntity;
+    private static final QWorkOfficeAmenityEntity woa = QWorkOfficeAmenityEntity.workOfficeAmenityEntity;
+    private static final QWorkOfficeEntity wo = QWorkOfficeEntity.workOfficeEntity;
+    private static final QStationAmenityEntity sa = QStationAmenityEntity.stationAmenityEntity;
 
 
     @Override
@@ -70,7 +82,7 @@ public class SearchCustomRepositoryImpl implements SearchCustomRepository{
                         )
                 )
                 .from(p)
-                .where(typeEq(dto.getPlaceType()), regionContains(dto.getRegion()))
+                .where(typeEq(dto.getPlaceType()), regionContains(dto.getRegion()), amenitiesFilter(dto.getAmenities()))
                 .orderBy(sortOrder((dto.getSort())))
                 .fetch()
                 ;
@@ -157,10 +169,10 @@ public class SearchCustomRepositoryImpl implements SearchCustomRepository{
                                         .where(
                                                 rsvnSub.officeNo.eq(o),
                                                 rsvnSub.status.eq(RsvnStatus.S),
-                                                // 예약종료 < 검색시작일(체크인)
-                                                rsvnSub.checkIn.lt(checkOut.atTime(23,59,59)),
+                                                // 예약종료 < 검색시작일(체크인) , 어차피 하루에 한팀이니까 시간 신경x 날짜만 신경
+                                                rsvnSub.checkIn.lt(checkOut.plusDays(1).atStartOfDay()),
                                                 // 예약시작 > 검색종료일(체크아웃)
-                                                rsvnSub.checkOut.gt(checkIn.atTime(23,59,59))
+                                                rsvnSub.checkOut.gt(checkIn.atStartOfDay())
                                         )
                         ))
                         .from(o)
@@ -174,8 +186,8 @@ public class SearchCustomRepositoryImpl implements SearchCustomRepository{
                                         .where(
                                                 rsvnSub.workStayNo.eq(ws),
                                                 rsvnSub.status.eq(RsvnStatus.S),
-                                                rsvnSub.checkIn.lt(checkOut.atTime(11, 0, 0)),
-                                                rsvnSub.checkOut.gt(checkIn.atTime(15, 0, 0))
+                                                rsvnSub.checkIn.lt(checkOut.plusDays(1).atStartOfDay()),
+                                                rsvnSub.checkOut.gt(checkIn.atStartOfDay())
                                         )
                         ))
                         .from(ws)
@@ -189,14 +201,66 @@ public class SearchCustomRepositoryImpl implements SearchCustomRepository{
                                         .where(
                                                 rsvnSub.stationNo.eq(st),
                                                 rsvnSub.status.eq(RsvnStatus.S),
-                                                rsvnSub.checkIn.lt(checkOut.atTime(11, 0, 0)),
-                                                rsvnSub.checkOut.gt(checkIn.atTime(15, 0, 0))
+                                                rsvnSub.checkIn.lt(checkOut.plusDays(1).atStartOfDay()),
+                                                rsvnSub.checkOut.gt(checkIn.atStartOfDay())
                                         )
                         ))
                         .from(st)
                         .where(st.placeEntity.eq(p))
                 );
                 return remainCount;
+    }
+
+    //편의시설
+    private BooleanExpression amenitiesFilter(List<Long> amenities){
+        if(amenities == null || amenities.isEmpty()){return null;}
+        BooleanExpression office = Expressions.asNumber(
+                        JPAExpressions
+                                .select(oa.no.count())
+                                .from(oa)
+                                .join(oa.officeEntity, o)
+                                .where(
+                                        o.placeEntity.eq(p),
+                                        oa.amenityEntity.no.in(amenities))
+                                )
+                        .goe((long) amenities.size()
+                        );
+        BooleanExpression workStay = Expressions.asNumber(
+                        JPAExpressions
+                                .select(wa.no.count())
+                                .from(wa)
+                                .join(wa.workStayEntity, ws)
+                                .where(
+                                        ws.placeEntity.eq(p),
+                                        wa.amenityEntity.no.in(amenities))
+                                )
+                .goe((long) amenities.size()
+                );
+        BooleanExpression workOffice = Expressions.asNumber(
+                        JPAExpressions
+                                .select(woa.no.count())
+                                .from(woa)
+                                .join(woa.workOfficeEntity, wo)
+                                .join(wo.workStayEntity, ws)
+                                .where(
+                                        ws.placeEntity.eq(p),
+                                        woa.amenityEntity.no.in(amenities))
+                )
+                .goe((long) amenities.size()
+                );
+        BooleanExpression station = Expressions.asNumber(
+                        JPAExpressions
+                                .select(sa.no.count())
+                                .from(sa)
+                                .join(sa.stationEntity, st)
+                                .where(
+                                        st.placeEntity.eq(p),
+                                        sa.amenityEntity.no.in(amenities))
+                )
+                .goe((long) amenities.size()
+                );
+
+           return office.or(workStay).or(workOffice).or(station);
     }
 
 
