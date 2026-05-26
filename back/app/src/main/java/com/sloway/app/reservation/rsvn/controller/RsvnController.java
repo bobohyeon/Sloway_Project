@@ -73,7 +73,7 @@ public class RsvnController {
         if(userDetails.getRole() != MemberRole.H){
             throw new CustomException(RsvnErrorCode.UNAUTHORIZED_ACCESS);
         }
-        rsvnService.rejectByHost(no,payNo);
+        rsvnService.rejectByHost(userDetails.getMemberNo(), no,payNo);
         return ResponseEntity.status(HttpStatus.NO_CONTENT).build();
     }
 }
