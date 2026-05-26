@@ -155,8 +155,8 @@ import AdminCommissionPolicy from './features/settlement/pages/admin/AdminCommis
 import StatsOverview from './features/stats/pages/admin/StatsOverview';
 
 // ── 쿠폰 ──────────────────────────────────────────────────
-import EventList from './features/coupon/pages/user/EventList';
 import MyCoupons from './features/coupon/pages/user/MyCoupons';
+import CouponEvent from './features/couponevent/pages/user/CouponEvent';
 import AdminCouponEvent from './features/couponevent/pages/admin/AdminCouponEvent';
 
 // ── 찜 ────────────────────────────────────────────────────
@@ -293,7 +293,7 @@ function App() {
         <Route path="/user/payment/method" element={<PaymentMethods />} />
         <Route path="/user/payment/:no" element={<PaymentDetail />} />
         <Route path="/user/point" element={<PointHistory />} />
-        <Route path="/event" element={<EventList />} />
+        <Route path="/user/coupon/event" element={<CouponEvent />} />
         <Route path="/user/coupon" element={<MyCoupons />} />
         {/* 환불 */}
         <Route path="/user/refund/request" element={<RefundRequest />} />

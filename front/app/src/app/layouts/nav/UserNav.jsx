@@ -87,7 +87,7 @@ const userMenuGroups = [
 			{ url: "/user/payment/method", str: "결제 수단", icon: <FaWallet /> },
 			{ url: "/user/point", str: "포인트", icon: <FaCoins /> },
 			{ url: "/user/coupon", str: "쿠폰함", icon: <FaTicketAlt /> },
-			{ url: "/event", str: "쿠폰 발급", icon: <FaGift /> },
+			{ url: "/user/coupon/event", str: "쿠폰 발급", icon: <FaGift /> },
 		],
 	},
 	{
