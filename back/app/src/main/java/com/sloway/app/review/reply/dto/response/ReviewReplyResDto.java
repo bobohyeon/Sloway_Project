@@ -15,4 +15,14 @@ public class ReviewReplyResDto {
     private Long hostNo;
     private String content;
     private LocalDateTime createdAt;
+
+    public static ReviewReplyResDto from(ReviewReplyEntity entity){
+        return ReviewReplyResDto.builder()
+                .no(entity.getNo())
+                .reviewNo(entity.getReviewNo().getNo())
+                .hostNo(entity.getHostNo().getNo())
+                .content(entity.getContent())
+                .createdAt(entity.getCreatedAt())
+                .build();
+    }
 }
