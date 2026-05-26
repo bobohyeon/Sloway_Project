@@ -6,6 +6,7 @@ import com.sloway.app.member.entity.MemberEntity;
 import com.sloway.app.payment.coupon.common.CouponDcType;
 import com.sloway.app.payment.coupon.common.CouponErrorCode;
 import com.sloway.app.payment.coupon.common.CouponStatus;
+import com.sloway.app.payment.couponevent.entity.CouponEventEntity;
 import com.sloway.app.payment.pay.entity.PayEntity;
 import jakarta.persistence.*;
 import lombok.*;
@@ -51,6 +52,10 @@ public class CouponEntity extends BaseEntity {
     @JoinColumn(name = "PAY_NO")
     @ManyToOne(fetch = FetchType.LAZY)
     private PayEntity payNo;
+
+    @JoinColumn(name = "COUPON_EVENT_NO")
+    @ManyToOne(fetch = FetchType.LAZY)
+    private CouponEventEntity couponEventNo;
 
     public void useCoupon(PayEntity payEntity) {
         if (this.status != CouponStatus.AVAILABLE) {
