@@ -9,7 +9,9 @@ import java.util.List;
 import java.util.Optional;
 
 public interface ReviewRepository extends JpaRepository<ReviewEntity, Long> , ReviewCustomRepository{
-
     //특정 예약의 리뷰 단건 조회
-    Optional<ReviewEntity> findByRsvnNo(RsvnEntity rsvnNo);
+    Optional<ReviewEntity> findByRsvnNoAndDelYn(RsvnEntity rsvnNo, String delYn);
+
+    Optional<ReviewEntity> findByNoAndDelYn(Long no, String delYn);
+
 }

@@ -44,14 +44,21 @@ public class ReviewController {
     }
 
     @PutMapping("/{no}")
-    public ResponseEntity<Void> editReview(@PathVariable Long no, @RequestBody ReviewEditReqDto dto){
-        reviewService.editReview(no, dto);
+    public ResponseEntity<Void> editReview(
+            @AuthenticationPrincipal CustomUserDetails userDetails,
+            @PathVariable Long no,
+            @RequestBody ReviewEditReqDto dto
+    ){
+        reviewService.editReview(userDetails.getMemberNo(), no, dto);
         return ResponseEntity.status(HttpStatus.NO_CONTENT).build();
     }
 
     @DeleteMapping("/{no}")
-    public ResponseEntity<Void> deleteReview(@PathVariable Long no){
-        reviewService.deleteReview(no);
+    public ResponseEntity<Void> deleteReview(
+            @AuthenticationPrincipal CustomUserDetails userDetails,
+            @PathVariable Long no
+    ){
+        reviewService.deleteReview(userDetails.getMemberNo(), no);
         return ResponseEntity.status(HttpStatus.NO_CONTENT).build();
     }
 }

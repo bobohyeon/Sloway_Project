@@ -117,9 +117,9 @@ function InsertCoworkingDetailComponent({
             수용 인원 <span>*</span>
           </label>
           <input
-            name="peopleCnt"
+            name="basePeople"
             placeholder="ex ) 40"
-            value={formData.peopleCnt}
+            value={formData.basePeople}
             onChange={handleChange}
           />
         </FormGroup>

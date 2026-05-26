@@ -223,7 +223,7 @@ function UpdateFeeComponent({
     { key: 'friPrice', label: '금' },
     { key: 'satPrice', label: '토' },
     { key: 'sunPrice', label: '일' },
-    { key: 'holidayPrice', label: '공휴일' },
+    { key: 'holPrice', label: '공휴일' },
   ];
 
   // 예외 기간 추가 함수
@@ -242,7 +242,7 @@ function UpdateFeeComponent({
           friPrice: '',
           satPrice: '',
           sunPrice: '',
-          holidayPrice: '',
+          holPrice: '',
         },
       ],
     });
@@ -260,6 +260,7 @@ function UpdateFeeComponent({
     updated[index][field] = value;
     setFormData({ ...formData, exceptionPeriods: updated });
   };
+  console.log(formData.exceptionPeriods);
 
   return (
     <FormCard>

@@ -5,7 +5,10 @@ import com.sloway.app.place.dto.request.sort.ImgUpdateSortReqDto;
 import com.sloway.app.place.dto.request.workStay.WorkStayReqDto;
 import com.sloway.app.place.dto.request.workStay.WorkUpdateDtoWrapper;
 import com.sloway.app.place.dto.request.workStay.workOffice.WorkOfficeReqDto;
+import com.sloway.app.place.dto.response.station.StationDetailRespDto;
+import com.sloway.app.place.dto.response.station.StationUpdateDetailRespDto;
 import com.sloway.app.place.dto.response.workStay.WorkStayImageListRespDto;
+import com.sloway.app.place.dto.response.workStay.WorkStayUpdateDetailRespDto;
 import com.sloway.app.place.service.workStay.WorkStayService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -88,6 +91,20 @@ public class WorkStayApiController {
     @GetMapping("/update/image/{no}")
     public ResponseEntity<WorkStayImageListRespDto> selectImageList(@PathVariable Long no, @AuthenticationPrincipal Long memberNo){
         WorkStayImageListRespDto dto = workStayService.selectImageList(no, Long.valueOf(2));
+
+        return ResponseEntity.ok(dto);
+    }
+
+    @GetMapping("/detail/dash/{no}")
+    public ResponseEntity<StationDetailRespDto> selectWorkStayDetailDashBoard(@PathVariable Long no, @AuthenticationPrincipal Long memberNo){
+        StationDetailRespDto dto = workStayService.selectWorkStayDetailDashBoard(no, Long.valueOf(2));
+        System.out.println("dto = " + dto);
+        return ResponseEntity.ok(dto);
+    }
+
+    @GetMapping("/update/{no}")
+    public ResponseEntity<WorkStayUpdateDetailRespDto> selectDetailForUpdate(@PathVariable Long no, @AuthenticationPrincipal Long memeberNo){
+        WorkStayUpdateDetailRespDto dto = workStayService.selectDetailForUpdate(no, Long.valueOf(2));
 
         return ResponseEntity.ok(dto);
     }

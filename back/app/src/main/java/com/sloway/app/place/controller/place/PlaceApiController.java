@@ -3,10 +3,9 @@ package com.sloway.app.place.controller.place;
 import com.sloway.app.place.dto.request.sort.ImgSortReqDto;
 import com.sloway.app.place.dto.request.place.PlaceReqDto;
 import com.sloway.app.place.dto.request.place.PlaceUpdateReqDto;
-import com.sloway.app.place.dto.response.place.MasterPlaceRespDto;
-import com.sloway.app.place.dto.response.place.PlaceBriefRespDto;
-import com.sloway.app.place.dto.response.place.PlaceDetailListRespDto;
-import com.sloway.app.place.dto.response.place.PlaceListRespDto;
+import com.sloway.app.place.dto.request.sort.ImgUpdateSortReqDto;
+import com.sloway.app.place.dto.response.place.*;
+import com.sloway.app.place.dto.response.workStay.WorkStayImageListRespDto;
 import com.sloway.app.place.service.place.PlaceService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -60,8 +59,8 @@ public class PlaceApiController {
     @PutMapping(value = "/update/image/{no}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<Object> updateImagePlace(
             @PathVariable Long no,
-            @RequestPart("files") List<MultipartFile> files,
-            @RequestPart("sortList") List<ImgSortReqDto> sortList) {
+            @RequestPart(name = "files", required = false) List<MultipartFile> files,
+            @RequestPart("sortList") List<ImgUpdateSortReqDto> sortList) {
 
         placeService.updatePlaceImg(no, files, sortList);
 
@@ -112,6 +111,12 @@ public class PlaceApiController {
     public ResponseEntity<PlaceUpdateReqDto> selectPlaceForUpdate(@AuthenticationPrincipal Long memberNo, @PathVariable Long no){
         PlaceUpdateReqDto dto = placeService.selectPlaceForUpdate(Long.valueOf(2), no);
 
+        return ResponseEntity.ok(dto);
+    }
+
+    @GetMapping("/update/image/{no}")
+    public ResponseEntity<PlaceImgListRespDto> selectImageList(@PathVariable Long no, @AuthenticationPrincipal Long memberNo){
+        PlaceImgListRespDto dto = placeService.selectImageList(no, Long.valueOf(2));
         return ResponseEntity.ok(dto);
     }
 }

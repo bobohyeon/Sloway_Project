@@ -1,11 +1,14 @@
 package com.sloway.app.payment.pay.repository;
 
+import com.querydsl.core.Tuple;
 import com.querydsl.jpa.impl.JPAQueryFactory;
+import com.sloway.app.payment.pay.common.PayStatus;
 import com.sloway.app.payment.pay.entity.PayEntity;
 import com.sloway.app.payment.pay.entity.QPayEntity;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Repository
@@ -37,4 +40,22 @@ public class PayRepositoryImpl implements PayRepositoryCustom {
                 .fetch();
         return payEntityList;
     }
+
+    @Override
+    public List<Tuple> sumByMethodBetween(LocalDateTime startDateTime, LocalDateTime endDateTime) {
+        return jpaQueryFactory
+                .select(
+                        qPayEntity.method,
+                        qPayEntity.count(),
+                        qPayEntity.finalAmt.sum()
+                )
+                .from(qPayEntity)
+                .where(
+                        qPayEntity.status.eq(PayStatus.COMPLETED),
+                        qPayEntity.createdAt.between(startDateTime, endDateTime)
+                )
+                .groupBy(qPayEntity.method)
+                .fetch();
+    }
+
 }

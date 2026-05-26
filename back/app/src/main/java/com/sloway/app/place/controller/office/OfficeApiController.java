@@ -3,6 +3,10 @@ package com.sloway.app.place.controller.office;
 import com.sloway.app.place.dto.request.office.OfficeUpdateReqDto;
 import com.sloway.app.place.dto.request.office.OfficeReqDto;
 import com.sloway.app.place.dto.request.sort.ImgSortReqDto;
+import com.sloway.app.place.dto.request.sort.ImgUpdateSortReqDto;
+import com.sloway.app.place.dto.response.office.OfficeUpdateDetailReqDto;
+import com.sloway.app.place.dto.response.place.PlaceImgListRespDto;
+import com.sloway.app.place.dto.response.station.StationDetailRespDto;
 import com.sloway.app.place.service.office.OfficeService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -56,8 +60,8 @@ public class OfficeApiController {
     @PutMapping(value = "/update/image/{no}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<Object> updateImageOffice(
             @PathVariable Long no,
-            @RequestPart("files") List<MultipartFile> files,
-            @RequestPart("sortList") List<ImgSortReqDto> sortList) {
+            @RequestPart(name = "files", required = false) List<MultipartFile> files,
+            @RequestPart("sortList") List<ImgUpdateSortReqDto> sortList) {
 
         officeService.updateOfficeImg(no, files, sortList);
 
@@ -77,4 +81,23 @@ public class OfficeApiController {
                 .build();
     }
 
+    @GetMapping("/update/image/{no}")
+    public ResponseEntity<PlaceImgListRespDto> selectImageList(@PathVariable Long no, @AuthenticationPrincipal Long memberNo){
+        PlaceImgListRespDto dto = officeService.selectImageList(no, Long.valueOf(2));
+        return ResponseEntity.ok(dto);
+    }
+
+    @GetMapping("/detail/dash/{no}")
+    public ResponseEntity<StationDetailRespDto> selectStationDetailDashBoard(@PathVariable Long no, @AuthenticationPrincipal Long memberNo){
+        StationDetailRespDto dto = officeService.selectOfficeDetailDashBoard(no, Long.valueOf(2));
+        System.out.println("dto = " + dto);
+        return ResponseEntity.ok(dto);
+    }
+
+    @GetMapping("/update/{no}")
+    public ResponseEntity<OfficeUpdateDetailReqDto> selectOfficeForUpdate(@PathVariable Long no, @AuthenticationPrincipal Long memberNo){
+        OfficeUpdateDetailReqDto dto = officeService.selectOfficeForUpdate(no, Long.valueOf(2));
+
+        return ResponseEntity.ok(dto);
+    }
 }

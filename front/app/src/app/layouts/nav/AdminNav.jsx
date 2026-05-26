@@ -23,6 +23,7 @@ import {
   FaCrown,
   FaChartPie,
   FaUsers,
+  FaGift,
 } from 'react-icons/fa';
 
 const Wrapper = styled.div`
@@ -80,6 +81,12 @@ const adminMenuGroups = [
         str: '수수료 정책',
         icon: <FaClipboardList />,
       },
+    ],
+  },
+  {
+    title: '쿠폰 · 이벤트',
+    items: [
+      { url: '/admin/coupon/event', str: '쿠폰 게시 관리', icon: <FaGift /> },
     ],
   },
   {

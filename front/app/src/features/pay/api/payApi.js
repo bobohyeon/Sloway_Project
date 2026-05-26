@@ -14,3 +14,8 @@ export async function findPayByNo(no) {
   const resp = await api.get(`/payment/pay/${no}`);
   return resp.data;
 }
+
+export async function findPaysByMemberNo(memberNo) {
+  const resp = await api.get(`/payment/pay/member/${memberNo}`);
+  return resp.data;
+}

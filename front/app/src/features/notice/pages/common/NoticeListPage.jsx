@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import styled from 'styled-components';
 import { useNavigate } from 'react-router-dom';
 import {
@@ -8,48 +8,49 @@ import {
   Card,
 } from '../../../pay_shared/components';
 import PageLayout from '../../../../app/layouts/page/PageLayout';
+import api from '../../../../app/api/axiosApi';
 
-// ─── Mock 데이터 (백엔드 연동 시 GET /api/notices?page=&category=&keyword= 로 대체) ─
-const MOCK_NOTICES = Array.from({ length: 22 }, (_, i) => ({
-  id: i + 1,
-  title:
-    i === 0
-      ? '[중요] 서비스 이용약관 변경 안내'
-      : `공지사항 제목입니다 ${i + 1}번`,
-  category: ['서비스', '이벤트', '점검', '기타'][i % 4],
-  views: Math.floor(Math.random() * 500) + 10,
-  createdAt: `2026.0${(i % 5) + 1}.${String((i % 28) + 1).padStart(2, '0')}`,
-}));
+const CATEGORY_OPTIONS = [
+  { label: '전체', value: '' },
+  { label: '서비스', value: 'SERVICE' },
+  { label: '이벤트', value: 'EVENT' },
+  { label: '점검', value: 'INSPECTION' },
+  { label: '기타', value: 'OTHER' },
+];
 
-const CATEGORY_OPTIONS = ['전체', '서비스', '이벤트', '점검', '기타'];
-const PAGE_SIZE = 10;
+const SORT_MAP = {
+  createdAt: 'createdAt,DESC',
+  views: 'viewCount,DESC',
+  title: 'title,ASC',
+};
+
+const fmtDate = (iso) => (iso ? iso.slice(0, 10).replace(/-/g, '.') : '');
 
 export default function NoticeListPage() {
-  // 1. state 추가
   const [sortKey, setSortKey] = useState('createdAt');
-
   const navigate = useNavigate();
-
-  const [category, setCategory] = useState('전체');
+  const [category, setCategory] = useState('');
   const [inputKeyword, setInputKeyword] = useState('');
   const [keyword, setKeyword] = useState('');
   const [page, setPage] = useState(1);
+  const [notices, setNotices] = useState([]);
+  const [totalPages, setTotalPages] = useState(0);
 
-  const filtered = MOCK_NOTICES.filter((n) => {
-    const matchCat = category === '전체' || n.category === category;
-    const matchKw = n.title.includes(keyword);
-    return matchCat && matchKw;
-  });
-
-  // 2. normal 필터링 이후 sort 적용
-  const sorted = [...filtered].sort((a, b) => {
-    if (sortKey === 'views') return b.views - a.views;
-    if (sortKey === 'title') return a.title.localeCompare(b.title, 'ko');
-    return b.createdAt.localeCompare(a.createdAt);
-  });
-
-  const totalPages = Math.ceil(sorted.length / PAGE_SIZE);
-  const paged = sorted.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
+  useEffect(() => {
+    api.get('/notice', {
+      params: {
+        page: page - 1,
+        size: 10,
+        sort: SORT_MAP[sortKey],
+        category: category || undefined,
+        keyword: keyword || undefined,
+        status: 'ACTIVE',
+      },
+    }).then(({ data }) => {
+      setNotices(data.content);
+      setTotalPages(data.totalPages);
+    });
+  }, [page, sortKey, category, keyword]);
 
   const handleSearch = () => {
     setKeyword(inputKeyword);
@@ -66,15 +67,15 @@ export default function NoticeListPage() {
         <CategoryBtnGroup>
           {CATEGORY_OPTIONS.map((c) => (
             <CategoryBtn
-              key={c}
-              $active={category === c}
+              key={c.value}
+              $active={category === c.value}
               onClick={() => {
-                setCategory(c);
+                setCategory(c.value);
                 setPage(1);
               }}
               type="button"
             >
-              {c}
+              {c.label}
             </CategoryBtn>
           ))}
         </CategoryBtnGroup>
@@ -108,7 +109,7 @@ export default function NoticeListPage() {
 
       {/* 공지 목록 */}
       <NoticeCard elevated>
-        {paged.length === 0 ? (
+        {notices.length === 0 ? (
           <EmptyState
             icon="📋"
             title="공지사항이 없습니다"
@@ -119,7 +120,7 @@ export default function NoticeListPage() {
             }
           />
         ) : (
-          paged.map((notice) => (
+          notices.map((notice) => (
             <NoticeRow
               key={notice.id}
               onClick={() => navigate(`/notices/${notice.id}`)}
@@ -136,10 +137,10 @@ export default function NoticeListPage() {
               <NoticeTitle>{notice.title}</NoticeTitle>
               <NoticeInfo>
                 <Badge size="sm" variant="muted">
-                  {notice.category}
+                  {CATEGORY_OPTIONS.find((c) => c.value === notice.category)?.label ?? notice.category}
                 </Badge>
-                <NoticeDate>{notice.createdAt}</NoticeDate>
-                <ViewCount>조회 {notice.views}</ViewCount>
+                <NoticeDate>{fmtDate(notice.createdAt)}</NoticeDate>
+                <ViewCount>조회 {notice.viewCount}</ViewCount>
               </NoticeInfo>
             </NoticeRow>
           ))

@@ -1,5 +1,5 @@
-import styled, { css } from 'styled-components'
-import { Card, Section } from '../../../pay_shared/components'
+import styled, { css } from 'styled-components';
+import { Card, Section } from '../../../pay_shared/components';
 
 export function CashReceiptInfo({
   receiptType,
@@ -12,7 +12,7 @@ export function CashReceiptInfo({
   const idPlaceholder =
     idType === 'phone'
       ? '01012345678 (-, 공백 없이)'
-      : '1234567890 (사업자번호 10자리)'
+      : '1234567890 (사업자번호 10자리)';
 
   return (
     <Section title="기본 발급 정보">
@@ -67,7 +67,9 @@ export function CashReceiptInfo({
             type="text"
             placeholder={idPlaceholder}
             value={idNumber}
-            onChange={(e) => onIdNumberChange(e.target.value.replace(/[^0-9]/g, ''))}
+            onChange={(e) =>
+              onIdNumberChange(e.target.value.replace(/[^0-9]/g, ''))
+            }
             maxLength={11}
           />
           <Hint>
@@ -78,10 +80,10 @@ export function CashReceiptInfo({
         </FieldGroup>
       </InfoCard>
     </Section>
-  )
+  );
 }
 
-const InfoCard = styled(Card)``
+const InfoCard = styled(Card)``;
 
 const FieldGroup = styled.div`
   &:not(:last-child) {
@@ -89,14 +91,14 @@ const FieldGroup = styled.div`
     padding-bottom: var(--space-4);
     border-bottom: 1px dashed var(--gray-200);
   }
-`
+`;
 
 const Label = styled.div`
   font-size: 0.88rem;
   font-weight: 500;
   color: var(--gray-800);
   margin-bottom: var(--space-2);
-`
+`;
 
 const RadioGroup = styled.div`
   display: grid;
@@ -106,7 +108,7 @@ const RadioGroup = styled.div`
   @media (max-width: 480px) {
     grid-template-columns: 1fr;
   }
-`
+`;
 
 const RadioOption = styled.button`
   display: flex;
@@ -130,12 +132,13 @@ const RadioOption = styled.button`
       border-color: var(--sage);
       background: var(--cream);
     `}
-`
+`;
 
 const RadioDot = styled.span`
   width: 18px;
   height: 18px;
-  border: 2px solid ${(props) => (props.$checked ? 'var(--sage)' : 'var(--gray-200)')};
+  border: 2px solid
+    ${(props) => (props.$checked ? 'var(--sage)' : 'var(--gray-200)')};
   border-radius: 50%;
   flex-shrink: 0;
   position: relative;
@@ -156,23 +159,23 @@ const RadioDot = styled.span`
         transform: translate(-50%, -50%);
       }
     `}
-`
+`;
 
 const RadioBody = styled.div`
   flex: 1;
-`
+`;
 
 const RadioTitle = styled.div`
   font-size: 0.92rem;
   font-weight: 500;
   color: var(--gray-800);
   margin-bottom: 2px;
-`
+`;
 
 const RadioDesc = styled.div`
   font-size: 0.75rem;
   color: var(--gray-600);
-`
+`;
 
 const TypeTabs = styled.div`
   display: inline-flex;
@@ -181,7 +184,7 @@ const TypeTabs = styled.div`
   padding: 4px;
   border-radius: var(--radius-full);
   margin-bottom: var(--space-2);
-`
+`;
 
 const TypeTab = styled.button`
   padding: 6px 14px;
@@ -208,7 +211,7 @@ const TypeTab = styled.button`
       color: var(--gray-800);
       box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
     `}
-`
+`;
 
 const Input = styled.input`
   width: 100%;
@@ -230,10 +233,10 @@ const Input = styled.input`
     color: var(--gray-400);
     font-family: inherit;
   }
-`
+`;
 
 const Hint = styled.div`
   font-size: 0.75rem;
   color: var(--gray-400);
   margin-top: 4px;
-`
+`;

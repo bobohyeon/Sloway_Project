@@ -1,13 +1,17 @@
 package com.sloway.app.reservation.blackOut.service;
 
 import com.sloway.app.common.exception.CustomException;
+import com.sloway.app.host.entity.HostEntity;
+import com.sloway.app.host.repository.HostRepository;
 import com.sloway.app.place.entity.place.PlaceEntity;
+import com.sloway.app.place.repository.hostPlace.HostPlaceRepository;
 import com.sloway.app.place.repository.place.PlaceRepository;
 import com.sloway.app.reservation.RsvnErrorCode;
 import com.sloway.app.reservation.blackOut.dto.request.BlackOutReqDto;
 import com.sloway.app.reservation.blackOut.dto.response.BlackOutResDto;
 import com.sloway.app.reservation.blackOut.entity.BlackOutEntity;
 import com.sloway.app.reservation.blackOut.repository.BlackOutRepository;
+import com.sloway.app.review.ReviewErrorCode;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -23,6 +27,8 @@ public class BlackOutService {
 
     private final BlackOutRepository blackOutRepository;
     private final PlaceRepository placeRepository;
+    private final HostRepository hostRepository;
+    private final HostPlaceRepository hostPlaceRepository;
 
     @Transactional
     public void save(Long placeNo, BlackOutReqDto dto){
@@ -47,7 +53,14 @@ public class BlackOutService {
     }
 
     @Transactional
-    public void editBlackOut(Long no, BlackOutReqDto dto){
+    public void editBlackOut(Long memberNo, Long no, BlackOutReqDto dto){
+        HostEntity host = hostRepository.findByMemberNo(memberNo)
+                .orElseThrow(() -> new CustomException(ReviewErrorCode.HOST_NOT_FOUND));
+
+        boolean exhost = hostPlaceRepository.existsByHostEntityNoAndPlaceEntityNo(host.getNo(), dto.getPlaceNo());
+        if(!exhost){
+            throw new CustomException(RsvnErrorCode.UNAUTHORIZED_ACCESS);
+        }
 
         BlackOutEntity entity = blackOutRepository.findById(no)
                 .orElseThrow(()->new CustomException(RsvnErrorCode.BLACKOUT_NOT_FOUND));
@@ -64,10 +77,19 @@ public class BlackOutService {
     }
 
     @Transactional
-    public void deleteBlackOut(Long no){
-        BlackOutEntity entity = blackOutRepository.findById(no)
-                .orElseThrow(()->new CustomException(RsvnErrorCode.BLACKOUT_NOT_FOUND));
-        blackOutRepository.delete(entity);
+    public void deleteBlackOut(Long memberNo, Long no){
+        HostEntity host = hostRepository.findByMemberNo(memberNo)
+                .orElseThrow(() -> new CustomException(ReviewErrorCode.HOST_NOT_FOUND));
+        BlackOutEntity blackOutEntity = blackOutRepository.findById(no)
+                .orElseThrow(() -> new CustomException(RsvnErrorCode.BLACKOUT_NOT_FOUND));
+
+        boolean isOwner = hostPlaceRepository
+                .existsByHostEntityNoAndPlaceEntityNo(host.getNo(), blackOutEntity.getPlaceNo().getNo());
+        if(!isOwner){
+            throw new CustomException(RsvnErrorCode.UNAUTHORIZED_ACCESS);
+        }
+
+        blackOutRepository.delete(blackOutEntity);
     }
 
 }

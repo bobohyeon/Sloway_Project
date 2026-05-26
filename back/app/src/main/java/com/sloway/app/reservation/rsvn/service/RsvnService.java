@@ -1,12 +1,13 @@
 package com.sloway.app.reservation.rsvn.service;
 
 import com.sloway.app.common.exception.CustomException;
+import com.sloway.app.host.entity.HostEntity;
+import com.sloway.app.host.repository.HostRepository;
 import com.sloway.app.member.entity.MemberEntity;
 import com.sloway.app.member.repository.MemberRepository;
 import com.sloway.app.payment.pay.common.PayErrorCode;
 import com.sloway.app.payment.pay.common.PayStatus;
 import com.sloway.app.payment.pay.dto.request.PayCreateReqDto;
-import com.sloway.app.payment.pay.dto.response.PayResDto;
 import com.sloway.app.payment.pay.entity.PayEntity;
 import com.sloway.app.payment.pay.repository.PayRepository;
 import com.sloway.app.payment.pay.service.PayService;
@@ -16,6 +17,7 @@ import com.sloway.app.payment.refund.service.RefundService;
 import com.sloway.app.place.entity.office.OfficeEntity;
 import com.sloway.app.place.entity.station.StationEntity;
 import com.sloway.app.place.entity.workStay.WorkStayEntity;
+import com.sloway.app.place.repository.hostPlace.HostPlaceRepository;
 import com.sloway.app.place.repository.office.OfficeRepository;
 import com.sloway.app.place.repository.station.StationRepository;
 import com.sloway.app.place.repository.workStay.WorkStayRepository;
@@ -23,7 +25,9 @@ import com.sloway.app.reservation.RsvnErrorCode;
 import com.sloway.app.reservation.rsvn.dto.request.RsvnReqDto;
 import com.sloway.app.reservation.rsvn.dto.response.RsvnResDto;
 import com.sloway.app.reservation.rsvn.entity.RsvnEntity;
+import com.sloway.app.reservation.rsvn.entity.RsvnStatus;
 import com.sloway.app.reservation.rsvn.repository.RsvnRepository;
+import com.sloway.app.review.ReviewErrorCode;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -45,6 +49,8 @@ public class RsvnService {
     private final PayService payService;
     private final PayRepository payRepository;
     private final RefundService refundService;
+    private final HostRepository hostRepository;
+    private final HostPlaceRepository hostPlaceRepository;
 
     @Transactional
     public void save(Long memberNo, RsvnReqDto dto) {
@@ -66,7 +72,7 @@ public class RsvnService {
                     new CustomException(RsvnErrorCode.PLACE_NOT_FOUND));
         }
 
-        // rsvnRepository.save() 반환값을 RsvnEntity 변수로 받기
+
         RsvnEntity savedRsvn = rsvnRepository.save(
                 RsvnEntity.builder()
                         .memberNo(member)
@@ -123,6 +129,10 @@ public class RsvnService {
         );
         RsvnEntity entity = rsvnRepository.findByNoAndMemberNo(rsvnNo, member)
                 .orElseThrow(() -> new CustomException(RsvnErrorCode.RESERVATION_NOT_FOUND));
+
+        if((entity.getStatus().equals(RsvnStatus.C)) || (entity.getStatus().equals(RsvnStatus.R))){
+            throw new CustomException(RsvnErrorCode.ALREADY_CANCELLED);
+        }
         entity.cancel();
 
         List<PayEntity> pay = payRepository.findByRsvn(rsvnNo);
@@ -144,11 +154,42 @@ public class RsvnService {
 
     // 호스트 예약 거절
     @Transactional
-    public void rejectByHost(Long rsvnNo, Long payNo) {
+    public void rejectByHost(Long memberNo, Long rsvnNo, Long payNo) {
+        HostEntity host = hostRepository.findByMemberNo(memberNo)
+                .orElseThrow(()-> new CustomException(ReviewErrorCode.HOST_NOT_FOUND));
         RsvnEntity entity = rsvnRepository.findById(rsvnNo)
                 .orElseThrow(() -> new CustomException(RsvnErrorCode.RESERVATION_NOT_FOUND));
 
+        if(!entity.getStatus().equals(RsvnStatus.S)){
+            throw new CustomException(RsvnErrorCode.RESERVATION_NOT_COMPLETED);
+        }
+
+        validateHostOwnership(host, entity);
+
         entity.reject();
         refundService.createRefundByHost(payNo);
+    }
+
+    // 호스트 소유 공간 검증 (내부 헬퍼)
+    private void validateHostOwnership(HostEntity host, RsvnEntity rsvn) {
+
+        if(rsvn.getOfficeNo() != null){
+            boolean isOfficeOwner = hostPlaceRepository.existsByHostEntityNoAndOfficeEntityNo(host.getNo(), rsvn.getOfficeNo().getNo());
+            if(!isOfficeOwner){
+                throw new CustomException(RsvnErrorCode.UNAUTHORIZED_ACCESS);
+            }
+        }
+        if(rsvn.getStationNo() != null) {
+            boolean isStationOwner = hostPlaceRepository.existsByHostEntityNoAndStationEntityNo(host.getNo(), rsvn.getStationNo().getNo());
+            if(!isStationOwner) {
+                throw new CustomException(RsvnErrorCode.UNAUTHORIZED_ACCESS);
+            }
+        }
+        if(rsvn.getWorkStayNo() != null) {
+            boolean isWorkStayOwner = hostPlaceRepository.existsByHostEntityNoAndWorkStayEntityNo(host.getNo(), rsvn.getWorkStayNo().getNo());
+            if (!isWorkStayOwner) {
+                throw new CustomException(RsvnErrorCode.UNAUTHORIZED_ACCESS);
+            }
+        }
     }
 }

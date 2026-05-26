@@ -1,158 +1,168 @@
-import { useState } from 'react'
-import { useNavigate } from 'react-router-dom'
-import styled from 'styled-components'
+import { useEffect, useMemo, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import styled from 'styled-components';
 
-import PageLayout from '../../../../app/layouts/page/PageLayout'
+import PageLayout from '../../../../app/layouts/page/PageLayout';
+import { Button, EmptyState, Pagination } from '../../../pay_shared/components';
+import { SettlementStatCard } from '../../../settlement/components/host/SettlementStatCard';
+import { RefundFilterBar } from '../../components/admin/RefundFilterBar';
+import { RefundRequestCard } from '../../components/admin/RefundRequestCard';
 
-import { Pagination, EmptyState, Button } from '../../../pay_shared/components'
-import { SettlementStatCard } from '../../../settlement/components/host/SettlementStatCard'
-import { RefundRequestCard } from '../../components/admin/RefundRequestCard'
-import { RefundFilterBar } from '../../components/admin/RefundFilterBar'
+import { findRefundAll } from '../../api/refundApi';
 
-const REFUND_REQUESTS = [
-  {
-    id: 1,
-    refundId: 'RFD-20260508-00921',
-    userName: '박지수',
-    spaceName: '강릉 바다향 코워킹',
-    spaceEmoji: '🌊',
-    method: '카카오페이',
-    paidAmount: 290000,
-    refundAmount: 290000,
-    rate: 100,
-    requestedAt: '2026.05.08 09:14',
-    completedAt: null,
-    status: 'failed',
-    isHostRejected: false,
-    alertMessage: 'PG사 송금 실패 - 자동 재처리 대기',
-  },
-  {
-    id: 2,
-    refundId: 'RFD-20260507-00918',
-    userName: '김도현',
-    spaceName: '청평 숲속 파인뷰 스테이',
-    spaceEmoji: '🌲',
-    method: '네이버페이',
-    paidAmount: 540000,
-    refundAmount: 540000,
-    rate: 100,
-    requestedAt: '2026.05.07 18:22',
-    completedAt: '2026.05.07 19:30',
-    status: 'completed',
-    isHostRejected: true,
+const PAGE_SIZE = 10;
+
+// REQUESTED / APPROVED = 사용자 시각 "처리 중" 단일 묶음
+const STATUS_TO_UI = {
+  REQUESTED: 'processing',
+  APPROVED: 'processing',
+  COMPLETED: 'completed',
+};
+
+const RATE_VALUE = {
+  WEEK: 100,
+  FOURTOSIX: 70,
+  TWOTOTHREE: 50,
+  ONEDAY: 30,
+  DDAY: 0,
+  FULL: 100,
+};
+
+const formatDate = (iso) => {
+  if (!iso) return '-';
+  const d = new Date(iso);
+  const pad = (n) => String(n).padStart(2, '0');
+  return `${d.getFullYear()}.${pad(d.getMonth() + 1)}.${pad(d.getDate())} ${pad(
+    d.getHours()
+  )}:${pad(d.getMinutes())}`;
+};
+
+// 호스트 거절 환불 식별 — refundReason null + refundRate FULL 조합 (메서드 시그니처 분기 영역)
+const isHostRejectedRefund = (refund) =>
+  refund.refundReason === null && refund.refundRate === 'FULL';
+
+// 회원·예약·공간·결제수단·결제액은 별도 도메인/조회 영역 — 통합 단계에 join API 또는 N+1 회피 결정
+const toRefundCardItem = (refund) => {
+  const refundAmtNumber = Number(refund.refundAmt ?? 0);
+  return {
+    id: refund.no,
+    refundId: `RFD-${String(refund.no).padStart(6, '0')}`,
+    userName: `회원 #${refund.rsvnNo}`,
+    spaceName: `예약 #${refund.rsvnNo}`,
+    spaceEmoji: '🏠',
+    method: '-',
+    paidAmount: refundAmtNumber,
+    refundAmount: refundAmtNumber,
+    rate: RATE_VALUE[refund.refundRate] ?? 0,
+    requestedAt: formatDate(refund.requestedAt ?? refund.createdAt),
+    completedAt:
+      refund.status === 'COMPLETED' ? formatDate(refund.modifiedAt) : null,
+    status: STATUS_TO_UI[refund.status] ?? 'processing',
+    isHostRejected: isHostRejectedRefund(refund),
     alertMessage: null,
-  },
-  {
-    id: 3,
-    refundId: 'RFD-20260507-00917',
-    userName: '최민서',
-    spaceName: '청평 숲속 파인뷰 스테이',
-    spaceEmoji: '🌲',
-    method: '카카오페이',
-    paidAmount: 510000,
-    refundAmount: 255000,
-    rate: 50,
-    requestedAt: '2026.05.07 14:05',
-    completedAt: '2026.05.08 10:23',
-    status: 'completed',
-    isHostRejected: false,
-  },
-  {
-    id: 4,
-    refundId: 'RFD-20260506-00912',
-    userName: '정유나',
-    spaceName: '강릉 바다향 코워킹',
-    spaceEmoji: '🌊',
-    method: '토스페이',
-    paidAmount: 880000,
-    refundAmount: 264000,
-    rate: 30,
-    requestedAt: '2026.05.06 21:38',
-    completedAt: '2026.05.07 11:12',
-    status: 'completed',
-    isHostRejected: false,
-  },
-  {
-    id: 5,
-    refundId: 'RFD-20260424-00847',
-    userName: '김우영',
-    spaceName: '청평 숲속 파인뷰 스테이',
-    spaceEmoji: '🌲',
-    method: '카카오페이',
-    paidAmount: 326500,
-    refundAmount: 326500,
-    rate: 100,
-    requestedAt: '2026.04.24 14:32',
-    completedAt: '2026.04.29 09:30',
-    status: 'completed',
-    isHostRejected: false,
-  },
-]
+  };
+};
 
 export default function RefundList() {
-  const nav = useNavigate()
-  const [tab, setTab] = useState('all')
-  const [period, setPeriod] = useState('month')
-  const [search, setSearch] = useState('')
-  const [page, setPage] = useState(1)
+  const navigate = useNavigate();
 
-  const filtered = REFUND_REQUESTS.filter((r) => {
-    if (tab === 'host_rejected' && !r.isHostRejected) return false
-    if (tab !== 'all' && tab !== 'host_rejected' && r.status !== tab) return false
-    if (search && !r.userName.includes(search) && !r.refundId.includes(search)) return false
-    return true
-  })
+  const [refunds, setRefunds] = useState([]);
+  const [tab, setTab] = useState('all');
+  const [period, setPeriod] = useState('month');
+  const [search, setSearch] = useState('');
+  const [page, setPage] = useState(1);
 
-  const total = REFUND_REQUESTS.length
-  const processing = REFUND_REQUESTS.filter((r) => r.status === 'processing').length
-  const completed = REFUND_REQUESTS.filter((r) => r.status === 'completed').length
-  const failed = REFUND_REQUESTS.filter((r) => r.status === 'failed').length
-  const hostRejected = REFUND_REQUESTS.filter((r) => r.isHostRejected).length
+  useEffect(() => {
+    const load = async () => {
+      try {
+        const list = await findRefundAll();
+        setRefunds(list);
+      } catch (err) {
+        console.error('환불 전체 조회 실패', err);
+      }
+    };
+    load();
+  }, []);
+
+  // 통계 카드는 전체 기간 누적 — 탭/필터 영향 X
+  const stats = useMemo(() => {
+    const s = { total: refunds.length, processing: 0, completed: 0, hostRejected: 0 };
+    refunds.forEach((r) => {
+      const uiStatus = STATUS_TO_UI[r.status];
+      if (uiStatus === 'processing') s.processing += 1;
+      if (uiStatus === 'completed') s.completed += 1;
+      if (isHostRejectedRefund(r)) s.hostRejected += 1;
+    });
+    return s;
+  }, [refunds]);
 
   const tabs = [
-    { value: 'all', label: '전체', count: total },
-    { value: 'processing', label: '처리 중', count: processing },
-    { value: 'completed', label: '완료', count: completed },
-    { value: 'failed', label: '실패', count: failed },
-    { value: 'host_rejected', label: '호스트거절', count: hostRejected },
-  ]
+    { value: 'all', label: '전체', count: stats.total },
+    { value: 'processing', label: '처리 중', count: stats.processing },
+    { value: 'completed', label: '완료', count: stats.completed },
+    { value: 'host_rejected', label: '호스트거절', count: stats.hostRejected },
+  ];
+
+  const filtered = useMemo(() => {
+    return refunds
+      .filter((r) => {
+        const uiStatus = STATUS_TO_UI[r.status];
+        if (tab === 'host_rejected') return isHostRejectedRefund(r);
+        if (tab !== 'all' && uiStatus !== tab) return false;
+        if (search) {
+          const refundId = `RFD-${String(r.no).padStart(6, '0')}`;
+          if (!refundId.includes(search.toUpperCase())) return false;
+        }
+        return true;
+      })
+      .map(toRefundCardItem);
+  }, [refunds, tab, search]);
+
+  const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
+  const pageItems = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
+
+  const handleReset = () => {
+    setTab('all');
+    setPeriod('month');
+    setSearch('');
+    setPage(1);
+  };
 
   return (
     <PageLayout
       title="환불 관리"
-      description="모든 환불 요청을 모니터링하고 예외 케이스를 확인하세요"
+      description="모든 환불 요청을 모니터링하고 승인 처리하세요"
       maxWidth={1200}
     >
-
       <StatGrid>
         <SettlementStatCard
           icon="📊"
           label="총 환불 요청"
-          value={total.toLocaleString()}
+          value={stats.total.toLocaleString()}
           unit="건"
           subText="누적"
         />
         <SettlementStatCard
           icon="⏳"
           label="처리 중"
-          value={processing.toLocaleString()}
+          value={stats.processing.toLocaleString()}
           unit="건"
-          subText="자동 처리 중"
+          subText="승인 대기"
+          highlight={stats.processing > 0}
         />
         <SettlementStatCard
           icon="✓"
           label="처리 완료"
-          value={completed.toLocaleString()}
+          value={stats.completed.toLocaleString()}
           unit="건"
           subText="환불 완료"
         />
         <SettlementStatCard
-          icon="⚠️"
-          label="실패"
-          value={failed.toLocaleString()}
+          icon="🏠"
+          label="호스트 거절"
+          value={stats.hostRejected.toLocaleString()}
           unit="건"
-          subText="자동 재시도 중"
-          highlight={failed > 0}
+          subText="100% 환불"
         />
       </StatGrid>
 
@@ -166,40 +176,34 @@ export default function RefundList() {
         onSearchChange={setSearch}
       />
 
-      {filtered.length === 0 ? (
+      {pageItems.length === 0 ? (
         <EmptyState
           icon="📋"
           title="해당 조건에 환불 요청이 없어요"
           description="필터를 변경하시거나 다른 기간을 선택해보세요"
           action={
-            <Button
-              variant="secondary"
-              onClick={() => {
-                setTab('all')
-                setPeriod('month')
-                setSearch('')
-              }}
-            >
+            <Button variant="secondary" onClick={handleReset}>
               필터 초기화
             </Button>
           }
         />
       ) : (
         <List>
-          {filtered.map((r) => (
+          {pageItems.map((item) => (
             <RefundRequestCard
-              key={r.id}
-              request={r}
-              onClick={(item) => nav(`/admin/refund/${item.id}`)}
+              key={item.id}
+              request={item}
+              onClick={(r) => navigate(`/admin/refund/${r.id}`)}
             />
           ))}
         </List>
       )}
 
-      <Pagination currentPage={page} totalPages={1} onChange={setPage} />
+      <Pagination currentPage={page} totalPages={totalPages} onChange={setPage} />
     </PageLayout>
-  )
+  );
 }
+
 const StatGrid = styled.div`
   display: grid;
   grid-template-columns: repeat(4, 1fr);
@@ -213,10 +217,10 @@ const StatGrid = styled.div`
   @media (max-width: 480px) {
     grid-template-columns: 1fr;
   }
-`
+`;
 
 const List = styled.div`
   display: flex;
   flex-direction: column;
   gap: var(--space-3);
-`
+`;

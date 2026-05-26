@@ -1,4 +1,4 @@
-import styled from "styled-components";
+import styled from 'styled-components';
 
 const Section = styled.div`
   background: white;
@@ -47,7 +47,7 @@ function DetailBasicInfo({ info }) {
         </InfoItem>
         <InfoItem>
           <span className="label">기본 요금 (1박)</span>
-          <span className="price">{info.price}원</span>
+          <span className="price">{info.basePrice}원</span>
         </InfoItem>
         <InfoItem>
           <span className="label">유형</span>
@@ -63,15 +63,15 @@ function DetailBasicInfo({ info }) {
         </InfoItem>
         <InfoItem>
           <span className="label">체크인</span>
-          <span className="val">{info.checkIn}</span>
+          <span className="val">{info.checkInTime}</span>
         </InfoItem>
         <InfoItem>
           <span className="label">최대 수용 인원</span>
-          <span className="val">{info.capacity}</span>
+          <span className="val">{info.capacity}명</span>
         </InfoItem>
         <InfoItem>
           <span className="label">체크아웃</span>
-          <span className="val">{info.checkOut}</span>
+          <span className="val">{info.checkOutTime}</span>
         </InfoItem>
       </InfoGrid>
     </Section>

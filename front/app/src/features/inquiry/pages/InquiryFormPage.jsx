@@ -103,18 +103,14 @@ export default function InquiryFormPage({ isEdit = false }) {
   }
 
   return (
-    <Wrap>
-      <PageHeader>
-        <div>
-          <PageTitle>{pageTitle}</PageTitle>
-          <PageDesc>
-            {isEdit
-              ? '문의 내용을 수정합니다. 답변 대기 중일 때만 수정 가능합니다.'
-              : '궁금하신 점을 남겨주시면 빠르게 답변 드리겠습니다.'}
-          </PageDesc>
-        </div>
-      </PageHeader>
-
+    <PageLayout
+      title={pageTitle}
+      description={
+        isEdit
+          ? '문의 내용을 수정합니다. 답변 대기 중일 때만 수정 가능합니다.'
+          : '궁금하신 점을 남겨주시면 빠르게 답변 드리겠습니다.'
+      }
+    >
       {/* 안내 배너 */}
       {!isEdit && (
         <NoticeBanner>
@@ -217,7 +213,7 @@ export default function InquiryFormPage({ isEdit = false }) {
           작성 중인 내용이 저장되지 않습니다. 정말 나가시겠습니까?
         </ModalText>
       </Modal>
-    </Wrap>
+    </PageLayout>
   );
 }
 

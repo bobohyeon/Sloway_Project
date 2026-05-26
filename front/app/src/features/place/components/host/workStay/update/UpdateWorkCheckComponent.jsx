@@ -174,8 +174,9 @@ function UpdateWorkCheckComponent({ formData, prev, onSubmit }) {
         <SummaryItem>
           <div className="label">편의시설</div>
           <div className="value">
-            {formData.facilities && formData.facilities.length > 0
-              ? formData.facilities.join(', ')
+            {/* 💡 1. 번호 배열(facilities) 대신 한글 이름 배열(facilityNames)을 join 해줍니다 */}
+            {formData.facilityNames && formData.facilityNames.length > 0
+              ? formData.facilityNames.join(', ')
               : '(선택한 편의시설 없음)'}
           </div>
         </SummaryItem>
@@ -199,15 +200,17 @@ function UpdateWorkCheckComponent({ formData, prev, onSubmit }) {
         </h3>
         <SummaryItem>
           <div className="label">수용 인원</div>
-          <div className="value">{formData.office?.peopleCnt || 0}명</div>
+          {/* 💡 2. 오피스 정보 컴포넌트의 변수명 규격인 cnt와 매핑해줍니다 */}
+          <div className="value">{formData.office?.cnt || 0}명</div>
         </SummaryItem>
 
         <SummaryItem>
           <div className="label">편의시설</div>
           <div className="value">
-            {formData.office?.facilities &&
-            formData.office?.facilities.length > 0
-              ? formData.office?.facilities.join(', ')
+            {/* 💡 3. 오피스용 한글 이름 배열 필드인 officeAmenityNames를 join 해줍니다 */}
+            {formData.office?.officeAmenityNames &&
+            formData.office.officeAmenityNames.length > 0
+              ? formData.office.officeAmenityNames.join(', ')
               : '(선택한 편의시설 없음)'}
           </div>
         </SummaryItem>

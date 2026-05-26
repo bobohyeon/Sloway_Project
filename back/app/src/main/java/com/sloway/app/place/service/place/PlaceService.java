@@ -3,10 +3,8 @@ package com.sloway.app.place.service.place;
 import com.sloway.app.place.dto.request.sort.ImgSortReqDto;
 import com.sloway.app.place.dto.request.place.PlaceReqDto;
 import com.sloway.app.place.dto.request.place.PlaceUpdateReqDto;
-import com.sloway.app.place.dto.response.place.MasterPlaceRespDto;
-import com.sloway.app.place.dto.response.place.PlaceBriefRespDto;
-import com.sloway.app.place.dto.response.place.PlaceDetailListRespDto;
-import com.sloway.app.place.dto.response.place.PlaceListRespDto;
+import com.sloway.app.place.dto.request.sort.ImgUpdateSortReqDto;
+import com.sloway.app.place.dto.response.place.*;
 import com.sloway.app.place.entity.place.ImgPlaceEntity;
 import com.sloway.app.place.entity.place.PlaceEntity;
 import com.sloway.app.place.repository.place.ImgPlaceRepository;
@@ -20,6 +18,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
+import java.util.Objects;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
@@ -80,31 +79,46 @@ public class PlaceService {
 
     // 이미지 수정 로직 (saveStation 로직 반영)
     @Transactional
-    public void updatePlaceImg(Long no, List<MultipartFile> files, List<ImgSortReqDto> sortList) {
-        // Place 조회
+    public void updatePlaceImg(Long no, List<MultipartFile> files, List<ImgUpdateSortReqDto> sortList) {
+        // 1. Place 조회
         PlaceEntity placeEntity = placeRepository.findByNo(no)
                 .orElseThrow(() -> new EntityNotFoundException("[PLACE-305] Place Not Found For Update Images"));
 
-        // 기존 이미지 관계 제거
-        placeEntity.getImages().clear();
-
-        // 이미지 aws로 수정
-        List<String> dummyUrls = files.stream()
-                .map(img -> "https://temp-bucket.s3.amazonaws.com/temp_"
-                        + System.currentTimeMillis() + "_"
-                        + img.getOriginalFilename())
+        // 2. 화면에 살아남은 기존 이미지 ID 추출 (새로 추가된 파일인 null은 제외)
+        List<Long> aliveImageNos = sortList.stream()
+                .map(ImgUpdateSortReqDto::getImageNo) // 💡 DTO에 추가된 imageNo 추출
+                .filter(Objects::nonNull)
                 .toList();
 
-        int size = Math.min(dummyUrls.size(), sortList.size());
-        List<ImgPlaceEntity> newImages = IntStream.range(0, size)
-                .mapToObj(i -> {
-                    String url = dummyUrls.get(i);
-                    int sortValue = sortList.get(i).getSort();
-                    return ImgPlaceEntity.from(placeEntity, url, sortValue);
-                })
-                .toList();
+        // 3. 화면에서 유저가 🗑️ 버튼을 눌러 지워진 이미지들만 DB에서 선택 삭제
+        // (※ Repository에 해당 Querydsl 또는 JPQL 메서드가 선언되어 있어야 합니다)
+        if (aliveImageNos.isEmpty()) {
+            imgPlaceRepository.deleteAllByPlaceEntityNo(no);
+        } else {
+            imgPlaceRepository.deleteByPlaceEntityNoAndNoNotIn(no, aliveImageNos);
+        }
 
-        imgPlaceRepository.saveAll(newImages);
+        // 4. 루프를 돌며 순서 교정(Dirty Check) 및 신규 파일 매칭 삽입(Loop Counter 방식)
+        int fileIndex = 0;
+        for (ImgUpdateSortReqDto dto : sortList) {
+            if (dto.getImageNo() != null) {
+                // ① 기존 이미지: 삭제되지 않고 화면에 남아있으므로 순서(sort)만 변경
+                ImgPlaceEntity existingImg = imgPlaceRepository.findById(dto.getImageNo())
+                        .orElseThrow(() -> new EntityNotFoundException("Place Image Not Found"));
+                existingImg.updateSort(dto.getSort());
+            } else {
+                // ② 신규 이미지: 드래그 앤 드롭으로 섞인 null 자리에 순서대로 파일을 매칭하여 S3 URL 발급 후 저장
+                if (files != null && fileIndex < files.size()) {
+                    MultipartFile currentFile = files.get(fileIndex++);
+                    String s3Url = "https://temp-bucket.s3.amazonaws.com/temp_"
+                            + System.currentTimeMillis() + "_"
+                            + currentFile.getOriginalFilename();
+
+                    ImgPlaceEntity newImg = ImgPlaceEntity.from(placeEntity, s3Url, dto.getSort());
+                    imgPlaceRepository.save(newImg);
+                }
+            }
+        }
     }
 
     public List<PlaceDetailListRespDto> placeDetailList(Long placeNo,Long hostNo) {
@@ -127,5 +141,9 @@ public class PlaceService {
 
     public PlaceUpdateReqDto selectPlaceForUpdate(Long memberNo, Long no) {
         return placeRepository.selectPlaceForUpdate(memberNo, no);
+    }
+
+    public PlaceImgListRespDto selectImageList(Long no, Long memberNo) {
+        return placeRepository.selectImageList(no,memberNo);
     }
 }

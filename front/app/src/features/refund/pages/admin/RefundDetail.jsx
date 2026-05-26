@@ -1,249 +1,190 @@
-import { useState } from 'react'
-import { useNavigate, useParams } from 'react-router-dom'
-import styled from 'styled-components'
+import { useEffect, useState } from 'react';
+import { useNavigate, useParams } from 'react-router-dom';
+import styled from 'styled-components';
 
-import PageLayout from '../../../../app/layouts/page/PageLayout'
+import PageLayout from '../../../../app/layouts/page/PageLayout';
+import { Badge, Button, Card, Section } from '../../../pay_shared/components';
+import { AdminMemoBox } from '../../components/admin/AdminMemoBox';
+import { RefundProcessHistory } from '../../components/admin/RefundProcessHistory';
+import { RefundStatusBanner } from '../../components/admin/RefundStatusBanner';
 
-import { Card, Section, Button, Badge } from '../../../pay_shared/components'
-import { RefundStatusBanner } from '../../components/admin/RefundStatusBanner'
-import { RefundProcessHistory } from '../../components/admin/RefundProcessHistory'
-import { AdminMemoBox } from '../../components/admin/AdminMemoBox'
-import { useRefundCalculation } from '../../hooks/useRefundCalculation'
+import { findPayByNo } from '../../../pay/api/payApi';
+import { findRefundByNo, processRefund } from '../../api/refundApi';
 
-const REFUNDS = [
-  {
-    id: 1,
-    refundId: 'RFD-20260508-00921',
-    bookingId: 'SW-20260512-001045',
-    paymentId: 'PAY-20260501-00892',
-    status: 'failed',
-    userName: '박지수',
-    userEmail: 'jisoo.park@example.com',
-    userPhone: '010-****-2390',
-    spaceName: '강릉 바다향 코워킹',
-    spaceEmoji: '🌊',
-    spaceCategory: '코워킹오피스',
-    spaceHost: '강릉 워크 호스트',
-    checkInDate: '2026-05-15',
-    paidAmount: 290000,
-    method: '카카오페이',
-    methodIcon: '💬',
-    pg: 'KG이니시스',
-    approvalNo: 'KP-20260501-00892',
-    requestedAt: '2026.05.08 09:14',
-    reason: '일정이 변경됐어요',
-    isHostRejected: false,
-    alertMessage: 'PG사 송금 실패 - 자동 재시도 진행 중',
-  },
-  {
-    id: 2,
-    refundId: 'RFD-20260507-00918',
-    bookingId: 'SW-20260516-001052',
-    paymentId: 'PAY-20260420-00845',
-    status: 'completed',
-    userName: '김도현',
-    userEmail: 'dohyun.kim@example.com',
-    userPhone: '010-****-5678',
-    spaceName: '청평 숲속 파인뷰 스테이',
-    spaceEmoji: '🌲',
-    spaceCategory: '워크앤스테이',
-    spaceHost: '청평 숲속 호스트',
-    checkInDate: '2026-05-16',
-    paidAmount: 540000,
-    method: '네이버페이',
-    methodIcon: 'N',
-    pg: '네이버페이',
-    approvalNo: 'NP-20260420-00845',
-    requestedAt: '2026.05.07 18:22',
-    reason: '호스트가 예약을 거절했어요',
-    isHostRejected: true,
-    alertMessage: null,
-  },
-  {
-    id: 3,
-    refundId: 'RFD-20260507-00917',
-    bookingId: 'SW-20260514-001038',
-    paymentId: 'PAY-20260418-00823',
-    status: 'completed',
-    userName: '최민서',
-    userEmail: 'minseo.choi@example.com',
-    userPhone: '010-****-9012',
-    spaceName: '청평 숲속 파인뷰 스테이',
-    spaceEmoji: '🌲',
-    spaceCategory: '워크앤스테이',
-    spaceHost: '청평 숲속 호스트',
-    checkInDate: '2026-05-14',
-    paidAmount: 510000,
-    method: '카카오페이',
-    methodIcon: '💬',
-    pg: 'KG이니시스',
-    approvalNo: 'KP-20260418-00823',
-    requestedAt: '2026.05.07 14:05',
-    reason: '여행 계획이 바뀌었어요',
-    isHostRejected: false,
-    alertMessage: null,
-  },
-  {
-    id: 4,
-    refundId: 'RFD-20260506-00912',
-    bookingId: 'SW-20260512-001025',
-    paymentId: 'PAY-20260415-00798',
-    status: 'completed',
-    userName: '정유나',
-    userEmail: 'yuna.jung@example.com',
-    userPhone: '010-****-3456',
-    spaceName: '강릉 바다향 코워킹',
-    spaceEmoji: '🌊',
-    spaceCategory: '코워킹오피스',
-    spaceHost: '강릉 워크 호스트',
-    checkInDate: '2026-05-12',
-    paidAmount: 880000,
-    method: '토스페이',
-    methodIcon: 'T',
-    pg: '토스페이먼츠',
-    approvalNo: 'TP-20260415-00798',
-    requestedAt: '2026.05.06 21:38',
-    reason: '개인 사정으로 취소해요',
-    isHostRejected: false,
-    alertMessage: null,
-  },
-  {
-    id: 5,
-    refundId: 'RFD-20260424-00847',
-    bookingId: 'SW-20260508-000847',
-    paymentId: 'PAY-20260424-00847',
-    status: 'completed',
-    userName: '김우영',
-    userEmail: 'wooyoung.kim@example.com',
-    userPhone: '010-****-1234',
-    spaceName: '청평 숲속 파인뷰 스테이',
-    spaceEmoji: '🌲',
-    spaceCategory: '워크앤스테이',
-    spaceHost: '청평 숲속 호스트',
-    checkInDate: '2026-05-08',
-    paidAmount: 326500,
-    method: '카카오페이',
-    methodIcon: '💬',
-    pg: 'KG이니시스',
-    approvalNo: 'KP-20260424-00512847',
-    requestedAt: '2026.04.24 14:32',
-    reason: '일정이 변경됐어요',
-    isHostRejected: false,
-    alertMessage: null,
-  },
-]
+const REASON_LABEL = {
+  SCHEDULE: '일정이 변경됐어요',
+  SPACE: '다른 공간으로 변경하려고요',
+  HEALTH: '건강상의 이유',
+  PERSONAL: '개인 사정 / 긴급 상황',
+  PRICE: '가격이 부담돼요',
+  ETC: '기타',
+};
 
-// status별 처리 이력 생성
-function buildProcessHistory(refund) {
-  const baseEvents = [
+const RATE_VALUE = {
+  WEEK: 100,
+  FOURTOSIX: 70,
+  TWOTOTHREE: 50,
+  ONEDAY: 30,
+  DDAY: 0,
+  FULL: 100,
+};
+
+const METHOD_INFO = {
+  KAKAOPAY: { label: '카카오페이', icon: '💬', pg: '카카오페이' },
+  TOSSPAY: { label: '토스페이', icon: '🅣', pg: '토스페이' },
+  NAVERPAY: { label: '네이버페이', icon: '🇳', pg: '네이버페이' },
+};
+
+const formatDate = (iso) => {
+  if (!iso) return '-';
+  const d = new Date(iso);
+  const pad = (n) => String(n).padStart(2, '0');
+  return `${d.getFullYear()}.${pad(d.getMonth() + 1)}.${pad(d.getDate())} ${pad(
+    d.getHours()
+  )}:${pad(d.getMinutes())}`;
+};
+
+const isRequested = (status) => status === 'REQUESTED' || status === 'APPROVED';
+const isCompleted = (status) => status === 'COMPLETED';
+const isHostRejected = (refund) =>
+  refund?.refundReason === null && refund?.refundRate === 'FULL';
+
+const buildProcessHistory = (refund) => {
+  const requestedAt = formatDate(refund.requestedAt ?? refund.createdAt);
+  const events = [
     {
       status: 'done',
       title: '환불 신청 접수',
-      description: '사용자가 환불 신청을 완료했습니다',
-      at: refund.requestedAt,
-      actor: `사용자: ${refund.userName}`,
+      description: isHostRejected(refund)
+        ? '호스트 거절로 인한 자동 환불 신청'
+        : '사용자가 환불 신청을 완료했습니다',
+      at: requestedAt,
+      actor: isHostRejected(refund) ? '시스템 (호스트 거절)' : '사용자',
     },
     {
       status: 'done',
-      title: '자동 환불 정책 검증',
-      description: '환불 정책에 따라 환불율을 계산했습니다',
-      at: refund.requestedAt,
+      title: '환불 정책 적용',
+      description: `환불율 ${RATE_VALUE[refund.refundRate] ?? 0}% 자동 계산`,
+      at: requestedAt,
       actor: '시스템',
     },
-  ]
+  ];
 
-  if (refund.status === 'failed') {
-    return [
-      ...baseEvents,
+  if (isCompleted(refund.status)) {
+    events.push(
       {
-        status: 'error',
-        title: 'PG사 송금 시도 실패',
-        description: '카카오페이 응답: ERR_INSUFFICIENT_BALANCE (잔액 부족)',
-        at: '2026.05.08 09:15',
-        actor: '시스템',
+        status: 'done',
+        title: '관리자 승인 완료',
+        description: '환불 승인 및 후속 처리 수행',
+        at: formatDate(refund.modifiedAt),
+        actor: '관리자',
       },
       {
-        status: 'error',
-        title: '자동 재시도 진행 중',
-        description: 'PG사 응답 대기 - 자동 재처리 큐 대기 중',
-        at: '2026.05.08 09:18',
+        status: 'done',
+        title: '환불 완료',
+        description: '쿠폰·포인트 복원 및 결제 취소 처리',
+        at: formatDate(refund.modifiedAt),
         actor: '시스템',
-      },
-    ]
+      }
+    );
+  } else {
+    events.push({
+      status: 'pending',
+      title: '관리자 승인 대기',
+      description: '환불 승인 후 자동으로 후속 처리됩니다',
+      at: '-',
+      actor: '관리자',
+    });
   }
 
-  // completed
-  return [
-    ...baseEvents,
-    {
-      status: 'done',
-      title: 'PG사 송금 요청',
-      description: `${refund.method}로 환불 요청 전송`,
-      at: refund.requestedAt,
-      actor: '시스템',
-    },
-    {
-      status: 'done',
-      title: '환불 완료',
-      description: '사용자 계좌로 환불 완료',
-      at: '2026.05.08 10:23',
-      actor: '시스템',
-    },
-  ]
-}
-
-// status별 저장된 메모
-function getSavedMemos(refund) {
-  if (refund.status === 'failed') {
-    return [
-      {
-        author: '시스템',
-        at: '2026.05.08 09:18',
-        content: '자동 재시도 큐로 이관됨 - PG사 응답 대기',
-      },
-    ]
-  }
-  return []
-}
+  return events;
+};
 
 export default function RefundDetail() {
-  const nav = useNavigate()
-  const { id } = useParams()
-  const [memo, setMemo] = useState('')
+  const navigate = useNavigate();
+  const { no } = useParams();
 
-  // ID로 환불 찾기 (없으면 첫 번째)
-  const refund = REFUNDS.find((r) => String(r.id) === id) || REFUNDS[0]
-  const processHistory = buildProcessHistory(refund)
-  const savedMemos = getSavedMemos(refund)
-  const isFailed = refund.status === 'failed'
+  const [refund, setRefund] = useState(null);
+  const [pay, setPay] = useState(null);
+  const [memo, setMemo] = useState('');
+  const [processing, setProcessing] = useState(false);
 
-  const calc = useRefundCalculation({
-    amount: refund.paidAmount,
-    checkInDate: refund.checkInDate,
-    hostRejected: refund.isHostRejected,
-  })
+  useEffect(() => {
+    if (!no) return;
+    const load = async () => {
+      try {
+        const refundResDto = await findRefundByNo(no);
+        setRefund(refundResDto);
+        if (refundResDto.payNo) {
+          const payResDto = await findPayByNo(refundResDto.payNo);
+          setPay(payResDto);
+        }
+      } catch (err) {
+        console.error('환불 상세 조회 실패', err);
+        alert('환불 정보를 불러올 수 없습니다.');
+        navigate('/admin/refund');
+      }
+    };
+    load();
+  }, [no, navigate]);
+
+  const handleApprove = async () => {
+    if (!refund || processing) return;
+    if (!window.confirm(`환불을 승인 처리할까요?\n쿠폰 반환·포인트 환원·결제 취소가 자동 진행됩니다.`)) {
+      return;
+    }
+    setProcessing(true);
+    try {
+      const updated = await processRefund(refund.no);
+      setRefund(updated);
+      alert('환불 승인 완료. 사용자에게 환불 처리됐습니다.');
+    } catch (err) {
+      console.error('환불 승인 실패', err);
+      const msg = err?.response?.data?.msg ?? err.message;
+      alert(`환불 승인에 실패했습니다.\n${msg}`);
+    } finally {
+      setProcessing(false);
+    }
+  };
+
+  if (!refund) return null;
+
+  const methodInfo = pay
+    ? METHOD_INFO[pay.method] ?? { label: pay.method, icon: '💳', pg: '-' }
+    : { label: '-', icon: '💳', pg: '-' };
+  const refundAmtNumber = Number(refund.refundAmt ?? 0);
+  const paidAmtNumber = Number(pay?.finalAmt ?? 0);
+  const rateNumber = RATE_VALUE[refund.refundRate] ?? 0;
+  const reasonText = isHostRejected(refund)
+    ? '호스트가 예약을 거절했어요'
+    : (REASON_LABEL[refund.refundReason] ?? '사유 없음');
+
+  const refundIdStr = `RFD-${String(refund.no).padStart(6, '0')}`;
+  const paymentIdStr = `PAY-${String(refund.payNo).padStart(6, '0')}`;
+  const bookingIdStr = `RSVN-${String(refund.rsvnNo).padStart(6, '0')}`;
+
+  const canApprove = isRequested(refund.status) && !processing;
 
   return (
     <PageLayout
       title="환불 상세"
-      description="환불 처리 내역을 확인하세요"
+      description="환불 처리 내역을 확인하고 승인하세요"
       backTo="/admin/refund"
       backLabel="환불 관리"
       maxWidth={1200}
     >
-
-      {isFailed && (
+      {isRequested(refund.status) && (
         <RefundStatusBanner
-          variant="danger"
-          title={`⚠️ PG 송금 실패 - ${refund.alertMessage}`}
-          description="자동 재시도 진행 중입니다. PG사 응답에 따라 환불이 완료되거나 재처리됩니다."
+          variant="warning"
+          title="⏳ 관리자 승인 대기 중"
+          description="아래 '환불 승인' 버튼을 눌러 환불을 처리하세요. 쿠폰·포인트·결제가 자동으로 후속 처리됩니다."
         />
       )}
-      {refund.status === 'completed' && (
+      {isCompleted(refund.status) && (
         <RefundStatusBanner
           variant="success"
           title="✓ 환불 완료"
-          description={`${calc.refundAmount.toLocaleString()}원이 사용자에게 환불 처리되었습니다.`}
+          description={`${refundAmtNumber.toLocaleString()}원이 사용자에게 환불 처리되었습니다.`}
         />
       )}
 
@@ -251,27 +192,36 @@ export default function RefundDetail() {
         <Section title="환불 정보">
           <InfoCard padded>
             <InfoHeader>
-              {refund.status === 'failed' && <Badge variant="danger" size="md">⚠️ 송금 실패</Badge>}
-              {refund.status === 'completed' && <Badge variant="success" size="md">✓ 완료</Badge>}
-              <RefundId>{refund.refundId}</RefundId>
+              {isRequested(refund.status) && (
+                <Badge variant="warning" size="md">⏳ 승인 대기</Badge>
+              )}
+              {isCompleted(refund.status) && (
+                <Badge variant="success" size="md">✓ 완료</Badge>
+              )}
+              <RefundId>{refundIdStr}</RefundId>
             </InfoHeader>
 
             <InfoBlock>
               <Row>
                 <Label>신청일시</Label>
-                <Value>{refund.requestedAt}</Value>
+                <Value>{formatDate(refund.requestedAt ?? refund.createdAt)}</Value>
               </Row>
               <Row>
                 <Label>환불 사유</Label>
-                <Value>"{refund.reason}"</Value>
+                <Value>
+                  "{reasonText}"
+                  {isHostRejected(refund) && (
+                    <Badge variant="warning" size="sm">호스트 거절</Badge>
+                  )}
+                </Value>
               </Row>
               <Row>
                 <Label>예약 번호</Label>
-                <Mono>{refund.bookingId}</Mono>
+                <Mono>{bookingIdStr}</Mono>
               </Row>
               <Row>
                 <Label>결제 번호</Label>
-                <Mono>{refund.paymentId}</Mono>
+                <Mono>{paymentIdStr}</Mono>
               </Row>
             </InfoBlock>
 
@@ -280,22 +230,16 @@ export default function RefundDetail() {
             <InfoBlock>
               <SubTitle>환불 정책 적용</SubTitle>
               <Row>
-                <Label>체크인까지 D-day</Label>
-                <Value>{calc.daysUntilCheckIn}일</Value>
-              </Row>
-              <Row>
                 <Label>환불율</Label>
-                <Badge variant="success" size="sm">
-                  {calc.rate}% 환불
-                </Badge>
+                <Badge variant="success" size="sm">{rateNumber}% 환불</Badge>
               </Row>
               <Row>
                 <Label>결제 금액</Label>
-                <Value>{refund.paidAmount.toLocaleString()}원</Value>
+                <Value>{paidAmtNumber.toLocaleString()}원</Value>
               </Row>
               <Row>
                 <Label>환불 금액</Label>
-                <Highlight>{calc.refundAmount.toLocaleString()}원</Highlight>
+                <Highlight>{refundAmtNumber.toLocaleString()}원</Highlight>
               </Row>
             </InfoBlock>
           </InfoCard>
@@ -307,38 +251,22 @@ export default function RefundDetail() {
               <UserHeader>
                 <UserAvatar>👤</UserAvatar>
                 <UserMain>
-                  <UserName>{refund.userName}</UserName>
-                  <UserEmail>{refund.userEmail}</UserEmail>
+                  <UserName>회원 #{refund.rsvnNo}</UserName>
+                  <UserEmail>회원 도메인 연동 영역 (미연동)</UserEmail>
                 </UserMain>
               </UserHeader>
-              <UserMeta>
-                <Row>
-                  <Label>연락처</Label>
-                  <Value>{refund.userPhone}</Value>
-                </Row>
-              </UserMeta>
             </InfoCard>
           </Section>
 
           <Section title="예약 공간">
             <InfoCard padded>
               <SpaceHeader>
-                <SpaceEmoji>{refund.spaceEmoji}</SpaceEmoji>
+                <SpaceEmoji>🏠</SpaceEmoji>
                 <SpaceMain>
-                  <SpaceName>{refund.spaceName}</SpaceName>
-                  <Badge variant="sage" size="sm">{refund.spaceCategory}</Badge>
+                  <SpaceName>예약 #{refund.rsvnNo}</SpaceName>
+                  <Badge variant="sage" size="sm">공간 정보 미연동</Badge>
                 </SpaceMain>
               </SpaceHeader>
-              <SpaceMeta>
-                <Row>
-                  <Label>호스트</Label>
-                  <Value>{refund.spaceHost}</Value>
-                </Row>
-                <Row>
-                  <Label>체크인</Label>
-                  <Value>{refund.checkInDate}</Value>
-                </Row>
-              </SpaceMeta>
             </InfoCard>
           </Section>
 
@@ -347,37 +275,41 @@ export default function RefundDetail() {
               <Row>
                 <Label>결제 수단</Label>
                 <Value>
-                  <MethodChip>{refund.methodIcon}</MethodChip>
-                  {refund.method}
+                  <MethodChip>{methodInfo.icon}</MethodChip>
+                  {methodInfo.label}
                 </Value>
               </Row>
               <Row>
                 <Label>PG사</Label>
-                <Value>{refund.pg}</Value>
+                <Value>{methodInfo.pg}</Value>
               </Row>
               <Row>
                 <Label>승인번호</Label>
-                <Mono>{refund.approvalNo}</Mono>
+                <Mono>{pay?.tid ?? '-'}</Mono>
               </Row>
             </InfoCard>
           </Section>
         </SideColumn>
       </DetailGrid>
 
-      <RefundProcessHistory events={processHistory} />
+      <RefundProcessHistory events={buildProcessHistory(refund)} />
 
-      <AdminMemoBox memo={memo} onChange={setMemo} savedMemos={savedMemos} />
+      <AdminMemoBox memo={memo} onChange={setMemo} savedMemos={[]} />
 
       <Actions>
-        <ActionRight style={{ marginLeft: 'auto' }}>
-          <Button variant="secondary" onClick={() => nav('/admin/refund')}>
-            목록으로
+        <Button variant="secondary" onClick={() => navigate('/admin/refund')}>
+          목록으로
+        </Button>
+        {canApprove && (
+          <Button variant="primary" onClick={handleApprove} disabled={processing}>
+            {processing ? '처리 중...' : '✓ 환불 승인하기'}
           </Button>
-        </ActionRight>
+        )}
       </Actions>
     </PageLayout>
-  )
+  );
 }
+
 const DetailGrid = styled.div`
   display: grid;
   grid-template-columns: 1.3fr 1fr;
@@ -387,15 +319,15 @@ const DetailGrid = styled.div`
   @media (max-width: 1100px) {
     grid-template-columns: 1fr;
   }
-`
+`;
 
 const SideColumn = styled.div`
   display: flex;
   flex-direction: column;
   gap: var(--space-3);
-`
+`;
 
-const InfoCard = styled(Card)``
+const InfoCard = styled(Card)``;
 
 const InfoHeader = styled.div`
   display: flex;
@@ -404,37 +336,37 @@ const InfoHeader = styled.div`
   margin-bottom: var(--space-3);
   padding-bottom: var(--space-3);
   border-bottom: 1px dashed var(--gray-200);
-`
+`;
 
 const RefundId = styled.span`
   font-family: var(--font-mono);
   font-size: 0.82rem;
   color: var(--gray-600);
-`
+`;
 
 const InfoBlock = styled.div`
   display: flex;
   flex-direction: column;
   gap: 8px;
-`
+`;
 
 const SubTitle = styled.div`
   font-size: 0.85rem;
   font-weight: 600;
   color: var(--gray-800);
   margin-bottom: 4px;
-`
+`;
 
 const Row = styled.div`
   display: flex;
   justify-content: space-between;
   align-items: center;
   font-size: 0.85rem;
-`
+`;
 
 const Label = styled.span`
   color: var(--gray-400);
-`
+`;
 
 const Value = styled.span`
   color: var(--gray-800);
@@ -442,14 +374,14 @@ const Value = styled.span`
   display: inline-flex;
   align-items: center;
   gap: 6px;
-`
+`;
 
 const Mono = styled.span`
   font-family: var(--font-mono);
   font-size: 0.78rem;
   color: var(--gray-800);
   font-weight: 500;
-`
+`;
 
 const Highlight = styled.span`
   font-family: var(--font-display);
@@ -457,22 +389,19 @@ const Highlight = styled.span`
   font-weight: 600;
   color: var(--sage);
   letter-spacing: -0.02em;
-`
+`;
 
 const Divider = styled.hr`
   border: none;
   border-top: 1px dashed var(--gray-200);
   margin: var(--space-3) 0;
-`
+`;
 
 const UserHeader = styled.div`
   display: flex;
   align-items: center;
   gap: var(--space-3);
-  margin-bottom: var(--space-3);
-  padding-bottom: var(--space-3);
-  border-bottom: 1px dashed var(--gray-200);
-`
+`;
 
 const UserAvatar = styled.div`
   width: 40px;
@@ -483,39 +412,30 @@ const UserAvatar = styled.div`
   align-items: center;
   justify-content: center;
   font-size: 1.2rem;
-`
+`;
 
 const UserMain = styled.div`
   flex: 1;
-`
+`;
 
 const UserName = styled.div`
   font-size: 0.95rem;
   font-weight: 500;
   color: var(--gray-800);
   margin-bottom: 2px;
-`
+`;
 
 const UserEmail = styled.div`
   font-family: var(--font-mono);
   font-size: 0.78rem;
   color: var(--gray-400);
-`
-
-const UserMeta = styled.div`
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-`
+`;
 
 const SpaceHeader = styled.div`
   display: flex;
   align-items: center;
   gap: var(--space-3);
-  margin-bottom: var(--space-3);
-  padding-bottom: var(--space-3);
-  border-bottom: 1px dashed var(--gray-200);
-`
+`;
 
 const SpaceEmoji = styled.div`
   width: 40px;
@@ -526,24 +446,18 @@ const SpaceEmoji = styled.div`
   align-items: center;
   justify-content: center;
   font-size: 1.3rem;
-`
+`;
 
 const SpaceMain = styled.div`
   flex: 1;
-`
+`;
 
 const SpaceName = styled.div`
   font-size: 0.95rem;
   font-weight: 500;
   color: var(--gray-800);
   margin-bottom: 4px;
-`
-
-const SpaceMeta = styled.div`
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-`
+`;
 
 const MethodChip = styled.span`
   width: 20px;
@@ -554,7 +468,7 @@ const MethodChip = styled.span`
   align-items: center;
   justify-content: center;
   font-size: 0.75rem;
-`
+`;
 
 const Actions = styled.div`
   display: flex;
@@ -566,21 +480,9 @@ const Actions = styled.div`
 
   @media (max-width: 640px) {
     flex-direction: column-reverse;
-  }
-`
-
-const ActionLeft = styled.div``
-
-const ActionRight = styled.div`
-  display: flex;
-  gap: var(--space-2);
-  flex-wrap: wrap;
-
-  @media (max-width: 640px) {
-    flex-direction: column;
 
     & > button {
       width: 100%;
     }
   }
-`
+`;

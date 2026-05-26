@@ -33,4 +33,8 @@ public class ImgPlaceEntity {
                 .sort(sort)
                 .build();
     }
+
+    public void updateSort(int sort) {
+        this.sort = sort;
+    }
 }

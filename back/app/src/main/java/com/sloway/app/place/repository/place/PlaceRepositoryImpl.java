@@ -9,7 +9,9 @@ import com.querydsl.jpa.impl.JPAQueryFactory;
 import com.sloway.app.place.dto.request.place.PlaceUpdateReqDto;
 import com.sloway.app.place.dto.response.place.MasterPlaceRespDto;
 import com.sloway.app.place.dto.response.place.PlaceDetailListRespDto;
+import com.sloway.app.place.dto.response.place.PlaceImgListRespDto;
 import com.sloway.app.place.dto.response.place.PlaceListRespDto;
+import com.sloway.app.place.dto.response.workStay.WorkStayImageListRespDto;
 import lombok.RequiredArgsConstructor;
 
 import java.time.LocalDateTime;
@@ -27,6 +29,8 @@ import static com.sloway.app.place.entity.place.QImgPlaceEntity.imgPlaceEntity;
 import static com.sloway.app.place.entity.office.QImgOfficeEntity.imgOfficeEntity;
 import static com.sloway.app.place.entity.station.QImgStationEntity.imgStationEntity;
 import static com.sloway.app.place.entity.station.QStationEntity.stationEntity;
+import static com.sloway.app.place.entity.workStay.workOffice.QImgWorkStayOfficeEntity.imgWorkStayOfficeEntity;
+import static com.sloway.app.place.entity.workStay.workOffice.QWorkOfficeEntity.workOfficeEntity;
 import static com.sloway.app.reservation.rsvn.entity.QRsvnEntity.rsvnEntity;
 import static com.sloway.app.review.review.entity.QReviewEntity.reviewEntity;
 import static com.sloway.app.place.entity.office.QOfficePeriodEntity.officePeriodEntity;
@@ -234,5 +238,28 @@ public class PlaceRepositoryImpl implements PlaceRepositoryCustom {
                         hostPlaceEntity.hostEntity.memberNo.eq(memberNo)
                 )
                 .fetchOne();
+    }
+
+    @Override
+    public PlaceImgListRespDto selectImageList(Long no, Long memberNo) {
+        List<PlaceImgListRespDto.ImageInfo> placeList = queryFactory
+                .select(Projections.constructor(PlaceImgListRespDto.ImageInfo.class,
+                        imgPlaceEntity.no,
+                        imgPlaceEntity.currentUrl,
+                        imgPlaceEntity.sort
+                ))
+                .from(imgPlaceEntity)
+                .join(hostPlaceEntity).on(imgPlaceEntity.placeEntity.eq(hostPlaceEntity.placeEntity))
+                .join(hostEntity).on(hostPlaceEntity.hostEntity.eq(hostEntity))
+                .where(
+                        imgPlaceEntity.placeEntity.no.eq(no),
+                        hostEntity.memberNo.eq(memberNo)
+                )
+                .orderBy(imgPlaceEntity.sort.asc())
+                .fetch();
+
+        return PlaceImgListRespDto.builder()
+                .placeImages(placeList != null ? placeList : List.of())
+                .build();
     }
 }

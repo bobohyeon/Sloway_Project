@@ -45,13 +45,47 @@ export default function useImageUpdate() {
       try {
         if (!id || !apiMap[spaceType]) return;
         const resp = await apiMap[spaceType].fetch(id);
+        console.log('백엔드 응답 데이터:', resp);
 
         if (resp && resp.data) {
           if (isWorkStay) {
-            setImages(resp.data.workStayImages || []);
-            setOfficeImages(resp.data.officeImages || []);
+            // 1. 워크앤스테이일 때 (숙소 / 오피스 찢어서 매핑)
+            const stayImagesRaw = resp.data.workStayImages || [];
+            const officeImagesRaw = resp.data.officeImages || [];
+
+            setImages(
+              stayImagesRaw.map((img) => ({
+                id: img.imageNo,
+                imageNo: img.imageNo,
+                preview: img.preview,
+                file: null,
+              }))
+            );
+
+            setOfficeImages(
+              officeImagesRaw.map((img) => ({
+                id: img.imageNo,
+                imageNo: img.imageNo,
+                preview: img.preview,
+                file: null,
+              }))
+            );
           } else {
-            setImages(resp.data || []);
+            // 2. 일반 단독 공간일 때
+            const normalImagesRaw = Array.isArray(resp.data.placeImages)
+              ? resp.data.placeImages
+              : [];
+
+            setImages(
+              normalImagesRaw.map((img) => ({
+                id: img.imageNo,
+                imageNo: img.imageNo,
+                preview: img.preview,
+                file: null,
+              }))
+            );
+            setOfficeImages([]);
+            console.log(images);
           }
         }
       } catch (error) {

@@ -1,480 +1,388 @@
-import { useNavigate, useParams } from 'react-router-dom'
-import styled from 'styled-components'
+import { useEffect, useMemo, useState } from 'react';
+import { useNavigate, useParams } from 'react-router-dom';
+import styled from 'styled-components';
+import PageLayout from '../../../../app/layouts/page/PageLayout';
+import { Badge, Button, Card, Section } from '../../../pay_shared/components';
+import { PaymentDetailCard } from '../../components/user/PaymentDetailCard';
+import { PaymentStatusBadge } from '../../components/user/PaymentStatusBadge';
+import { PriceBreakdown } from '../../components/user/PriceBreakdown';
+import { findPayByNo } from '../../api/payApi';
+import { findRefundAll } from '../../../refund/api/refundApi';
 
-import PageLayout from '../../../../app/layouts/page/PageLayout'
+const StatusRow = styled.div`
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  margin-bottom: var(--space-4);
+`;
 
-import { Card, Button, Badge, Section } from '../../../pay_shared/components'
+const PayIdMono = styled.span`
+  font-family: var(--font-mono);
+  font-size: 0.85rem;
+  color: var(--gray-400);
+`;
 
-const PAYMENTS = [
-  {
-    id: 'PAY-20260508-921',
-    bookingId: 'SW-20260512-001045',
-    status: 'completed',
-    userName: '이재현',
-    userEmail: 'jaehyun.lee@example.com',
-    userPhone: '010-****-1234',
-    userJoinDate: '2025.08.15',
-    spaceName: '청평 숲속 파인뷰 스테이',
-    spaceEmoji: '🌲',
-    category: '워크앤스테이',
-    location: '경기 가평',
-    hostName: '청평 숲속 호스트',
-    checkInDate: '2026.05.10 (토) ~ 05.12 (월) · 2박',
-    guests: '성인 2명',
-    method: '카카오페이',
-    methodIcon: '💬',
-    pg: 'KG이니시스',
-    approvalNo: 'KP-20260508-00512921',
-    cardInfo: '신한 ****-1234',
-    installments: '일시불',
-    paidAt: '2026.05.08 14:32',
-    refundedAt: null,
-    failReason: null,
-    priceItems: [
-      { label: '270,000원 × 2박', amount: 540000 },
-      { label: '서비스 수수료', amount: 15000 },
-      { label: '🎟️ 봄맞이 워케이션 15% 할인', amount: 81000, type: 'discount' },
-    ],
-    subtotal: 555000,
-    total: 540000,
-    earnedPoints: 5400,
-    commission: 67500,
-    payoutToHost: 472500,
-  },
-  {
-    id: 'PAY-20260508-917',
-    bookingId: 'SW-20260514-001038',
-    status: 'refunded',
-    userName: '김도현',
-    userEmail: 'dohyun.kim@example.com',
-    userPhone: '010-****-5678',
-    userJoinDate: '2025.11.20',
-    spaceName: '청평 숲속 파인뷰 스테이',
-    spaceEmoji: '🌲',
-    category: '워크앤스테이',
-    location: '경기 가평',
-    hostName: '청평 숲속 호스트',
-    checkInDate: '2026.05.14 (수) ~ 05.16 (금) · 2박',
-    guests: '성인 2명',
-    method: '네이버페이',
-    methodIcon: 'N',
-    pg: '네이버페이',
-    approvalNo: 'NP-20260508-00478917',
-    cardInfo: '네이버페이 머니',
-    installments: '일시불',
-    paidAt: '2026.05.08 10:05',
-    refundedAt: '2026.05.08 16:23',
-    refundAmount: 540000,
-    failReason: null,
-    priceItems: [{ label: '270,000원 × 2박', amount: 540000 }],
-    subtotal: 540000,
-    total: 540000,
-    earnedPoints: 0,
-    commission: 67500,
-    payoutToHost: 0,
-  },
-  {
-    id: 'PAY-20260507-912',
-    bookingId: 'SW-20260512-001025',
-    status: 'failed',
-    userName: '정유나',
-    userEmail: 'yuna.jung@example.com',
-    userPhone: '010-****-3456',
-    userJoinDate: '2026.02.10',
-    spaceName: '강릉 바다향 코워킹',
-    spaceEmoji: '🌊',
-    category: '코워킹오피스',
-    location: '강원 강릉',
-    hostName: '강릉 워크 호스트',
-    checkInDate: '2026.05.12 (월) 10:00 ~ 18:00 · 8시간',
-    guests: '성인 3명',
-    method: '토스페이',
-    methodIcon: 'T',
-    pg: '토스페이먼츠',
-    approvalNo: '-',
-    cardInfo: '토스 머니',
-    installments: '-',
-    paidAt: '2026.05.07 21:38',
-    refundedAt: null,
-    failReason: '카드 한도 초과 - PG사 응답: ERR_LIMIT_EXCEEDED',
-    priceItems: [{ label: '10,500원 × 8시간', amount: 84000 }],
-    subtotal: 84000,
-    total: 84000,
-    earnedPoints: 0,
-    commission: 0,
-    payoutToHost: 0,
-  },
-]
+const DetailGrid = styled.div`
+  display: grid;
+  grid-template-columns: 1.4fr 1fr;
+  gap: var(--space-4);
+  margin-bottom: var(--space-5);
+
+  @media (max-width: 1000px) {
+    grid-template-columns: 1fr;
+  }
+`;
+
+const MainColumn = styled.div``;
+
+const SideColumn = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+`;
+
+const InfoCard = styled(Card)``;
+
+const InfoHeader = styled.div`
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+`;
+
+const Avatar = styled.div`
+  width: 40px;
+  height: 40px;
+  background: var(--cream);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.2rem;
+`;
+
+const Main = styled.div`
+  flex: 1;
+`;
+
+const MainName = styled.div`
+  font-size: 0.95rem;
+  font-weight: 500;
+  color: var(--gray-800);
+  margin-bottom: 2px;
+`;
+
+const SubText = styled.div`
+  font-size: 0.78rem;
+  color: var(--gray-400);
+`;
+
+const Row = styled.div`
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 0.85rem;
+  padding: 6px 0;
+
+  & + & {
+    border-top: 1px dashed var(--gray-200);
+  }
+`;
+
+const Label = styled.span`
+  color: var(--gray-400);
+`;
+
+const Value = styled.span`
+  color: var(--gray-800);
+  font-weight: 500;
+`;
+
+const Mono = styled.span`
+  font-family: var(--font-mono);
+  font-size: 0.78rem;
+  color: var(--gray-800);
+  font-weight: 500;
+`;
+
+const Muted = styled.span`
+  color: var(--gray-400);
+  font-weight: 400;
+`;
+
+const RefundCard = styled(Card)`
+  cursor: pointer;
+  transition: all 200ms ease;
+
+  &:hover {
+    border-color: var(--sage);
+    transform: translateY(-1px);
+  }
+`;
+
+const RefundHeader = styled.div`
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-bottom: var(--space-2);
+  border-bottom: 1px dashed var(--gray-200);
+  margin-bottom: var(--space-2);
+`;
+
+const RefundIdMono = styled.span`
+  font-family: var(--font-mono);
+  font-size: 0.78rem;
+  color: var(--gray-600);
+`;
+
+const RefundFooter = styled.div`
+  margin-top: var(--space-3);
+  text-align: right;
+  font-size: 0.78rem;
+  color: var(--sage);
+  font-weight: 500;
+`;
+
+const Actions = styled.div`
+  display: flex;
+  justify-content: space-between;
+  gap: var(--space-3);
+  padding-top: var(--space-5);
+  border-top: 1px solid var(--gray-200);
+
+  @media (max-width: 640px) {
+    flex-direction: column-reverse;
+
+    & > button {
+      width: 100%;
+    }
+  }
+`;
+
+const STATUS_TO_UI = {
+  READY: 'pending',
+  COMPLETED: 'completed',
+  FAILED: 'failed',
+  CANCELED: 'refunded',
+};
+
+const METHOD_INFO = {
+  KAKAOPAY: { label: '카카오페이', icon: '💛', pg: '카카오페이' },
+  TOSSPAY: { label: '토스페이', icon: '💙', pg: '토스페이' },
+  NAVERPAY: { label: '네이버페이', icon: '💚', pg: '네이버페이' },
+};
+
+const REFUND_STATUS_LABEL = {
+  REQUESTED: { label: '환불 요청 중', variant: 'warning' },
+  APPROVED: { label: '환불 처리 중', variant: 'warning' },
+  COMPLETED: { label: '환불 완료', variant: 'success' },
+};
+
+const formatDate = (iso) => {
+  if (!iso) return '-';
+  const d = new Date(iso);
+  const pad = (n) => String(n).padStart(2, '0');
+  return `${d.getFullYear()}.${pad(d.getMonth() + 1)}.${pad(d.getDate())} ${pad(
+    d.getHours()
+  )}:${pad(d.getMinutes())}`;
+};
+
+const toDetailCardPayment = (resDto) => {
+  const methodInfo = METHOD_INFO[resDto.method] ?? {
+    label: resDto.method,
+    icon: '💳',
+    pg: '-',
+  };
+  return {
+    paidAt: formatDate(resDto.approvedAt ?? resDto.createdAt),
+    method: methodInfo.label,
+    methodIcon: methodInfo.icon,
+    pg: methodInfo.pg,
+    approvalNo: resDto.tid ?? '-',
+  };
+};
+
+const buildPriceItems = (resDto) => {
+  const items = [
+    { label: '기본 금액', amount: resDto.baseAmt ?? 0, type: 'normal' },
+  ];
+  if (resDto.addAmt && resDto.addAmt > 0) {
+    items.push({ label: '추가 금액', amount: resDto.addAmt, type: 'normal' });
+  }
+  if (resDto.dcAmt && resDto.dcAmt > 0) {
+    items.push({ label: '쿠폰 할인', amount: resDto.dcAmt, type: 'discount' });
+  }
+  if (resDto.usedPoint && resDto.usedPoint > 0) {
+    items.push({
+      label: '포인트 사용',
+      amount: resDto.usedPoint,
+      type: 'discount',
+    });
+  }
+  return items;
+};
 
 export default function AdminPaymentDetail() {
-  const nav = useNavigate()
-  const { id } = useParams()
+  const navigate = useNavigate();
+  const { no } = useParams();
 
-  const payment = PAYMENTS.find((p) => p.id === id) || PAYMENTS[0]
-  const isCompleted = payment.status === 'completed'
-  const isRefunded = payment.status === 'refunded'
-  const isFailed = payment.status === 'failed'
+  const [pay, setPay] = useState(null);
+  const [linkedRefund, setLinkedRefund] = useState(null);
+
+  useEffect(() => {
+    if (!no) return;
+    const load = async () => {
+      try {
+        const [payResDto, refundList] = await Promise.all([
+          findPayByNo(no),
+          findRefundAll(),
+        ]);
+        setPay(payResDto);
+        const refund = refundList.find((r) => r.payNo === payResDto.no);
+        if (refund) setLinkedRefund(refund);
+      } catch (err) {
+        console.error('관리자 결제 상세 조회 실패', err);
+        alert('결제 정보를 불러올 수 없습니다.');
+        navigate('/admin/payment');
+      }
+    };
+    load();
+  }, [no, navigate]);
+
+  const uiStatus = useMemo(() => STATUS_TO_UI[pay?.status] ?? 'pending', [pay]);
+
+  if (!pay) return null;
+
+  const detailCardPayment = toDetailCardPayment(pay);
+  const priceItems = buildPriceItems(pay);
+  const refundStatusInfo = linkedRefund
+    ? REFUND_STATUS_LABEL[linkedRefund.status]
+    : null;
+  const refundIdStr = linkedRefund
+    ? `RFD-${String(linkedRefund.no).padStart(6, '0')}`
+    : null;
+
+  const handleRefundDetailClick = () => {
+    if (linkedRefund) navigate(`/admin/refund/${linkedRefund.no}`);
+  };
 
   return (
     <PageLayout
       title="결제 상세"
-      description="결제 내역과 관련 정보를 확인합니다"
+      description="결제 정보 및 연관 데이터를 확인하세요"
       backTo="/admin/payment"
-      backLabel="결제 내역"
-      maxWidth={1200}
+      backLabel="결제 관리"
+      maxWidth={1100}
     >
+      <StatusRow>
+        <PaymentStatusBadge status={uiStatus} size="md" />
+        <PayIdMono>PAY-{String(pay.no).padStart(6, '0')}</PayIdMono>
+      </StatusRow>
 
-      {isRefunded && (
-        <InfoBanner $variant="info">
-          <BannerIcon>↻</BannerIcon>
-          <BannerContent>
-            <BannerTitle>환불 완료</BannerTitle>
-            <BannerDesc>
-              {payment.refundedAt}에 환불 처리되었습니다 ({payment.refundAmount?.toLocaleString()}원)
-            </BannerDesc>
-          </BannerContent>
-        </InfoBanner>
-      )}
+      <DetailGrid>
+        <MainColumn>
+          <Card padded>
+            <PaymentDetailCard payment={detailCardPayment} />
+            <PriceBreakdown items={priceItems} total={pay.finalAmt ?? 0} />
+          </Card>
+        </MainColumn>
 
-      {isFailed && (
-        <InfoBanner $variant="danger">
-          <BannerIcon>✗</BannerIcon>
-          <BannerContent>
-            <BannerTitle>결제 실패</BannerTitle>
-            <BannerDesc>{payment.failReason}</BannerDesc>
-          </BannerContent>
-        </InfoBanner>
-      )}
+        <SideColumn>
+          <Section title="회원 정보">
+            <InfoCard padded>
+              <InfoHeader>
+                <Avatar>👤</Avatar>
+                <Main>
+                  <MainName>예약 #{pay.rsvnNo}</MainName>
+                  <SubText>
+                    회원 도메인 미연동 — 추후 회원명/이메일 노출
+                  </SubText>
+                </Main>
+              </InfoHeader>
+            </InfoCard>
+          </Section>
 
-      <DetailCard padded>
-        <CardHeader>
-          <HeaderLeft>
-            {isCompleted && <Badge variant="success" size="md">✓ 결제 완료</Badge>}
-            {isRefunded && <Badge variant="info" size="md">↻ 환불됨</Badge>}
-            {isFailed && <Badge variant="danger" size="md">✗ 결제 실패</Badge>}
-            <PaymentId>{payment.id}</PaymentId>
-          </HeaderLeft>
-          <PaymentAmount $refunded={isRefunded} $failed={isFailed}>
-            {payment.total.toLocaleString()}원
-          </PaymentAmount>
-        </CardHeader>
+          <Section title="예약 정보">
+            <InfoCard padded>
+              <Row>
+                <Label>예약 번호</Label>
+                <Mono>RSVN-{String(pay.rsvnNo).padStart(6, '0')}</Mono>
+              </Row>
+              <Row>
+                <Label>공간 정보</Label>
+                <Value>예약 도메인 미연동</Value>
+              </Row>
+            </InfoCard>
+          </Section>
 
-        <DetailGrid>
-          <DetailGroup>
-            <GroupTitle>회원 정보</GroupTitle>
-            <DetailRow>
-              <Label>회원명</Label>
-              <Value>{payment.userName}</Value>
-            </DetailRow>
-            <DetailRow>
-              <Label>이메일</Label>
-              <Value>{payment.userEmail}</Value>
-            </DetailRow>
-            <DetailRow>
-              <Label>연락처</Label>
-              <Value>{payment.userPhone}</Value>
-            </DetailRow>
-            <DetailRow>
-              <Label>가입일</Label>
-              <Value>{payment.userJoinDate}</Value>
-            </DetailRow>
-          </DetailGroup>
+          <Section title="할인 사용 영역">
+            <InfoCard padded>
+              <Row>
+                <Label>쿠폰 사용</Label>
+                <Value>
+                  {pay.ucNo ? (
+                    <Mono>UC-{String(pay.ucNo).padStart(6, '0')}</Mono>
+                  ) : (
+                    <Muted>미사용</Muted>
+                  )}
+                </Value>
+              </Row>
+              <Row>
+                <Label>포인트 사용</Label>
+                <Value>
+                  {pay.usedPoint && pay.usedPoint > 0 ? (
+                    `${pay.usedPoint.toLocaleString()}P`
+                  ) : (
+                    <Muted>미사용</Muted>
+                  )}
+                </Value>
+              </Row>
+            </InfoCard>
+          </Section>
 
-          <DetailGroup>
-            <GroupTitle>공간 정보</GroupTitle>
-            <DetailRow>
-              <Label>공간명</Label>
-              <Value>
-                {payment.spaceEmoji} {payment.spaceName}
-              </Value>
-            </DetailRow>
-            <DetailRow>
-              <Label>카테고리</Label>
-              <Value>{payment.category}</Value>
-            </DetailRow>
-            <DetailRow>
-              <Label>위치</Label>
-              <Value>{payment.location}</Value>
-            </DetailRow>
-            <DetailRow>
-              <Label>호스트</Label>
-              <Value>{payment.hostName}</Value>
-            </DetailRow>
-          </DetailGroup>
-
-          <DetailGroup>
-            <GroupTitle>예약 정보</GroupTitle>
-            <DetailRow>
-              <Label>예약번호</Label>
-              <Value>{payment.bookingId}</Value>
-            </DetailRow>
-            <DetailRow>
-              <Label>일정</Label>
-              <Value>{payment.checkInDate}</Value>
-            </DetailRow>
-            <DetailRow>
-              <Label>인원</Label>
-              <Value>{payment.guests}</Value>
-            </DetailRow>
-          </DetailGroup>
-
-          <DetailGroup>
-            <GroupTitle>결제 정보</GroupTitle>
-            <DetailRow>
-              <Label>결제수단</Label>
-              <Value>
-                {payment.methodIcon} {payment.method}
-              </Value>
-            </DetailRow>
-            <DetailRow>
-              <Label>PG사</Label>
-              <Value>{payment.pg}</Value>
-            </DetailRow>
-            <DetailRow>
-              <Label>승인번호</Label>
-              <Value>
-                <MonoText>{payment.approvalNo}</MonoText>
-              </Value>
-            </DetailRow>
-            <DetailRow>
-              <Label>카드</Label>
-              <Value>{payment.cardInfo}</Value>
-            </DetailRow>
-            <DetailRow>
-              <Label>할부</Label>
-              <Value>{payment.installments}</Value>
-            </DetailRow>
-            <DetailRow>
-              <Label>결제일시</Label>
-              <Value>{payment.paidAt}</Value>
-            </DetailRow>
-          </DetailGroup>
-        </DetailGrid>
-      </DetailCard>
-
-      <Section title="결제 금액 내역">
-        <BreakdownCard padded>
-          {payment.priceItems.map((item, i) => (
-            <BreakdownRow key={i}>
-              <BreakdownLabel>{item.label}</BreakdownLabel>
-              <BreakdownValue $discount={item.type === 'discount'}>
-                {item.type === 'discount' ? '-' : ''}
-                {item.amount.toLocaleString()}원
-              </BreakdownValue>
-            </BreakdownRow>
-          ))}
-          <Divider />
-          <BreakdownRow>
-            <BreakdownLabel $bold>총 결제 금액</BreakdownLabel>
-            <BreakdownValueSage>{payment.total.toLocaleString()}원</BreakdownValueSage>
-          </BreakdownRow>
-        </BreakdownCard>
-      </Section>
-
-      {isCompleted && (
-        <Section title="플랫폼 정산 내역">
-          <BreakdownCard padded>
-            <BreakdownRow>
-              <BreakdownLabel>결제 금액</BreakdownLabel>
-              <BreakdownValue>{payment.total.toLocaleString()}원</BreakdownValue>
-            </BreakdownRow>
-            <BreakdownRow>
-              <BreakdownLabel>플랫폼 수수료</BreakdownLabel>
-              <BreakdownValueRed>-{payment.commission.toLocaleString()}원</BreakdownValueRed>
-            </BreakdownRow>
-            <BreakdownRow>
-              <BreakdownLabel>적립 포인트</BreakdownLabel>
-              <BreakdownValue>{payment.earnedPoints.toLocaleString()}P</BreakdownValue>
-            </BreakdownRow>
-            <Divider />
-            <BreakdownRow>
-              <BreakdownLabel $bold>호스트 지급 예정</BreakdownLabel>
-              <BreakdownValueSage>{payment.payoutToHost.toLocaleString()}원</BreakdownValueSage>
-            </BreakdownRow>
-          </BreakdownCard>
-        </Section>
-      )}
+          {linkedRefund && (
+            <Section title="연관 환불">
+              <RefundCard padded onClick={handleRefundDetailClick}>
+                <RefundHeader>
+                  <Badge
+                    variant={refundStatusInfo?.variant ?? 'muted'}
+                    size="sm"
+                  >
+                    {refundStatusInfo?.label ?? linkedRefund.status}
+                  </Badge>
+                  <RefundIdMono>{refundIdStr}</RefundIdMono>
+                </RefundHeader>
+                <Row>
+                  <Label>환불 신청일</Label>
+                  <Value>
+                    {formatDate(
+                      linkedRefund.requestedAt ?? linkedRefund.createdAt
+                    )}
+                  </Value>
+                </Row>
+                <Row>
+                  <Label>환불 금액</Label>
+                  <Value>
+                    {Number(linkedRefund.refundAmt ?? 0).toLocaleString()}원
+                  </Value>
+                </Row>
+                <RefundFooter>환불 상세로 이동 →</RefundFooter>
+              </RefundCard>
+            </Section>
+          )}
+        </SideColumn>
+      </DetailGrid>
 
       <Actions>
-        <Button variant="secondary" onClick={() => nav('/admin/payment')}>
+        <Button variant="secondary" onClick={() => navigate('/admin/payment')}>
           목록으로
         </Button>
-        {isCompleted && (
-          <Button variant="secondary" onClick={() => nav('/admin/refund')}>
-            환불 관리로 이동
+        {linkedRefund && (
+          <Button variant="primary" onClick={handleRefundDetailClick}>
+            환불 상세 보기
           </Button>
         )}
-        <Button variant="primary" onClick={() => window.print()}>
-          🖨️ 출력
-        </Button>
       </Actions>
     </PageLayout>
-  )
+  );
 }
-const InfoBanner = styled.div`
-  display: flex;
-  align-items: flex-start;
-  gap: var(--space-3);
-  padding: var(--space-4);
-  background: ${(p) =>
-    p.$variant === 'danger'
-      ? 'rgba(220, 38, 38, 0.04)'
-      : 'rgba(168, 184, 159, 0.08)'};
-  border: 1px solid
-    ${(p) =>
-      p.$variant === 'danger' ? 'rgba(220, 38, 38, 0.2)' : 'rgba(168, 184, 159, 0.3)'};
-  border-radius: var(--radius-lg);
-  margin-bottom: var(--space-4);
-`
-
-const BannerIcon = styled.div`
-  font-size: 1.3rem;
-  flex-shrink: 0;
-`
-
-const BannerContent = styled.div`
-  flex: 1;
-`
-
-const BannerTitle = styled.div`
-  font-weight: 500;
-  color: var(--gray-800);
-  margin-bottom: 2px;
-`
-
-const BannerDesc = styled.div`
-  font-size: 0.85rem;
-  color: var(--gray-600);
-`
-
-const DetailCard = styled(Card)`
-  margin-bottom: var(--space-5);
-`
-
-const CardHeader = styled.div`
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: var(--space-5);
-  padding-bottom: var(--space-4);
-  border-bottom: 1px solid var(--gray-200);
-`
-
-const HeaderLeft = styled.div`
-  display: flex;
-  align-items: center;
-  gap: var(--space-3);
-`
-
-const PaymentId = styled.div`
-  font-family: var(--font-mono);
-  font-size: 0.85rem;
-  color: var(--gray-600);
-`
-
-const PaymentAmount = styled.div`
-  font-family: var(--font-display);
-  font-size: 1.6rem;
-  font-weight: 500;
-  color: ${(p) => {
-    if (p.$refunded) return 'var(--gray-400)'
-    if (p.$failed) return '#c44b3c'
-    return 'var(--sage)'
-  }};
-  text-decoration: ${(p) => (p.$refunded ? 'line-through' : 'none')};
-`
-
-const DetailGrid = styled.div`
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: var(--space-5);
-
-  @media (max-width: 720px) {
-    grid-template-columns: 1fr;
-  }
-`
-
-const DetailGroup = styled.div`
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-2);
-`
-
-const GroupTitle = styled.div`
-  font-size: 0.78rem;
-  font-weight: 500;
-  color: var(--gray-600);
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-  margin-bottom: var(--space-2);
-`
-
-const DetailRow = styled.div`
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: var(--space-2) 0;
-`
-
-const Label = styled.span`
-  font-size: 0.85rem;
-  color: var(--gray-600);
-`
-
-const Value = styled.span`
-  font-size: 0.9rem;
-  color: var(--gray-800);
-  font-weight: 500;
-`
-
-const MonoText = styled.span`
-  font-family: var(--font-mono);
-  font-size: 0.8rem;
-`
-
-const BreakdownCard = styled(Card)``
-
-const BreakdownRow = styled.div`
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: var(--space-2) 0;
-`
-
-const BreakdownLabel = styled.span`
-  font-size: ${(p) => (p.$bold ? '1rem' : '0.9rem')};
-  color: var(--gray-700);
-  font-weight: ${(p) => (p.$bold ? 600 : 400)};
-`
-
-const BreakdownValue = styled.span`
-  font-size: 0.95rem;
-  color: ${(p) => (p.$discount ? 'var(--sage)' : 'var(--gray-800)')};
-  font-weight: ${(p) => (p.$discount ? 500 : 400)};
-`
-
-const BreakdownValueRed = styled.span`
-  font-size: 0.95rem;
-  color: #c44b3c;
-  font-weight: 500;
-`
-
-const BreakdownValueSage = styled.span`
-  font-family: var(--font-display);
-  font-size: 1.3rem;
-  font-weight: 600;
-  color: var(--sage);
-`
-
-const Divider = styled.div`
-  height: 1px;
-  background: var(--gray-200);
-  margin: var(--space-3) 0;
-`
-
-const Actions = styled.div`
-  display: flex;
-  justify-content: flex-end;
-  gap: var(--space-3);
-  margin-top: var(--space-6);
-`

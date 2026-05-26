@@ -1,232 +1,180 @@
-import { useState, useMemo } from 'react'
-import { useNavigate } from 'react-router-dom'
-import styled from 'styled-components'
+import { useEffect, useState } from 'react';
+import styled from 'styled-components';
 
-import PageLayout from '../../../../app/layouts/page/PageLayout'
+import PageLayout from '../../../../app/layouts/page/PageLayout';
+import { findPointBalanceByMemberNo } from '../../api/pointApi';
 
-import { Tabs, EmptyState, Pagination, Button } from '../../../pay_shared/components'
-import { PointBalance } from '../../components/user/PointBalance'
-import { PointExpiringSoon } from '../../components/user/PointExpiringSoon'
-import { PointStatsRow } from '../../components/user/PointStatsRow'
-import { PointHistoryItem } from '../../components/user/PointHistoryItem'
-import { PointPolicyNotice } from '../../components/user/PointPolicyNotice'
+const MEMBER_NO = 1;
 
-const BALANCE = 2450
-const PENDING_POINTS = 3240
-
-const EXPIRING_ITEMS = [
-  {
-    amount: 800,
-    reason: '2025.05.15 적립 (강릉 바다향 코워킹)',
-    expireDate: '2026.05.15',
-    daysLeft: 4,
-  },
-  {
-    amount: 200,
-    reason: '2025.05.28 적립 (성수 브릭라운지)',
-    expireDate: '2026.05.28',
-    daysLeft: 17,
-  },
-]
-
-const TOTAL_EARNED = 5820
-const TOTAL_USED = 2400
-const TOTAL_EXPIRED = 970
-
-const HISTORY = [
-  {
-    type: 'pending',
-    title: '청평 숲속 파인뷰 스테이 결제',
-    description: '이용 완료 후 7일 뒤 적립 예정',
-    amount: 3240,
-    at: '2026.05.08 14:32',
-    balanceAfter: 2450,
-  },
-  {
-    type: 'used',
-    title: '청평 숲속 파인뷰 스테이 결제 시 사용',
-    description: 'PAY-20260508-00921',
-    amount: 2450,
-    at: '2026.05.08 14:30',
-    balanceAfter: 2450,
-  },
-  {
-    type: 'earned',
-    title: '강릉 바다향 코워킹 이용 완료',
-    description: '결제액 1% 적립',
-    amount: 240,
-    at: '2026.05.06 09:14',
-    balanceAfter: 4900,
-  },
-  {
-    type: 'used',
-    title: '성수 브릭라운지 결제 시 사용',
-    description: 'PAY-20260503-00845',
-    amount: 1200,
-    at: '2026.05.03 18:22',
-    balanceAfter: 4660,
-  },
-  {
-    type: 'earned',
-    title: '남해 올리브 팜스테이 이용 완료',
-    description: '결제액 1% 적립',
-    amount: 1820,
-    at: '2026.04.28 12:05',
-    balanceAfter: 5860,
-  },
-  {
-    type: 'expired',
-    title: '포인트 만료',
-    description: '2025.03.18 적립분 365일 경과',
-    amount: 450,
-    at: '2026.03.18 00:00',
-    balanceAfter: 4040,
-  },
-  {
-    type: 'earned',
-    title: '북촌 한옥 워크룸 이용 완료',
-    description: '결제액 1% 적립',
-    amount: 1280,
-    at: '2026.04.20 16:30',
-    balanceAfter: 4490,
-  },
-  {
-    type: 'cancelled',
-    title: '강릉 바다향 코워킹 결제 취소',
-    description: '환불 처리 시 포인트 복원',
-    amount: 240,
-    at: '2026.04.15 11:20',
-    balanceAfter: 3210,
-  },
-]
+const POLICIES = [
+  { label: '적립률', value: '결제 금액의 1%' },
+  { label: '적립 시점', value: '이용 완료 후 7일 뒤 확정' },
+  { label: '유효 기간', value: '적립일로부터 1년' },
+  { label: '최소 사용', value: '1,000P 이상' },
+  { label: '최대 사용', value: '결제 금액의 30%까지' },
+  { label: '환산 기준', value: '1P = 1원' },
+];
 
 export default function PointHistory() {
-  const nav = useNavigate()
-  const [tab, setTab] = useState('all')
-  const [page, setPage] = useState(1)
+  const [balance, setBalance] = useState(0);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
-  const filtered = useMemo(() => {
-    if (tab === 'all') return HISTORY
-    return HISTORY.filter((h) => h.type === tab)
-  }, [tab])
-
-  const tabs = [
-    { value: 'all', label: '전체', count: HISTORY.length },
-    { value: 'earned', label: '적립', count: HISTORY.filter((h) => h.type === 'earned').length },
-    { value: 'used', label: '사용', count: HISTORY.filter((h) => h.type === 'used').length },
-    { value: 'expired', label: '만료', count: HISTORY.filter((h) => h.type === 'expired').length },
-  ]
+  useEffect(() => {
+    const load = async () => {
+      setLoading(true);
+      try {
+        const balanceResDto = await findPointBalanceByMemberNo(MEMBER_NO);
+        setBalance(balanceResDto.balance ?? 0);
+      } catch (err) {
+        console.error('포인트 잔액 조회 실패', err);
+        setError(err?.response?.data?.msg ?? err.message);
+      } finally {
+        setLoading(false);
+      }
+    };
+    load();
+  }, []);
 
   return (
     <PageLayout
-      title="포인트"
-      description="적립된 포인트로 더 저렴하게 예약하세요"
-      maxWidth={800}
+      title="포인트 내역"
+      description="포인트 적립·사용 내역을 확인하세요"
     >
+      <BalanceCard>
+        <BalanceLabel>보유 포인트</BalanceLabel>
+        <BalanceAmount>
+          {loading ? '불러오는 중…' : `${Number(balance).toLocaleString()}P`}
+        </BalanceAmount>
+        {error && <BalanceError>잔액을 불러오지 못했습니다 — {error}</BalanceError>}
+        <BalanceHint>1P = 1원으로 결제 시 사용할 수 있어요</BalanceHint>
+      </BalanceCard>
 
-      <BalanceSection>
-        <PointBalance balance={BALANCE} pendingPoints={PENDING_POINTS} />
-      </BalanceSection>
+      <Section>
+        <SectionTitle>포인트 정책</SectionTitle>
+        <PolicyTable>
+          {POLICIES.map((policy) => (
+            <PolicyRow key={policy.label}>
+              <PolicyLabel>{policy.label}</PolicyLabel>
+              <PolicyValue>{policy.value}</PolicyValue>
+            </PolicyRow>
+          ))}
+        </PolicyTable>
+      </Section>
 
-      <ExpiringSection>
-        <PointExpiringSoon
-          items={EXPIRING_ITEMS}
-          totalExpiring={EXPIRING_ITEMS.reduce((s, i) => s + i.amount, 0)}
-        />
-      </ExpiringSection>
-
-      <StatsSection>
-        <PointStatsRow
-          totalEarned={TOTAL_EARNED}
-          totalUsed={TOTAL_USED}
-          totalExpired={TOTAL_EXPIRED}
-        />
-      </StatsSection>
-
-      <PolicySection>
-        <PointPolicyNotice />
-      </PolicySection>
-
-      <HistorySection>
-        <SectionHeader>
-          <SectionTitle>적립·사용 내역</SectionTitle>
-        </SectionHeader>
-
-        <TabsWrap>
-          <Tabs items={tabs} value={tab} onChange={setTab} />
-        </TabsWrap>
-
-        {filtered.length === 0 ? (
-          <EmptyState
-            icon="🌱"
-            title="내역이 없어요"
-            description="해당 카테고리에 포인트 내역이 없습니다"
-            action={
-              <Button variant="secondary" onClick={() => setTab('all')}>
-                전체 보기
-              </Button>
-            }
-          />
-        ) : (
-          <List>
-            {filtered.map((entry, i) => (
-              <PointHistoryItem key={i} entry={entry} />
-            ))}
-          </List>
-        )}
-
-        <Pagination currentPage={page} totalPages={2} onChange={setPage} />
-      </HistorySection>
+      <Section>
+        <SectionTitle>적립·사용 내역</SectionTitle>
+        <EmptyBox>
+          <EmptyIcon>📋</EmptyIcon>
+          <EmptyTitle>아직 표시할 내역이 없어요</EmptyTitle>
+          <EmptyDesc>
+            결제 후 적립이 시작되면 이 영역에서 적립·사용·만료 내역을 확인할 수
+            있어요.
+          </EmptyDesc>
+        </EmptyBox>
+      </Section>
     </PageLayout>
-  )
+  );
 }
-const BackLink = styled.button`
-  font-size: 0.85rem;
-  color: var(--gray-600);
-  margin-bottom: var(--space-4);
 
-  &:hover {
-    color: var(--gray-800);
-  }
-`
-const BalanceSection = styled.div`
-  margin-bottom: var(--space-4);
-`
-
-const ExpiringSection = styled.div`
-  margin-bottom: var(--space-4);
-`
-
-const StatsSection = styled.div`
-  margin-bottom: var(--space-5);
-`
-
-const PolicySection = styled.div`
+const BalanceCard = styled.div`
+  background: var(--sage);
+  color: var(--white);
+  border-radius: var(--radius-lg);
+  padding: var(--space-8) var(--space-6);
+  text-align: center;
   margin-bottom: var(--space-6);
-`
+`;
 
-const HistorySection = styled.div``
+const BalanceLabel = styled.div`
+  font-size: 14px;
+  opacity: 0.85;
+  margin-bottom: var(--space-2);
+`;
 
-const SectionHeader = styled.div`
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: var(--space-3);
-`
+const BalanceAmount = styled.div`
+  font-size: 36px;
+  font-weight: 700;
+  letter-spacing: -0.5px;
+  margin-bottom: var(--space-2);
+`;
+
+const BalanceError = styled.div`
+  font-size: 13px;
+  background: rgba(255, 255, 255, 0.18);
+  border-radius: var(--radius-sm);
+  padding: var(--space-2) var(--space-3);
+  margin: var(--space-3) auto 0;
+  display: inline-block;
+`;
+
+const BalanceHint = styled.div`
+  font-size: 13px;
+  opacity: 0.8;
+  margin-top: var(--space-2);
+`;
+
+const Section = styled.section`
+  margin-bottom: var(--space-6);
+`;
 
 const SectionTitle = styled.h3`
-  font-family: var(--font-display);
-  font-size: 1.05rem;
-  font-weight: 500;
-  color: var(--gray-800);
-`
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--gray800);
+  margin: 0 0 var(--space-3);
+`;
 
-const TabsWrap = styled.div`
-  margin-bottom: var(--space-3);
-`
+const PolicyTable = styled.div`
+  background: var(--white);
+  border: 1px solid var(--gray200);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+`;
 
-const List = styled.div`
+const PolicyRow = styled.div`
   display: flex;
-  flex-direction: column;
-  gap: var(--space-2);
-`
+  padding: var(--space-3) var(--space-4);
+  border-bottom: 1px solid var(--gray100);
+  font-size: 14px;
+
+  &:last-child {
+    border-bottom: none;
+  }
+`;
+
+const PolicyLabel = styled.div`
+  flex: 0 0 120px;
+  color: var(--gray600);
+  font-weight: 500;
+`;
+
+const PolicyValue = styled.div`
+  flex: 1;
+  color: var(--gray800);
+`;
+
+const EmptyBox = styled.div`
+  background: var(--gray100);
+  border-radius: var(--radius-md);
+  padding: var(--space-10) var(--space-6);
+  text-align: center;
+`;
+
+const EmptyIcon = styled.div`
+  font-size: 40px;
+  margin-bottom: var(--space-3);
+`;
+
+const EmptyTitle = styled.div`
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--gray800);
+  margin-bottom: var(--space-2);
+`;
+
+const EmptyDesc = styled.div`
+  font-size: 13px;
+  color: var(--gray600);
+  line-height: 1.5;
+`;

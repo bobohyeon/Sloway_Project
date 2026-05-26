@@ -1,7 +1,8 @@
 package com.sloway.app.notice.dto.request;
 
-import com.sloway.app.admin.entity.AdminEntity;
+import com.sloway.app.notice.entity.NoticeCategory;
 import com.sloway.app.notice.entity.NoticeEntity;
+import com.sloway.app.notice.entity.NoticeStatus;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -11,13 +12,15 @@ public class NoticeWriteReqDto {
 
     private String title;
     private String content;
+    private NoticeCategory category;
+    private NoticeStatus status = NoticeStatus.ACTIVE;
 
-    public NoticeEntity toEntity(){
+    public NoticeEntity toEntity() {
         return NoticeEntity.builder()
                 .title(title)
                 .content(content)
-//                .writer(adminEntity)
-                .build()
-                ;
+                .category(category)
+                .status(status)
+                .build();
     }
 }
