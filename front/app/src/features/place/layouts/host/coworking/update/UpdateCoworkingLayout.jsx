@@ -24,8 +24,8 @@ function UpdateCoworkingLayout({ stateSection, currentStepSection }) {
     <PageWrapper>
       <Container>
         <PageLayout
-          title={'코워킹오피스 등록'}
-          description={'업무 중심의 오피스 공간을 등록합니다'}
+          title={'코워킹오피스 수정'}
+          description={'업무 중심의 오피스 공간을 수정합니다'}
           backTo={`/host/space/list`}
           backLabel="내 공간 목록"
         >

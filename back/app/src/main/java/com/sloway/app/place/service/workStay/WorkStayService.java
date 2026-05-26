@@ -6,7 +6,9 @@ import com.sloway.app.place.dto.request.workStay.WorkStayReqDto;
 import com.sloway.app.place.dto.request.workStay.WorkStayUpdateReqDto;
 import com.sloway.app.place.dto.request.workStay.workOffice.WorkOfficeReqDto;
 import com.sloway.app.place.dto.request.workStay.workOffice.WorkOfficeUpdateReqDto;
+import com.sloway.app.place.dto.response.station.StationDetailRespDto;
 import com.sloway.app.place.dto.response.workStay.WorkStayImageListRespDto;
+import com.sloway.app.place.dto.response.workStay.WorkStayUpdateDetailRespDto;
 import com.sloway.app.place.entity.amenity.AmenityEntity;
 import com.sloway.app.place.entity.amenity.workStay.WorkAmenityEntity;
 import com.sloway.app.place.entity.amenity.workStay.workOffice.WorkOfficeAmenityEntity;
@@ -196,52 +198,7 @@ public class WorkStayService {
         office.updateAmenities(newOfficeAmenities);
     }
 
-//    @Transactional
-//    public void updateImageWorkStay(Long no, List<MultipartFile> files, List<ImgUpdateSortReqDto> sortList, List<MultipartFile> officeFiles, List<ImgUpdateSortReqDto> officeSortList) {
-//        // 1. 엔티티 조회
-//        WorkStayEntity workStay = workStayRepository.findById(no)
-//                .orElseThrow(() -> new EntityNotFoundException("[WORKSTAY-315] WorkStay Not Found"));
-//
-//        WorkOfficeEntity workOffice = workOfficeRepository.findByWorkStayEntityNo(no)
-//                .orElseThrow(() -> new EntityNotFoundException("[WORKOFFICE-316] WorkOffice Not Found"));
-//
-//        // 2. WorkStay 이미지 업데이트 (삭제 후 저장)
-//        // 기존 DB 이미지 데이터 삭제
-//        imgWorkStayRepository.deleteAllByWorkStayEntityNo(no);
-//
-//        if (files != null && !files.isEmpty()) {
-//            List<String> dummyUrls = files.stream()
-//                    .map(img -> "https://temp-bucket.s3.amazonaws.com/temp_" + System.currentTimeMillis() + "_" + img.getOriginalFilename())
-//                    .toList();
-//
-//            int size = Math.min(dummyUrls.size(), sortList.size());
-//            List<ImgWorkStayEntity> imgEntities = IntStream.range(0, size)
-//                    .mapToObj(i -> ImgWorkStayEntity.from(workStay, dummyUrls.get(i), sortList.get(i).getSort()))
-//                    .collect(Collectors.toList());
-//
-//            imgWorkStayRepository.saveAll(imgEntities);
-//        }
-//
-//        // 3. WorkOffice 이미지 업데이트 (삭제 후 저장)
-//        // 기존 DB 이미지 데이터 삭제
-//        imgWorkOfficeRepository.deleteAllByWorkOfficeEntityNo(workOffice.getNo());
-//
-//        if (officeFiles != null && !officeFiles.isEmpty()) {
-//            List<String> officeUrls = officeFiles.stream()
-//                    .map(img -> "https://temp-bucket.s3.amazonaws.com/temp_" + System.currentTimeMillis() + "_" + img.getOriginalFilename())
-//                    .toList();
-//
-//            int sort = Math.min(officeUrls.size(), officeSortList.size());
-//            List<ImgWorkStayOfficeEntity> imgEntityList = IntStream.range(0, sort)
-//                    .mapToObj(i -> ImgWorkStayOfficeEntity.from(workOffice, officeUrls.get(i), officeSortList.get(i).getSort()))
-//                    .toList();
-//
-//            imgWorkOfficeRepository.saveAll(imgEntityList);
-//        }
-//    }
-
 // imageUpdateReqDto만들어서 구현예정 현재 파일에 대해서만 처리하게 되어있는데
-// 이미 저장이 되어있는 파일은 text형태로 넘어와서 맞지않는 형태라 수정필요하여 밑의 코드 참고하여 수정예정
     @Transactional
     public void updateImageWorkStay(Long no,
                                     List<MultipartFile> files, List<ImgUpdateSortReqDto> sortList,
@@ -329,5 +286,13 @@ public class WorkStayService {
 
     public WorkStayImageListRespDto selectImageList(Long no, Long memberNo) {
         return workStayRepository.selectImageList(no, memberNo);
+    }
+
+    public StationDetailRespDto selectWorkStayDetailDashBoard(Long no, Long memberNo) {
+        return workStayRepository.selectWorkStayDetailDashBoard(no, memberNo);
+    }
+
+    public WorkStayUpdateDetailRespDto selectDetailForUpdate(Long no, Long memberNo) {
+        return workStayRepository.selectDetailForUpdate(no,memberNo);
     }
 }

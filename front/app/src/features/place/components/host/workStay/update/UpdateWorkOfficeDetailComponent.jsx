@@ -1,6 +1,21 @@
 import React from 'react';
 import styled from 'styled-components';
 
+const facilityList = [
+  { no: 1, name: '주방' },
+  { no: 2, name: '세탁기' },
+  { no: 3, name: '건조기' },
+  { no: 4, name: 'WiFi' },
+  { no: 5, name: '주차' },
+  { no: 6, name: '어메니티' },
+  { no: 7, name: 'TV' },
+  { no: 8, name: '에어컨' },
+  { no: 9, name: '난방' },
+  { no: 10, name: '금연' },
+  { no: 11, name: '반려동물' },
+  { no: 12, name: '바베큐' },
+];
+
 const FormCard = styled.div`
   background: white;
   border-radius: 15px;
@@ -46,7 +61,7 @@ const FormGroup = styled.div`
 
 const CheckboxGrid = styled.div`
   display: grid;
-  grid-template-columns: repeat(4, 1fr); // 4열 배치
+  grid-template-columns: repeat(4, 1fr);
   gap: 15px;
   margin-top: 10px;
 `;
@@ -89,7 +104,7 @@ const PrevButton = styled.button`
 `;
 
 const NextButton = styled.button`
-  flex: 5; // 다음 버튼을 더 길게
+  flex: 5;
   padding: 18px;
   background-color: #768966;
   color: white;
@@ -100,27 +115,12 @@ const NextButton = styled.button`
 `;
 
 function UpdateWorkOfficeDetailComponent({
-  formData,
-  handleChange,
-  handleCheckChange,
+  formData, // 부모가 준 formData.office
+  handleChange, // 부모의 handleOfficeChange
+  handleCheckChange, // 부모의 handleOfficeCheckChange
   prev,
   next,
 }) {
-  const facilityList = [
-    '주방',
-    '세탁기',
-    '건조기',
-    'WiFi',
-    '주차',
-    '어메니티',
-    'TV',
-    '에어컨',
-    '난방',
-    '금연',
-    '반려동물',
-    '바베큐',
-  ];
-
   return (
     <FormCard>
       <SectionTitle>공간 상세 정보</SectionTitle>
@@ -131,9 +131,9 @@ function UpdateWorkOfficeDetailComponent({
             수용 인원 <span>*</span>
           </label>
           <input
-            name="peopleCnt"
+            name="cnt"
             placeholder="ex ) 40"
-            value={formData.peopleCnt}
+            value={formData?.cnt || ''}
             onChange={handleChange}
           />
         </FormGroup>
@@ -142,14 +142,19 @@ function UpdateWorkOfficeDetailComponent({
       <FormGroup style={{ marginTop: '20px' }}>
         <label>편의시설 (제공 항목을 모두 선택해주세요)</label>
         <CheckboxGrid>
+          {/* 💡 객체 배열 구조에 맞춰 렌더링 세팅 */}
           {facilityList.map((item) => (
-            <CheckItem key={item}>
+            <CheckItem key={item.no}>
+              {' '}
+              {/* 고유 번호(no)를 key로 활용 */}
               <input
                 type="checkbox"
-                checked={formData.facilities.includes(item)}
-                onChange={() => handleCheckChange(item)}
+                // 💡 데이터가 불러와지는 도중이거나 없을 때 undefined 방치턱 기용
+                checked={formData?.amenityNoList?.includes(item.no) || false}
+                // 💡 훅 규격에 매칭되도록 객체의 고유 no와 name을 정밀 전달
+                onChange={() => handleCheckChange(item.no, item.name)}
               />
-              {item}
+              {item.name}
             </CheckItem>
           ))}
         </CheckboxGrid>
