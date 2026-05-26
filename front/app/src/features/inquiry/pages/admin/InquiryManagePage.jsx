@@ -269,7 +269,7 @@ export default function InquiryManagePage() {
               </colgroup>
               <Thead>
                 <tr>
-                  <Th>No.</Th>
+                  <Th>번호</Th>
                   <Th>카테고리</Th>
                   <Th>제목</Th>
                   <Th>작성자</Th>

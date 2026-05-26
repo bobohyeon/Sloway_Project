@@ -113,6 +113,9 @@ export default function FaqManagePage() {
     <PageLayout
       title="FAQ 관리"
       description="자주 묻는 질문을 등록하고 노출 순서를 관리합니다"
+      actions={
+        <Button onClick={() => navigate('/admin/faq/form')}>+ FAQ 등록</Button>
+      }
     >
       <TabWrap>
         <Tabs
@@ -156,9 +159,6 @@ export default function FaqManagePage() {
             />
             <Button size="sm" variant="secondary" onClick={handleSearch}>
               검색
-            </Button>
-            <Button onClick={() => navigate('/admin/faq/form')}>
-              + FAQ 등록
             </Button>
           </SearchGroup>
         </FilterRow>
@@ -220,9 +220,6 @@ export default function FaqManagePage() {
                     <Th $w="110px" $center>
                       등록일
                     </Th>
-                    <Th $w="100px" $center>
-                      관리
-                    </Th>
                   </tr>
                 </thead>
                 <tbody>
@@ -266,19 +263,6 @@ export default function FaqManagePage() {
                       </Td> */}
                       <Td $center $muted>
                         {faq.createdAt}
-                      </Td>
-                      <Td $center>
-                        <ActionGroup>
-                          <Button
-                            size="sm"
-                            variant="ghost"
-                            onClick={() =>
-                              navigate(`/admin/faq/form/${faq.id}`)
-                            }
-                          >
-                            수정
-                          </Button>
-                        </ActionGroup>
                       </Td>
                     </Tr>
                   ))}
