@@ -1,6 +1,5 @@
 package com.sloway.app.notice.entity;
 
-import com.sloway.app.admin.entity.AdminEntity;
 import com.sloway.app.common.entity.BaseEntity;
 import jakarta.persistence.*;
 import lombok.*;
@@ -17,18 +16,34 @@ public class NoticeEntity extends BaseEntity {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(nullable = false)
+    @Column(nullable = false, length = 100)
     private String title;
 
-    @Column(nullable = false , columnDefinition = "TEXT")
+    @Column(nullable = false, columnDefinition = "TEXT")
     private String content;
 
-    @JoinColumn(name = "ADMIN_NO" , nullable = false)
-    @ManyToOne(fetch = FetchType.LAZY)
-    private AdminEntity writer;
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false, length = 20)
+    private NoticeCategory category;
 
-    public void update(String title , String content){
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false, length = 20)
+    @Builder.Default
+    private NoticeStatus status = NoticeStatus.ACTIVE;
+
+    @Column(nullable = false)
+    @Builder.Default
+    private Long viewCount = 0L;
+
+
+    public void update(String title, String content, NoticeCategory category, NoticeStatus status) {
         this.title = title;
         this.content = content;
+        this.category = category;
+        this.status = status;
+    }
+    
+    public void increaseViewCount() {
+        this.viewCount++;
     }
 }
