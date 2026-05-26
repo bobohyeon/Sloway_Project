@@ -157,6 +157,7 @@ import StatsOverview from './features/stats/pages/admin/StatsOverview';
 // ── 쿠폰 ──────────────────────────────────────────────────
 import EventList from './features/coupon/pages/user/EventList';
 import MyCoupons from './features/coupon/pages/user/MyCoupons';
+import AdminCouponEvent from './features/couponevent/pages/admin/AdminCouponEvent';
 
 // ── 찜 ────────────────────────────────────────────────────
 import WishListPage from './features/wishList/pages/user/WishListPage';
@@ -460,6 +461,8 @@ function App() {
           path="/admin/settlement/fee"
           element={<AdminCommissionPolicy />}
         />
+        {/* 쿠폰 게시 (어드민) */}
+        <Route path="/admin/coupon/event" element={<AdminCouponEvent />} />
         {/* 통계 */}
         <Route path="/admin/stats/sales" element={<StatsOverview />} />
         <Route path="/admin/stats/revenue" element={<RevenueStats />} />
