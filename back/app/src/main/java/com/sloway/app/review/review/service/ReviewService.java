@@ -47,7 +47,7 @@ public class ReviewService {
         if(LocalDateTime.now().isAfter(rsvn.getCheckOut().plusDays(14))){
             throw new CustomException(ReviewErrorCode.REVIEW_PERIOD_EXPIRED);
         }
-        if(reviewRepository.findByRsvnNo(rsvn).isPresent()){
+        if(reviewRepository.findByRsvnNoAndDelYn(rsvn, "N").isPresent()){
             throw new CustomException(ReviewErrorCode.ALREADY_REVIEWED);
         }
         reviewRepository.save(ReviewEntity.builder()

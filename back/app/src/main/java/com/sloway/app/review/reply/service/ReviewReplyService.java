@@ -7,6 +7,7 @@ import com.sloway.app.place.repository.hostPlace.HostPlaceRepository;
 import com.sloway.app.reservation.rsvn.entity.RsvnEntity;
 import com.sloway.app.review.ReviewErrorCode;
 import com.sloway.app.review.reply.dto.request.ReviewReplyReqDto;
+import com.sloway.app.review.reply.dto.response.ReviewReplyResDto;
 import com.sloway.app.review.reply.entity.ReviewReplyEntity;
 import com.sloway.app.review.reply.repository.ReviewReplyRepository;
 import com.sloway.app.review.review.entity.ReviewEntity;
@@ -15,6 +16,8 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.util.List;
 
 @Slf4j
 @RequiredArgsConstructor
@@ -45,6 +48,17 @@ public class ReviewReplyService {
                         .hostNo(hostNo)
                         .content(reqDto.getContent())
                 .build());
+    }
+
+    //답글 조회
+    public List<ReviewReplyResDto> findAll(Long reviewNo){
+        ReviewEntity review = reviewRepository.findById(reviewNo)
+                .orElseThrow(() -> new CustomException(ReviewErrorCode.REVIEW_NOT_FOUND));
+
+        List<ReviewReplyEntity> entityList =reviewReplyRepository.findByReviewNoAndDelAtIsNull(review);
+        List<ReviewReplyResDto> dtoList = entityList.stream().map(ReviewReplyResDto::from).toList();
+
+        return dtoList;
     }
 
     // 답글 수정
