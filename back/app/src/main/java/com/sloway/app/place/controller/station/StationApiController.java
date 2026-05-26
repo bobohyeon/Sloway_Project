@@ -1,8 +1,12 @@
 package com.sloway.app.place.controller.station;
 
 import com.sloway.app.place.dto.request.sort.ImgSortReqDto;
+import com.sloway.app.place.dto.request.sort.ImgUpdateSortReqDto;
 import com.sloway.app.place.dto.request.station.StationReqDto;
 import com.sloway.app.place.dto.request.station.StationUpdateReqDto;
+import com.sloway.app.place.dto.response.place.PlaceImgListRespDto;
+import com.sloway.app.place.dto.response.station.StationDetailRespDto;
+import com.sloway.app.place.dto.response.station.StationUpdateDetailRespDto;
 import com.sloway.app.place.service.station.StationService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -56,8 +60,8 @@ public class StationApiController {
     @PutMapping(value = "/update/image/{no}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<Object> updateImageStation(
             @PathVariable Long no,
-            @RequestPart("files") List<MultipartFile> files,
-            @RequestPart("sortList") List<ImgSortReqDto> sortList) {
+            @RequestPart(name = "files", required = false) List<MultipartFile> files,
+            @RequestPart("sortList") List<ImgUpdateSortReqDto> sortList) {
 
         stationService.updateStationImg(no, files, sortList);
 
@@ -75,5 +79,26 @@ public class StationApiController {
         return ResponseEntity
                 .status(HttpStatus.OK)
                 .build();
+    }
+
+    @GetMapping("/update/image/{no}")
+    public ResponseEntity<PlaceImgListRespDto> selectImageList(@PathVariable Long no, @AuthenticationPrincipal Long memberNo){
+        PlaceImgListRespDto dto = stationService.selectImageList(no, Long.valueOf(2));
+
+        return ResponseEntity.ok(dto);
+    }
+
+    @GetMapping("/detail/dash/{no}")
+    public ResponseEntity<StationDetailRespDto> selectStationDetailDashBoard(@PathVariable Long no, @AuthenticationPrincipal Long memberNo){
+        StationDetailRespDto dto = stationService.selectStationDetailDashBoard(no, Long.valueOf(2));
+        System.out.println("dto = " + dto);
+        return ResponseEntity.ok(dto);
+    }
+
+    @GetMapping("/update/{no}")
+    public ResponseEntity<StationUpdateDetailRespDto> selectDetailForUpdate(@PathVariable Long no, @AuthenticationPrincipal Long memeberNo){
+        StationUpdateDetailRespDto dto = stationService.selectDetailForUpdate(no, Long.valueOf(2));
+
+        return ResponseEntity.ok(dto);
     }
 }

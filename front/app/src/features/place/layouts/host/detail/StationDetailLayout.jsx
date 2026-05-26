@@ -4,7 +4,7 @@ import DetailSummaryCards from '../../../components/host/detail/DetailSummaryCar
 import DetailBasicInfo from './../../../components/host/detail/DetailBasicInfo';
 import DetailFacilities from '../../../components/host/detail/DetailFacilities';
 import RecentBookings from './../../../components/host/detail/RecentBookings';
-import DetailHeader from './../../../components/host/detail/DetailHeader';
+import PageLayout from '../../../../../app/layouts/page/PageLayout';
 
 // --- 스타일 정의 ---
 const PageWrapper = styled.div`
@@ -71,41 +71,75 @@ const Tag = styled.span`
 `;
 
 // --- 레이아웃 컴포넌트 ---
-function StationDetailLayout({ data, onBack }) {
+function StationDetailLayout({
+  data,
+  onBack,
+  handleUpdateDetail,
+  handleImageUpdate,
+}) {
   return (
     <PageWrapper>
       <Container>
-        <DetailHeader title={data.title} />
-        <BackLink onClick={onBack}>← 내 공간 목록</BackLink>
-
-        {/* 프로필 배너 섹션 */}
-        <Banner>
-          <ProfileInfo>
-            <div className="icon">🌲</div>
-            <div className="text">
-              <div className="tags">
-                <Tag $color="#888">{data.type}</Tag>
-                <Tag $color="#768966">✓ {data.status}</Tag>
+        <PageLayout
+          title={data.header.title}
+          backTo={onBack}
+          backLabel="내 공간 목록"
+        >
+          {/* 프로필 배너 섹션 */}
+          <Banner>
+            <ProfileInfo>
+              <div className="icon">🌲</div>
+              <div className="text">
+                <div className="tags">
+                  <Tag $color="#888">{data.header.type}</Tag>
+                  <Tag $color="#768966">{data.header.status}</Tag>
+                </div>
+                <h2>{data.basicInfo.name}</h2>
+                <p style={{ color: '#888', fontSize: '14px' }}>
+                  📍 {data.basicInfo.address} | ⭐ {data.header.rating} (
+                  {data.header.reviewCount}개 리뷰)
+                </p>
               </div>
-              <h2>{data.title}</h2>
-              <p style={{ color: '#888', fontSize: '14px' }}>
-                📍 {data.location} | ⭐ {data.rating} ({data.reviews}개 리뷰)
-              </p>
+            </ProfileInfo>
+            <div style={{ textAlign: 'right' }}>
+              <button
+                style={{
+                  border: 'none',
+                  background: 'none',
+                  cursor: 'pointer',
+                  display: 'block',
+                  marginBottom: '10px',
+                }}
+                onClick={handleUpdateDetail}
+              >
+                정보 수정
+              </button>
+              <button
+                style={{
+                  border: 'none',
+                  background: 'none',
+                  cursor: 'pointer',
+                  color: '#4a6fa5',
+                }}
+                onClick={handleImageUpdate}
+              >
+                이미지 수정
+              </button>
             </div>
-          </ProfileInfo>
-        </Banner>
+          </Banner>
 
-        {/* 수치 요약 카드 */}
-        <DetailSummaryCards data={data} />
+          {/* 수치 요약 카드 */}
+          <DetailSummaryCards data={data.summary} />
 
-        {/* 기본 정보 */}
-        <DetailBasicInfo info={data.basicInfo} />
+          {/* 기본 정보 */}
+          <DetailBasicInfo info={data.basicInfo} />
 
-        {/* 편의 시설 */}
-        <DetailFacilities items={data.facilities} />
+          {/* 편의 시설 */}
+          <DetailFacilities items={data.facilities} />
 
-        {/* 최근 예약 */}
-        <RecentBookings bookings={data.recentBookings} />
+          {/* 최근 예약 */}
+          <RecentBookings bookings={data.recentBookings} />
+        </PageLayout>
       </Container>
     </PageWrapper>
   );

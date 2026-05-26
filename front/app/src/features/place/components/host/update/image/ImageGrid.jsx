@@ -151,7 +151,6 @@ function ImageGrid({ images = [], setImages, title }) {
       return;
     }
 
-    // 💡 폼데이터 전송 프로세스를 위해 원본 file 객체를 구조화 데이터 안에 함께 심어줍니다.
     const newImages = files.map((file, index) => ({
       id: Date.now() + index + Math.random(), // 중복 키 보장 분기 가드
       preview: URL.createObjectURL(file),

@@ -81,9 +81,6 @@ function UpdateMainComponent({
   handleChange,
   setStep,
   currentStep,
-  // 실제 DB에서 불러온 내 공간 리스트 (PLACE 테이블)
-  masterPlaces = [],
-  // 수정 모드 여부 (이미 등록된 것을 수정할 때는 공간 변경을 못하게 막을 수도 있음)
   isEditMode = true,
 }) {
   // 공간 선택 시 No와 Title을 동시에 저장하는 커스텀 핸들러
@@ -120,11 +117,9 @@ function UpdateMainComponent({
           <option value="" disabled>
             공간을 선택하세요
           </option>
-          {masterPlaces.map((place) => (
-            <option key={place.no} value={place.no}>
-              {place.title}
-            </option>
-          ))}
+          <option value={formData.placeNo} selected>
+            {formData.placeTitle}
+          </option>
         </select>
         {isEditMode && (
           <p style={{ fontSize: '12px', color: '#888', marginTop: '5px' }}>
