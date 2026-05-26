@@ -72,7 +72,7 @@ public class ReviewService {
 
     //리뷰 상세조회
     public ReviewResDto findOne(Long no){
-        ReviewEntity entity = reviewRepository.findById(no)
+        ReviewEntity entity = reviewRepository.findByNoAndDelYn(no, "N")
                 .orElseThrow(()->new CustomException(ReviewErrorCode.REVIEW_NOT_FOUND));
         return ReviewResDto.from(entity);
     }
@@ -80,7 +80,7 @@ public class ReviewService {
     //리뷰 수정
     @Transactional
     public void editReview(Long memberNo, Long no, ReviewEditReqDto editReqDto){
-        ReviewEntity entity = reviewRepository.findById(no)
+        ReviewEntity entity = reviewRepository.findByNoAndDelYn(no, "N")
                 .orElseThrow(()->new CustomException(ReviewErrorCode.REVIEW_NOT_FOUND));
         if(!entity.getRsvnNo().getMemberNo().getNo().equals(memberNo)){
             throw new CustomException(RsvnErrorCode.UNAUTHORIZED_ACCESS);
@@ -97,7 +97,7 @@ public class ReviewService {
     //리뷰 삭제
     @Transactional
     public void deleteReview(Long memberNo, Long no){
-        ReviewEntity entity = reviewRepository.findById(no)
+        ReviewEntity entity = reviewRepository.findByNoAndDelYn(no, "N")
                 .orElseThrow(()->new CustomException(ReviewErrorCode.REVIEW_NOT_FOUND));
         if(!entity.getRsvnNo().getMemberNo().getNo().equals(memberNo)){
             throw new CustomException(RsvnErrorCode.UNAUTHORIZED_ACCESS);
