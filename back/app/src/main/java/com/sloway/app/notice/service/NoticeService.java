@@ -1,14 +1,21 @@
 package com.sloway.app.notice.service;
 
-import com.sloway.app.admin.entity.AdminEntity;
-import com.sloway.app.admin.repository.AdminRepository;
 import com.sloway.app.notice.dto.request.NoticeWriteReqDto;
+import com.sloway.app.notice.dto.response.NoticeDetailResDto;
+import com.sloway.app.notice.dto.response.NoticeListResDto;
+import com.sloway.app.notice.entity.NoticeCategory;
 import com.sloway.app.notice.entity.NoticeEntity;
+import com.sloway.app.notice.entity.NoticeStatus;
 import com.sloway.app.notice.repository.NoticeRepository;
+import org.springframework.util.StringUtils;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.util.List;
 
 @Service
 @Transactional(readOnly = true)
@@ -17,14 +24,60 @@ import org.springframework.transaction.annotation.Transactional;
 public class NoticeService {
 
     private final NoticeRepository noticeRepository;
-    private final AdminRepository adminRepository;
 
+
+    public Page<NoticeListResDto> findAll(
+            String category, String keyword, String status, Pageable pageable) {
+
+        NoticeCategory categoryEnum = StringUtils.hasText(category)
+                ? NoticeCategory.from(category) : null;
+        NoticeStatus statusEnum = StringUtils.hasText(status) && !"all".equals(status)
+                ? NoticeStatus.from(status) : null;
+
+        return noticeRepository
+                .findAllByCondition(categoryEnum, keyword, statusEnum, pageable)
+                .map(NoticeListResDto::from);
+    }
+
+    @Transactional
+    public NoticeDetailResDto findById(Long id) {
+        NoticeEntity noticeEntity = noticeRepository.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 공지사항입니다. id=" + id));
+
+        noticeEntity.increaseViewCount();
+
+        log.info("[공지사항 상세 조회] id={}, viewCount={}", id, noticeEntity.getViewCount());
+        return NoticeDetailResDto.from(noticeEntity);
+    }
+
+
+    @Transactional
     public void write(NoticeWriteReqDto reqDto) {
+        NoticeEntity noticeEntity = noticeRepository.save(reqDto.toEntity());
+        log.info("[공지사항 등록] id={}, title={}", noticeEntity.getId(), noticeEntity.getTitle());
+    }
 
-//        AdminEntity adminEntity = adminRepository.findByName(name)
-//                .orElseThrow( ()-> new IllegalArgumentException("존재하지 않는 회원입니다.") );
-        NoticeEntity noticeEntity = reqDto.toEntity();
-        noticeRepository.save(noticeEntity);
-//        log.info("[공지사항 작성 완료] writer : {}" , name);
+    @Transactional
+    public void update(Long id, NoticeWriteReqDto reqDto) {
+        NoticeEntity noticeEntity = noticeRepository.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 공지사항입니다. id=" + id));
+
+        noticeEntity.update(reqDto.getTitle(), reqDto.getContent(),
+                reqDto.getCategory(), reqDto.getStatus());
+        log.info("[공지사항 수정] id={}", id);
+    }
+
+    @Transactional
+    public void delete(Long id) {
+        NoticeEntity noticeEntity = noticeRepository.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 공지사항입니다. id=" + id));
+        noticeRepository.delete(noticeEntity);
+        log.info("[공지사항 삭제] id={}", id);
+    }
+
+    @Transactional
+    public void deleteAll(List<Long> ids) {
+        noticeRepository.deleteAllByIdInBatch(ids);
+        log.info("[공지사항 일괄 삭제] ids={}", ids);
     }
 }
