@@ -1,5 +1,6 @@
 package com.sloway.app.payment.refund.repository;
 
+import com.querydsl.core.Tuple;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import com.sloway.app.payment.refund.common.RefundStatus;
 import com.sloway.app.payment.refund.entity.QRefundEntity;
@@ -7,6 +8,8 @@ import com.sloway.app.payment.refund.entity.RefundEntity;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
 
+import java.math.BigDecimal;
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Repository
@@ -37,4 +40,18 @@ public class RefundRepositoryImpl implements RefundRepositoryCustom {
                 .fetch();
     }
 
+    @Override
+    public Tuple sumBetween(LocalDateTime startDateTime, LocalDateTime endDateTime) {
+        return jpaQueryFactory
+                .select(
+                        qRefundEntity.count(),
+                        qRefundEntity.refundAmt.sum().coalesce(BigDecimal.ZERO)
+                )
+                .from(qRefundEntity)
+                .where(
+                        qRefundEntity.status.eq(RefundStatus.COMPLETED),
+                        qRefundEntity.createdAt.between(startDateTime, endDateTime)
+                )
+                .fetchOne();
+    }
 }
