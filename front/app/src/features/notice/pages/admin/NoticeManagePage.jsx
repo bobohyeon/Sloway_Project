@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import styled from 'styled-components';
 import {
   Badge,
@@ -12,63 +12,61 @@ import {
 } from '../../../pay_shared/components';
 import { useNavigate } from 'react-router-dom';
 import PageLayout from '../../../../app/layouts/page/PageLayout';
+import api from '../../../../app/api/axiosApi';
 
-// ─── Mock 데이터 (백엔드 연동 시 API 호출로 대체) ───────────────────────────
-const MOCK_NOTICES = Array.from({ length: 18 }, (_, i) => ({
-  id: i + 1,
-  title:
-    i === 0
-      ? '[중요] 서비스 이용약관 변경 안내'
-      : `공지사항 제목입니다 ${i + 1}번`,
-  category: ['서비스', '이벤트', '점검', '기타'][i % 4],
-  views: Math.floor(Math.random() * 500) + 10,
-  createdAt: `2026.0${(i % 5) + 1}.${String((i % 28) + 1).padStart(2, '0')}`,
-  exposureStart: `2026.0${(i % 5) + 1}.01`,
-  exposureEnd: i % 3 === 0 ? '2026.12.31' : null,
-  status: i % 5 === 4 ? 'inactive' : 'active',
-}));
-
-const CATEGORY_OPTIONS = ['전체', '서비스', '이벤트', '점검', '기타'];
-
-const TAB_ITEMS = [
-  { label: '전체', value: 'all', count: MOCK_NOTICES.length },
-  {
-    label: '게시중',
-    value: 'active',
-    count: MOCK_NOTICES.filter((n) => n.status === 'active').length,
-  },
-  {
-    label: '미게시',
-    value: 'inactive',
-    count: MOCK_NOTICES.filter((n) => n.status === 'inactive').length,
-  },
+const CATEGORY_OPTIONS = [
+  { label: '전체', value: '' },
+  { label: '서비스', value: 'SERVICE' },
+  { label: '이벤트', value: 'EVENT' },
+  { label: '점검', value: 'INSPECTION' },
+  { label: '기타', value: 'OTHER' },
 ];
+const TAB_ITEMS = [
+  { label: '전체', value: 'ALL' },
+  { label: '게시중', value: 'ACTIVE' },
+  { label: '미게시', value: 'INACTIVE' },
+];
+const fmtDate = (iso) => (iso ? iso.slice(0, 10).replace(/-/g, '.') : '');
 
 export default function NoticeManagePage() {
   const navigate = useNavigate();
 
-  // ─── 상태 (백엔드 연동 시 useQuery로 대체) ──────────────────────────────
-  const [tab, setTab] = useState('all');
-  const [category, setCategory] = useState('전체');
+  const [tab, setTab] = useState('ALL');
+  const [category, setCategory] = useState('');
   const [keyword, setKeyword] = useState('');
   const [inputKeyword, setInputKeyword] = useState('');
   const [page, setPage] = useState(1);
   const [selectedIds, setSelectedIds] = useState([]);
   const [deleteModal, setDeleteModal] = useState(false);
-  const PAGE_SIZE = 10;
 
-  // ─── 필터링 (백엔드 연동 시 쿼리 파라미터로 전달) ────────────────────────
-  const filtered = MOCK_NOTICES.filter((n) => {
-    const matchTab = tab === 'all' || n.status === tab;
-    const matchCategory = category === '전체' || n.category === category;
-    const matchKeyword = n.title.includes(keyword);
-    return matchTab && matchCategory && matchKeyword;
-  });
+  const [notices, setNotices] = useState([]);
+  const [totalPages, setTotalPages] = useState(0);
+  const [totalElements, setTotalElements] = useState(0);
 
-  const totalPages = Math.ceil(filtered.length / PAGE_SIZE);
-  const paged = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
+  const fetchNotices = useCallback(() => {
+    api
+      .get('/notice', {
+        params: {
+          page: page - 1,
+          size: 10,
+          sort: 'createdAt,DESC',
+          status: tab,
+          category: category || undefined,
+          keyword: keyword || undefined,
+        },
+      })
+      .then(({ data }) => {
+        setNotices(data.content);
+        setTotalPages(data.totalPages);
+        setTotalElements(data.totalElements);
+      });
+  }, [tab, category, keyword, page]);
 
-  // ─── 전체 선택 ───────────────────────────────────────────────────────────
+  useEffect(() => {
+    fetchNotices();
+  }, [fetchNotices]);
+
+  const paged = notices;
   const isAllSelected =
     paged.length > 0 && paged.every((n) => selectedIds.includes(n.id));
 
@@ -95,10 +93,11 @@ export default function NoticeManagePage() {
     setPage(1);
   };
 
-  const handleDelete = () => {
-    // 백엔드 연동 시: DELETE /api/admin/notices { ids: selectedIds }
+  const handleDelete = async () => {
+    await api.delete('/notice', { data: selectedIds });
     setSelectedIds([]);
     setDeleteModal(false);
+    fetchNotices();
   };
 
   return (
@@ -131,15 +130,15 @@ export default function NoticeManagePage() {
             <CategoryBtnGroup>
               {CATEGORY_OPTIONS.map((c) => (
                 <CategoryBtn
-                  key={c}
-                  $active={category === c}
+                  key={c.label}
+                  $active={category === c.value}
                   onClick={() => {
-                    setCategory(c);
+                    setCategory(c.value);
                     setPage(1);
                   }}
                   type="button"
                 >
-                  {c}
+                  {c.label}
                 </CategoryBtn>
               ))}
             </CategoryBtnGroup>
@@ -163,7 +162,7 @@ export default function NoticeManagePage() {
       <TableCard elevated>
         <TableToolbar>
           <TableCount>
-            총 <strong>{filtered.length}</strong>건
+            총 <strong>{totalElements}</strong>건
             {selectedIds.length > 0 && (
               <SelectedCount>{selectedIds.length}개 선택됨</SelectedCount>
             )}
@@ -209,14 +208,8 @@ export default function NoticeManagePage() {
                       카테고리
                     </Th>
                     <Th>제목</Th>
-                    {/* <Th $w="80px" $center>
+                    <Th $w="80px" $center>
                       상태
-                    </Th> */}
-                    <Th $w="110px" $center>
-                      노출 시작
-                    </Th>
-                    <Th $w="110px" $center>
-                      노출 종료
                     </Th>
                     <Th $w="70px" $center>
                       조회수
@@ -240,39 +233,36 @@ export default function NoticeManagePage() {
                       </Td>
                       <Td $center>
                         <Badge size="sm" variant="muted">
-                          {notice.category}
+                          {CATEGORY_OPTIONS.find(
+                            (c) => c.value === notice.category
+                          )?.label ?? notice.category}
                         </Badge>
                       </Td>
                       <Td>
                         <TitleCell>
                           <TitleText
-                            onClick={() => navigate(`/notices/${notice.id}`)}
+                            onClick={() => navigate(`/notices/${notice.id}`, { state: { from: '/admin/notice' } })}
                           >
                             {notice.title}
                           </TitleText>
                         </TitleCell>
                       </Td>
-                      {/* <Td $center>
+                      <Td $center>
                         <Badge
                           size="sm"
                           variant={
-                            notice.status === 'active' ? 'success' : 'muted'
+                            notice.status === 'ACTIVE' ? 'success' : 'muted'
                           }
                         >
-                          {notice.status === 'active' ? '게시중' : '미게시'}
+                          {TAB_ITEMS.find((t) => t.value === notice.status)
+                            ?.label ?? notice.status}
                         </Badge>
-                      </Td> */}
-                      <Td $center $muted>
-                        {notice.exposureStart}
                       </Td>
                       <Td $center $muted>
-                        {notice.exposureEnd ?? '-'}
+                        {notice.viewCount}
                       </Td>
                       <Td $center $muted>
-                        {notice.views}
-                      </Td>
-                      <Td $center $muted>
-                        {notice.createdAt}
+                        {fmtDate(notice.createdAt)}
                       </Td>
                     </Tr>
                   ))}
@@ -444,7 +434,7 @@ const TableWrap = styled.div`
 const Table = styled.table`
   width: 100%;
   border-collapse: collapse;
-  min-width: 780px;
+  min-width: 560px;
 `;
 
 const Th = styled.th`

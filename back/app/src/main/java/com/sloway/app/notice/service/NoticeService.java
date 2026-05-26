@@ -31,7 +31,7 @@ public class NoticeService {
 
         NoticeCategory categoryEnum = StringUtils.hasText(category)
                 ? NoticeCategory.from(category) : null;
-        NoticeStatus statusEnum = StringUtils.hasText(status) && !"all".equals(status)
+        NoticeStatus statusEnum = StringUtils.hasText(status) && !"all".equalsIgnoreCase(status)
                 ? NoticeStatus.from(status) : null;
 
         return noticeRepository

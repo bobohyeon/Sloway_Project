@@ -5,13 +5,19 @@ import com.fasterxml.jackson.annotation.JsonValue;
 
 public enum NoticeStatus {
 
-    ACTIVE("active"),
-    INACTIVE("inactive");
+    ACTIVE("게시중", "ACTIVE"),
+    INACTIVE("미게시", "INACTIVE");
 
+    private final String label;
     private final String value;
 
-    NoticeStatus(String value) {
+    NoticeStatus(String label, String value) {
+        this.label = label;
         this.value = value;
+    }
+
+    public String getLabel() {
+        return label;
     }
 
     @JsonValue
