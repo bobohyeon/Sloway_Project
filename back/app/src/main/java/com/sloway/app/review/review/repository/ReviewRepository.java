@@ -12,4 +12,7 @@ public interface ReviewRepository extends JpaRepository<ReviewEntity, Long> , Re
 
     //특정 예약의 리뷰 단건 조회
     Optional<ReviewEntity> findByRsvnNo(RsvnEntity rsvnNo);
+
+
+    Optional<ReviewEntity> findByNoAndDelYn(Long no, String delYn);
 }
