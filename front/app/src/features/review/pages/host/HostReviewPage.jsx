@@ -210,12 +210,11 @@ function HostReviewPage() {
   const [placeNo, setPlaceNo] = useState('');
   const [minScore, setMinScore] = useState('');
   const [period, setPeriod] = useState('');
-  const [searchTrigger, setSearchTrigger] = useState(0);
 
   useEffect(() => {
     if (!placeNo) return;
     findReview(placeNo, minScore, period);
-  }, [searchTrigger, minScore, period]);
+  }, [placeNo, minScore, period]);
 
   async function findReview(placeNo, minScore, period) {
     const resp = await findReviewsByHost(
@@ -285,9 +284,6 @@ function HostReviewPage() {
           onChange={(e) => setPlaceNo(e.target.value)}
           style={{ maxWidth: 140 }}
         />
-        <button onClick={() => setSearchTrigger((prev) => prev + 1)}>
-          검색
-        </button>
         <Select value={period} onChange={(e) => setPeriod(e.target.value)}>
           <option value={''}>전체 기간</option>
           <option value={'THIS_MONTH'}>이번 달</option>
