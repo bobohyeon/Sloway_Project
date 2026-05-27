@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
 import styled from 'styled-components';
-import { facilityList } from '../../../../hooks/host/coworking/useInsertCoworking';
 
 const FormCard = styled.div`
   background: white;
@@ -134,7 +133,12 @@ const SubmitButton = styled.button`
   transition: background 0.2s;
 `;
 
-function InsertCoworkingCheckComponent({ formData, prev, onSubmit }) {
+function InsertCoworkingCheckComponent({
+  formData,
+  facilityList,
+  prev,
+  onSubmit,
+}) {
   const [agreed, setAgreed] = useState({
     info: false,
     terms: false,

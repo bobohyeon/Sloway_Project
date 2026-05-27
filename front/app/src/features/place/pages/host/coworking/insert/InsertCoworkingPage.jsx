@@ -14,6 +14,7 @@ function InsertCoworkingPage() {
     step,
     setStep,
     formData,
+    facilityList,
     setFormData,
     handleChange,
     handleCheckChange,
@@ -37,6 +38,7 @@ function InsertCoworkingPage() {
         return (
           <InsertCoworkingDetailComponent
             formData={formData}
+            facilityList={facilityList}
             handleChange={handleChange}
             handleCheckChange={handleCheckChange}
             prev={() => setStep(1)}
@@ -66,6 +68,7 @@ function InsertCoworkingPage() {
         return (
           <InsertCoworkingCheckComponent
             formData={formData}
+            facilityList={facilityList}
             prev={() => setStep(4)}
             onSubmit={handleSubmit}
           />

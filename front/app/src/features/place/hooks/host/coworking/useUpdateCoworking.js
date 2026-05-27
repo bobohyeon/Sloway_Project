@@ -4,10 +4,35 @@ import {
   getOfficeDetail,
   updateOfficeApi,
 } from '../../../api/host/coworking/officeApi';
+import { fetchTypeAmenityListApi } from '../../../api/host/amenity/hostAmenityApi';
 
 export default function useUpdateCoworking(officeNo) {
   const navigate = useNavigate();
   const [step, setStep] = useState(1);
+  const [facilityList, setFacilityList] = useState([]); // 동적 데이터를 위한 state
+
+  const type = 'office';
+  useEffect(() => {
+    const loadAmenities = async () => {
+      console.log('API 호출 시작 전...'); // 1. 함수 진입 확인
+      try {
+        const resp = await fetchTypeAmenityListApi(type);
+        console.log('API 응답 확인:', resp); // 2. 응답 내용 확인
+
+        if (resp && resp.data) {
+          setFacilityList(resp.data.amenityList);
+          console.log('리스트 설정 완료:', resp.data.amenityList);
+        } else {
+          console.warn('응답은 왔으나 data 구조가 이상함:', resp);
+        }
+      } catch (e) {
+        console.error('API 호출 중 에러 발생!!!:', e); // 3. 에러 발생 시 확실히 출력
+      }
+    };
+
+    loadAmenities();
+  }, [type]);
+
   const [formData, setFormData] = useState({
     placeNo: '',
     title: '',
@@ -141,6 +166,7 @@ export default function useUpdateCoworking(officeNo) {
     step,
     setStep,
     formData,
+    facilityList,
     setFormData,
     handleChange,
     handlePriceChange,

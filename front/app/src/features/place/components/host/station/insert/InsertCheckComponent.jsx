@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
 import styled from 'styled-components';
-import { facilityList } from '../../../../hooks/host/station/useInsertStation';
 
 const FormCard = styled.div`
   background: white;
@@ -134,7 +133,7 @@ const SubmitButton = styled.button`
   transition: background 0.2s;
 `;
 
-function InsertCheckComponent({ formData, prev, onSubmit }) {
+function InsertCheckComponent({ formData, facilityList, prev, onSubmit }) {
   const [agreed, setAgreed] = useState({
     info: false,
     terms: false,

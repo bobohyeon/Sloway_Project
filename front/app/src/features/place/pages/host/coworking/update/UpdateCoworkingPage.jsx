@@ -14,6 +14,7 @@ function UpdateCoworkingPage() {
     step,
     setStep,
     formData,
+    facilityList,
     setFormData,
     handleChange,
     handlePriceChange,
@@ -42,6 +43,7 @@ function UpdateCoworkingPage() {
         return (
           <UpdateCoworkingDetailComponent
             formData={formData}
+            facilityList={facilityList}
             handleChange={handleChange}
             handleCheckChange={handleCheckChange}
             prev={() => setStep(1)}
@@ -62,6 +64,7 @@ function UpdateCoworkingPage() {
         return (
           <UpdateCoworkingCheckComponent
             formData={formData}
+            facilityList={facilityList}
             prev={() => setStep(3)}
             onSubmit={handleSubmit} // 훅의 handleSubmit 실행
           />

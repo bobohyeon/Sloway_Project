@@ -102,26 +102,12 @@ const NextButton = styled.button`
 
 function UpdateDetailComponent({
   formData,
+  facilityList,
   handleChange,
   handleCheckChange,
   prev,
   next,
 }) {
-  const facilityList = [
-    { no: 1, name: '주방' },
-    { no: 2, name: '세탁기' },
-    { no: 3, name: '건조기' },
-    { no: 4, name: 'WiFi' },
-    { no: 5, name: '주차' },
-    { no: 6, name: '어메니티' },
-    { no: 7, name: 'TV' },
-    { no: 8, name: '에어컨' },
-    { no: 9, name: '난방' },
-    { no: 10, name: '금연' },
-    { no: 11, name: '반려동물' },
-    { no: 12, name: '바베큐' },
-  ];
-
   return (
     <FormCard>
       <SectionTitle>공간 상세 정보</SectionTitle>

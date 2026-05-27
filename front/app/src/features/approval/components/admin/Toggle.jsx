@@ -2,14 +2,13 @@ import React from 'react';
 import styled from 'styled-components';
 
 export default function Toggle({ checked, onChange }) {
-  const isChecked = checked === 'Y';
   return (
     <ToggleWrapper
-      onClick={() => onChange(isChecked ? 'N' : 'Y')}
-      className={isChecked ? 'active' : ''}
+      onClick={() => onChange(!checked)} // 클릭 시 반대값(boolean) 전달
+      className={checked ? 'active' : ''}
     >
-      <Circle className={isChecked ? 'active' : ''} />
-      <Icon className={isChecked ? 'active' : ''}>{isChecked ? '✓' : '✕'}</Icon>
+      <Circle className={checked ? 'active' : ''} />
+      <Icon className={checked ? 'active' : ''}>{checked ? '✓' : '✕'}</Icon>
     </ToggleWrapper>
   );
 }
