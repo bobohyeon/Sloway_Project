@@ -94,6 +94,14 @@ public class ReviewService {
         );
     }
 
+    // 관리자용 리뷰 삭제 (소유자 확인 없이 바로 삭제)
+    @Transactional
+    public void adminDeleteReview(Long no){
+        ReviewEntity entity = reviewRepository.findByNoAndDelYn(no, "N")
+                .orElseThrow(()-> new CustomException(ReviewErrorCode.REVIEW_NOT_FOUND));
+        entity.delete();
+    }
+
     //리뷰 삭제
     @Transactional
     public void deleteReview(Long memberNo, Long no){
