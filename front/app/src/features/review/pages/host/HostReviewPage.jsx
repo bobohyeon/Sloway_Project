@@ -1,11 +1,12 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import styled, { keyframes } from 'styled-components';
 import PageLayout from '../../../../app/layouts/page/PageLayout';
 import {
   TabBar,
   TabBtn,
-  TabCount,Card,
+  TabCount,
+  Card,
   CardRow,
   Thumb,
   CardBody,
@@ -15,6 +16,7 @@ import {
   CardRight,
   COLOR,
 } from '../../../rsvn/components/user/RsvnStyled';
+import { findReviewsByHost, deleteReply } from '../../api/reviewApi';
 
 const fadeInUp = keyframes`
   from { opacity: 0; transform: translateY(10px); }
@@ -204,19 +206,47 @@ function HostReviewPage() {
   const [editingId, setEditingId] = useState(null);
   const [submitted, setSubmitted] = useState({});
 
+  const [reviews, setReviews] = useState([]);
+  const [placeNo, setPlaceNo] = useState('');
+  const [minScore, setMinScore] = useState('');
+  const [period, setPeriod] = useState('');
+  const [searchTrigger, setSearchTrigger] = useState(0);
+
+  useEffect(() => {
+    if (!placeNo) return;
+    findReview(placeNo, minScore, period);
+  }, [searchTrigger, minScore, period]);
+
+  async function findReview(placeNo, minScore, period) {
+    const resp = await findReviewsByHost(
+      placeNo,
+      minScore || null,
+      period || null
+    );
+    setReviews(resp);
+  }
+
   const counts = TABS.map((tab, idx) =>
     idx === 0
-      ? DUMMY.length
-      : DUMMY.filter((i) => i.status === tab.status).length
+      ? reviews.length
+      : reviews.filter(
+          (i) => (i.replies?.length === 0 ? 'pending' : 'done') === tab.status
+        ).length
   );
 
-  const filtered = DUMMY.filter(
-    (i) => activeTab === 0 || i.status === TABS[activeTab].status
-  )
+  const filtered = reviews
+    .filter(
+      (i) =>
+        activeTab === 0 ||
+        (i.replies?.length === 0 ? 'pending' : 'done') ===
+          TABS[activeTab].status
+    )
     .filter((i) => spaceFilter === '전체 공간' || i.space === spaceFilter)
     .filter(
       (i) =>
-        !keyword || i.reviewer.includes(keyword) || i.text.includes(keyword)
+        !keyword ||
+        i.memberName.includes(keyword) ||
+        i.content.includes(keyword)
     );
 
   const handleReplyChange = (id, val) =>
@@ -234,7 +264,6 @@ function HostReviewPage() {
       description="게스트 리뷰에 답글을 달고 소통하세요"
       maxWidth={1200}
     >
-
       <TabBar>
         {TABS.map((tab, idx) => (
           <TabBtn
@@ -249,18 +278,28 @@ function HostReviewPage() {
       </TabBar>
 
       <FilterRow>
-        <Select
-          value={spaceFilter}
-          onChange={(e) => setSpaceFilter(e.target.value)}
-        >
-          <option>전체 공간</option>
-          <option>청평 숲속 파인뷰</option>
-          <option>성수 브릭라운지</option>
+        <SearchInput
+          type="number"
+          placeholder="공간 번호 입력"
+          value={placeNo}
+          onChange={(e) => setPlaceNo(e.target.value)}
+          style={{ maxWidth: 140 }}
+        />
+        <button onClick={() => setSearchTrigger((prev) => prev + 1)}>
+          검색
+        </button>
+        <Select value={period} onChange={(e) => setPeriod(e.target.value)}>
+          <option value={''}>전체 기간</option>
+          <option value={'THIS_MONTH'}>이번 달</option>
+          <option value={'THREE_MONTHS'}>지난 3개월</option>
         </Select>
-        <Select>
-          <option>전체 기간</option>
-          <option>이번 달</option>
-          <option>지난 3개월</option>
+        <Select value={minScore} onChange={(e) => setMinScore(e.target.value)}>
+          <option value={''}>전체 평점</option>
+          <option value={'1'}>1점 이상</option>
+          <option value={'2'}>2점 이상</option>
+          <option value={'3'}>3점 이상</option>
+          <option value={'4'}>4점 이상</option>
+          <option value={'5'}>5점</option>
         </Select>
         <SearchInput
           placeholder="작성자명 · 내용 검색"
@@ -283,15 +322,15 @@ function HostReviewPage() {
       )}
 
       {filtered.map((item) => {
-        const existingReply = submitted[item.id]
-          ? { text: submitted[item.id], date: '방금' }
-          : item.reply;
-        const isEditing = editingId === item.id;
+        const existingReply = submitted[item.no]
+          ? { text: submitted[item.no], date: '방금' }
+          : item.replies?.[0];
+        const isEditing = editingId === item.no;
 
         return (
-          <Card key={item.id} style={{ cursor: 'default' }}>
+          <Card key={item.no} style={{ cursor: 'default' }}>
             <CardRow>
-              <Thumb>{item.icon}</Thumb>
+              <Thumb>{item.spaceType?.[0]}</Thumb>
               <CardBody>
                 <TagRow>
                   <span
@@ -304,10 +343,10 @@ function HostReviewPage() {
                       color: '#5b6b53',
                     }}
                   >
-                    {item.type}
+                    {item.spaceType}
                   </span>
                   <span style={{ fontSize: 12, color: COLOR.gray400 }}>
-                    {item.space}
+                    {item.spaceName}
                   </span>
                 </TagRow>
                 <div
@@ -319,30 +358,44 @@ function HostReviewPage() {
                   }}
                 >
                   <span style={{ fontSize: 14, fontWeight: 700 }}>
-                    {item.reviewer}
+                    {item.memberName}
                   </span>
                   <Stars>
-                    {'★'.repeat(item.score)}
-                    {'☆'.repeat(5 - item.score)}
+                    {'★'.repeat(item.scoreTotal)}
+                    {'☆'.repeat(5 - item.scoreTotal)}
                   </Stars>
                   <span style={{ fontSize: 12, color: COLOR.gray400 }}>
-                    {item.date}
+                    {new Date(item.createdAt).toLocaleDateString('ko-KR')}
                   </span>
                 </div>
-                <ReviewText>{item.text}</ReviewText>
+                <ReviewText>{item.content}</ReviewText>
 
                 {/* 기존 답글 */}
                 {existingReply && !isEditing && (
                   <ReplyBox>
-                    <ReplyLabel>🏠 내 답글 · {existingReply.date}</ReplyLabel>
-                    <div>{existingReply.text}</div>
+                    <ReplyLabel>
+                      🏠 내 답글 ·{' '}
+                      {new Date(existingReply.createdAt).toLocaleDateString(
+                        'ko-KR'
+                      )}
+                    </ReplyLabel>
+                    <div>{existingReply.content}</div>
                     <EditBtn
                       onClick={() => {
-                        setEditingId(item.id);
-                        handleReplyChange(item.id, existingReply.text);
+                        setEditingId(item.no);
+                        handleReplyChange(item.no, existingReply.content);
                       }}
                     >
                       수정
+                    </EditBtn>
+                    <EditBtn
+                      onClick={() => {
+                        deleteReply(existingReply.no).then(() =>
+                          findReview(placeNo, minScore, period)
+                        );
+                      }}
+                    >
+                      삭제
                     </EditBtn>
                   </ReplyBox>
                 )}
@@ -353,9 +406,9 @@ function HostReviewPage() {
                     <ReplyArea
                       rows={3}
                       placeholder="게스트에게 감사한 마음을 전해보세요"
-                      value={replyTexts[item.id] || ''}
+                      value={replyTexts[item.no] || ''}
                       onChange={(e) =>
-                        handleReplyChange(item.id, e.target.value)
+                        handleReplyChange(item.no, e.target.value)
                       }
                     />
                     <div
@@ -371,7 +424,7 @@ function HostReviewPage() {
                           취소
                         </EditBtn>
                       )}
-                      <ReplySubmitBtn onClick={() => handleSubmit(item.id)}>
+                      <ReplySubmitBtn onClick={() => handleSubmit(item.no)}>
                         {isEditing ? '수정 완료' : '답글 등록'}
                       </ReplySubmitBtn>
                     </div>
