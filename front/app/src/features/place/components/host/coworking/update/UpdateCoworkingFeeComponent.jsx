@@ -170,7 +170,6 @@ const NextButton = styled.button`
 `;
 
 // --- Main Component ---
-
 function UpdateCoworkingFeeComponent({ formData, setFormData, prev, next }) {
   const dayList = [
     { key: '1', label: '월요일' },
@@ -188,32 +187,31 @@ function UpdateCoworkingFeeComponent({ formData, setFormData, prev, next }) {
     (_, i) => `${String(i).padStart(2, '0')}:00`
   );
 
-  // 1. 평상시 요금 변경 핸들러
+  // 1. 평상시 요금 변경 (월요일 00:00 수정 시 일괄 동기화)
   const handleBasePriceChange = (dayKey, hour, value) => {
     if (value !== '' && !/^\d+$/.test(value)) return;
-    setFormData((prev) => ({
-      ...prev,
-      officePeriods: {
-        ...prev.officePeriods,
-        [dayKey]: { ...(prev.officePeriods?.[dayKey] || {}), [hour]: value },
-      },
-    }));
+
+    setFormData((prev) => {
+      const nextOfficePeriods = { ...prev.officePeriods };
+
+      // 수정된 값 적용
+      if (!nextOfficePeriods[dayKey]) nextOfficePeriods[dayKey] = {};
+      nextOfficePeriods[dayKey][hour] = value;
+
+      // 월요일 00:00 수정 시 나머지 전체 동기화
+      if (dayKey === '1' && hour === '00:00') {
+        dayList.forEach((d) => {
+          if (!nextOfficePeriods[d.key]) nextOfficePeriods[d.key] = {};
+          hourList.forEach((h) => {
+            nextOfficePeriods[d.key][h] = value;
+          });
+        });
+      }
+      return { ...prev, officePeriods: nextOfficePeriods };
+    });
   };
 
-  // 2. 예외 기간(성수기) 추가
-  const addException = () => {
-    const newException = {
-      startDate: '',
-      endDate: '',
-      prices: {},
-    };
-    setFormData((prev) => ({
-      ...prev,
-      exceptionPeriods: [...(prev.exceptionPeriods || []), newException],
-    }));
-  };
-
-  // 3. 예외 기간 데이터 변경
+  // 2. 예외 기간 데이터 변경 (월요일 00:00 수정 시 일괄 동기화)
   const handleExceptionChange = (
     index,
     field,
@@ -222,13 +220,32 @@ function UpdateCoworkingFeeComponent({ formData, setFormData, prev, next }) {
     hour = null
   ) => {
     const updated = [...formData.exceptionPeriods];
+
     if (dayKey && hour) {
       if (!updated[index].prices[dayKey]) updated[index].prices[dayKey] = {};
       updated[index].prices[dayKey][hour] = value;
+
+      // 예외 기간 내 월요일 00:00 수정 시 동기화
+      if (dayKey === '1' && hour === '00:00') {
+        dayList.forEach((d) => {
+          if (!updated[index].prices[d.key]) updated[index].prices[d.key] = {};
+          hourList.forEach((h) => {
+            updated[index].prices[d.key][h] = value;
+          });
+        });
+      }
     } else {
       updated[index][field] = value;
     }
     setFormData((prev) => ({ ...prev, exceptionPeriods: updated }));
+  };
+
+  const addException = () => {
+    const newException = { startDate: '', endDate: '', prices: {} };
+    setFormData((prev) => ({
+      ...prev,
+      exceptionPeriods: [...(prev.exceptionPeriods || []), newException],
+    }));
   };
 
   const removeException = (index) => {
@@ -239,44 +256,40 @@ function UpdateCoworkingFeeComponent({ formData, setFormData, prev, next }) {
   return (
     <FormCard>
       <SectionTitle>요금 및 운영 시간 설정</SectionTitle>
-
       <SubTitle>평상시 시간당 요금</SubTitle>
-      <div style={{ marginBottom: '50px' }}>
-        {dayList.map((day) => (
-          <div key={day.key} style={{ marginBottom: '25px' }}>
-            <div
-              style={{
-                fontSize: '13px',
-                fontWeight: '600',
-                marginBottom: '10px',
-                color: '#888',
-              }}
-            >
-              {day.label}
-            </div>
-            <InputGrid>
-              {hourList.map((hour) => (
-                <TimePriceRow key={`${day.key}-${hour}`}>
-                  <span className="time-label">{hour} ~</span>
-                  <PriceInputWrapper>
-                    <input
-                      type="text"
-                      placeholder="0"
-                      value={formData.officePeriods?.[day.key]?.[hour] || ''}
-                      onChange={(e) =>
-                        handleBasePriceChange(day.key, hour, e.target.value)
-                      }
-                    />
-                    <span className="unit">원</span>
-                  </PriceInputWrapper>
-                </TimePriceRow>
-              ))}
-            </InputGrid>
+      {dayList.map((day) => (
+        <div key={day.key} style={{ marginBottom: '25px' }}>
+          <div
+            style={{
+              fontSize: '13px',
+              fontWeight: '600',
+              marginBottom: '10px',
+              color: '#888',
+            }}
+          >
+            {day.label}
           </div>
-        ))}
-      </div>
+          <InputGrid>
+            {hourList.map((hour) => (
+              <TimePriceRow key={`${day.key}-${hour}`}>
+                <span className="time-label">{hour} ~</span>
+                <PriceInputWrapper>
+                  <input
+                    type="text"
+                    placeholder="0"
+                    value={formData.officePeriods?.[day.key]?.[hour] || ''}
+                    onChange={(e) =>
+                      handleBasePriceChange(day.key, hour, e.target.value)
+                    }
+                  />
+                  <span className="unit">원</span>
+                </PriceInputWrapper>
+              </TimePriceRow>
+            ))}
+          </InputGrid>
+        </div>
+      ))}
 
-      {/* --- 파트 2: 예외 기간 (성수기) 설정 --- */}
       <SubTitle>예외 기간 설정</SubTitle>
       {formData.exceptionPeriods?.map((exp, idx) => (
         <ExceptionBox key={idx}>
@@ -299,22 +312,16 @@ function UpdateCoworkingFeeComponent({ formData, setFormData, prev, next }) {
                 handleExceptionChange(idx, 'endDate', e.target.value)
               }
             />
-            <div style={{ flex: 1 }} />
             <RemoveButton onClick={() => removeException(idx)}>
               삭제
             </RemoveButton>
           </DateInputRow>
-
-          <p style={{ fontSize: '12px', color: '#999', marginBottom: '15px' }}>
-            * 이 기간에는 아래 설정한 요금이 우선 적용됩니다.
-          </p>
-
           {dayList.map((day) => (
             <div key={day.key} style={{ marginBottom: '15px' }}>
               <div
                 style={{ fontSize: '12px', color: '#666', marginBottom: '8px' }}
               >
-                {day.label}요일 (성수기 요금)
+                {day.label} (성수기 요금)
               </div>
               <InputGrid>
                 {hourList.map((hour) => (
@@ -348,7 +355,6 @@ function UpdateCoworkingFeeComponent({ formData, setFormData, prev, next }) {
       <AddButton type="button" onClick={addException}>
         + 성수기/이벤트 예외 기간 추가하기
       </AddButton>
-
       <ButtonGroup>
         <PrevButton type="button" onClick={prev}>
           이전 단계
