@@ -1,10 +1,14 @@
 package com.sloway.app.admin.controller;
 
 import com.sloway.app.admin.dto.request.RejectRequestDto;
+import com.sloway.app.admin.dto.response.HostDetailResponseDto;
+import com.sloway.app.admin.dto.response.HostListResponseDto;
 import com.sloway.app.admin.service.AdminHostService;
 import com.sloway.app.auth.user.CustomUserDetails;
+import com.sloway.app.host.common.ApprovalState;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
@@ -67,4 +71,45 @@ public class AdminHostController {
         adminHostService.reject(id , dto.getReason());
         return ResponseEntity.ok().build();
     }
-}
+
+    /**
+     * 어드민 — 호스트 목록 조회.
+     *
+     * <p>쿼리 파라미터:
+     * <ul>
+     *   <li>state — 상태 필터 (P/A/R/V). 생략하면 전체 조회</li>
+     *   <li>page  — 페이지 번호 (0부터 시작, 기본 0)</li>
+     *   <li>size  — 페이지당 개수 (기본 20)</li>
+     * </ul>
+     *
+     * <p>예시: GET /api/admin/hosts?state=P&page=0&size=10
+     *
+     * @return 호스트 목록 (페이징 메타 포함)
+     */
+    @GetMapping
+    public ResponseEntity<Page<HostListResponseDto>> findAll(
+            @RequestParam(required = false) ApprovalState state,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "20") int size) {
+
+        log.info("호스트 목록 조회: state={}, page={}, size={}", state, page, size);
+        Page<HostListResponseDto> result = adminHostService.findAll(state, page, size);
+        return ResponseEntity.ok(result);
+    }
+
+    /**
+     * 어드민 — 호스트 상세 조회.
+     *
+     * <p>목록보다 풍부한 정보: 사업자등록증 URL, 승인/반려 시각/사유,
+     * 회원 전화번호·생년월일까지 포함. 어드민이 신청 검토할 때 사용.
+     *
+     * @param id 호스트 PK (HostEntity.no)
+     */
+    @GetMapping("/{id}")
+    public ResponseEntity<HostDetailResponseDto> findOne(@PathVariable Long id) {
+
+        log.info("호스트 상세 조회: hostNo={}", id);
+        HostDetailResponseDto result = adminHostService.findOne(id);
+        return ResponseEntity.ok(result);
+    }
+}//class
