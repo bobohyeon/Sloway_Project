@@ -1,24 +1,24 @@
-import { useState } from 'react'
-import styled from 'styled-components'
-import { Card, Button } from '../../../pay_shared/components'
+import { useState } from 'react';
+import styled from 'styled-components';
+import { Card, Button } from '../../../pay_shared/components';
 
 export function CouponCodeInput({ onSubmit }) {
-  const [code, setCode] = useState('')
+  const [code, setCode] = useState('');
 
   const handleSubmit = () => {
     if (code.trim().length < 4) {
-      alert('쿠폰 코드를 정확히 입력해주세요')
-      return
+      alert('쿠폰 코드를 정확히 입력해주세요');
+      return;
     }
-    onSubmit?.(code.trim().toUpperCase())
-    setCode('')
-  }
+    onSubmit?.(code.trim().toUpperCase());
+    setCode('');
+  };
 
   const handleKeyDown = (e) => {
     if (e.key === 'Enter') {
-      handleSubmit()
+      handleSubmit();
     }
-  }
+  };
 
   return (
     <Wrap padded>
@@ -35,36 +35,42 @@ export function CouponCodeInput({ onSubmit }) {
           type="text"
           placeholder="예: WELCOME2026"
           value={code}
-          onChange={(e) => setCode(e.target.value.toUpperCase().replace(/[^A-Z0-9-]/g, ''))}
+          onChange={(e) =>
+            setCode(e.target.value.toUpperCase().replace(/[^A-Z0-9-]/g, ''))
+          }
           onKeyDown={handleKeyDown}
           maxLength={20}
         />
-        <Button variant="primary" onClick={handleSubmit} disabled={!code.trim()}>
+        <Button
+          variant="primary"
+          onClick={handleSubmit}
+          disabled={!code.trim()}
+        >
           등록
         </Button>
       </InputRow>
     </Wrap>
-  )
+  );
 }
 
 const Wrap = styled(Card)`
   background: linear-gradient(135deg, var(--cream) 0%, var(--white) 100%);
-`
+`;
 
 const Header = styled.div`
   display: flex;
   gap: var(--space-3);
   align-items: center;
   margin-bottom: var(--space-3);
-`
+`;
 
 const Icon = styled.div`
   font-size: 1.8rem;
-`
+`;
 
 const HeaderText = styled.div`
   flex: 1;
-`
+`;
 
 const Title = styled.div`
   font-family: var(--font-display);
@@ -72,17 +78,17 @@ const Title = styled.div`
   font-weight: 500;
   color: var(--gray-800);
   margin-bottom: 2px;
-`
+`;
 
 const SubTitle = styled.div`
   font-size: 0.78rem;
   color: var(--gray-600);
-`
+`;
 
 const InputRow = styled.div`
   display: flex;
   gap: var(--space-2);
-`
+`;
 
 const CodeInput = styled.input`
   flex: 1;
@@ -105,4 +111,4 @@ const CodeInput = styled.input`
     color: var(--gray-400);
     letter-spacing: 0;
   }
-`
+`;

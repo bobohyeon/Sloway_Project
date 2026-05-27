@@ -1,6 +1,5 @@
-import { useEffect, useMemo } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { useSelector } from 'react-redux';
+import { useMemo } from 'react';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import styled from 'styled-components';
 import PageLayout from '../../../../app/layouts/page/PageLayout';
 import { Button } from '../../../pay_shared/components';
@@ -51,20 +50,13 @@ const formatAttemptedAt = (date) => {
 
 export default function PaymentFail() {
   const nav = useNavigate();
-  const error = useSelector((state) => state.pay.error);
-
-  useEffect(() => {
-    if (!error) nav('/user/payment/checkout');
-  }, [error, nav]);
-
+  const [params] = useSearchParams();
   const attemptedAt = useMemo(() => formatAttemptedAt(new Date()), []);
 
-  if (!error) return null;
-
   const errorInfo = {
-    reason: '결제 처리 실패',
-    code: '-',
-    message: error,
+    reason: '결제를 완료하지 못했어요',
+    code: params.get('code') ?? '-',
+    message: params.get('reason') ?? '결제가 취소되었거나 처리 중 오류가 발생했어요.',
     attemptedAt,
   };
 
