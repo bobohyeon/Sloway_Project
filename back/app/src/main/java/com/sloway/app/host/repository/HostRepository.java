@@ -1,6 +1,9 @@
 package com.sloway.app.host.repository;
 
+import com.sloway.app.host.common.ApprovalState;
 import com.sloway.app.host.entity.HostEntity;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.Optional;
@@ -25,4 +28,10 @@ public interface HostRepository
 
     /** 사업자등록번호 중복 체크 (호스트 신청 시 필요) */
     boolean existsByBusinessNo(String businessNo);
+
+    /**
+     * 상태 필터 + 페이징 조회.
+     * <p>어드민 호스트 목록에서 "대기/승인/반려/취소" 필터링용.
+     */
+    Page<HostEntity> findByApprovalState(ApprovalState state, PageRequest pageable);
 }
