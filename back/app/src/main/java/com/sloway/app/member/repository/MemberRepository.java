@@ -3,6 +3,7 @@ package com.sloway.app.member.repository;
 import com.sloway.app.member.entity.MemberEntity;
 import org.springframework.data.jpa.repository.JpaRepository;
 
+import java.util.List;
 import java.util.Optional;
 
 /**
@@ -21,4 +22,10 @@ public interface MemberRepository extends JpaRepository<MemberEntity  , Long> , 
     /** 이메일 존재 여부 (회원가입 중복 체크용) */
     boolean existsByEmail(String email);
 
+    /**
+     * 여러 memberNo로 회원 일괄 조회 (N+1 방지).
+     * <p>호스트 목록처럼 "여러 호스트의 회원 정보를 한 번에" 가져올 때 사용.
+     * 빈 리스트 넘기면 빈 결과 반환 (예외 안 남).
+     */
+    List<MemberEntity> findByNoIn(List<Long> memberNos);
 }

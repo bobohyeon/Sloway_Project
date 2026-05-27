@@ -4,7 +4,10 @@ import PageLayout from '../../../../app/layouts/page/PageLayout';
 
 export default function AmenityTableLayout({ children, title, onAddRow }) {
   return (
-    <PageLayout title={title}>
+    <PageLayout
+      title={title}
+      description={'공간에 필요한 편의시설을 관리합니다'}
+    >
       <TableCard>
         <HeaderActions>
           <Title />
@@ -25,7 +28,8 @@ const TableCard = styled.div`
   box-shadow: 0 4px 16px rgba(0, 0, 0, 0.05);
   width: 100%;
   max-width: 1400px;
-  padding: 24px;
+  margin-top: 15px;
+  padding: 30px 40px;
   display: flex;
   flex-direction: column;
   gap: 20px;

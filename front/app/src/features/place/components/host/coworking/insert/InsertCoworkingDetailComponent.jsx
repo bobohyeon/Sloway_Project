@@ -1,6 +1,5 @@
 import React from 'react';
 import styled from 'styled-components';
-import { facilityList } from '../../../../hooks/host/coworking/useInsertCoworking';
 
 const FormCard = styled.div`
   background: white;
@@ -102,6 +101,7 @@ const NextButton = styled.button`
 
 function InsertCoworkingDetailComponent({
   formData,
+  facilityList,
   handleChange,
   handleCheckChange,
   prev,

@@ -3,9 +3,9 @@ package com.sloway.app.notice.service;
 import com.sloway.app.notice.dto.request.NoticeWriteReqDto;
 import com.sloway.app.notice.dto.response.NoticeDetailResDto;
 import com.sloway.app.notice.dto.response.NoticeListResDto;
-import com.sloway.app.notice.entity.NoticeCategory;
+import com.sloway.app.notice.enums.NoticeCategory;
 import com.sloway.app.notice.entity.NoticeEntity;
-import com.sloway.app.notice.entity.NoticeStatus;
+import com.sloway.app.notice.enums.NoticeStatus;
 import com.sloway.app.notice.repository.NoticeRepository;
 import org.springframework.util.StringUtils;
 import lombok.RequiredArgsConstructor;
@@ -41,7 +41,7 @@ public class NoticeService {
 
     @Transactional
     public NoticeDetailResDto findById(Long id) {
-        NoticeEntity noticeEntity = noticeRepository.findById(id)
+        NoticeEntity noticeEntity = noticeRepository.findByIdAndDelYn(id , "N")
                 .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 공지사항입니다. id=" + id));
 
         noticeEntity.increaseViewCount();
@@ -59,7 +59,7 @@ public class NoticeService {
 
     @Transactional
     public void update(Long id, NoticeWriteReqDto reqDto) {
-        NoticeEntity noticeEntity = noticeRepository.findById(id)
+        NoticeEntity noticeEntity = noticeRepository.findByIdAndDelYn(id , "N")
                 .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 공지사항입니다. id=" + id));
 
         noticeEntity.update(reqDto.getTitle(), reqDto.getContent(),
@@ -69,15 +69,19 @@ public class NoticeService {
 
     @Transactional
     public void delete(Long id) {
-        NoticeEntity noticeEntity = noticeRepository.findById(id)
+        NoticeEntity noticeEntity = noticeRepository.findByIdAndDelYn(id , "N")
                 .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 공지사항입니다. id=" + id));
-        noticeRepository.delete(noticeEntity);
+        noticeEntity.delete();
         log.info("[공지사항 삭제] id={}", id);
     }
 
     @Transactional
     public void deleteAll(List<Long> ids) {
-        noticeRepository.deleteAllByIdInBatch(ids);
+        List<NoticeEntity> notices = noticeRepository.findAllByIdInAndDelYn(ids ,"N");
+        if (notices.size() != ids.size()) {
+            throw new IllegalArgumentException("존재하지 않는 공지사항이 포함되어 있습니다.");
+        }
+        notices.forEach(NoticeEntity::delete);
         log.info("[공지사항 일괄 삭제] ids={}", ids);
     }
 }

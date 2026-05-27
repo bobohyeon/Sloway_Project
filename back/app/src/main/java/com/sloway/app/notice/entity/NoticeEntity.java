@@ -1,6 +1,8 @@
 package com.sloway.app.notice.entity;
 
 import com.sloway.app.common.entity.BaseEntity;
+import com.sloway.app.notice.enums.NoticeCategory;
+import com.sloway.app.notice.enums.NoticeStatus;
 import jakarta.persistence.*;
 import lombok.*;
 

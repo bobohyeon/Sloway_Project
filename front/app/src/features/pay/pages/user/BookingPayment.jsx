@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import styled from 'styled-components';
 import PageLayout from '../../../../app/layouts/page/PageLayout';
 import { PaymentSteps } from '../../components/user/PaymentSteps';
@@ -11,7 +12,7 @@ import { TermsAgreement } from '../../components/user/TermsAgreement';
 import { PaymentSummary } from '../../components/user/PaymentSummary';
 import { useCheckoutForm } from '../../hooks/useCheckoutForm';
 import { useCheckoutCalc } from '../../hooks/useCheckoutCalc';
-import { usePayAction } from '../../hooks/usePayAction';
+import { readyPay } from '../../api/payApi';
 import { findCouponsByMemberNo } from '../../../coupon/api/couponApi';
 import { findPointBalanceByMemberNo } from '../../../point/api/pointApi';
 
@@ -73,6 +74,8 @@ const toCouponForUI = (resDto) => ({
 });
 
 export default function BookingPaymentPage() {
+  const nav = useNavigate();
+
   const {
     selectedCoupon,
     setSelectedCoupon,
@@ -88,6 +91,7 @@ export default function BookingPaymentPage() {
 
   const [coupons, setCoupons] = useState([]);
   const [heldPoints, setHeldPoints] = useState(0);
+  const [paying, setPaying] = useState(false);
 
   useEffect(() => {
     const loadData = async () => {
@@ -115,18 +119,24 @@ export default function BookingPaymentPage() {
       agrees,
     });
 
-  const { loading, handlePay } = usePayAction();
-
-  const onPayClick = () => {
-    if (!canPay || loading) return;
-    handlePay({
-      rsvnNo: RSVN_NO,
-      ucNo: selectedCoupon?.no ?? null,
-      usedPoint: points,
-      paymentMethod,
-      baseAmt: subtotal,
-      addAmt: SERVICE_FEE,
-    });
+  const onPayClick = async () => {
+    if (!canPay || paying) return;
+    setPaying(true);
+    try {
+      const { nextRedirectPcUrl } = await readyPay({
+        rsvnNo: RSVN_NO,
+        ucNo: selectedCoupon?.no ?? null,
+        usedPoint: points,
+        payMethod: paymentMethod,
+        baseAmt: subtotal,
+        addAmt: SERVICE_FEE,
+      });
+      window.location.href = nextRedirectPcUrl;
+    } catch (err) {
+      console.error('결제 준비 실패', err);
+      setPaying(false);
+      nav('/user/payment/fail');
+    }
   };
 
   return (
@@ -167,7 +177,7 @@ export default function BookingPaymentPage() {
             usePoints={points}
             total={total}
             earnPoints={earnPoints}
-            canPay={canPay && !loading}
+            canPay={canPay && !paying}
             onPay={onPayClick}
           />
         </Sidebar>

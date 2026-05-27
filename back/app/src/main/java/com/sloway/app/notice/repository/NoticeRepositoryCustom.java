@@ -1,8 +1,8 @@
 package com.sloway.app.notice.repository;
 
-import com.sloway.app.notice.entity.NoticeCategory;
+import com.sloway.app.notice.enums.NoticeCategory;
 import com.sloway.app.notice.entity.NoticeEntity;
-import com.sloway.app.notice.entity.NoticeStatus;
+import com.sloway.app.notice.enums.NoticeStatus;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 

@@ -1,12 +1,12 @@
-import { useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { useSelector } from 'react-redux';
+import { useEffect, useState } from 'react';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import styled from 'styled-components';
 import PageLayout from '../../../../app/layouts/page/PageLayout';
 import { Button } from '../../../pay_shared/components';
 import { ResultHeader } from '../../components/user/ResultHeader';
 import { ReservationInfoCard } from '../../components/user/ReservationInfoCard';
 import { NextStepsList } from '../../components/user/NextStepsList';
+import { findPayByNo } from '../../api/payApi';
 
 const Content = styled.div`
   display: flex;
@@ -56,11 +56,19 @@ const formatPaidAt = (iso) => {
 
 export default function PaymentComplete() {
   const nav = useNavigate();
-  const result = useSelector((state) => state.pay.result);
+  const [params] = useSearchParams();
+  const payNo = params.get('payNo');
+  const [result, setResult] = useState(null);
 
   useEffect(() => {
-    if (!result) nav('/user/payment');
-  }, [result, nav]);
+    if (!payNo) {
+      nav('/user/payment');
+      return;
+    }
+    findPayByNo(payNo)
+      .then(setResult)
+      .catch(() => nav('/user/payment/fail'));
+  }, [payNo, nav]);
 
   if (!result) return null;
 

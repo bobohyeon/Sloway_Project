@@ -4,38 +4,88 @@ import {
   getOfficeDetail,
   updateOfficeApi,
 } from '../../../api/host/coworking/officeApi';
+import { fetchTypeAmenityListApi } from '../../../api/host/amenity/hostAmenityApi';
 
 export default function useUpdateCoworking(officeNo) {
   const navigate = useNavigate();
   const [step, setStep] = useState(1);
+  const [facilityList, setFacilityList] = useState([]); // 동적 데이터를 위한 state
+
+  const type = 'office';
+  useEffect(() => {
+    const loadAmenities = async () => {
+      console.log('API 호출 시작 전...'); // 1. 함수 진입 확인
+      try {
+        const resp = await fetchTypeAmenityListApi(type);
+        console.log('API 응답 확인:', resp); // 2. 응답 내용 확인
+
+        if (resp && resp.data) {
+          setFacilityList(resp.data.amenityList);
+          console.log('리스트 설정 완료:', resp.data.amenityList);
+        } else {
+          console.warn('응답은 왔으나 data 구조가 이상함:', resp);
+        }
+      } catch (e) {
+        console.error('API 호출 중 에러 발생!!!:', e); // 3. 에러 발생 시 확실히 출력
+      }
+    };
+
+    loadAmenities();
+  }, [type]);
+
   const [formData, setFormData] = useState({
     placeNo: '',
-    placeTitle: '',
     title: '',
     content: '',
     basePeople: '',
     facilities: [],
-    officePeriods: {}, // { '1': { '00:00': 10000 } } 구조
+    officePeriods: {},
     exceptionPeriods: [],
   });
 
-  // 1. 데이터 가져오기 (Fetch)
   useEffect(() => {
-    console.log('DEBUG - officeNo 확인:', officeNo); // 👈 로그 확인!
     if (!officeNo) return;
+
     const fetchData = async () => {
       try {
-        console.log('API 요청 시작...');
         const resp = await getOfficeDetail(officeNo);
-        console.log('API 응답 데이터:', resp);
+        const data = resp.data;
+        console.log(data);
+
+        // 1. 요금 데이터 변환: 배열 -> { day: { hour: price } } 객체로 구조화
+        const dayMap = {
+          mon: '1',
+          tue: '2',
+          wed: '3',
+          thu: '4',
+          fri: '5',
+          sat: '6',
+          sun: '7',
+          hol: '8',
+        };
+
+        // fetchData 내부의 파싱 로직 수정
+        const parsedPeriods = {};
+        if (Array.isArray(data.officePeriods)) {
+          data.officePeriods.forEach((p) => {
+            const dayKey = dayMap[p.dayOfWeek] || p.dayOfWeek; // 'mon' -> '1'로 변환
+            const hour = p.startTime.split('T')[1].substring(0, 5);
+
+            if (!parsedPeriods[dayKey]) parsedPeriods[dayKey] = {};
+            parsedPeriods[dayKey][hour] = p.price;
+          });
+        }
+
+        // 2. 상태 업데이트
         setFormData({
-          placeNo: resp.data.placeNo,
-          title: resp.data.title,
-          content: resp.data.content,
-          basePeople: resp.data.basePeople || '',
-          facilities: resp.data.facilityList || [],
-          officePeriods: resp.data.officePeriods || {},
-          exceptionPeriods: resp.data.exceptionPeriods || [],
+          placeNo: data.placeNo || '',
+          placeTitle: data.placeTitle || '',
+          title: data.title || '',
+          content: data.content || '',
+          basePeople: data.basePeople || '',
+          facilities: data.facilityList || [], // 서버에서 받는 그대로 저장
+          officePeriods: parsedPeriods,
+          exceptionPeriods: data.exceptionPeriods || [],
         });
       } catch (error) {
         console.error('데이터 조회 실패:', error);
@@ -43,8 +93,10 @@ export default function useUpdateCoworking(officeNo) {
     };
     fetchData();
   }, [officeNo]);
-
-  // 2. 입력 핸들러
+  useEffect(() => {
+    console.log('최신 formData 상태:', formData);
+  }, [formData]);
+  // 입력 핸들러 (그대로 유지)
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
@@ -75,23 +127,16 @@ export default function useUpdateCoworking(officeNo) {
     });
   };
 
-  // 3. 제출 (Submit)
   const handleSubmit = async () => {
     try {
-      // 요금 변환 로직 (기존과 동일)
+      // 서버 전송 전 다시 배열 구조로 변환
       const finalOfficePeriods = [];
-      Object.entries(formData.officePeriods).forEach(([dayKey, hours]) => {
-        Object.entries(hours).forEach(([hour, price]) => {
-          const dayPrefix =
-            dayKey === '8'
-              ? 'hol'
-              : ['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun'][
-                  Number(dayKey) - 1
-                ];
+      Object.entries(formData.officePeriods).forEach(([day, hoursObj]) => {
+        Object.entries(hoursObj).forEach(([hour, price]) => {
           finalOfficePeriods.push({
-            startTime: `2000-01-01T${hour.split(':')[0].padStart(2, '0')}:00:00`,
+            dayOfWeek: day,
+            startTime: `2000-01-01T${hour}:00`,
             price: Number(price),
-            dayOfWeek: dayPrefix,
           });
         });
       });
@@ -100,10 +145,10 @@ export default function useUpdateCoworking(officeNo) {
         placeNo: Number(formData.placeNo),
         title: formData.title,
         content: formData.content,
-        basePeople: Number(formData.basePeople), // 서버 요구 필드명 cnt
+        basePeople: Number(formData.basePeople),
         facilityList: formData.facilities,
         officePeriods: finalOfficePeriods,
-        exceptionPeriods: [], // 필요 시 확장
+        exceptionPeriods: formData.exceptionPeriods,
       };
 
       const response = await updateOfficeApi(officeNo, formattedDto);
@@ -121,6 +166,7 @@ export default function useUpdateCoworking(officeNo) {
     step,
     setStep,
     formData,
+    facilityList,
     setFormData,
     handleChange,
     handlePriceChange,

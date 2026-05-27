@@ -8,6 +8,8 @@ import com.sloway.app.reservation.rsvn.entity.RsvnEntity;
 import com.sloway.app.reservation.rsvn.entity.RsvnStatus;
 import com.sloway.app.reservation.rsvn.repository.RsvnRepository;
 import com.sloway.app.review.ReviewErrorCode;
+import com.sloway.app.review.reply.dto.response.ReviewReplyResDto;
+import com.sloway.app.review.reply.repository.ReviewReplyRepository;
 import com.sloway.app.review.review.dto.request.ReviewCreateReqDto;
 import com.sloway.app.review.review.dto.request.ReviewEditReqDto;
 import com.sloway.app.review.review.dto.response.ReviewResDto;
@@ -30,6 +32,7 @@ public class ReviewService {
     private final ReviewRepository reviewRepository;
     private final RsvnRepository rsvnRepository;
     private final PlaceRepository placeRepository;
+    private final ReviewReplyRepository reviewReplyRepository;
 
     //리뷰 작성
     @Transactional
@@ -66,7 +69,7 @@ public class ReviewService {
                 .orElseThrow(()->new CustomException(RsvnErrorCode.PLACE_NOT_FOUND));
         return reviewRepository.findByPlaceNo(place)
                 .stream()
-                .map(ReviewResDto::from)
+                .map(entity -> ReviewResDto.from(entity, toReplyDtos(entity)))
                 .toList();
     }
 
@@ -74,7 +77,7 @@ public class ReviewService {
     public ReviewResDto findOne(Long no){
         ReviewEntity entity = reviewRepository.findByNoAndDelYn(no, "N")
                 .orElseThrow(()->new CustomException(ReviewErrorCode.REVIEW_NOT_FOUND));
-        return ReviewResDto.from(entity);
+        return ReviewResDto.from(entity, toReplyDtos(entity));
     }
 
     //리뷰 수정
@@ -92,6 +95,22 @@ public class ReviewService {
                 editReqDto.getScoreAmenity(),
                 editReqDto.getScoreFocus()
         );
+    }
+
+    // 관리자용 리뷰 삭제 (소유자 확인 없이 바로 삭제)
+    @Transactional
+    public void adminDeleteReview(Long no){
+        ReviewEntity entity = reviewRepository.findByNoAndDelYn(no, "N")
+                .orElseThrow(()-> new CustomException(ReviewErrorCode.REVIEW_NOT_FOUND));
+        entity.delete();
+    }
+
+    // 리뷰에 달린 답글 목록을 DTO로 변환
+    private List<ReviewReplyResDto> toReplyDtos(ReviewEntity entity) {
+        return reviewReplyRepository.findByReviewNoAndDelAtIsNull(entity)
+                .stream()
+                .map(ReviewReplyResDto::from)
+                .toList();
     }
 
     //리뷰 삭제
