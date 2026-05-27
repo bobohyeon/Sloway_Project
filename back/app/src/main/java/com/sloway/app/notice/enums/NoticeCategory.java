@@ -1,4 +1,4 @@
-package com.sloway.app.notice.entity;
+package com.sloway.app.notice.enums;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonValue;
