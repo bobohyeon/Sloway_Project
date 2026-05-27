@@ -152,6 +152,7 @@ public class SearchCustomRepositoryImpl implements SearchCustomRepository{
                         o.placeEntity.eq(p)
                                 .or(ws.placeEntity.eq(p))
                                 .or(st.placeEntity.eq(p))
+                        ,rv.delYn.eq("N")
                 );
         return avg;
     }
