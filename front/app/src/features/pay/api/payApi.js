@@ -5,6 +5,11 @@ export async function createPay(payCreateReqDto) {
   return resp.data;
 }
 
+export async function readyPay(payReadyReqDto) {
+  const resp = await api.post(`/payment/pay/ready`, payReadyReqDto);
+  return resp.data;
+}
+
 export async function findPayAll() {
   const resp = await api.get(`/payment/pay`);
   return resp.data;
