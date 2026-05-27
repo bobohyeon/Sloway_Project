@@ -29,23 +29,33 @@ public class HostEntity extends BaseEntity {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long no;
 
-    /** Member FK — 1:1 관계 */
+    /**
+     * Member FK — 1:1 관계
+     */
     @Column(nullable = false, unique = true)
     private Long memberNo;
 
-    /** 호스트 전용 비밀번호 (일반회원 비번과 별도) */
+    /**
+     * 호스트 전용 비밀번호 (일반회원 비번과 별도)
+     */
     @Column(length = 100, nullable = false)
     private String password;
 
-    /** 상호명 */
+    /**
+     * 상호명
+     */
     @Column(length = 100, nullable = false)
     private String businessName;
 
-    /** 사업자등록번호 (하이픈 없이 10자) */
+    /**
+     * 사업자등록번호 (하이픈 없이 10자)
+     */
     @Column(length = 10, nullable = false, unique = true)
     private String businessNo;
 
-    /** 사업자등록증 PDF URL */
+    /**
+     * 사업자등록증 PDF URL
+     */
     @Column(length = 200)
     private String businessDocUrl;
 
@@ -53,8 +63,14 @@ public class HostEntity extends BaseEntity {
     @Column(length = 20, nullable = false)
     private ApprovalState approvalState;
 
-    /** 승인 시각 (NULL = 대기 또는 반려) */
+    /**
+     * 승인 시각 (NULL = 대기 또는 반려)
+     */
     private LocalDateTime approvedAt;
+
+    /** 반려 사유 (NULL = 반려된 적 없음) — 호스트에게 노출됨 */
+    @Column(length = 500)
+    private String rejectReason;
 
     // ─── 비즈니스 메서드 ───────────────────────────
 
@@ -67,18 +83,27 @@ public class HostEntity extends BaseEntity {
      * approvalState를 APPROVED로 변경 + 승인 시각 기록.
      */
     public void approve() {
-//        this.approvalState = ApprovalState.APPROVED;
+        this.approvalState = ApprovalState.A;
         this.approvedAt = LocalDateTime.now();
     }
 
     /**
      * 호스트 신청 반려.
+     *  * <p>대기(P) 상태였던 호스트를 반려(R)로 전환 + 반려 사유 저장.
+     *      * <p>사유는 호스트에게 노출되므로 의미 있는 텍스트여야 함
+     *      * (빈 문자열 검증은 AdminHostService에서 수행).
+     *      *
      */
-    public void reject() {
-//        this.approvalState = ApprovalState.REJECTED;
+    public void reject(String reason) {
+        this.approvalState = ApprovalState.R;
+//         반려 사유 저장 — 호스트가 본인 신청 현황 조회 시 확인 가능
+        this.rejectReason = reason;
     }
 
     public void changeBusinessName(String businessName) {
         this.businessName = businessName;
     }
-}
+
+
+
+}//class
