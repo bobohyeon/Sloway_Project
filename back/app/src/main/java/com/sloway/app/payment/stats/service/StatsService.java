@@ -4,6 +4,10 @@ import com.querydsl.core.Tuple;
 import com.sloway.app.payment.pay.common.PayMethod;
 import com.sloway.app.payment.pay.repository.PayRepository;
 import com.sloway.app.payment.refund.repository.RefundRepository;
+import com.sloway.app.payment.stats.dto.response.MonthlySalesResDto;
+import com.sloway.app.payment.stats.dto.response.MonthlyTrendResDto;
+import com.sloway.app.payment.stats.dto.response.PayMethodStatResDto;
+import com.sloway.app.payment.stats.dto.response.RefundStatResDto;
 import com.sloway.app.payment.stats.entity.DailyPayStatsEntity;
 import com.sloway.app.payment.stats.entity.DailyRefundStatsEntity;
 import com.sloway.app.payment.stats.repository.DailyPayStatsRepository;
@@ -16,7 +20,10 @@ import org.springframework.transaction.annotation.Transactional;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.YearMonth;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 @Transactional(readOnly = true)
@@ -76,12 +83,73 @@ public class StatsService {
                 );
     }
 
-    // ════════ 조회용 (API — 6단계, 나중에) ════════
-    // TODO: 통계 4종 조회 — 이제 PayRepository 직접 집계가 아니라
-    //       집계 테이블(DailyXxxStats)을 읽어 roll-up (findByStatDateBetween)
-    //   1) 월별 매출 요약   → MonthlySalesResDto       (월 범위 행들 합산)
-    //   2) 결제수단별 분포  → List<PayMethodStatResDto>  (수단별 묶기)
-    //   3) 월별 시계열 추이 → List<MonthlyTrendResDto>
-    //   4) 환불 통계        → RefundStatResDto
-    //   조회 메서드명 컨벤션: 도메인명 접두 (findStatsXxx)
+    public MonthlySalesResDto findStatsMonthlySales(int year, int month) {
+        YearMonth ym = YearMonth.of(year, month);
+        LocalDate start = YearMonth.of(year, month).atDay(1);
+        LocalDate end = YearMonth.of(year, month).atEndOfMonth();
+
+        List<DailyPayStatsEntity> payRows = dailyPayStatsRepository.findByStatDateBetween(start, end);
+        int totalAmt = payRows.stream().mapToInt(DailyPayStatsEntity::getTotalAmt).sum();
+        long payCount = payRows.stream().mapToInt(DailyPayStatsEntity::getPayCount).sum();
+
+        int refundAmt = dailyRefundStatsRepository.findByStatDateBetween(start, end).stream()
+                .map(DailyRefundStatsEntity::getRefundAmt)
+                .reduce(BigDecimal.ZERO, BigDecimal::add)
+                .intValue();
+
+        return MonthlySalesResDto.of(ym.toString(), totalAmt, payCount, refundAmt);
+    }
+
+
+    public List<PayMethodStatResDto> findStatsPayMethods(int year, int month) {
+        YearMonth ym = YearMonth.of(year, month);
+        LocalDate start = YearMonth.of(year, month).atDay(1);
+        LocalDate end = YearMonth.of(year, month).atEndOfMonth();
+
+        List<DailyPayStatsEntity> payRows = dailyPayStatsRepository.findByStatDateBetween(start, end);
+        return payRows.stream()
+                .collect(Collectors.groupingBy(DailyPayStatsEntity::getPayMethod))
+                .entrySet().stream()
+                .map(entry -> {
+                    PayMethod method = entry.getKey();
+                    List<DailyPayStatsEntity> rows = entry.getValue();
+                    int count = rows.stream().mapToInt(DailyPayStatsEntity::getPayCount).sum();
+                    int amt = rows.stream().mapToInt(DailyPayStatsEntity::getTotalAmt).sum();
+                    return PayMethodStatResDto.of(method, count, amt);
+                })
+                .toList();
+    }
+
+
+    public List<MonthlyTrendResDto> findStatsMonthlyTrend(int year, int month) {
+        YearMonth base = YearMonth.of(year, month);
+        List<MonthlyTrendResDto> result = new ArrayList<>();
+        for (int i = 5; i >= 0; i--) {
+            YearMonth ym = base.minusMonths(i);
+            LocalDate start = ym.atDay(1);
+            LocalDate end = ym.atEndOfMonth();
+            int totalAmt = dailyPayStatsRepository.findByStatDateBetween(start, end).stream()
+                    .mapToInt(DailyPayStatsEntity::getTotalAmt)
+                    .sum();
+            result.add(MonthlyTrendResDto.of(ym.toString(), totalAmt));
+        }
+        return result;
+    }
+
+
+    public RefundStatResDto findStatsRefund(int year, int month) {
+        YearMonth ym = YearMonth.of(year, month);
+        LocalDate start = ym.atDay(1);
+        LocalDate end = ym.atEndOfMonth();
+        List<DailyRefundStatsEntity> refundRows = dailyRefundStatsRepository.findByStatDateBetween(start, end);
+        int refundCount = refundRows.stream().mapToInt(DailyRefundStatsEntity::getRefundCount).sum();
+        BigDecimal refundAmt = refundRows.stream()
+                .map(DailyRefundStatsEntity::getRefundAmt)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+        int finalAmt = dailyPayStatsRepository.findByStatDateBetween(start, end).stream()
+                .mapToInt(DailyPayStatsEntity::getTotalAmt)
+                .sum();
+        return RefundStatResDto.of(refundCount, refundAmt, finalAmt);
+    }
+
 }
