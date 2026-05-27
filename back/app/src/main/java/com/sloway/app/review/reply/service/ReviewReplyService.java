@@ -6,10 +6,15 @@ import com.sloway.app.host.repository.HostRepository;
 import com.sloway.app.place.repository.hostPlace.HostPlaceRepository;
 import com.sloway.app.reservation.rsvn.entity.RsvnEntity;
 import com.sloway.app.review.ReviewErrorCode;
+import com.sloway.app.place.entity.place.PlaceEntity;
+import com.sloway.app.place.repository.place.PlaceRepository;
+import com.sloway.app.reservation.RsvnErrorCode;
 import com.sloway.app.review.reply.dto.request.ReviewReplyReqDto;
 import com.sloway.app.review.reply.dto.response.ReviewReplyResDto;
 import com.sloway.app.review.reply.entity.ReviewReplyEntity;
 import com.sloway.app.review.reply.repository.ReviewReplyRepository;
+import com.sloway.app.review.review.dto.request.ReviewHostFilterReqDto;
+import com.sloway.app.review.review.dto.response.ReviewResDto;
 import com.sloway.app.review.review.entity.ReviewEntity;
 import com.sloway.app.review.review.repository.ReviewRepository;
 import lombok.RequiredArgsConstructor;
@@ -29,6 +34,26 @@ public class ReviewReplyService {
     private final ReviewRepository reviewRepository;
     private final HostRepository hostRepository;
     private final HostPlaceRepository hostPlaceRepository;
+    private final PlaceRepository placeRepository;
+
+    // 호스트용 리뷰 필터 조회
+    public List<ReviewResDto> findReviewsByHost(Long memberNo, ReviewHostFilterReqDto filterDto) {
+
+        HostEntity host = hostRepository.findByMemberNo(memberNo)
+                .orElseThrow(()-> new CustomException(ReviewErrorCode.HOST_NOT_FOUND));
+
+        boolean isOwner = hostPlaceRepository.existsByHostEntityNoAndPlaceEntityNo(host.getNo(), filterDto.getPlaceNo());
+        if(!isOwner){
+            throw new CustomException(ReviewErrorCode.UNAUTHORIZED_REPLY);
+        }
+
+        PlaceEntity place = placeRepository.findByNo(filterDto.getPlaceNo())
+                .orElseThrow(()-> new CustomException(RsvnErrorCode.PLACE_NOT_FOUND));
+
+        List<ReviewEntity> dtoList = reviewRepository.findByHostFilter(place, filterDto.getMinScore(), filterDto.getPeriod());
+
+        return dtoList.stream().map(ReviewResDto::from).toList();
+    }
 
     // 답글 작성
     @Transactional
