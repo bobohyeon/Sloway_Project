@@ -133,7 +133,7 @@ const SubmitButton = styled.button`
   transition: background 0.2s;
 `;
 
-function UpdateCheckComponent({ formData, prev, onSubmit }) {
+function UpdateCheckComponent({ formData, facilityList, prev, onSubmit }) {
   const [agreed, setAgreed] = useState({
     info: false,
     terms: false,

@@ -18,6 +18,7 @@ function UpdateStationPage() {
     step,
     setStep,
     formData,
+    facilityList,
     setFormData,
     isLoading,
     handleChange,
@@ -46,6 +47,7 @@ function UpdateStationPage() {
         return (
           <UpdateDetailComponent
             formData={formData}
+            facilityList={facilityList}
             handleChange={handleChange}
             handleCheckChange={handleCheckChange}
             prev={() => setStep(1)}
@@ -66,6 +68,7 @@ function UpdateStationPage() {
         return (
           <UpdateCheckComponent
             formData={formData}
+            facilityList={facilityList}
             prev={() => setStep(3)}
             onSubmit={handleSubmit}
           />

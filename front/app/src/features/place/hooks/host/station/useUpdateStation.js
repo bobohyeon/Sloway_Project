@@ -4,6 +4,7 @@ import {
   StationDetailUpdate,
 } from '../../../api/host/station/stationApi';
 import { useNavigate } from 'react-router-dom';
+import { fetchTypeAmenityListApi } from '../../../api/host/amenity/hostAmenityApi';
 
 // API 호출 함수 예시 (실제 프로젝트 구조에 맞게 변경하여 사용하세요)
 
@@ -11,6 +12,30 @@ export function useUpdateStation(stationNo) {
   const [step, setStep] = useState(1);
   const [isLoading, setIsLoading] = useState(true);
   const navigate = useNavigate();
+
+  const [facilityList, setFacilityList] = useState([]); // 동적 데이터를 위한 state
+
+  const type = 'station';
+  useEffect(() => {
+    const loadAmenities = async () => {
+      console.log('API 호출 시작 전...'); // 1. 함수 진입 확인
+      try {
+        const resp = await fetchTypeAmenityListApi(type);
+        console.log('API 응답 확인:', resp); // 2. 응답 내용 확인
+
+        if (resp && resp.data) {
+          setFacilityList(resp.data.amenityList);
+          console.log('리스트 설정 완료:', resp.data.amenityList);
+        } else {
+          console.warn('응답은 왔으나 data 구조가 이상함:', resp);
+        }
+      } catch (e) {
+        console.error('API 호출 중 에러 발생!!!:', e); // 3. 에러 발생 시 확실히 출력
+      }
+    };
+
+    loadAmenities();
+  }, [type]);
 
   const [formData, setFormData] = useState({
     // 1단계
@@ -49,24 +74,11 @@ export function useUpdateStation(stationNo) {
         const data = response.data;
 
         // 💡 1. 번호(no)를 한글 이름(name)으로 바꿔줄 역매핑 사전 정의
-        const reverseMap = {
-          1: '주방',
-          2: '세탁기',
-          3: '건조기',
-          4: 'WiFi',
-          5: '주차',
-          6: '어메니티',
-          7: 'TV',
-          8: '에어컨',
-          9: '난방',
-          10: '금연',
-          11: '반려동물',
-          12: '바베큐',
-        };
+        const reverseMap = facilityList;
 
         // 💡 2. 백엔드에서 내려온 [{amenityNo: 1}, {amenityNo: 4}] 구조에서 번호만 추출
         const initialNos = data.facilityList
-          ? data.facilityList.map((f) => f.amenityNo)
+          ? data.facilityList.map((f) => f.no)
           : [];
 
         // 💡 3. 추출한 번호를 바탕으로 한글 이름 배열 동시 생성 -> ['주방', 'WiFi']
@@ -198,6 +210,7 @@ export function useUpdateStation(stationNo) {
     step,
     setStep,
     formData,
+    facilityList,
     setFormData,
     isLoading,
     handleChange,

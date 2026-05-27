@@ -1,5 +1,6 @@
 package com.sloway.app.place.entity.amenity;
 
+import com.sloway.app.place.dto.request.amenity.AmenityReqDto;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -15,7 +16,7 @@ public class AmenityEntity {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long no;
 
-    @Column(length = 30, nullable = false)
+    @Column(length = 30, nullable = true)
     private String name;
 
     @Column(length = 1 , nullable = false)
@@ -40,5 +41,13 @@ public class AmenityEntity {
 
     public void deleteAmenity(Long no){
         this.delYn = "N".equals(this.delYn) ? "Y" : "N";
+    }
+
+    public void updateAmenity(AmenityReqDto entity){
+        this.name = entity.getName();
+        this.commonYn = entity.getCommonYn();
+        this.stationYn = entity.getStationYn();
+        this.officeYn = entity.getOfficeYn();
+        this.workStayYn = entity.getWorkStayYn();
     }
 }

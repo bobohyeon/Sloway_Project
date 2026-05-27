@@ -1,25 +1,34 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { registerOfficeInspection } from '../../../api/host/place/placeApi';
-
-export const facilityList = [
-  { no: 1, name: '주방' },
-  { no: 2, name: '세탁기' },
-  { no: 3, name: '건조기' },
-  { no: 4, name: 'WiFi' },
-  { no: 5, name: '주차' },
-  { no: 6, name: '어메니티' },
-  { no: 7, name: 'TV' },
-  { no: 8, name: '에어컨' },
-  { no: 9, name: '난방' },
-  { no: 10, name: '금연' },
-  { no: 11, name: '반려동물' },
-  { no: 12, name: '바베큐' },
-];
+import { fetchTypeAmenityListApi } from '../../../api/host/amenity/hostAmenityApi';
 
 export default function useInsertCoworking() {
   const navigate = useNavigate();
   const [step, setStep] = useState(1);
+  const [facilityList, setFacilityList] = useState([]); // 동적 데이터를 위한 state
+
+  const type = 'office';
+  useEffect(() => {
+    const loadAmenities = async () => {
+      console.log('API 호출 시작 전...'); // 1. 함수 진입 확인
+      try {
+        const resp = await fetchTypeAmenityListApi(type);
+        console.log('API 응답 확인:', resp); // 2. 응답 내용 확인
+
+        if (resp && resp.data) {
+          setFacilityList(resp.data.amenityList);
+          console.log('리스트 설정 완료:', resp.data.amenityList);
+        } else {
+          console.warn('응답은 왔으나 data 구조가 이상함:', resp);
+        }
+      } catch (e) {
+        console.error('API 호출 중 에러 발생!!!:', e); // 3. 에러 발생 시 확실히 출력
+      }
+    };
+
+    loadAmenities();
+  }, [type]);
 
   const [formData, setFormData] = useState({
     placeNo: '',
@@ -170,6 +179,7 @@ export default function useInsertCoworking() {
     step,
     setStep,
     formData,
+    facilityList,
     setFormData,
     handleChange,
     handlePriceChange,

@@ -1,6 +1,5 @@
 import React from 'react';
 import styled from 'styled-components';
-import { facilityList } from '../../../../hooks/host/station/useInsertStation';
 
 const FormCard = styled.div`
   background: white;
@@ -103,6 +102,7 @@ const NextButton = styled.button`
 
 function InsertDetailComponent({
   formData,
+  facilityList,
   handleChange,
   handleCheckChange,
   prev,
@@ -179,9 +179,9 @@ function InsertDetailComponent({
       <FormGroup style={{ marginTop: '20px' }}>
         <label>편의시설 (제공 항목을 모두 선택해주세요)</label>
         <CheckboxGrid>
-          {facilityList.map((item) => {
-            // [수정 1] formData.facilities 배열 안에 현재 item.no와 일치하는 객체가 있는지 판별합니다.
-            const isChecked = formData.facilities.some(
+          {/* [수정] facilityList가 비어있어도 에러가 나지 않게 처리 */}
+          {(facilityList || []).map((item) => {
+            const isChecked = formData.facilities?.some(
               (facility) => facility.amenityNo === item.no
             );
 

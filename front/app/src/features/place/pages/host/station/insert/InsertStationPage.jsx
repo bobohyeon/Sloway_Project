@@ -13,6 +13,7 @@ function InsertStationPage() {
     step,
     setStep,
     formData,
+    facilityList,
     setFormData,
     handleChange,
     handleCheckChange,
@@ -36,6 +37,7 @@ function InsertStationPage() {
         return (
           <InsertDetailComponent
             formData={formData}
+            facilityList={facilityList}
             handleChange={handleChange}
             handleCheckChange={handleCheckChange}
             prev={() => setStep(1)}
@@ -65,6 +67,7 @@ function InsertStationPage() {
         return (
           <InsertCheckComponent
             formData={formData}
+            facilityList={facilityList}
             prev={() => setStep(4)}
             onSubmit={handleSubmit}
           />
