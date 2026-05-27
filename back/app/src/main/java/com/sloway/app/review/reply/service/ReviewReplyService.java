@@ -52,7 +52,11 @@ public class ReviewReplyService {
 
         List<ReviewEntity> dtoList = reviewRepository.findByHostFilter(place, filterDto.getMinScore(), filterDto.getPeriod());
 
-        return dtoList.stream().map(ReviewResDto::from).toList();
+        return dtoList.stream()
+                .map(entity -> ReviewResDto.from(entity,
+                        reviewReplyRepository.findByReviewNoAndDelAtIsNull(entity)
+                                .stream().map(ReviewReplyResDto::from).toList()))
+                .toList();
     }
 
     // 답글 작성
