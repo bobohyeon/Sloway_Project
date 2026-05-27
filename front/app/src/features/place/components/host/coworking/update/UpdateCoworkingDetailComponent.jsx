@@ -107,18 +107,18 @@ function UpdateCoworkingDetailComponent({
   next,
 }) {
   const facilityList = [
-    '주방',
-    '세탁기',
-    '건조기',
-    'WiFi',
-    '주차',
-    '어메니티',
-    'TV',
-    '에어컨',
-    '난방',
-    '금연',
-    '반려동물',
-    '바베큐',
+    { no: 1, name: '주방' },
+    { no: 2, name: '세탁기' },
+    { no: 3, name: '건조기' },
+    { no: 4, name: 'WiFi' },
+    { no: 5, name: '주차' },
+    { no: 6, name: '어메니티' },
+    { no: 7, name: 'TV' },
+    { no: 8, name: '에어컨' },
+    { no: 9, name: '난방' },
+    { no: 10, name: '금연' },
+    { no: 11, name: '반려동물' },
+    { no: 12, name: '바베큐' },
   ];
 
   return (
@@ -133,7 +133,7 @@ function UpdateCoworkingDetailComponent({
           <input
             name="peopleCnt"
             placeholder="ex ) 40"
-            value={formData.peopleCnt}
+            value={formData.basePeople}
             onChange={handleChange}
           />
         </FormGroup>
@@ -142,14 +142,17 @@ function UpdateCoworkingDetailComponent({
       <FormGroup style={{ marginTop: '20px' }}>
         <label>편의시설 (제공 항목을 모두 선택해주세요)</label>
         <CheckboxGrid>
-          {facilityList.map((item) => (
-            <CheckItem key={item}>
+          {facilityList.map((f) => (
+            <CheckItem key={f.no}>
               <input
                 type="checkbox"
-                checked={formData.facilities.includes(item)}
-                onChange={() => handleCheckChange(item)}
+                // 1. checked 비교: formData.facilities(서버에서 온 데이터) 안에
+                checked={formData.facilities.some(
+                  (item) => item.amenityNo === f.no
+                )}
+                onChange={() => handleCheckChange(f.no, facilityList.name)}
               />
-              {item}
+              {f.name}
             </CheckItem>
           ))}
         </CheckboxGrid>
