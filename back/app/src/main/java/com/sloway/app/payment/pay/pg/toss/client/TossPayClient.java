@@ -1,4 +1,4 @@
-package com.sloway.app.payment.pay.pg.toss;
+package com.sloway.app.payment.pay.pg.toss.client;
 
 // 토스페이먼츠 연동 클라이언트 — 흐름이 카카오와 다름(주의)
 //
