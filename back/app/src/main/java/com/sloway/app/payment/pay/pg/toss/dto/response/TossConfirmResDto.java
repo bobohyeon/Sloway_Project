@@ -1,4 +1,4 @@
-package com.sloway.app.payment.pay.pg.toss.dto;
+package com.sloway.app.payment.pay.pg.toss.dto.response;
 
 // 토스페이먼츠 결제 승인(confirm) 응답 DTO — 결제 최종 결과
 //
