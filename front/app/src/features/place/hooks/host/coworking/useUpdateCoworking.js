@@ -14,14 +14,11 @@ export default function useUpdateCoworking(officeNo) {
   const type = 'office';
   useEffect(() => {
     const loadAmenities = async () => {
-      console.log('API 호출 시작 전...'); // 1. 함수 진입 확인
       try {
         const resp = await fetchTypeAmenityListApi(type);
-        console.log('API 응답 확인:', resp); // 2. 응답 내용 확인
 
         if (resp && resp.data) {
           setFacilityList(resp.data.amenityList);
-          console.log('리스트 설정 완료:', resp.data.amenityList);
         } else {
           console.warn('응답은 왔으나 data 구조가 이상함:', resp);
         }
@@ -50,7 +47,6 @@ export default function useUpdateCoworking(officeNo) {
       try {
         const resp = await getOfficeDetail(officeNo);
         const data = resp.data;
-        console.log(data);
 
         // 1. 요금 데이터 변환: 배열 -> { day: { hour: price } } 객체로 구조화
         const dayMap = {
@@ -93,9 +89,7 @@ export default function useUpdateCoworking(officeNo) {
     };
     fetchData();
   }, [officeNo]);
-  useEffect(() => {
-    console.log('최신 formData 상태:', formData);
-  }, [formData]);
+
   // 입력 핸들러 (그대로 유지)
   const handleChange = (e) => {
     const { name, value } = e.target;

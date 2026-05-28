@@ -45,7 +45,6 @@ export default function useImageUpdate() {
       try {
         if (!id || !apiMap[spaceType]) return;
         const resp = await apiMap[spaceType].fetch(id);
-        console.log('백엔드 응답 데이터:', resp);
 
         if (resp && resp.data) {
           if (isWorkStay) {
@@ -85,7 +84,6 @@ export default function useImageUpdate() {
               }))
             );
             setOfficeImages([]);
-            console.log(images);
           }
         }
       } catch (error) {

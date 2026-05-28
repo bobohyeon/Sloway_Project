@@ -46,10 +46,7 @@ export default function useSpaceUpdate() {
   // 서버 수정 요청 제출 핸들러
   const handleSaveSubmit = async () => {
     try {
-      console.log('수정 요청 데이터:', formData);
-
       const resp = await updatePlaceInfo(id, formData);
-      console.log(resp);
 
       if (resp.status === 200) {
         alert('공간 정보 수정이 완료되었습니다.');

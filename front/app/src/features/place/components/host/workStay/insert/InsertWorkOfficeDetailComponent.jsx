@@ -1,6 +1,5 @@
 import React from 'react';
 import styled from 'styled-components';
-import { facilityList } from '../../../../hooks/host/workStay/useInsertWorkStay';
 
 const FormCard = styled.div`
   background: white;
@@ -102,6 +101,8 @@ const NextButton = styled.button`
 
 function InsertWorkOfficeDetailComponent({
   formData,
+
+  facilityList,
   handleChange,
   handleCheckChange,
   prev,

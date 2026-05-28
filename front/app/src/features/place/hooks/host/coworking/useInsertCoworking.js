@@ -11,14 +11,11 @@ export default function useInsertCoworking() {
   const type = 'office';
   useEffect(() => {
     const loadAmenities = async () => {
-      console.log('API 호출 시작 전...'); // 1. 함수 진입 확인
       try {
         const resp = await fetchTypeAmenityListApi(type);
-        console.log('API 응답 확인:', resp); // 2. 응답 내용 확인
 
         if (resp && resp.data) {
           setFacilityList(resp.data.amenityList);
-          console.log('리스트 설정 완료:', resp.data.amenityList);
         } else {
           console.warn('응답은 왔으나 data 구조가 이상함:', resp);
         }
@@ -153,8 +150,6 @@ export default function useInsertCoworking() {
         officePeriods: finalOfficePeriods,
         exceptionPeriods: formattedExceptionPeriods,
       };
-
-      console.log('최종 전송 DTO:', JSON.stringify(formattedDto, null, 2));
 
       const files = formData.images.map((img) => img.file);
       const sortList = formData.images.map((_, index) => ({ sort: index + 1 }));
