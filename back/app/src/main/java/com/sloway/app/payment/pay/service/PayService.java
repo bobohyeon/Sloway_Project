@@ -7,6 +7,7 @@ import com.sloway.app.payment.coupon.entity.CouponEntity;
 import com.sloway.app.payment.coupon.repository.CouponRepository;
 import com.sloway.app.payment.pay.common.PayErrorCode;
 import com.sloway.app.payment.pay.dto.request.PayCreateReqDto;
+import com.sloway.app.payment.pay.dto.response.PayReadyResDto;
 import com.sloway.app.payment.pay.dto.response.PayResDto;
 import com.sloway.app.payment.pay.entity.PayEntity;
 import com.sloway.app.payment.pay.pg.kakao.KakaoPayClient;
@@ -126,9 +127,9 @@ public class PayService {
     // ─────────────────────────────────────────────────────────────
 
 
-    public PayReady readyReqDto(PayCreateReqDto payCreateReqDto){
-
-    }
+//    public PayReadyResDto readyReqDto(PayCreateReqDto payCreateReqDto){
+//
+//    }
 
 
     private int calculateDcAmt(CouponEntity coupon, Integer baseAmt) {
