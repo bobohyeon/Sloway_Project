@@ -17,6 +17,24 @@ export async function findReviewsByHost(placeNo, minScore, period) {
   return resp.data;
 }
 
+export async function saveReply(reviewNo, content) {
+  const resp = await api.post(
+    `/review/reply`,
+    { reviewNo, content },
+    { headers: authHeader() }
+  );
+  return resp.data;
+}
+
+export async function updateReply(replyNo, content) {
+  const resp = await api.put(
+    `/review/reply/${replyNo}`,
+    { content },
+    { headers: authHeader() }
+  );
+  return resp.data;
+}
+
 export async function deleteReply(replyNo) {
   const resp = await api.delete(`/review/reply/${replyNo}`, {
     headers: authHeader(),

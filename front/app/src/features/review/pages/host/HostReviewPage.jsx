@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { redirect, useNavigate } from 'react-router-dom';
 import styled, { keyframes } from 'styled-components';
 import PageLayout from '../../../../app/layouts/page/PageLayout';
 import {
@@ -16,7 +16,12 @@ import {
   CardRight,
   COLOR,
 } from '../../../rsvn/components/user/RsvnStyled';
-import { findReviewsByHost, deleteReply } from '../../api/reviewApi';
+import {
+  findReviewsByHost,
+  deleteReply,
+  saveReply,
+  updateReply,
+} from '../../api/reviewApi';
 
 const fadeInUp = keyframes`
   from { opacity: 0; transform: translateY(10px); }
@@ -137,74 +142,12 @@ const TABS = [
   { label: '답글 완료', status: 'done' },
 ];
 
-const DUMMY = [
-  {
-    id: 1,
-    status: 'pending',
-    space: '청평 숲속 파인뷰',
-    type: '워크앤스테이',
-    reviewer: '민정',
-    avatar: '민',
-    score: 5,
-    date: '2026.04.22',
-    text: '조용하고 몰입감 있어요. 듀얼모니터도 잘 쓰고 왔습니다. 다음에 또 오고 싶어요!',
-    reply: null,
-    icon: '🌲',
-  },
-  {
-    id: 2,
-    status: 'done',
-    space: '청평 숲속 파인뷰',
-    type: '워크앤스테이',
-    reviewer: '준호',
-    avatar: '준',
-    score: 4,
-    date: '2026.04.10',
-    text: '리모트 워크 일주일 했는데 너무 좋았어요. 인터넷 속도 빠르고 데스크 셋업이 편했습니다.',
-    reply: {
-      text: '감사합니다! 다음에도 좋은 시간 보내러 오세요 🌲',
-      date: '2026.04.11',
-    },
-    icon: '🌲',
-  },
-  {
-    id: 3,
-    status: 'pending',
-    space: '성수 브릭라운지',
-    type: '오피스',
-    reviewer: '이강',
-    avatar: '이',
-    score: 5,
-    date: '2026.03.18',
-    text: '바다 뷰 보면서 일하는 게 너무 좋아요. 와이파이 엄청 빠르고 폰부스도 있어서 편했어요.',
-    reply: null,
-    icon: '🧱',
-  },
-  {
-    id: 4,
-    status: 'done',
-    space: '성수 브릭라운지',
-    type: '오피스',
-    reviewer: '소영',
-    avatar: '소',
-    score: 3,
-    date: '2026.03.05',
-    text: '주말에 사람이 많아서 좀 시끄러웠어요. 평일에 오시는 걸 추천해요.',
-    reply: {
-      text: '불편함을 드려 죄송합니다. 주말 혼잡 개선 중이에요 🙏',
-      date: '2026.03.06',
-    },
-    icon: '🧱',
-  },
-];
-
 function HostReviewPage() {
   const [activeTab, setActiveTab] = useState(0);
   const [spaceFilter, setSpaceFilter] = useState('전체 공간');
   const [keyword, setKeyword] = useState('');
   const [replyTexts, setReplyTexts] = useState({});
   const [editingId, setEditingId] = useState(null);
-  const [submitted, setSubmitted] = useState({});
 
   const [reviews, setReviews] = useState([]);
   const [placeNo, setPlaceNo] = useState('');
@@ -251,10 +194,16 @@ function HostReviewPage() {
   const handleReplyChange = (id, val) =>
     setReplyTexts((prev) => ({ ...prev, [id]: val }));
 
-  const handleSubmit = (id) => {
+  const handleSubmit = async (id, replyNo) => {
     if (!replyTexts[id]?.trim()) return;
-    setSubmitted((prev) => ({ ...prev, [id]: replyTexts[id] }));
+    if (replyNo) {
+      await updateReply(replyNo, replyTexts[id]);
+    } else {
+      await saveReply(id, replyTexts[id]);
+    }
+    await findReview(placeNo, minScore, period);
     setEditingId(null);
+    setReplyTexts((prev) => ({ ...prev, [id]: '' }));
   };
 
   return (
@@ -318,9 +267,7 @@ function HostReviewPage() {
       )}
 
       {filtered.map((item) => {
-        const existingReply = submitted[item.no]
-          ? { text: submitted[item.no], date: '방금' }
-          : item.replies?.[0];
+        const existingReply = item.replies?.[0];
         const isEditing = editingId === item.no;
 
         return (
@@ -385,6 +332,7 @@ function HostReviewPage() {
                       수정
                     </EditBtn>
                     <EditBtn
+                      style={{ marginLeft: 8, color: '#c0626a' }}
                       onClick={() => {
                         deleteReply(existingReply.no).then(() =>
                           findReview(placeNo, minScore, period)
@@ -420,7 +368,9 @@ function HostReviewPage() {
                           취소
                         </EditBtn>
                       )}
-                      <ReplySubmitBtn onClick={() => handleSubmit(item.no)}>
+                      <ReplySubmitBtn
+                        onClick={() => handleSubmit(item.no, existingReply?.no)}
+                      >
                         {isEditing ? '수정 완료' : '답글 등록'}
                       </ReplySubmitBtn>
                     </div>
