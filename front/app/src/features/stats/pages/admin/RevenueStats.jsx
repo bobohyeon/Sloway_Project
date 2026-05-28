@@ -1,8 +1,144 @@
-import PageLayout from '../../../../app/layouts/page/PageLayout';
+import { useEffect, useMemo, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import styled from 'styled-components';
+import { FaCoins, FaUndo, FaChartLine } from 'react-icons/fa';
 
-// 본인 4번 도메인 통계 (Pay/Refund/Settle 집계) — Stats 도메인 진입 시 본인 SSOT 자산
+import PageLayout from '../../../../app/layouts/page/PageLayout';
+import { StatCard } from '../../../pay_shared/components/StatCard';
+import { Card, Section, EmptyState } from '../../../pay_shared/components';
+import { VerticalBarChart } from '../../components/admin/VerticalBarChart';
+import {
+  findStatsMonthlySales,
+  findStatsMonthlyTrend,
+  findStatsRefund,
+} from '../../api/statsApi';
+
+const YEAR_OPTIONS = [2024, 2025, 2026];
+const MONTH_OPTIONS = Array.from({ length: 12 }, (_, i) => i + 1);
+
+function getPrevMonth() {
+  const d = new Date();
+  d.setDate(1);
+  d.setMonth(d.getMonth() - 1);
+  return { year: d.getFullYear(), month: d.getMonth() + 1 };
+}
+
 export default function RevenueStats() {
+  const nav = useNavigate();
+  const init = useMemo(() => getPrevMonth(), []);
+  const [year, setYear] = useState(init.year);
+  const [month, setMonth] = useState(init.month);
+
+  const [summary, setSummary] = useState(null);
+  const [trend, setTrend] = useState([]);
+  const [refund, setRefund] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
+
+  useEffect(() => {
+    let alive = true;
+    setLoading(true);
+    setError(null);
+    Promise.all([
+      findStatsMonthlySales(year, month),
+      findStatsMonthlyTrend(year, month),
+      findStatsRefund(year, month),
+    ])
+      .then(([s, t, r]) => {
+        if (!alive) return;
+        setSummary(s);
+        setTrend(t ?? []);
+        setRefund(r);
+      })
+      .catch((e) => {
+        if (alive) setError(e?.response?.data?.message ?? '수익 통계 조회에 실패했습니다.');
+      })
+      .finally(() => { if (alive) setLoading(false); });
+    return () => { alive = false; };
+  }, [year, month]);
+
+  const currentYm = `${year}-${String(month).padStart(2, '0')}`;
+  const trendData = trend.map((row) => ({
+    label: row.yearMonth?.slice(5) ?? '',
+    value: Number(row.totalAmt ?? 0),
+    highlight: row.yearMonth === currentYm,
+  }));
+
   return (
-    <PageLayout title="수익 통계" description="플랫폼 수익 현황을 분석합니다" />
+    <PageLayout
+      title="수익 통계"
+      description="월별 매출·환불·순매출 추이"
+      maxWidth={1200}
+    >
+      <FilterBar>
+        <FilterGroup>
+          <FilterLabel>연도</FilterLabel>
+          <Select value={year} onChange={(e) => setYear(Number(e.target.value))}>
+            {YEAR_OPTIONS.map((y) => <option key={y} value={y}>{y}년</option>)}
+          </Select>
+        </FilterGroup>
+        <FilterGroup>
+          <FilterLabel>월</FilterLabel>
+          <Select value={month} onChange={(e) => setMonth(Number(e.target.value))}>
+            {MONTH_OPTIONS.map((m) => <option key={m} value={m}>{m}월</option>)}
+          </Select>
+        </FilterGroup>
+        {loading && <StatusText>불러오는 중...</StatusText>}
+        {error && <ErrorText>{error}</ErrorText>}
+        <Spacer />
+        <DetailLink onClick={() => nav('/admin/stats/sales')}>통합 대시보드 →</DetailLink>
+      </FilterBar>
+
+      <KPIGrid>
+        <StatCard label="총 매출" value={Number(summary?.totalAmt ?? 0).toLocaleString()} unit="원" icon={<FaCoins />} highlight />
+        <StatCard label="환불 총액" value={Number(refund?.refundAmt ?? 0).toLocaleString()} unit="원" icon={<FaUndo />} />
+        <StatCard label="순매출 (환불 차감)" value={Number(summary?.netAmt ?? 0).toLocaleString()} unit="원" icon={<FaChartLine />} />
+        <StatCard label="환불율" value={Number(refund?.refundRate ?? 0)} unit="%" icon={<FaUndo />} />
+      </KPIGrid>
+
+      <ChartBlock>
+        {trendData.length > 0 ? (
+          <VerticalBarChart
+            title="최근 6개월 매출 추이"
+            data={trendData}
+            formatValue={(v) => `${Math.floor(Number(v) / 10000).toLocaleString()}만`}
+          />
+        ) : (
+          <Section title="최근 6개월 매출 추이">
+            <EmptyCard padded>
+              <EmptyState title="시계열 데이터가 없습니다" description="배치 적재 진입 후 노출됩니다." />
+            </EmptyCard>
+          </Section>
+        )}
+      </ChartBlock>
+    </PageLayout>
   );
 }
+
+const FilterBar = styled.div`
+  display: flex; align-items: center; gap: var(--space-3);
+  margin-bottom: var(--space-5); flex-wrap: wrap;
+`;
+const FilterGroup = styled.label`display: inline-flex; align-items: center; gap: 8px;`;
+const FilterLabel = styled.span`font-size: 0.82rem; color: var(--gray-600);`;
+const Select = styled.select`
+  padding: 6px 10px; border: 1px solid var(--gray-200); border-radius: var(--radius-md);
+  background: var(--white); font-family: 'Noto Sans KR', sans-serif;
+  font-size: 0.85rem; color: var(--gray-800); cursor: pointer;
+  &:focus { outline: none; border-color: var(--sage); }
+`;
+const StatusText = styled.span`font-size: 0.78rem; color: var(--gray-400);`;
+const ErrorText = styled.span`font-size: 0.82rem; color: #c0392b;`;
+const Spacer = styled.div`flex: 1;`;
+const DetailLink = styled.button`
+  background: transparent; border: none; color: var(--sage);
+  font-size: 0.82rem; font-weight: 600; cursor: pointer; padding: 4px 0;
+  &:hover { text-decoration: underline; }
+`;
+const KPIGrid = styled.div`
+  display: grid; grid-template-columns: repeat(4, 1fr); gap: var(--space-3);
+  margin-bottom: var(--space-5);
+  @media (max-width: 960px) { grid-template-columns: repeat(2, 1fr); }
+`;
+const ChartBlock = styled.div`margin-bottom: var(--space-5);`;
+const EmptyCard = styled(Card)`padding: var(--space-6) var(--space-5);`;

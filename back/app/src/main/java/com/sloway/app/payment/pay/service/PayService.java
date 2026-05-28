@@ -96,8 +96,6 @@ public class PayService {
     //   목표: 결제창을 띄우기 직전, 카카오에 "결제 준비" 요청 → tid + redirect URL 받기.
     //         createPay 처럼 즉시 COMPLETED 가 아니라, READY 상태로만 저장하고 카카오로 넘긴다.
     //
-    //   의존성 먼저: KakaoPayClient 를 이 서비스에 주입 (위쪽 final 필드 영역에 추가)
-    //
     //   메서드 시그니처부터 생각:
     //     - 반환 타입? 프론트(BookingPayment)가 redirect 하려면 payNo + nextRedirectPcUrl 이 필요.
     //       기존 PayResDto 에는 redirect URL 이 없으니 새 ResDto(PayReadyResDto) 를 만들지 결정.
@@ -127,9 +125,9 @@ public class PayService {
     // ─────────────────────────────────────────────────────────────
 
 
-//    public PayReadyResDto readyReqDto(PayCreateReqDto payCreateReqDto){
-//
-//    }
+    public PayReadyResDto readyReqDto(PayCreateReqDto payCreateReqDto){
+
+    }
 
 
     private int calculateDcAmt(CouponEntity coupon, Integer baseAmt) {
