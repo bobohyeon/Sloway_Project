@@ -1,21 +1,6 @@
 import React from 'react';
 import styled from 'styled-components';
 
-const facilityList = [
-  { no: 1, name: '주방' },
-  { no: 2, name: '세탁기' },
-  { no: 3, name: '건조기' },
-  { no: 4, name: 'WiFi' },
-  { no: 5, name: '주차' },
-  { no: 6, name: '어메니티' },
-  { no: 7, name: 'TV' },
-  { no: 8, name: '에어컨' },
-  { no: 9, name: '난방' },
-  { no: 10, name: '금연' },
-  { no: 11, name: '반려동물' },
-  { no: 12, name: '바베큐' },
-];
-
 const FormCard = styled.div`
   background: white;
   border-radius: 15px;
@@ -116,6 +101,7 @@ const NextButton = styled.button`
 
 function UpdateWorkOfficeDetailComponent({
   formData, // 부모가 준 formData.office
+  facilityList,
   handleChange, // 부모의 handleOfficeChange
   handleCheckChange, // 부모의 handleOfficeCheckChange
   prev,
@@ -142,16 +128,14 @@ function UpdateWorkOfficeDetailComponent({
       <FormGroup style={{ marginTop: '20px' }}>
         <label>편의시설 (제공 항목을 모두 선택해주세요)</label>
         <CheckboxGrid>
-          {/* 💡 객체 배열 구조에 맞춰 렌더링 세팅 */}
           {facilityList.map((item) => (
+            // ✨ [수정 포인트 2] 고유 key값을 고유 ID인 item.no로 변경
             <CheckItem key={item.no}>
-              {' '}
-              {/* 고유 번호(no)를 key로 활용 */}
               <input
                 type="checkbox"
-                // 💡 데이터가 불러와지는 도중이거나 없을 때 undefined 방치턱 기용
-                checked={formData?.amenityNoList?.includes(item.no) || false}
-                // 💡 훅 규격에 매칭되도록 객체의 고유 no와 name을 정밀 전달
+                // ✨ [수정 포인트 3] formData.facilities 배열(숫자 리스트)에 포함되어 있는지 번호로 비교
+                checked={formData.facilities.includes(item.no)}
+                // ✨ [수정 포인트 4] 핸들러에 텍스트가 아닌 고유 번호(no)를 전달
                 onChange={() => handleCheckChange(item.no, item.name)}
               />
               {item.name}

@@ -260,7 +260,6 @@ function UpdateFeeComponent({
     updated[index][field] = value;
     setFormData({ ...formData, exceptionPeriods: updated });
   };
-  console.log(formData.exceptionPeriods);
 
   return (
     <FormCard>

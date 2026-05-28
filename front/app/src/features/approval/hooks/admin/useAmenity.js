@@ -14,10 +14,8 @@ export const useAmenity = () => {
     try {
       // [API] GET: 데이터 조회
       const resp = await fetchAmenityListApi();
-      console.log(resp);
 
       setAmenityList(resp.data.amenityList);
-      console.log('백엔드에서 데이터 로드 완료');
     } catch (e) {
       console.error('데이터 로드 실패', e);
     }
@@ -38,7 +36,6 @@ export const useAmenity = () => {
   const syncToBackend = async (row) => {
     try {
       await updateAmenityApi(row.no, row);
-      console.log('업데이트 성공:', row.no);
     } catch (e) {
       console.error('업데이트 실패', e);
     }

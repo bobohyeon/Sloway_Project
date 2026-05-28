@@ -87,7 +87,6 @@ function InsertMainComponent({
     const selectedNo = e.target.value;
     // 선택된 option의 텍스트(Title) 가져오기
     const selectedTitle = e.target.options[e.target.selectedIndex].text;
-    console.log(selectedNo);
 
     setFormData((prev) => ({
       ...prev,

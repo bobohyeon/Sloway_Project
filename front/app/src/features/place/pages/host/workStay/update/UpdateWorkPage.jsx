@@ -2,12 +2,12 @@ import React from 'react';
 import { useParams } from 'react-router-dom';
 import UpdateWorkLayout from '../../../../layouts/host/workStay/update/UpdateWorkLayout';
 import UpdateWorkStateComponent from '../../../../components/host/workStay/update/UpdateWorkStateComponent';
-import UpdateMainComponent from '../../../../components/host/station/update/UpdateMainComponent';
 import UpdateDetailComponent from '../../../../components/host/station/update/UpdateDetailComponent';
 import UpdateFeeComponent from '../../../../components/host/station/update/UpdateFeeComponent';
 import UpdateWorkOfficeDetailComponent from '../../../../components/host/workStay/update/UpdateWorkOfficeDetailComponent';
 import UpdateWorkCheckComponent from '../../../../components/host/workStay/update/UpdateWorkCheckComponent';
 import { useUpdateWorkStay } from '../../../../hooks/host/workStay/useUpdateWorkStay';
+import UpdateMainComponent from './../../../../components/host/station/update/UpdateMainComponent';
 
 // 방금 만든 커스텀 훅 가져오기
 
@@ -20,11 +20,13 @@ function UpdateWorkPage() {
     formData,
     setFormData,
     isLoading,
-    handleChange,
+    handleStayChange,
     handleOfficeChange,
     handleCheckChange,
     handleOfficeCheckChange,
     handleSubmit,
+    officeFacilityList,
+    facilityList,
   } = useUpdateWorkStay(id);
 
   if (isLoading) {
@@ -37,9 +39,9 @@ function UpdateWorkPage() {
       case 1: // 1단계: 워크스테이 기본 정보
         return (
           <UpdateMainComponent
-            formData={formData}
+            formData={formData.stay}
             setFormData={setFormData}
-            handleChange={handleChange}
+            handleChange={handleStayChange}
             setStep={setStep}
             currentStep={step}
           />
@@ -47,10 +49,13 @@ function UpdateWorkPage() {
       case 2: // 2단계: 워크스테이 상세 정보 및 편의시설 목록
         return (
           <UpdateDetailComponent
-            formData={formData}
-            handleChange={handleChange}
+            formData={formData.stay}
+            facilityList={facilityList}
+            handleChange={handleStayChange}
             setFormData={setFormData}
-            handleCheckChange={handleCheckChange} // 워크스테이용 체크
+            handleCheckChange={(no, name) =>
+              handleCheckChange(no, name, 'stay')
+            }
             prev={() => setStep(1)}
             next={() => setStep(3)}
           />
@@ -58,9 +63,9 @@ function UpdateWorkPage() {
       case 3: // 3단계: 워크스테이 요금 및 예외기간 요금 설정
         return (
           <UpdateFeeComponent
-            formData={formData}
+            formData={formData.stay}
             setFormData={setFormData}
-            handleChange={handleChange}
+            handleChange={handleStayChange}
             prev={() => setStep(2)}
             next={() => setStep(4)}
           />
@@ -69,8 +74,11 @@ function UpdateWorkPage() {
         return (
           <UpdateWorkOfficeDetailComponent
             formData={formData.office} // 오피스 단건 객체 전달
+            facilityList={officeFacilityList}
             handleChange={handleOfficeChange} // 오피스 전용 값 변경 핸들러
-            handleCheckChange={handleOfficeCheckChange} // 오피스 전용 리스트 체크 핸들러
+            handleCheckChange={(no, name) =>
+              handleCheckChange(no, name, 'office')
+            }
             prev={() => setStep(3)}
             next={() => setStep(5)}
           />
@@ -81,6 +89,8 @@ function UpdateWorkPage() {
             formData={formData} // 전체 통합된 객체 그대로 전송
             prev={() => setStep(4)}
             onSubmit={handleSubmit}
+            facilityList={facilityList}
+            officeFacilityList={officeFacilityList}
           />
         );
       default:
