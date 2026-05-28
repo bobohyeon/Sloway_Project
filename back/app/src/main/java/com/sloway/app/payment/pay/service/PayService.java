@@ -125,9 +125,9 @@ public class PayService {
     // ─────────────────────────────────────────────────────────────
 
 
-    public PayReadyResDto readyReqDto(PayCreateReqDto payCreateReqDto){
-
-    }
+//    public PayReadyResDto readyReqDto(PayCreateReqDto payCreateReqDto){
+//
+//    }
 
 
     private int calculateDcAmt(CouponEntity coupon, Integer baseAmt) {
