@@ -16,7 +16,6 @@ export const useStationDetail = (typePath, id) => {
       try {
         setLoading(true);
         const response = await fetchStationDetailDashboard(typePath, id);
-        console.log(response);
 
         setData(response);
       } catch (err) {

@@ -41,14 +41,11 @@ export default function useInsertStation() {
   const type = 'station';
   useEffect(() => {
     const loadAmenities = async () => {
-      console.log('API 호출 시작 전...'); // 1. 함수 진입 확인
       try {
         const resp = await fetchTypeAmenityListApi(type);
-        console.log('API 응답 확인:', resp); // 2. 응답 내용 확인
 
         if (resp && resp.data) {
           setFacilityList(resp.data.amenityList);
-          console.log('리스트 설정 완료:', resp.data.amenityList);
         } else {
           console.warn('응답은 왔으나 data 구조가 이상함:', resp);
         }
@@ -147,11 +144,6 @@ export default function useInsertStation() {
       const sortList = currentImages.map((_, index) => ({
         sort: index + 1, // 첫 번째 이미지는 1, 두 번째는 2... 순서 보장
       }));
-
-      // 디버깅용 콘솔 (전송 데이터 최종 확인용)
-      console.log('전송할 DTO:', formattedDto);
-      console.log(' 전송할 파일배열:', files);
-      console.log(' 생성된 순서배열:', sortList);
 
       const response = await registerStationInspection(
         formattedDto,

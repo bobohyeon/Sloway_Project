@@ -35,18 +35,14 @@ export default function useInsertSpace() {
     const { images, ...dto } = formData;
 
     const files = images.map((img) => img.file);
-    console.log(12);
 
     // 3. images 배열에서 sort 정보만 추출하여 sortList 배열 생성
     const sortList = images.map((img) => ({
       sort: img.sort,
     }));
-    console.log(123);
-    console.log(sortList);
 
     // 4. 분리된 데이터를 파라미터로 주입하여 전송
     const resp = await insertPlace(dto, files, sortList);
-    console.log(resp);
 
     const currentConfig = TYPE_MAPPING[formData.type];
 

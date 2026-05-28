@@ -138,7 +138,13 @@ const SubmitButton = styled.button`
   transition: background 0.2s;
 `;
 
-function UpdateWorkCheckComponent({ formData, prev, onSubmit }) {
+function UpdateWorkCheckComponent({
+  formData,
+  prev,
+  onSubmit,
+  facilityList,
+  officeFacilityList,
+}) {
   const [agreed, setAgreed] = useState({
     info: false,
     terms: false,
@@ -161,23 +167,41 @@ function UpdateWorkCheckComponent({ formData, prev, onSubmit }) {
           <div className="label">공간</div>
           <div className="value">
             {formData.placeNo
-              ? `[No.${formData.placeNo}] ${formData.placeTitle}`
+              ? `[No.${formData.stay.placeNo}] ${formData.stay.placeTitle}`
               : '선택 안됨'}
           </div>
         </SummaryItem>
 
         <SummaryItem>
           <div className="label">워크스테이명</div>
-          <div className="value">{formData.title || '(미입력)'}</div>
+          <div className="value">{formData.stay.title || '(미입력)'}</div>
         </SummaryItem>
 
         <SummaryItem>
           <div className="label">편의시설</div>
-          <div className="value">
-            {/* 💡 1. 번호 배열(facilities) 대신 한글 이름 배열(facilityNames)을 join 해줍니다 */}
-            {formData.facilityNames && formData.facilityNames.length > 0
-              ? formData.facilityNames.join(', ')
-              : '(선택한 편의시설 없음)'}
+          <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
+            {formData.stay.facilities.length > 0 ? (
+              formData.stay.facilities.map((f) => {
+                const target = facilityList.find((item) => item.no === f);
+                return target ? (
+                  <span
+                    key={f}
+                    style={{
+                      padding: '4px 10px',
+                      background: '#f1f4ee',
+                      color: '#768966',
+                      borderRadius: '20px',
+                      fontSize: '13px',
+                      fontWeight: '500',
+                    }}
+                  >
+                    {target.name}
+                  </span>
+                ) : null;
+              })
+            ) : (
+              <span style={{ color: '#aaa' }}>선택된 편의시설 없음</span>
+            )}
           </div>
         </SummaryItem>
 
@@ -206,12 +230,29 @@ function UpdateWorkCheckComponent({ formData, prev, onSubmit }) {
 
         <SummaryItem>
           <div className="label">편의시설</div>
-          <div className="value">
-            {/* 💡 3. 오피스용 한글 이름 배열 필드인 officeAmenityNames를 join 해줍니다 */}
-            {formData.office?.officeAmenityNames &&
-            formData.office.officeAmenityNames.length > 0
-              ? formData.office.officeAmenityNames.join(', ')
-              : '(선택한 편의시설 없음)'}
+          <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
+            {formData.office.facilities.length > 0 ? (
+              formData.office.facilities.map((f) => {
+                const target = officeFacilityList.find((item) => item.no === f);
+                return target ? (
+                  <span
+                    key={f}
+                    style={{
+                      padding: '4px 10px',
+                      background: '#f1f4ee',
+                      color: '#768966',
+                      borderRadius: '20px',
+                      fontSize: '13px',
+                      fontWeight: '500',
+                    }}
+                  >
+                    {target.name}
+                  </span>
+                ) : null;
+              })
+            ) : (
+              <span style={{ color: '#aaa' }}>선택된 편의시설 없음</span>
+            )}
           </div>
         </SummaryItem>
       </SummaryBox>

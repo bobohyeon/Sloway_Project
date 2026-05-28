@@ -13,6 +13,8 @@ function InsertWorkPage() {
   const {
     step,
     setStep,
+    officeFacilityList,
+    facilityList,
     workData,
     setWorkData,
     officeData,
@@ -41,6 +43,7 @@ function InsertWorkPage() {
           <InsertDetailComponent
             formData={workData}
             handleChange={handleWorkChange}
+            facilityList={facilityList}
             setFormData={setWorkData}
             handleCheckChange={handleCheckChange}
             prev={() => setStep(1)}
@@ -70,6 +73,7 @@ function InsertWorkPage() {
         return (
           <InsertWorkOfficeDetailComponent
             formData={officeData}
+            facilityList={officeFacilityList}
             setFormData={setOfficeData}
             handleChange={handleOfficeChange}
             handleCheckChange={handleWorkCheckChange}

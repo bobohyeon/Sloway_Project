@@ -1,25 +1,13 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { registerWorkStayInspection } from '../../../api/host/place/placeApi';
-
-export const facilityList = [
-  { no: 1, name: '주방' },
-  { no: 2, name: '세탁기' },
-  { no: 3, name: '건조기' },
-  { no: 4, name: 'WiFi' },
-  { no: 5, name: '주차' },
-  { no: 6, name: '어메니티' },
-  { no: 7, name: 'TV' },
-  { no: 8, name: '에어컨' },
-  { no: 9, name: '난방' },
-  { no: 10, name: '금연' },
-  { no: 11, name: '반려동물' },
-  { no: 12, name: '바베큐' },
-];
+import { fetchTypeAmenityListApi } from '../../../api/host/amenity/hostAmenityApi';
 
 export default function useInsertWorkStay() {
   const navigate = useNavigate();
   const [step, setStep] = useState(1);
+  const [facilityList, setFacilityList] = useState([]);
+  const [officeFacilityList, setOfficeFacilityList] = useState([]);
 
   // 1. 워크스테이(숙소) 데이터 상태
   const [workData, setWorkData] = useState({
@@ -53,6 +41,26 @@ export default function useInsertWorkStay() {
     facilities: [],
     images: [],
   });
+
+  // 1. 전체 시설 목록 로드
+  useEffect(() => {
+    const loadAmenities = async () => {
+      try {
+        // 두 요청을 동시에 보냄
+        const [resp, officeresp] = await Promise.all([
+          fetchTypeAmenityListApi('workStay'),
+          fetchTypeAmenityListApi('office'),
+        ]);
+
+        if (resp?.data?.amenityList) setFacilityList(resp.data.amenityList);
+        if (officeresp?.data?.amenityList)
+          setOfficeFacilityList(officeresp.data.amenityList);
+      } catch (e) {
+        console.error('어메니티 리스트 로드 실패', e);
+      }
+    };
+    loadAmenities();
+  }, []);
 
   // 일반 입력 및 체크박스 핸들러들
   const handleWorkChange = (e) => {
@@ -228,6 +236,8 @@ export default function useInsertWorkStay() {
     step,
     setStep,
     workData,
+    officeFacilityList,
+    facilityList,
     setWorkData,
     officeData,
     setOfficeData,
