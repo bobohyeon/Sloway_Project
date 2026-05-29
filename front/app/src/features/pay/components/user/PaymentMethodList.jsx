@@ -28,14 +28,6 @@ const DEFAULT_METHODS = [
     color: '#FFFFFF',
     desc: 'UI 시뮬레이션',
   },
-  {
-    id: 'card',
-    name: '신용/체크카드',
-    icon: '💳',
-    bg: '#FFFFFF',
-    color: '#333333',
-    desc: 'UI 시뮬레이션',
-  },
 ];
 
 export function PaymentMethodList({

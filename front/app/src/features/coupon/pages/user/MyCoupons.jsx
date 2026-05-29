@@ -3,7 +3,6 @@ import styled from 'styled-components';
 import PageLayout from '../../../../app/layouts/page/PageLayout';
 import { Tabs, EmptyState } from '../../../pay_shared/components';
 import { CouponTicket } from '../../components/user/CouponTicket';
-import { CouponCodeInput } from '../../components/user/CouponCodeInput';
 import { findCouponsByMemberNo } from '../../api/couponApi';
 
 const emptyTitleByFilter = (filter) => {
@@ -13,8 +12,7 @@ const emptyTitleByFilter = (filter) => {
 };
 
 const emptyDescByFilter = (filter) => {
-  if (filter === 'available')
-    return '쿠폰 코드를 등록하거나 이벤트에 참여해보세요';
+  if (filter === 'available') return '이벤트에 참여해보세요';
   return '';
 };
 
@@ -27,10 +25,6 @@ const CouponList = styled.div`
   flex-direction: column;
   gap: var(--space-3);
   margin-bottom: var(--space-6);
-`;
-
-const CodeInputWrap = styled.div`
-  margin-top: var(--space-6);
 `;
 
 const MEMBER_NO = 1;
@@ -103,10 +97,6 @@ export default function MyCoupons() {
     { value: 'expired', label: '만료', count: counts.expired },
   ];
 
-  const handleCodeSubmit = (code) => {
-    alert(`쿠폰 코드 "${code}" — 이벤트 도메인 구현 후 활성화 예정입니다.`);
-  };
-
   return (
     <PageLayout
       title="내 쿠폰"
@@ -131,10 +121,6 @@ export default function MyCoupons() {
           ))}
         </CouponList>
       )}
-
-      <CodeInputWrap>
-        <CouponCodeInput onSubmit={handleCodeSubmit} />
-      </CodeInputWrap>
     </PageLayout>
   );
 }
