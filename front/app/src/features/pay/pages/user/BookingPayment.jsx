@@ -13,6 +13,7 @@ import { PaymentSummary } from '../../components/user/PaymentSummary';
 import { useCheckoutForm } from '../../hooks/useCheckoutForm';
 import { useCheckoutCalc } from '../../hooks/useCheckoutCalc';
 import { readyPay } from '../../api/payApi';
+import { toPayMethod } from '../../constants/payMethod';
 import { findCouponsByMemberNo } from '../../../coupon/api/couponApi';
 import { findPointBalanceByMemberNo } from '../../../point/api/pointApi';
 
@@ -121,13 +122,16 @@ export default function BookingPaymentPage() {
 
   const onPayClick = async () => {
     if (!canPay || paying) return;
+    // 프론트 'kakao'/'toss'/'naver' → 백엔드 PayMethod enum(KAKAOPAY 등) 변환
+    const method = toPayMethod(paymentMethod);
+    if (!method) return;
     setPaying(true);
     try {
       const { nextRedirectPcUrl } = await readyPay({
         rsvnNo: RSVN_NO,
         ucNo: selectedCoupon?.no ?? null,
         usedPoint: points,
-        payMethod: paymentMethod,
+        method,
         baseAmt: subtotal,
         addAmt: SERVICE_FEE,
       });
