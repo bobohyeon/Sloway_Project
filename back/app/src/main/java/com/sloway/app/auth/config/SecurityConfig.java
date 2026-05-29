@@ -87,6 +87,7 @@ public class SecurityConfig {
                                 .requestMatchers("/api/admin/auth/**").permitAll()
                                 // 권한별 보호 (URL 패턴으로 표현)
                                 .requestMatchers("/api/user/**").hasRole("USER")
+                                .requestMatchers("/api/host/**").hasRole("HOST")
                                 .requestMatchers("/api/admin/**").hasRole("ADMIN")
                                 // 나머지 — 점진 도입 단계, 다른 담당자 API 진행 위해 일단 공개
                                 .anyRequest().permitAll()
