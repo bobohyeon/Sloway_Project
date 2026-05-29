@@ -15,7 +15,7 @@ import {
   CardRight,
   COLOR,
 } from '../../../rsvn/components/user/RsvnStyled';
-import api from '../../../../app/api/axiosApi';
+import { findAllReports } from '../../api/reviewApi';
 
 const FilterRow = styled.div`
   display: flex;
@@ -71,8 +71,8 @@ function AdminReviewPage() {
   useEffect(() => {
     const fetchReports = async () => {
       try {
-        const res = await api.get('/review/report');
-        setReports(res.data);
+        const data = await findAllReports();
+        setReports(data);
       } catch {
         setReports([]);
       }

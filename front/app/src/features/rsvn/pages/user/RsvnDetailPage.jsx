@@ -15,7 +15,7 @@ import {
   BtnOutline,
   COLOR,
 } from '../../components/user/RsvnStyled';
-import api from '../../../../app/api/axiosApi';
+import { findOneRsvn } from '../../api/rsvnApi';
 
 const StatusBanner = styled.div`
   background: ${COLOR.gray100};
@@ -79,8 +79,8 @@ function RsvnDetailPage() {
   useEffect(() => {
     const fetch = async () => {
       try {
-        const res = await api.get(`/reservation/${id}`);
-        setRsvn(res.data);
+        const data = await findOneRsvn(id);
+        setRsvn(data);
       } catch {
         alert('예약 정보를 불러오지 못했어요');
         navigate('/user/reservation');

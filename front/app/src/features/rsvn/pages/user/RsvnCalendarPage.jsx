@@ -11,7 +11,7 @@ import {
   StatValue,
   COLOR,
 } from '../../components/user/RsvnStyled';
-import api from '../../../../app/api/axiosApi';
+import { findMyRsvns } from '../../api/rsvnApi';
 
 
 const fadeInUp = keyframes`
@@ -185,8 +185,8 @@ function RsvnCalendarPage() {
   useEffect(() => {
     const fetch = async () => {
       try {
-        const res = await api.get('/reservation');
-        setRsvns(res.data);
+        const data = await findMyRsvns();
+        setRsvns(data);
       } catch {
         setRsvns([]);
       }

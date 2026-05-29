@@ -7,7 +7,7 @@ import {
   SectionTitle,
   COLOR,
 } from '../../../rsvn/components/user/RsvnStyled';
-import api from '../../../../app/api/axiosApi';
+import { findOneReview, processReport } from '../../api/reviewApi';
 
 const StatusBadge = styled.span`
   display: inline-block;
@@ -142,8 +142,8 @@ function AdminReviewReportPage() {
     if (!report) return;
     const fetchReview = async () => {
       try {
-        const res = await api.get(`/review/${report.reviewNo}`);
-        setReview(res.data);
+        const data = await findOneReview(report.reviewNo);
+        setReview(data);
       } catch {
         // 리뷰 데이터 없으면 빈 상태 유지
       }
@@ -153,7 +153,7 @@ function AdminReviewReportPage() {
 
   const handleConfirm = async () => {
     try {
-      await api.put(`/review/report/${id}?status=${decision}`);
+      await processReport(id, decision);
       alert('처리되었습니다');
       navigate('/admin/review/report');
     } catch {
