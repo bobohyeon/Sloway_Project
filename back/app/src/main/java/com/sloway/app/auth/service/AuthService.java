@@ -1,6 +1,7 @@
 package com.sloway.app.auth.service;
 
 import com.sloway.app.auth.dto.request.JoinRequestDto;
+import com.sloway.app.auth.dto.response.EmailCheckResponseDto;
 import com.sloway.app.member.common.AuthType;
 import com.sloway.app.member.common.MemberStatus;
 import com.sloway.app.member.entity.MemberEntity;
@@ -54,7 +55,7 @@ public class AuthService {
             throw new IllegalArgumentException("휴대폰을 입력하세요");
         }
         // 2) 이메일 중복 체크
-        if (memberRepository.existsByEmail(request.getEmail())){
+        if (memberRepository.existsByEmail(request.getEmail())) {
             throw new IllegalArgumentException("이미 가입된 이메일 입니다");
         }
         // 3) 비밀번호 암호화 (평문 저장 절대 금지)
@@ -78,9 +79,25 @@ public class AuthService {
                 .build();
         userRepository.save(user);
 
-        log.info("회원가입 완료 : {} (memberNo = {})" , saveMember.getEmail() , saveMember.getNo());
+        log.info("회원가입 완료 : {} (memberNo = {})", saveMember.getEmail(), saveMember.getNo());
 
     }
+    /**
+     * 이메일 중복 확인.
+     *
+     * <p>가입 화면에서 이메일 입력 시 실시간 중복 체크용.
+     * 일반회원/호스트 가입 둘 다 같은 Member 테이블 보기 때문에 메서드 1개로 공통 처리.
+     *
+     * @param email 확인할 이메일
+     * @return 사용 가능 여부 + 메시지
+     */
+    public EmailCheckResponseDto checkEmail(String email){
 
+        boolean isExists = memberRepository.existsByEmail(email);
+
+        return isExists
+                ? EmailCheckResponseDto.unavailable()
+                :EmailCheckResponseDto.available();
+    }
 
 }//class
