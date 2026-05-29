@@ -7,19 +7,20 @@ import { CommissionPolicyTable } from '../../components/host/CommissionPolicyTab
 
 import { createFee, findFeeAll } from '../../api/feeApi';
 
-// 사용자 노출 명칭 SSOT — STATION=숙소 / WORK_STAY=워크앤스테이 / OFFICE=코워킹오피스
+// 사용자 노출 명칭 SSOT — station=숙소 / workStay=워크앤스테이 / office=코워킹오피스
+// 백엔드 PlaceType enum 영영 camelCase 소문자
 const PLACE_TYPE_INFO = {
-  STATION: {
+  station: {
     icon: '🏠',
     category: '숙소',
     description: '워케이션용 일반 숙소 영역',
   },
-  WORK_STAY: {
+  workStay: {
     icon: '🌲',
     category: '워크앤스테이',
     description: '장기 체류 + 업무 공간 결합형',
   },
-  OFFICE: {
+  office: {
     icon: '🏢',
     category: '코워킹오피스',
     description: '단기 사무·미팅 공간',
@@ -27,9 +28,9 @@ const PLACE_TYPE_INFO = {
 };
 
 const PLACE_TYPE_OPTIONS = [
-  { value: 'STATION', label: '숙소 (STATION)' },
-  { value: 'WORK_STAY', label: '워크앤스테이 (WORK_STAY)' },
-  { value: 'OFFICE', label: '코워킹오피스 (OFFICE)' },
+  { value: 'station', label: '숙소 (station)' },
+  { value: 'workStay', label: '워크앤스테이 (workStay)' },
+  { value: 'office', label: '코워킹오피스 (office)' },
 ];
 
 const formatDate = (iso) => {
@@ -60,7 +61,7 @@ export default function AdminCommissionPolicy() {
   const [modalOpen, setModalOpen] = useState(false);
   const [submitting, setSubmitting] = useState(false);
 
-  const [formPlaceType, setFormPlaceType] = useState('STATION');
+  const [formPlaceType, setFormPlaceType] = useState('station');
   const [formRate, setFormRate] = useState('');
   const [formStartAt, setFormStartAt] = useState('');
   const [formEndAt, setFormEndAt] = useState('');
@@ -78,14 +79,21 @@ export default function AdminCommissionPolicy() {
     loadFees();
   }, []);
 
-  // 적용 중 정책만 표시 (백엔드 delYn=N 영역)
-  const policies = useMemo(
-    () => fees.filter((f) => f.delYn !== 'Y').map(toPolicyTableItem),
-    [fees]
-  );
+  // 적용 중 정책만 노출 — startAt <= NOW <= endAt (endAt null 영영 무기한)
+  const policies = useMemo(() => {
+    const now = Date.now();
+    return fees
+      .filter((f) => f.delYn !== 'Y')
+      .filter((f) => {
+        const start = f.startAt ? new Date(f.startAt).getTime() : 0;
+        const end = f.endAt ? new Date(f.endAt).getTime() : Infinity;
+        return start <= now && now <= end;
+      })
+      .map(toPolicyTableItem);
+  }, [fees]);
 
   const resetForm = () => {
-    setFormPlaceType('STATION');
+    setFormPlaceType('station');
     setFormRate('');
     setFormStartAt('');
     setFormEndAt('');
