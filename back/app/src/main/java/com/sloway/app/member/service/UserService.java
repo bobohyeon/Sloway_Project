@@ -1,8 +1,10 @@
 package com.sloway.app.member.service;
 
 import com.sloway.app.auth.dto.request.ChangePasswordRequestDto;
+import com.sloway.app.auth.service.EmailService;
 import com.sloway.app.common.exception.CustomException;
 import com.sloway.app.member.common.MemberErrorCode;
+import com.sloway.app.member.dto.request.ChangeEmailRequestDto;
 import com.sloway.app.member.dto.request.UpdateUserRequestDto;
 import com.sloway.app.member.dto.response.UserResponseDto;
 import com.sloway.app.member.entity.MemberEntity;
@@ -27,7 +29,7 @@ public class UserService {
     private final MemberRepository memberRepository;
     private final PasswordEncoder passwordEncoder;
     private final UserRepository userRepository;
-
+    private final EmailService emailService;
 
     public UserResponseDto getMyInfo(Long memberNo){
         MemberEntity member = memberRepository.findById(memberNo)
@@ -98,5 +100,45 @@ public class UserService {
         user.changePassword(encoded);
 
         log.info("일반회원 비밀번호 변경 완료: memberNo={}", memberNo);
+    }
+
+    /**
+     * 일반회원 이메일 변경.
+     *
+     * <p>새 이메일은 (1) 인증 완료(isVerified) (2) 미사용(중복 아님) 두 조건을 만족해야 함.
+     * 프론트에서 인증을 거쳤더라도 서버에서 반드시 재검증 (우회 방지).
+     * <p>이메일은 JWT에 박혀있으므로, 변경 후 프론트는 재로그인을 유도해야 함.
+     */
+    @Transactional
+    public void changeEmail(Long memberNo, ChangeEmailRequestDto request) {
+        String newEmail = request.getNewEmail();
+
+        // 1) 입력 검증
+        if (newEmail == null || newEmail.isBlank()) {
+            throw new IllegalArgumentException("새 이메일을 입력하세요");
+        }
+
+        // 2) 회원 조회
+        MemberEntity member = memberRepository.findById(memberNo)
+                .orElseThrow(() -> new CustomException(MemberErrorCode.MEMBER_NOT_FOUND));
+
+        // 3) 기존 이메일과 동일하면 변경 의미 없음
+        if (newEmail.equals(member.getEmail())) {
+            throw new CustomException(MemberErrorCode.SAME_AS_OLD_EMAIL);
+        }
+
+        // 4) 중복 체크 — 남이 쓰는 이메일이면 거부
+        if (memberRepository.existsByEmail(newEmail)) {
+            throw new CustomException(MemberErrorCode.EMAIL_DUPLICATED);
+        }
+
+        // 5) 인증 완료 여부 재검증 (프론트 우회 방지)
+        if (!emailService.isVerified(newEmail)) {
+            throw new CustomException(MemberErrorCode.EMAIL_NOT_VERIFIED);
+        }
+
+        // 6) 변경
+        member.changeEmail(newEmail);
+        log.info("일반회원 이메일 변경 완료: memberNo={}", memberNo);
     }
 }

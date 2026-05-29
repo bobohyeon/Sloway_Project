@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import styled from 'styled-components';
 import { FaCheckCircle } from 'react-icons/fa';
-
+import { sendVerifyCode, verifyCode } from '../../../auth/api/authApi';
 // ─── 상수 ───────────────────────────────────────────────────
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const EMAIL_VERIFY_TIMEOUT = 180; // 인증번호 유효시간 (초)
@@ -151,16 +151,17 @@ function EmailVerifyField({ value, onChange, initialEmail, onVerifiedChange }) {
 
     setSending(true);
     try {
-      // TODO: POST /api/user/email/verify-request { email: value }
-      await new Promise((r) => setTimeout(r, 500));
+      await sendVerifyCode(value);
       setStatus('sent');
       setCode('');
       setTimer(EMAIL_VERIFY_TIMEOUT);
       setEmailError(null);
       setCodeError(null);
     } catch (err) {
-      console.error(err);
-      alert('인증번호 발송에 실패했습니다. 잠시 후 다시 시도해주세요.');
+      setEmailError(
+        err.response?.data?.message ??
+          '인증번호 발송에 실패했습니다. 잠시 후 다시 시도해주세요.'
+      );
     } finally {
       setSending(false);
     }
@@ -174,14 +175,14 @@ function EmailVerifyField({ value, onChange, initialEmail, onVerifiedChange }) {
 
     setVerifying(true);
     try {
-      // TODO: POST /api/user/email/verify-confirm { email: value, code }
-      await new Promise((r) => setTimeout(r, 500));
+      await verifyCode(value, code);
       setStatus('verified');
       setTimer(0);
       setCodeError(null);
     } catch (err) {
-      console.error(err);
-      setCodeError('인증번호가 일치하지 않습니다.');
+      setCodeError(
+        err.response?.data?.message ?? '인증번호가 일치하지 않습니다.'
+      );
     } finally {
       setVerifying(false);
     }
