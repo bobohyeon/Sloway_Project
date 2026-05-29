@@ -12,6 +12,7 @@ import {
   FaStore,
 } from 'react-icons/fa';
 import PageLayout from '../../../../app/layouts/page/PageLayout';
+import { useMyPage } from '../../hooks/useMyPage';
 
 // ─── 더미 데이터 (백엔드 연동 후 API로 교체) ───────────────
 const DUMMY_USER = {
@@ -299,22 +300,6 @@ const QuickMenuItem = styled.button`
   }
 `;
 
-// 호스트 전환 배너
-const HostBanner = styled.div`
-  background: linear-gradient(135deg, #768966, #a8b89f);
-  border-radius: 16px;
-  padding: 24px 28px;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  cursor: pointer;
-  transition: opacity 0.2s;
-
-  &:hover {
-    opacity: 0.92;
-  }
-`;
-
 const BannerText = styled.div``;
 
 const BannerTitle = styled.div`
@@ -337,7 +322,8 @@ const BannerArrow = styled.div`
 // ─── 컴포넌트 ───────────────────────────────────────────────
 function MyPage() {
   const navigate = useNavigate();
-  const user = DUMMY_USER;
+  const { data: profile } = useMyPage(); // 프로필(이름/이메일/사진) 실데이터
+  const user = DUMMY_USER; // 통계·예약용 더미 (나중에 본인이 교체)
 
   return (
     <PageLayout>
@@ -345,9 +331,9 @@ function MyPage() {
         {/* 프로필 카드 */}
         <ProfileCard>
           <Avatar>
-            {user.profileImg ? (
+            {profile?.imgUrl ? (
               <img
-                src={user.profileImg}
+                src={profile.imgUrl}
                 alt="프로필"
                 style={{
                   width: '100%',
@@ -357,14 +343,12 @@ function MyPage() {
                 }}
               />
             ) : (
-              user.name[0]
+              (profile?.name?.[0] ?? 'U')
             )}
           </Avatar>
           <ProfileInfo>
-            <UserName>{user.name}님</UserName>
-            <UserMeta>
-              {user.email} · 가입일 {user.joinDate}
-            </UserMeta>
+            <UserName>{profile?.name ?? '회원'}님</UserName>
+            <UserMeta>{profile?.email ?? ''}</UserMeta>
             <GradeBadge>{user.grade}</GradeBadge>
           </ProfileInfo>
           <ProfileActions>
@@ -376,6 +360,8 @@ function MyPage() {
             </ActionBtn>
           </ProfileActions>
         </ProfileCard>
+
+        {/* ↓ 통계·퀵메뉴·최근예약 카드는 그대로 (네가 알아서 할 부분) */}
 
         {/* 통계 카드 3개 */}
         <StatsRow>
