@@ -21,11 +21,8 @@ import org.springframework.http.HttpStatus;
 @RequiredArgsConstructor
 public enum AdminErrorCode implements ErrorCode {
 
-    ADMIN_NOT_FOUND(HttpStatus.NOT_FOUND, "어드민 정보를 찾을 수 없습니다"),
+    ADMIN_NOT_FOUND(HttpStatus.NOT_FOUND, "어드민 정보를 찾을 수 없습니다");
 
-    MEMBER_NOT_FOUND(HttpStatus.NOT_FOUND, "회원 정보를 찾을 수 없습니다"),
-    INVALID_MEMBER_STATE(HttpStatus.CONFLICT, "현재 상태에서 처리할 수 없습니다"),
-    SUSPEND_REASON_REQUIRED(HttpStatus.BAD_REQUEST, "정지 사유를 입력해주세요");
 
     private final HttpStatus status;
     private final String msg;

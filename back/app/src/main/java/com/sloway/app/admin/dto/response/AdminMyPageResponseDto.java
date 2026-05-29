@@ -24,7 +24,7 @@ public class AdminMyPageResponseDto {
     private final String phone;
     private final LocalDateTime createdAt;
 
-    public static AdminMyPageResponseDto fron(AdminEntity admin){
+    public static AdminMyPageResponseDto from(AdminEntity admin){
         return AdminMyPageResponseDto.builder()
                 .adminNo(admin.getNo())
                 .email(admin.getEmail())

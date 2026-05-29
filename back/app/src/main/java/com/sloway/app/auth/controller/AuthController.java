@@ -1,8 +1,11 @@
 package com.sloway.app.auth.controller;
 
 import com.sloway.app.auth.dto.request.JoinRequestDto;
+import com.sloway.app.auth.dto.request.SendCodeRequestDto;
+import com.sloway.app.auth.dto.request.VerifyCodeRequestDto;
 import com.sloway.app.auth.dto.response.EmailCheckResponseDto;
 import com.sloway.app.auth.service.AuthService;
+import com.sloway.app.auth.service.EmailService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
@@ -29,6 +32,7 @@ import org.springframework.web.bind.annotation.*;
 @RequestMapping("/api/auth")
 public class AuthController {
     private final AuthService authService;
+    private final EmailService emailService;
 
     @PostMapping("/join")
     public ResponseEntity<Void> userJoin(@RequestBody JoinRequestDto request) {
@@ -36,14 +40,11 @@ public class AuthController {
         return ResponseEntity.status(HttpStatus.CREATED)
                 .build();
     }
+
     /**
      * 이메일 중복 확인 (일반회원).
-     *
      * <p>가입 화면에서 이메일 입력 시 FE가 실시간 호출.
      * URL 예: GET /api/auth/email/check?email=test@example.com
-     *
-     * @param email 확인할 이메일 (쿼리 파라미터)
-     * @return 사용 가능 여부 + 메시지
      */
     @GetMapping("/email/check")
     public ResponseEntity<EmailCheckResponseDto> checkEmail(@RequestParam String email) {
@@ -52,4 +53,30 @@ public class AuthController {
         EmailCheckResponseDto result = authService.checkEmail(email);
         return ResponseEntity.ok(result);
     }
-}
+
+    /**
+     * 이메일 인증번호 발송.
+     * <p>가입 화면 → 이메일 입력 → [인증번호 발송] 버튼.
+     * <p>6자리 코드를 생성해 입력된 이메일로 발송 + DB 저장 (5분 만료).
+     * <p>같은 이메일에 여러 번 발송 가능 (재발송 지원).
+     */
+    @PostMapping("/email/send-code")
+    public ResponseEntity<Void> sendCode(@RequestBody SendCodeRequestDto request) {
+
+        log.info("이메일 인증번호 발송 요청: email={}", request.getEmail());
+        emailService.sendCode(request.getEmail());
+        return ResponseEntity.ok().build();
+    }
+
+    /**
+     * 이메일 인증번호 확인.
+     */
+    @PostMapping("/email/verify-code")
+    public ResponseEntity<Void> verifyCode(@RequestBody VerifyCodeRequestDto request) {
+
+        log.info("이메일 인증번호 확인 요청: email={}", request.getEmail());
+        emailService.verifyCode(request.getEmail(), request.getCode());
+        return ResponseEntity.ok().build();
+    }
+
+}//class

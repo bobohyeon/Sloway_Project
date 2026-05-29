@@ -1,9 +1,12 @@
 package com.sloway.app.host.service;
 
+import com.sloway.app.auth.service.EmailService;
+import com.sloway.app.common.exception.CustomException;
 import com.sloway.app.host.common.ApprovalState;
 import com.sloway.app.host.dto.request.HostJoinRequestDto;
 import com.sloway.app.host.entity.HostEntity;
 import com.sloway.app.host.repository.HostRepository;
+import com.sloway.app.member.common.MemberErrorCode;
 import com.sloway.app.member.common.MemberStatus;
 import com.sloway.app.member.entity.MemberEntity;
 import com.sloway.app.member.repository.MemberRepository;
@@ -31,6 +34,7 @@ public class HostJoinService {
     private final MemberRepository memberRepository;
     private final HostRepository hostRepository;
     private final PasswordEncoder passwordEncoder;
+    private final EmailService emailService;
 
     /**
      * 호스트 신청.
@@ -61,10 +65,15 @@ public class HostJoinService {
         if (request.getBusinessDocUrl() == null || request.getBusinessDocUrl().isBlank()) {
             throw new IllegalArgumentException("사업자등록증 파일은 필수입니다");
         }
-
+        // 2) 이메일 중복 체크
         if (memberRepository.existsByEmail(request.getEmail())) {
             throw new IllegalArgumentException("이미 가입된 이메일입니다");
         }
+        // 3) 이메일 인증 여부
+        if (!emailService.isVerified(request.getEmail())) {
+            throw new CustomException(MemberErrorCode.EMAIL_NOT_VERIFIED);
+        }
+
 
         // 3) 사업자번호 중복 체크 (호스트 특유)
         if (hostRepository.existsByBusinessNo(request.getBusinessNo())) {
