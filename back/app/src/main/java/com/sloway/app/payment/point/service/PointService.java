@@ -23,7 +23,6 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.stream.Stream;
 
 @Service
 @Transactional(readOnly = true)
@@ -121,6 +120,25 @@ public class PointService {
         pointRepository.save(entity);
     }
 
+
+    @Transactional
+    public void earnPointInternal(Long memberNo, PayEntity payEntity) {
+        int savePoint = (int) (payEntity.getFinalAmt() * 0.01);
+        LocalDateTime expiredAt = LocalDateTime.now().plusYears(1);
+        MemberEntity memberEntity = memberRepository.findById(memberNo)
+                .orElseThrow(() -> new EntityNotFoundException("회원 정보를 조회할 수 없습니다."));
+
+        PointEntity pointEntity = PointEntity.builder()
+                .memberNo(memberEntity)
+                .payNo(payEntity)
+                .amount(savePoint)
+                .dealType(PointDealType.EARN)
+                .expiredAt(expiredAt)
+                .status(PointStatus.WAIT)
+                .build();
+        pointRepository.save(pointEntity);
+    }
+
     public PointBalanceResDto findPointBalanceByMemberNo(Long memberNo) {
         MemberEntity memberEntity = memberRepository.findById(memberNo)
                 .orElseThrow(() -> new EntityNotFoundException("회원 정보를 조회할 수 없습니다."));
@@ -156,5 +174,16 @@ public class PointService {
                 .filter(p -> p.getStatus() == PointStatus.WAIT || p.getStatus() == PointStatus.SAVE)
                 .forEach(PointEntity::cancel);
     }
+
+    @Transactional
+    public void confirmEarnPointsScheduled() {
+        List<PointEntity> pointEntityList = pointRepository.findExpiredWaitForEarn(LocalDateTime.now().minusDays(7));
+        pointEntityList.stream()
+                .filter(p -> p.getStatus() == PointStatus.WAIT)
+                .forEach(PointEntity::confirmEarn);
+
+
+    }
+
 
 }

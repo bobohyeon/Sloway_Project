@@ -5,6 +5,7 @@ import { FaPencilAlt, FaExclamationTriangle } from 'react-icons/fa';
 import { RiKakaoTalkFill } from 'react-icons/ri';
 import { FcGoogle } from 'react-icons/fc';
 import PageLayout from '../../../../app/layouts/page/PageLayout';
+import { useMyPage } from '../../hooks/useMyPage';
 
 // ─── 더미 데이터 (백엔드 연동 후 GET API로 교체) ────────────
 const DUMMY_USER = {
@@ -256,10 +257,10 @@ const WithdrawBtn = styled.button`
 // ─── 컴포넌트 ──────────────────────────────────────────────
 function ProfilePage() {
   const navigate = useNavigate();
-  const user = DUMMY_USER;
-  const socialAccounts = DUMMY_SOCIAL_ACCOUNTS;
+  const { data: user, loading, error } = useMyPage();
+  const socialAccounts = DUMMY_SOCIAL_ACCOUNTS; // 소셜은 회원가입 OAuth 연동 시 교체
 
-  // 소셜 연동/해제 (실제 OAuth 플로우는 백엔드 연동 시 구현)
+  // 소셜 연동/해제 (실제 OAuth 플로우는 회원가입 OAuth 작업 시 구현)
   const handleSocialToggle = (provider, connected) => {
     if (connected) {
       if (!window.confirm(`${PROVIDER_META[provider].name} 연동을 해제할까요?`))
@@ -271,6 +272,30 @@ function ProfilePage() {
       alert(`${PROVIDER_META[provider].name} 연동을 시작합니다.`);
     }
   };
+
+  // 로딩/에러 가드 — data가 null인 동안 아래 user.name[0] 같은 접근이 터지는 걸 방지
+  if (loading) {
+    return (
+      <PageLayout
+        title="내 정보 관리"
+        description="프로필과 연락처를 관리할 수 있어요"
+      >
+        <div style={{ padding: 40, color: '#888' }}>불러오는 중...</div>
+      </PageLayout>
+    );
+  }
+  if (error || !user) {
+    return (
+      <PageLayout
+        title="내 정보 관리"
+        description="프로필과 연락처를 관리할 수 있어요"
+      >
+        <div style={{ padding: 40, color: '#c0392b' }}>
+          {error || '내 정보를 불러오지 못했습니다.'}
+        </div>
+      </PageLayout>
+    );
+  }
 
   return (
     <PageLayout
@@ -285,18 +310,14 @@ function ProfilePage() {
               {user.imgUrl ? (
                 <img src={user.imgUrl} alt="프로필" />
               ) : (
-                user.name[0]
+                user.name?.[0]
               )}
             </Avatar>
             <ProfileMeta>
               <NameRow>
                 <UserName>{user.name}</UserName>
-                <GradeBadge>{user.grade}</GradeBadge>
               </NameRow>
               <SubText>{user.email}</SubText>
-              <SubText>
-                {formatDate(user.joinDate)} 가입 · 방문 {user.visitCount}회
-              </SubText>
             </ProfileMeta>
             <EditBtn onClick={() => navigate('/user/profile/edit')}>
               <FaPencilAlt size={11} /> 수정하기
@@ -320,7 +341,7 @@ function ProfilePage() {
           </InfoRow>
           <InfoRow>
             <InfoLabel>생년월일</InfoLabel>
-            <InfoValue>{formatDate(user.birth)}</InfoValue>
+            <InfoValue>{formatDate(user.birthDate)}</InfoValue>
           </InfoRow>
         </Card>
 
@@ -366,5 +387,4 @@ function ProfilePage() {
     </PageLayout>
   );
 }
-
 export default ProfilePage;

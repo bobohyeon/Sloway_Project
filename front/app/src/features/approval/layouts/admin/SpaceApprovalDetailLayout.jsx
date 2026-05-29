@@ -11,35 +11,6 @@ const Container = styled.div`
   box-sizing: border-box;
 `;
 
-const BackButton = styled.div`
-  display: flex;
-  align-items: center;
-  gap: 5px;
-  font-size: 14px;
-  color: #888;
-  cursor: pointer;
-  margin-bottom: 20px;
-  width: fit-content;
-
-  &:hover {
-    color: #333;
-  }
-`;
-
-const Header = styled.div`
-  margin-bottom: 30px;
-  h1 {
-    font-size: 24px;
-    color: #333;
-    margin-bottom: 8px;
-    font-weight: 700;
-  }
-  p {
-    font-size: 14px;
-    color: #888;
-  }
-`;
-
 const SpaceApprovalDetailLayout = ({ children, title, description }) => {
   const navigate = useNavigate();
   return (

@@ -1,6 +1,8 @@
 import React from 'react';
 import styled from 'styled-components';
 import { FaHotel, FaBriefcase, FaLeaf, FaStar } from 'react-icons/fa';
+import { STATUS_TEXT } from '../../../../hooks/host/place/useSpaceList';
+import RejectButtonWithModal from '../../approvalCheck/RejectButtonWithModal';
 
 const Grid = styled.div`
   display: grid;
@@ -51,12 +53,18 @@ const ImageArea = styled.div`
 const Content = styled.div`
   padding: 20px;
 
-  .date-row {
+  /* 상단 영역을 감싸는 컨테이너 추가 */
+  .header-row {
     display: flex;
-    justify-content: flex-end;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 10px;
+  }
+
+  .date-row {
     font-size: 12px;
     color: #999;
-    margin-bottom: 10px;
+    /* margin-bottom은 header-row가 담당하므로 삭제 */
   }
 
   h3 {
@@ -82,6 +90,39 @@ const Content = styled.div`
     font-weight: 700;
     font-size: 14px;
   }
+`;
+
+// [수정] PENDING, APPROVED, REJECTED 상태별로 색상이 명확하게 분기되도록 리팩토링
+const StatusTag = styled.span`
+  padding: 4px 12px;
+  border-radius: 6px;
+  font-size: 11px;
+  font-weight: 600;
+  border: 1px solid;
+
+  ${({ $status }) => {
+    switch ($status) {
+      case 'P': // 검수 대기 (그레이 계열)
+        return `
+          background: #f5f5f5;
+          color: #888888;
+          border-color: #e0e0e0;
+        `;
+      case 'R': // 반려됨 (붉은 계열)
+        return `
+          background: #ffebee;
+          color: #c62828;
+          border-color: #ffcdd2;
+        `;
+      case 'A': // 운영 중 (시그니처 그린 계열)
+      default:
+        return `
+          background: #76896610;
+          color: #768966;
+          border-color: #76896630;
+        `;
+    }
+  }}
 `;
 
 // [💡 추가] 데이터가 비어있을 때 노출할 센터링 문구 스타일
@@ -137,6 +178,14 @@ function SpaceDetailComponent({ data = [], onCardClick, typeLabel }) {
           </ImageArea>
 
           <Content>
+            <div className="header-row">
+              <StatusTag $status={item.status}>
+                {STATUS_TEXT[item.status] || item.status}
+              </StatusTag>
+              {item.status === 'R' && (
+                <RejectButtonWithModal no={item.id} type={item.type} />
+              )}
+            </div>
             <div className="date-row">
               등록일 {item.created_at || '2026.05.12'}
             </div>

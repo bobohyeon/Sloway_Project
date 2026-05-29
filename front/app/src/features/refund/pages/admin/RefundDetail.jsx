@@ -135,14 +135,14 @@ export default function RefundDetail() {
     }
     setProcessing(true);
     try {
-      const updated = await processRefund(refund.no);
-      setRefund(updated);
+      await processRefund(refund.no);
       alert('환불 승인 완료. 사용자에게 환불 처리됐습니다.');
+      // 목록으로 자동 이동 → RefundList re-mount → fetch 자동 갱신
+      navigate('/admin/refund');
     } catch (err) {
       console.error('환불 승인 실패', err);
       const msg = err?.response?.data?.msg ?? err.message;
       alert(`환불 승인에 실패했습니다.\n${msg}`);
-    } finally {
       setProcessing(false);
     }
   };

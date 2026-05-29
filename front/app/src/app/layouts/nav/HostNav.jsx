@@ -2,6 +2,8 @@ import React from 'react';
 import styled from 'styled-components';
 import NavItem from './NavItem';
 import ProfileBox from './ProfileBox';
+import { useAuth } from '../../../features/auth/hooks/useAuth';
+import { useHostMyPage } from '../../../features/account/hooks/useHostMyPage';
 import {
   FaHome,
   FaUserCircle,
@@ -129,6 +131,8 @@ const hostMenuGroups = [
 ];
 
 function HostNav() {
+  const { user } = useAuth();
+  const { data } = useHostMyPage();
   return (
     <Wrapper>
       <ProfileBox
@@ -137,8 +141,10 @@ function HostNav() {
             <FaStore /> 호스트 센터
           </>
         }
-        name="청평 스테이"
-        subInfo="김우영님 · 승인 2024.03.20"
+        name={data?.businessName ?? '사업자명'}
+        subInfo={`${user?.name ?? '호스트'}님${
+          data?.approvedAt ? ` · 승인 ${data.approvedAt.slice(0, 10)}` : ''
+        }`}
         stats={[
           { value: '3', label: '운영 공간' },
           { value: '4.9', label: '평균 평점' },

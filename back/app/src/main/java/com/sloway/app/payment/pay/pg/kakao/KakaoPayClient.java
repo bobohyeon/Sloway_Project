@@ -33,8 +33,9 @@ public class KakaoPayClient {
 
 
     public KakaoReadyResDto ready(KakaoReadyReqDto reqDto) {
+        reqDto = reqDto.toBuilder().cid(this.cid).build();
         HttpHeaders headers = new HttpHeaders();
-        headers.set("Authorization", "SECRET_KEY " + secretKey);
+        headers.set("Authorization", "DEV_SECRET_KEY " + secretKey);
         headers.setContentType(MediaType.APPLICATION_JSON);
 
         HttpEntity<KakaoReadyReqDto> entity = new HttpEntity<>(reqDto, headers);
@@ -43,8 +44,9 @@ public class KakaoPayClient {
     }
 
     public KakaoApproveResDto approve(KakaoApproveReqDto reqDto) {
+        reqDto = reqDto.toBuilder().cid(this.cid).build();
         HttpHeaders headers = new HttpHeaders();
-        headers.set("Authorization", "SECRET_KEY " + secretKey);
+        headers.set("Authorization", "DEV_SECRET_KEY " + secretKey);
         headers.setContentType(MediaType.APPLICATION_JSON);
 
         HttpEntity<KakaoApproveReqDto> entity = new HttpEntity<>(reqDto, headers);
@@ -53,13 +55,15 @@ public class KakaoPayClient {
     }
 
     public KakaoCancelResDto cancel(KakaoCancelReqDto reqDto) {
+        reqDto = reqDto.toBuilder().cid(this.cid).build();
         HttpHeaders headers = new HttpHeaders();
-        headers.set("Authorization", "SECRET_KEY " + secretKey);
+        headers.set("Authorization", "DEV_SECRET_KEY " + secretKey);
         headers.setContentType(MediaType.APPLICATION_JSON);
 
         HttpEntity<KakaoCancelReqDto> entity = new HttpEntity<>(reqDto, headers);
 
         return restTemplate.postForObject(baseUrl + "/payment/cancel", entity, KakaoCancelResDto.class);
     }
+
 
 }

@@ -25,6 +25,9 @@ public class ReviewResDto {
     private String content;
     private LocalDateTime createdAt;
     private List<ReviewReplyResDto> replies;  // 호스트 답글 목록
+    private LocalDateTime checkIn;
+    private LocalDateTime checkOut;
+
 
     public static ReviewResDto from(ReviewEntity entity, List<ReviewReplyResDto> replies) {
         RsvnEntity rsvn = entity.getRsvnNo();
@@ -55,6 +58,8 @@ public class ReviewResDto {
                 .scoreFocus(entity.getScoreFocus())
                 .content(entity.getContent())
                 .createdAt(entity.getCreatedAt())
+                .checkIn(rsvn.getCheckIn())
+                .checkOut(rsvn.getCheckOut())
                 .replies(replies)
                 .build();
     }

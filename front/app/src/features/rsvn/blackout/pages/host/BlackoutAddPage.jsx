@@ -1,6 +1,6 @@
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import styled, { keyframes } from 'styled-components';
+import { useNavigate, useLocation } from 'react-router-dom';
+import styled from 'styled-components';
 import PageLayout from '../../../../../app/layouts/page/PageLayout';
 import {
   BackLink,
@@ -8,11 +8,8 @@ import {
   BtnOutline,
   COLOR,
 } from '../../../components/user/RsvnStyled';
+import { saveBlackout } from '../../../api/blackoutApi';
 
-const fadeInUp = keyframes`
-  from { opacity: 0; transform: translateY(10px); }
-  to   { opacity: 1; transform: translateY(0); }
-`;
 const FormBox = styled.div`
   background: #fff;
   border: 1px solid ${COLOR.gray200};
@@ -47,20 +44,6 @@ const Input = styled.input`
   font-family: inherit;
   outline: none;
   box-sizing: border-box;
-  &:focus {
-    border-color: ${COLOR.sage};
-  }
-`;
-
-const Select = styled.select`
-  width: 100%;
-  padding: 10px 14px;
-  border: 1px solid ${COLOR.gray200};
-  border-radius: 8px;
-  font-size: 14px;
-  font-family: inherit;
-  outline: none;
-  background: #fff;
   &:focus {
     border-color: ${COLOR.sage};
   }
@@ -143,15 +126,55 @@ const BottomBtns = styled.div`
   margin-top: 24px;
 `;
 
-const TYPES = ['🔧 정비·보수', '🧹 청소', '🏠 개인 이용', '📝 기타'];
+const TYPES = [
+  { label: '🔧 정비·보수', value: 'M' },
+  { label: '🧹 청소', value: 'C' },
+  { label: '🏠 개인 이용', value: 'P' },
+  { label: '📝 기타', value: 'E' },
+];
 
 function BlackoutAddPage() {
   const navigate = useNavigate();
-  const [selectedType, setSelectedType] = useState(0);
-  const [timeOn, setTimeOn] = useState(true);
+  const location = useLocation();
+  const placeNo = location.state?.placeNo;
 
-  const handleSave = () => {
-    navigate('/host/reservation/block');
+  const [selectedType, setSelectedType] = useState(0);
+  const [title, setTitle] = useState('');
+  const [startDate, setStartDate] = useState('');
+  const [endDate, setEndDate] = useState('');
+  const [timeOn, setTimeOn] = useState(false);
+  const [startTime, setStartTime] = useState('');
+  const [endTime, setEndTime] = useState('');
+  const [memo, setMemo] = useState('');
+
+  const handleSave = async () => {
+    if (!placeNo) {
+      alert('공간 번호가 없어요. 이용 불가 목록에서 다시 시도해주세요');
+      return;
+    }
+    if (!title.trim()) {
+      alert('제목을 입력해주세요');
+      return;
+    }
+    if (!startDate || !endDate) {
+      alert('날짜를 입력해주세요');
+      return;
+    }
+
+    try {
+      await saveBlackout(placeNo, {
+        title,
+        memo,
+        reasonType: TYPES[selectedType].value,
+        startDate: `${startDate}T00:00:00`,
+        endDate: `${endDate}T00:00:00`,
+        startTime: timeOn && startTime ? `${startDate}T${startTime}:00` : null,
+        endTime: timeOn && endTime ? `${endDate}T${endTime}:00` : null,
+      });
+      navigate('/host/reservation/block');
+    } catch {
+      alert('저장에 실패했어요');
+    }
   };
 
   return (
@@ -167,18 +190,6 @@ function BlackoutAddPage() {
       <FormBox>
         <FormRow>
           <Label>
-            공간 선택 <Req>*</Req>
-          </Label>
-          <Select>
-            <option value="">공간을 선택해주세요</option>
-            <option>청평 숲속 파인뷰 스테이</option>
-            <option>성수 브릭라운지</option>
-            <option>제주 돌담집 리트릿</option>
-          </Select>
-        </FormRow>
-
-        <FormRow>
-          <Label>
             사유 유형 <Req>*</Req>
           </Label>
           <TypeGrid>
@@ -188,7 +199,7 @@ function BlackoutAddPage() {
                 $active={selectedType === i}
                 onClick={() => setSelectedType(i)}
               >
-                {t}
+                {t.label}
               </TypeBtn>
             ))}
           </TypeGrid>
@@ -198,7 +209,12 @@ function BlackoutAddPage() {
           <Label>
             제목 <Req>*</Req>
           </Label>
-          <Input type="text" placeholder="예) 내부 정비, 정기 청소" />
+          <Input
+            type="text"
+            placeholder="예) 내부 정비, 정기 청소"
+            value={title}
+            onChange={(e) => setTitle(e.target.value)}
+          />
         </FormRow>
 
         <FormRow>
@@ -206,9 +222,17 @@ function BlackoutAddPage() {
             날짜 <Req>*</Req>
           </Label>
           <DateRow>
-            <Input type="date" defaultValue="2026-05-13" />
+            <Input
+              type="date"
+              value={startDate}
+              onChange={(e) => setStartDate(e.target.value)}
+            />
             <span style={{ color: COLOR.gray400 }}>~</span>
-            <Input type="date" defaultValue="2026-05-15" />
+            <Input
+              type="date"
+              value={endDate}
+              onChange={(e) => setEndDate(e.target.value)}
+            />
           </DateRow>
         </FormRow>
 
@@ -228,16 +252,29 @@ function BlackoutAddPage() {
               시간 <Req>*</Req>
             </Label>
             <DateRow>
-              <Input type="time" defaultValue="10:00" />
+              <Input
+                type="time"
+                value={startTime}
+                onChange={(e) => setStartTime(e.target.value)}
+              />
               <span style={{ color: COLOR.gray400 }}>~</span>
-              <Input type="time" defaultValue="14:00" />
+              <Input
+                type="time"
+                value={endTime}
+                onChange={(e) => setEndTime(e.target.value)}
+              />
             </DateRow>
           </FormRow>
         )}
 
         <FormRow>
           <Label>메모 (선택)</Label>
-          <Textarea rows={3} placeholder="추가 안내 사항을 입력해주세요" />
+          <Textarea
+            rows={3}
+            placeholder="추가 안내 사항을 입력해주세요"
+            value={memo}
+            onChange={(e) => setMemo(e.target.value)}
+          />
         </FormRow>
       </FormBox>
 

@@ -1,5 +1,6 @@
-import { useState } from 'react';
-import styled, { keyframes, css } from 'styled-components';
+import { useState, useEffect } from 'react';
+import dayjs from 'dayjs';
+import styled, { css, keyframes } from 'styled-components';
 import PageLayout from '../../../../app/layouts/page/PageLayout';
 import { useNavigate } from 'react-router-dom';
 import {
@@ -10,94 +11,23 @@ import {
   StatValue,
   COLOR,
 } from '../../components/user/RsvnStyled';
+import { findMyRsvns } from '../../api/rsvnApi';
+
 
 const fadeInUp = keyframes`
   from { opacity: 0; transform: translateY(10px); }
-  to   { opacity: 1; transform: translateY(0); }
+  to   { opacity: 1; transform: translateX(0); }
 `;
-
-// 달력 슬라이드 애니메이션
 const slideLeft = keyframes`
   from { opacity: 0; transform: translateX(30px); }
   to   { opacity: 1; transform: translateX(0); }
 `;
-
 const slideRight = keyframes`
   from { opacity: 0; transform: translateX(-30px); }
   to   { opacity: 1; transform: translateX(0); }
 `;
 
-const Page = styled.div`
-  max-width: 960px;
-  margin: 0 auto;
-  padding: 32px 24px;
-  animation: ${fadeInUp} 480ms ease-out both;
-`;
-
-const DAYS = ['일', '월', '화', '수', '목', '금', '토'];
-const EVENTS = {
-  8: [{ title: '청평 숲속 파인뷰', type: 'confirmed', id: 1 }],
-  9: [{ title: '청평 숲속 파인뷰', type: 'confirmed', id: 1 }],
-  10: [{ title: '청평 숲속 파인뷰', type: 'confirmed', id: 1 }],
-  15: [{ title: '성수 브릭라운지', type: 'pending', id: 2 }],
-  22: [{ title: '강릉 바다향', type: 'confirmed', id: 3 }],
-  28: [{ title: '제주 돌담집', type: 'confirmed', id: 4 }],
-  29: [{ title: '제주 돌담집', type: 'confirmed', id: 4 }],
-};
-const EVENT_COLOR = { confirmed: '#2D6A4F', pending: '#E65100' };
-
-// 2026.05 기준 — 백엔드 연결 시 dayjs로 교체
-const MONTHS = [
-  { label: '2026년 4월', firstDay: 3, totalDays: 30 },
-  { label: '2026년 5월', firstDay: 5, totalDays: 31 },
-  { label: '2026년 6월', firstDay: 1, totalDays: 30 },
-];
-
-const WEEK_DAYS = [
-  { label: '일 4', sun: true, events: [] },
-  { label: '월 5', sun: false, events: [] },
-  { label: '화 6', sun: false, events: [] },
-  { label: '수 7', sun: false, events: [] },
-  {
-    label: '목 8',
-    sun: false,
-    events: [{ id: 1, title: '청평 파인뷰', type: 'confirmed' }],
-  },
-  {
-    label: '금 9',
-    sun: false,
-    events: [{ id: 1, title: '청평 파인뷰', type: 'confirmed' }],
-  },
-  {
-    label: '토 10',
-    sat: true,
-    events: [{ id: 1, title: '청평 파인뷰', type: 'confirmed' }],
-  },
-];
-
-const WEEKS = [
-  { range: '5월 4일 ~ 10일', days: WEEK_DAYS },
-  {
-    range: '5월 11일 ~ 17일',
-    days: WEEK_DAYS.map((d) => ({ ...d, events: [] })),
-  },
-  {
-    range: '5월 18일 ~ 24일',
-    days: WEEK_DAYS.map((d) => ({ ...d, events: [] })),
-  },
-];
-
-const HeaderRow = styled.div`
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-  margin-bottom: 24px;
-`;
-
-const ViewToggle = styled.div`
-  display: flex;
-  gap: 4px;
-`;
+const ViewToggle = styled.div`display: flex; gap: 4px;`;
 
 const ToggleBtn = styled.button`
   padding: 6px 14px;
@@ -118,17 +48,13 @@ const CalHeader = styled.div`
 `;
 
 const CalNav = styled.button`
-  width: 30px;
-  height: 30px;
+  width: 30px; height: 30px;
   border-radius: 50%;
   border: 1px solid ${COLOR.gray200};
   background: #fff;
   cursor: pointer;
   font-size: 16px;
-  transition: background 0.15s;
-  &:hover {
-    background: ${COLOR.gray100};
-  }
+  &:hover { background: ${COLOR.gray100}; }
 `;
 
 const DayHeader = styled.div`
@@ -141,8 +67,7 @@ const DayLabel = styled.div`
   text-align: center;
   font-size: 12px;
   font-weight: 600;
-  color: ${({ $sun }) =>
-    $sun === true ? COLOR.red : $sun === false ? COLOR.green : COLOR.gray400};
+  color: ${({ $col }) => $col === 0 ? COLOR.red : $col === 6 ? COLOR.green : COLOR.gray400};
   padding: 6px 0;
 `;
 
@@ -151,15 +76,9 @@ const CalGrid = styled.div`
   grid-template-columns: repeat(7, 1fr);
   gap: 2px;
   animation: ${({ $dir }) =>
-    $dir === 'left'
-      ? css`
-          ${slideLeft} 280ms ease-out
-        `
-      : $dir === 'right'
-        ? css`
-            ${slideRight} 280ms ease-out
-          `
-        : 'none'};
+    $dir === 'left' ? css`${slideLeft} 280ms ease-out`
+    : $dir === 'right' ? css`${slideRight} 280ms ease-out`
+    : 'none'};
 `;
 
 const CalCell = styled.div`
@@ -167,17 +86,13 @@ const CalCell = styled.div`
   padding: 6px;
   border-radius: 6px;
   cursor: ${({ $hasEvent }) => ($hasEvent ? 'pointer' : 'default')};
-  &:hover {
-    background: ${({ $hasEvent }) =>
-      $hasEvent ? COLOR.greenLight : COLOR.cream};
-  }
+  &:hover { background: ${({ $hasEvent }) => $hasEvent ? COLOR.greenLight : COLOR.cream}; }
 `;
 
 const CalDate = styled.div`
   font-size: 13px;
   font-weight: ${({ $today }) => ($today ? 700 : 400)};
-  color: ${({ $sun, $today }) =>
-    $today ? COLOR.green : $sun ? COLOR.red : '#333'};
+  color: ${({ $col, $today }) => $today ? COLOR.green : $col === 0 ? COLOR.red : '#333'};
   margin-bottom: 3px;
 `;
 
@@ -187,28 +102,21 @@ const CalEvent = styled.div`
   padding: 2px 5px;
   border-radius: 3px;
   margin-bottom: 2px;
-  background: ${({ $type }) => EVENT_COLOR[$type] + '22'};
-  color: ${({ $type }) => EVENT_COLOR[$type]};
+  background: ${({ $status }) => STATUS_COLOR[$status] + '22'};
+  color: ${({ $status }) => STATUS_COLOR[$status]};
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 `;
 
-// 주 뷰
 const WeekGrid = styled.div`
   display: grid;
   grid-template-columns: repeat(7, 1fr);
   gap: 4px;
   animation: ${({ $dir }) =>
-    $dir === 'left'
-      ? css`
-          ${slideLeft} 280ms ease-out
-        `
-      : $dir === 'right'
-        ? css`
-            ${slideRight} 280ms ease-out
-          `
-        : 'none'};
+    $dir === 'left' ? css`${slideLeft} 280ms ease-out`
+    : $dir === 'right' ? css`${slideRight} 280ms ease-out`
+    : 'none'};
 `;
 
 const WeekCol = styled.div`
@@ -224,13 +132,11 @@ const WeekHead = styled.div`
   font-size: 12px;
   font-weight: 600;
   background: ${COLOR.gray100};
-  color: ${({ $sun }) => ($sun ? COLOR.red : COLOR.black)};
+  color: ${({ $col }) => $col === 0 ? COLOR.red : COLOR.black};
   border-bottom: 1px solid ${COLOR.gray200};
 `;
 
-const WeekBody = styled.div`
-  padding: 6px;
-`;
+const WeekBody = styled.div`padding: 6px;`;
 
 const WeekEvent = styled.div`
   font-size: 10px;
@@ -238,12 +144,10 @@ const WeekEvent = styled.div`
   padding: 3px 5px;
   border-radius: 4px;
   margin-bottom: 3px;
-  background: ${({ $type }) => EVENT_COLOR[$type] + '22'};
-  color: ${({ $type }) => EVENT_COLOR[$type]};
+  background: ${({ $status }) => STATUS_COLOR[$status] + '22'};
+  color: ${({ $status }) => STATUS_COLOR[$status]};
   cursor: pointer;
-  &:hover {
-    opacity: 0.8;
-  }
+  &:hover { opacity: 0.8; }
 `;
 
 const Legend = styled.div`
@@ -262,46 +166,65 @@ const LegendItem = styled.div`
 `;
 
 const LegendDot = styled.div`
-  width: 10px;
-  height: 10px;
+  width: 10px; height: 10px;
   border-radius: 2px;
   background: ${({ $color }) => $color};
 `;
 
+const STATUS_COLOR = { S: '#2D6A4F', E: '#888', C: '#C0392B', R: '#C0392B' };
+const DAYS = ['일', '월', '화', '수', '목', '금', '토'];
+
 function RsvnCalendarPage() {
   const navigate = useNavigate();
   const [view, setView] = useState('month');
-  const [monthIdx, setMonthIdx] = useState(1); // 2026년 5월 기본
-  const [weekIdx, setWeekIdx] = useState(0);
+  const [current, setCurrent] = useState(dayjs().startOf('month'));
+  const [weekStart, setWeekStart] = useState(dayjs().startOf('week'));
   const [slideDir, setSlideDir] = useState('none');
+  const [rsvns, setRsvns] = useState([]);
 
-  const month = MONTHS[monthIdx];
-  const cells = [
-    ...Array(month.firstDay).fill(null),
-    ...Array.from({ length: month.totalDays }, (_, i) => i + 1),
-  ];
+  useEffect(() => {
+    const fetch = async () => {
+      try {
+        const data = await findMyRsvns();
+        setRsvns(data);
+      } catch {
+        setRsvns([]);
+      }
+    };
+    fetch();
+  }, []);
+
+  // 해당 날짜에 걸쳐있는 예약 목록 반환
+  const getEventsForDate = (date) =>
+    rsvns.filter((r) => {
+      const ci = dayjs(r.checkIn).startOf('day');
+      const co = dayjs(r.checkOut).startOf('day');
+      return !date.isBefore(ci) && !date.isAfter(co);
+    });
 
   const goMonth = (dir) => {
-    const next = monthIdx + dir;
-    if (next < 0 || next >= MONTHS.length) return;
     setSlideDir(dir > 0 ? 'left' : 'right');
-    setTimeout(() => {
-      setMonthIdx(next);
-      setSlideDir('none');
-    }, 50);
+    setTimeout(() => { setCurrent((c) => c.add(dir, 'month')); setSlideDir('none'); }, 50);
   };
 
   const goWeek = (dir) => {
-    const next = weekIdx + dir;
-    if (next < 0 || next >= WEEKS.length) return;
     setSlideDir(dir > 0 ? 'left' : 'right');
-    setTimeout(() => {
-      setWeekIdx(next);
-      setSlideDir('none');
-    }, 50);
+    setTimeout(() => { setWeekStart((w) => w.add(dir * 7, 'day')); setSlideDir('none'); }, 50);
   };
 
-  const week = WEEKS[weekIdx];
+  // 월 달력 셀 계산
+  const firstDow = current.day(); // 첫째날 요일(0=일)
+  const daysInMonth = current.daysInMonth();
+  const cells = [...Array(firstDow).fill(null), ...Array.from({ length: daysInMonth }, (_, i) => i + 1)];
+
+  // 주 달력 7일 계산
+  const weekDays = Array.from({ length: 7 }, (_, i) => weekStart.add(i, 'day'));
+
+  // 이번 달 예약 통계
+  const thisMonthRsvns = rsvns.filter((r) => dayjs(r.checkIn).isSame(current, 'month'));
+  const nearestRsvn = rsvns
+    .filter((r) => r.status === 'S' && dayjs(r.checkIn).isAfter(dayjs()))
+    .sort((a, b) => dayjs(a.checkIn).valueOf() - dayjs(b.checkIn).valueOf())[0];
 
   return (
     <PageLayout
@@ -309,15 +232,8 @@ function RsvnCalendarPage() {
       description="내 예약 일정을 달력으로 확인하세요"
       actions={
         <ViewToggle>
-          <ToggleBtn
-            $active={view === 'month'}
-            onClick={() => setView('month')}
-          >
-            월
-          </ToggleBtn>
-          <ToggleBtn $active={view === 'week'} onClick={() => setView('week')}>
-            주
-          </ToggleBtn>
+          <ToggleBtn $active={view === 'month'} onClick={() => setView('month')}>월</ToggleBtn>
+          <ToggleBtn $active={view === 'week'} onClick={() => setView('week')}>주</ToggleBtn>
         </ViewToggle>
       }
       maxWidth={1200}
@@ -325,68 +241,57 @@ function RsvnCalendarPage() {
       <StatCards>
         <StatCard>
           <StatLabel>이번 달 예약</StatLabel>
-          <StatValue $color={COLOR.terra}>4</StatValue>
+          <StatValue $color={COLOR.terra}>{thisMonthRsvns.length}</StatValue>
         </StatCard>
         <StatCard>
           <StatLabel>확정</StatLabel>
-          <StatValue>3</StatValue>
+          <StatValue>{thisMonthRsvns.filter((r) => r.status === 'S').length}</StatValue>
         </StatCard>
         <StatCard>
-          <StatLabel>대기</StatLabel>
-          <StatValue>1</StatValue>
+          <StatLabel>이용완료</StatLabel>
+          <StatValue>{thisMonthRsvns.filter((r) => r.status === 'E').length}</StatValue>
         </StatCard>
         <StatCard>
           <StatLabel>가장 가까운 일정</StatLabel>
           <StatValue $color={COLOR.green} style={{ fontSize: 16 }}>
-            ★ 5/8
+            {nearestRsvn ? `★ ${dayjs(nearestRsvn.checkIn).format('M/D')}` : '-'}
           </StatValue>
         </StatCard>
       </StatCards>
+
       <SectionBox>
         <CalHeader>
-          <CalNav onClick={() => (view === 'month' ? goMonth(-1) : goWeek(-1))}>
-            ‹
-          </CalNav>
+          <CalNav onClick={() => (view === 'month' ? goMonth(-1) : goWeek(-1))}>‹</CalNav>
           <div style={{ fontSize: 18, fontWeight: 700 }}>
-            {view === 'month' ? month.label : `2026년 ${week.range}`}
+            {view === 'month'
+              ? current.format('YYYY년 M월')
+              : `${weekStart.format('M월 D일')} ~ ${weekStart.add(6, 'day').format('M월 D일')}`}
           </div>
-          <CalNav onClick={() => (view === 'month' ? goMonth(1) : goWeek(1))}>
-            ›
-          </CalNav>
+          <CalNav onClick={() => (view === 'month' ? goMonth(1) : goWeek(1))}>›</CalNav>
         </CalHeader>
 
         {view === 'month' ? (
           <>
             <DayHeader>
-              {DAYS.map((d, i) => (
-                <DayLabel
-                  key={d}
-                  $sun={i === 0 ? true : i === 6 ? false : undefined}
-                >
-                  {d}
-                </DayLabel>
-              ))}
+              {DAYS.map((d, i) => <DayLabel key={d} $col={i}>{d}</DayLabel>)}
             </DayHeader>
             <CalGrid $dir={slideDir}>
               {cells.map((date, idx) => {
-                const evs = date ? EVENTS[date] || [] : [];
+                const cellDate = date ? current.date(date) : null;
+                const evs = cellDate ? getEventsForDate(cellDate) : [];
+                const isToday = cellDate?.isSame(dayjs(), 'day');
                 return (
                   <CalCell
                     key={idx}
                     $hasEvent={evs.length > 0}
-                    onClick={() =>
-                      evs.length > 0 &&
-                      navigate(`/user/reservation/${evs[0].id}`)
-                    }
+                    onClick={() => evs.length > 0 && navigate(`/user/reservation/${evs[0].no}`)}
                   >
                     {date && (
                       <>
-                        <CalDate $today={date === 8} $sun={idx % 7 === 0}>
-                          {date}
-                        </CalDate>
-                        {evs.map((ev, i) => (
-                          <CalEvent key={i} $type={ev.type}>
-                            {ev.title}
+                        <CalDate $col={idx % 7} $today={isToday}>{date}</CalDate>
+                        {evs.map((ev) => (
+                          <CalEvent key={ev.no} $status={ev.status}>
+                            {ev.spaceName ?? `예약${ev.no}`}
                           </CalEvent>
                         ))}
                       </>
@@ -397,39 +302,37 @@ function RsvnCalendarPage() {
             </CalGrid>
           </>
         ) : (
-          <WeekGrid $dir={slideDir}>
-            {week.days.map((d, i) => (
-              <WeekCol key={i}>
-                <WeekHead $sun={d.sun}>{d.label}</WeekHead>
-                <WeekBody>
-                  {d.events.map((ev, j) => (
-                    <WeekEvent
-                      key={j}
-                      $type={ev.type}
-                      onClick={() => navigate(`/user/reservation/${ev.id}`)}
-                    >
-                      {ev.title}
-                    </WeekEvent>
-                  ))}
-                </WeekBody>
-              </WeekCol>
-            ))}
-          </WeekGrid>
+          <>
+            <WeekGrid $dir={slideDir}>
+              {weekDays.map((day, i) => {
+                const evs = getEventsForDate(day);
+                return (
+                  <WeekCol key={i}>
+                    <WeekHead $col={i}>
+                      {DAYS[day.day()]} {day.date()}
+                    </WeekHead>
+                    <WeekBody>
+                      {evs.map((ev) => (
+                        <WeekEvent
+                          key={ev.no}
+                          $status={ev.status}
+                          onClick={() => navigate(`/user/reservation/${ev.no}`)}
+                        >
+                          {ev.spaceName ?? `예약${ev.no}`}
+                        </WeekEvent>
+                      ))}
+                    </WeekBody>
+                  </WeekCol>
+                );
+              })}
+            </WeekGrid>
+          </>
         )}
 
         <Legend>
-          <LegendItem>
-            <LegendDot $color={COLOR.green} />
-            확정
-          </LegendItem>
-          <LegendItem>
-            <LegendDot $color={COLOR.orange} />
-            대기
-          </LegendItem>
-          <LegendItem>
-            <LegendDot $color={COLOR.red} />
-            취소됨
-          </LegendItem>
+          <LegendItem><LegendDot $color={COLOR.green} />확정</LegendItem>
+          <LegendItem><LegendDot $color={COLOR.gray400} />이용완료</LegendItem>
+          <LegendItem><LegendDot $color={COLOR.red} />취소/거절</LegendItem>
         </Legend>
       </SectionBox>
     </PageLayout>

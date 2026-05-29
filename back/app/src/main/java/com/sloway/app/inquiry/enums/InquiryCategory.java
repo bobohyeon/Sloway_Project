@@ -3,19 +3,19 @@ package com.sloway.app.inquiry.enums;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonValue;
 
+import java.util.Arrays;
+
 public enum InquiryCategory {
 
-    RESERVATION("예약", "RESERVATION"),
-    PAYMENT("결제", "PAYMENT"),
-    PLACE("공간", "PLACE"),
-    OTHER("기타", "OTHER");
+    RESERVATION("예약"),
+    PAYMENT("결제"),
+    PLACE("공간"),
+    OTHER("기타");
 
     private final String label;
-    private final String value;
 
-    InquiryCategory(String label, String value) {
+    InquiryCategory(String label) {
         this.label = label;
-        this.value = value;
     }
 
     public String getLabel() {
@@ -24,14 +24,16 @@ public enum InquiryCategory {
 
     @JsonValue
     public String getValue() {
-        return value;
+        return name(); // value 필드 없이 name() 직접 사용
     }
 
     @JsonCreator
     public static InquiryCategory from(String value) {
-        for (InquiryCategory c : values()) {
-            if (c.value.equals(value) || c.name().equals(value)) return c;
-        }
-        throw new IllegalArgumentException("알 수 없는 카테고리: " + value);
+        return Arrays.stream(values())
+                .filter(c -> c.name().equals(value))
+                .findFirst()
+                .orElseThrow(() -> new IllegalArgumentException(
+                        "알 수 없는 카테고리: " + value
+                ));
     }
 }

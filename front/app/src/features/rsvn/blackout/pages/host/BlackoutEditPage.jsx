@@ -1,6 +1,6 @@
 import { useState } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
-import styled, { keyframes } from 'styled-components';
+import { useNavigate, useParams, useLocation } from 'react-router-dom';
+import styled from 'styled-components';
 import PageLayout from '../../../../../app/layouts/page/PageLayout';
 import {
   BackLink,
@@ -8,11 +8,8 @@ import {
   BtnOutline,
   COLOR,
 } from '../../../components/user/RsvnStyled';
+import { editBlackout } from '../../../api/blackoutApi';
 
-const fadeInUp = keyframes`
-  from { opacity: 0; transform: translateY(10px); }
-  to   { opacity: 1; transform: translateY(0); }
-`;
 const FormBox = styled.div`
   background: #fff;
   border: 1px solid ${COLOR.gray200};
@@ -47,20 +44,6 @@ const Input = styled.input`
   font-family: inherit;
   outline: none;
   box-sizing: border-box;
-  &:focus {
-    border-color: ${COLOR.sage};
-  }
-`;
-
-const Select = styled.select`
-  width: 100%;
-  padding: 10px 14px;
-  border: 1px solid ${COLOR.gray200};
-  border-radius: 8px;
-  font-size: 14px;
-  font-family: inherit;
-  outline: none;
-  background: #fff;
   &:focus {
     border-color: ${COLOR.sage};
   }
@@ -143,74 +126,79 @@ const BottomBtns = styled.div`
   margin-top: 24px;
 `;
 
-const TYPES = ['🔧 정비·보수', '🧹 청소', '🏠 개인 이용', '📝 기타'];
+const TYPES = [
+  { label: '🔧 정비·보수', value: 'M' },
+  { label: '🧹 청소', value: 'C' },
+  { label: '🏠 개인 이용', value: 'P' },
+  { label: '📝 기타', value: 'E' },
+];
 
-// 더미 — 백엔드 연결 시 id로 fetch해서 교체
-const DUMMY_DATA = {
-  1: {
-    space: '청평 숲속 파인뷰 스테이',
-    typeIdx: 0,
-    title: '내부 정비',
-    startDate: '2026-05-13',
-    endDate: '2026-05-15',
-    timeOn: false,
-    startTime: '',
-    endTime: '',
-    memo: '',
-  },
-  2: {
-    space: '성수 브릭라운지',
-    typeIdx: 1,
-    title: '정기 청소',
-    startDate: '2026-05-25',
-    endDate: '2026-05-25',
-    timeOn: true,
-    startTime: '10:00',
-    endTime: '14:00',
-    memo: '',
-  },
-  3: {
-    space: '제주 돌담집 리트릿',
-    typeIdx: 0,
-    title: '장기 점검',
-    startDate: '2026-06-01',
-    endDate: '2026-06-10',
-    timeOn: false,
-    startTime: '',
-    endTime: '',
-    memo: '에어컨 교체 예정',
-  },
-  4: {
-    space: '청평 숲속 파인뷰 스테이',
-    typeIdx: 2,
-    title: '호스트 개인 이용',
-    startDate: '2026-05-30',
-    endDate: '2026-06-02',
-    timeOn: false,
-    startTime: '',
-    endTime: '',
-    memo: '',
-  },
-};
+const typeIndexOf = (value) => TYPES.findIndex((t) => t.value === value);
 
 function BlackoutEditPage() {
   const navigate = useNavigate();
   const { id } = useParams();
-  const init = DUMMY_DATA[id] || DUMMY_DATA[1];
+  const location = useLocation();
+  const blackout = location.state?.blackout;
 
-  const [space, setSpace] = useState(init.space);
-  const [selectedType, setSelectedType] = useState(init.typeIdx);
-  const [title, setTitle] = useState(init.title);
-  const [startDate, setStartDate] = useState(init.startDate);
-  const [endDate, setEndDate] = useState(init.endDate);
-  const [timeOn, setTimeOn] = useState(init.timeOn);
-  const [startTime, setStartTime] = useState(init.startTime);
-  const [endTime, setEndTime] = useState(init.endTime);
-  const [memo, setMemo] = useState(init.memo);
+  // navigate state에서 초기값 세팅
+  const [selectedType, setSelectedType] = useState(
+    typeIndexOf(blackout?.reasonType) ?? 0
+  );
+  const [title, setTitle] = useState(blackout?.title ?? '');
+  const [startDate, setStartDate] = useState(
+    blackout?.startDate?.slice(0, 10) ?? ''
+  );
+  const [endDate, setEndDate] = useState(blackout?.endDate?.slice(0, 10) ?? '');
+  const [timeOn, setTimeOn] = useState(!!blackout?.startTime);
+  const [startTime, setStartTime] = useState(
+    blackout?.startTime?.slice(11, 16) ?? ''
+  );
+  const [endTime, setEndTime] = useState(
+    blackout?.endTime?.slice(11, 16) ?? ''
+  );
+  const [memo, setMemo] = useState(blackout?.memo ?? '');
 
-  const handleSave = () => {
-    navigate('/host/reservation/block');
+  const handleSave = async () => {
+    if (!title.trim()) {
+      alert('제목을 입력해주세요');
+      return;
+    }
+    if (!startDate || !endDate) {
+      alert('날짜를 입력해주세요');
+      return;
+    }
+
+    try {
+      await editBlackout(id, {
+        title,
+        memo,
+        reasonType: TYPES[selectedType].value,
+        startDate: `${startDate}T00:00:00`,
+        endDate: `${endDate}T00:00:00`,
+        startTime: timeOn && startTime ? `${startDate}T${startTime}:00` : null,
+        endTime: timeOn && endTime ? `${endDate}T${endTime}:00` : null,
+      });
+      navigate('/host/reservation/block');
+    } catch {
+      alert('수정에 실패했어요');
+    }
   };
+
+  if (!blackout) {
+    return (
+      <PageLayout
+        title="이용 불가 수정"
+        backTo="/host/reservation/block"
+        backLabel="이용 불가 목록"
+        maxWidth={800}
+      >
+        <div style={{ textAlign: 'center', padding: 40, color: COLOR.gray400 }}>
+          데이터를 불러오지 못했어요
+        </div>
+      </PageLayout>
+    );
+  }
 
   return (
     <PageLayout
@@ -225,17 +213,6 @@ function BlackoutEditPage() {
       <FormBox>
         <FormRow>
           <Label>
-            공간 선택 <Req>*</Req>
-          </Label>
-          <Select value={space} onChange={(e) => setSpace(e.target.value)}>
-            <option>청평 숲속 파인뷰 스테이</option>
-            <option>성수 브릭라운지</option>
-            <option>제주 돌담집 리트릿</option>
-          </Select>
-        </FormRow>
-
-        <FormRow>
-          <Label>
             사유 유형 <Req>*</Req>
           </Label>
           <TypeGrid>
@@ -245,7 +222,7 @@ function BlackoutEditPage() {
                 $active={selectedType === i}
                 onClick={() => setSelectedType(i)}
               >
-                {t}
+                {t.label}
               </TypeBtn>
             ))}
           </TypeGrid>

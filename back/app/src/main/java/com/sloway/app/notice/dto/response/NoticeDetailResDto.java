@@ -17,7 +17,7 @@ public class NoticeDetailResDto {
     private final NoticeStatus status;
     private final Long viewCount;
     private final LocalDateTime createdAt;
-    private final LocalDateTime updatedAt;
+    private final LocalDateTime modifiedAt;
 
     private NoticeDetailResDto(NoticeEntity e) {
         this.id = e.getId();
@@ -27,7 +27,7 @@ public class NoticeDetailResDto {
         this.status = e.getStatus();
         this.viewCount = e.getViewCount();
         this.createdAt = e.getCreatedAt();
-        this.updatedAt = e.getModifiedAt();
+        this.modifiedAt = e.getModifiedAt();
     }
 
     public static NoticeDetailResDto from(NoticeEntity entity) {

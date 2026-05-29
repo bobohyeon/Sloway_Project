@@ -1,27 +1,9 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import styled, { keyframes } from 'styled-components';
+import styled from 'styled-components';
 import PageLayout from '../../../../app/layouts/page/PageLayout';
-import {
-  BtnPrimary,
-  COLOR,
-} from '../../components/user/RsvnStyled';
-
-const fadeInUp = keyframes`
-  from { opacity: 0; transform: translateY(10px); }
-  to   { opacity: 1; transform: translateY(0); }
-`;
-
-const Page = styled.div`
-  max-width: 960px;
-  margin: 0 auto;
-  padding: 32px 24px;
-  animation: ${fadeInUp} 480ms ease-out both;
-`;
-
-const Header = styled.div`
-  margin-bottom: 20px;
-`;
+import { BtnPrimary, COLOR } from '../../components/user/RsvnStyled';
+import { findBlackouts, deleteBlackout } from '../../api/blackoutApi';
 
 const InfoBanner = styled.div`
   background: #fffbf0;
@@ -42,34 +24,29 @@ const FilterRow = styled.div`
   justify-content: space-between;
   align-items: center;
   margin-bottom: 14px;
-  flex-wrap: wrap;
   gap: 10px;
 `;
 
-const FilterLeft = styled.div`
-  display: flex;
-  gap: 6px;
-  flex-wrap: wrap;
-`;
-
-const FilterTab = styled.button`
-  padding: 6px 14px;
-  border-radius: 20px;
-  font-size: 12px;
-  font-weight: 600;
-  border: 1px solid ${({ $active }) => ($active ? COLOR.black : COLOR.gray200)};
-  background: ${({ $active }) => ($active ? COLOR.black : '#fff')};
-  color: ${({ $active }) => ($active ? '#fff' : '#555')};
-  cursor: pointer;
-`;
-
-const Select = styled.select`
+const PlaceInput = styled.input`
   padding: 7px 12px;
   border: 1px solid ${COLOR.gray200};
   border-radius: 8px;
   font-size: 13px;
-  background: #fff;
   outline: none;
+  width: 140px;
+  &:focus { border-color: ${COLOR.sage}; }
+`;
+
+const FetchBtn = styled.button`
+  padding: 7px 14px;
+  border-radius: 8px;
+  background: ${COLOR.green};
+  color: #fff;
+  border: none;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  &:hover { background: #1a3a2a; }
 `;
 
 const BlackoutCard = styled.div`
@@ -84,120 +61,72 @@ const BlackoutCard = styled.div`
 `;
 
 const CardIcon = styled.div`
-  width: 48px;
-  height: 48px;
+  width: 48px; height: 48px;
   background: ${COLOR.gray100};
   border-radius: 10px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 22px;
-  flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 22px; flex-shrink: 0;
 `;
 
 const ReasonTag = styled.span`
-  font-size: 11px;
-  font-weight: 600;
-  padding: 2px 7px;
-  border-radius: 4px;
-  background: #fff3e0;
-  color: ${COLOR.orange};
+  font-size: 11px; font-weight: 600;
+  padding: 2px 7px; border-radius: 4px;
+  background: #fff3e0; color: ${COLOR.orange};
 `;
 
 const EditBtn = styled.button`
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  font-size: 12px;
-  padding: 5px 12px;
-  border-radius: 6px;
-  border: 1px solid ${COLOR.gray200};
-  background: #fff;
-  cursor: pointer;
-  &:hover {
-    border-color: ${COLOR.sage};
-  }
+  font-size: 12px; padding: 5px 12px; border-radius: 6px;
+  border: 1px solid ${COLOR.gray200}; background: #fff; cursor: pointer;
+  &:hover { border-color: ${COLOR.sage}; }
 `;
 
 const DelBtn = styled.button`
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  font-size: 12px;
-  padding: 5px 12px;
-  border-radius: 6px;
-  border: 1px solid #fcc;
-  color: ${COLOR.red};
-  background: #fff;
-  cursor: pointer;
-  &:hover {
-    background: #fff0f0;
-  }
+  font-size: 12px; padding: 5px 12px; border-radius: 6px;
+  border: 1px solid #fcc; color: ${COLOR.red}; background: #fff; cursor: pointer;
+  &:hover { background: #fff0f0; }
 `;
 
 const EmptyBox = styled.div`
-  text-align: center;
-  padding: 60px 0;
-  color: ${COLOR.gray400};
-  font-size: 14px;
+  text-align: center; padding: 60px 0; color: ${COLOR.gray400}; font-size: 14px;
 `;
 
-const DUMMY = [
-  {
-    id: 1,
-    reason: '정비·보수',
-    space: '청평 숲속 파인뷰',
-    title: '내부 정비',
-    date: '2026.05.13 ~ 2026.05.15',
-    time: null,
-    icon: '🔧',
-  },
-  {
-    id: 2,
-    reason: '청소',
-    space: '성수 브릭라운지',
-    title: '정기 청소',
-    date: '2026.05.25',
-    time: '10:00 ~ 14:00',
-    icon: '🧹',
-  },
-  {
-    id: 3,
-    reason: '정비·보수',
-    space: '제주 돌담집 리트릿',
-    title: '장기 점검 · 에어컨 교체',
-    date: '2026.06.01 ~ 2026.06.10',
-    time: null,
-    icon: '🔧',
-  },
-  {
-    id: 4,
-    reason: '개인 이용',
-    space: '청평 숲속 파인뷰',
-    title: '호스트 개인 이용',
-    date: '2026.05.30 ~ 2026.06.02',
-    time: null,
-    icon: '🏠',
-  },
-];
+const REASON_LABEL = { M: '정비/보수', C: '청소', P: '개인이용', E: '기타' };
+const REASON_ICON = { M: '🔧', C: '🧹', P: '🏠', E: '📋' };
 
-const FILTERS = ['공간 전체', '다가오는 일정'];
+const formatDt = (dt) => dt?.slice(0, 10).replaceAll('-', '.') ?? '';
 
 function BlackoutPage() {
   const navigate = useNavigate();
-  const [items, setItems] = useState(DUMMY);
-  const [activeFilter, setActiveFilter] = useState(0);
-  const [spaceFilter, setSpaceFilter] = useState('전체 공간');
+  const [placeNoInput, setPlaceNoInput] = useState('');
+  const [placeNo, setPlaceNo] = useState(null);
+  const [items, setItems] = useState([]);
 
-  const filtered = items.filter(
-    (item) => spaceFilter === '전체 공간' || item.space === spaceFilter
-  );
+  const fetchBlackouts = async (no) => {
+    try {
+      const data = await findBlackouts(no);
+      setItems(data);
+    } catch {
+      alert('이용 불가 목록을 불러오지 못했어요');
+      setItems([]);
+    }
+  };
 
-  const handleDelete = (id) => {
-    const ok = window.confirm(
-      '이용 불가 설정을 삭제하시겠어요?\n삭제하면 해당 기간에 예약이 다시 가능해집니다.'
-    );
-    if (ok) setItems((prev) => prev.filter((i) => i.id !== id));
+  const handleFetch = () => {
+    const no = Number(placeNoInput);
+    if (!no) { alert('공간 번호를 입력해주세요'); return; }
+    setPlaceNo(no);
+    fetchBlackouts(no);
+  };
+
+  const handleDelete = async (id) => {
+    const ok = window.confirm('이용 불가 설정을 삭제하시겠어요?');
+    if (!ok) return;
+    try {
+      await deleteBlackout(id);
+      setItems((prev) => prev.filter((i) => i.no !== id));
+    } catch {
+      alert('삭제에 실패했어요');
+    }
   };
 
   return (
@@ -205,81 +134,67 @@ function BlackoutPage() {
       title="이용 불가 설정"
       description="예약을 받지 않을 날짜·시간을 관리하세요"
       actions={
-        <BtnPrimary onClick={() => navigate('/host/reservation/block/add')}>
+        <BtnPrimary
+          onClick={() => navigate('/host/reservation/block/add', { state: { placeNo } })}
+          disabled={!placeNo}
+        >
           + 이용 불가 추가
         </BtnPrimary>
       }
       maxWidth={1200}
     >
-
       <InfoBanner>
         <span style={{ fontSize: 18, flexShrink: 0 }}>💡</span>
         <div>
-          <div style={{ fontWeight: 700, marginBottom: 3 }}>
-            이용 불가 설정이란?
-          </div>
-          정비·청소·개인 사정 등으로 예약을 받을 수 없는 날짜·시간을 미리
-          설정해두시면 해당 기간에는 자동으로 예약이 차단됩니다. 기존 예약은
-          영향받지 않아요.
+          <div style={{ fontWeight: 700, marginBottom: 3 }}>이용 불가 설정이란?</div>
+          정비·청소·개인 사정 등으로 예약을 받을 수 없는 날짜를 설정하면 해당 기간에 자동으로 예약이 차단됩니다.
         </div>
       </InfoBanner>
 
       <FilterRow>
-        <FilterLeft>
-          {FILTERS.map((t, i) => (
-            <FilterTab
-              key={i}
-              $active={activeFilter === i}
-              onClick={() => setActiveFilter(i)}
-            >
-              {t}
-            </FilterTab>
-          ))}
-        </FilterLeft>
-        <Select
-          value={spaceFilter}
-          onChange={(e) => setSpaceFilter(e.target.value)}
-        >
-          <option>전체 공간</option>
-          <option>청평 숲속 파인뷰</option>
-          <option>성수 브릭라운지</option>
-          <option>제주 돌담집 리트릿</option>
-        </Select>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+          <span style={{ fontSize: 13, color: COLOR.gray600 }}>공간 번호</span>
+          <PlaceInput
+            type="number"
+            placeholder="placeNo 입력"
+            value={placeNoInput}
+            onChange={(e) => setPlaceNoInput(e.target.value)}
+            onKeyDown={(e) => e.key === 'Enter' && handleFetch()}
+          />
+          <FetchBtn onClick={handleFetch}>조회</FetchBtn>
+        </div>
       </FilterRow>
 
-      {filtered.length === 0 ? (
+      {!placeNo ? (
+        <EmptyBox>
+          <div style={{ fontSize: 32, marginBottom: 12 }}>🔍</div>
+          <div>공간 번호를 입력하고 조회하세요</div>
+        </EmptyBox>
+      ) : items.length === 0 ? (
         <EmptyBox>
           <div style={{ fontSize: 32, marginBottom: 12 }}>🚫</div>
           <div>이용 불가 설정이 없어요</div>
         </EmptyBox>
       ) : (
-        filtered.map((item) => (
-          <BlackoutCard key={item.id}>
-            <CardIcon>{item.icon}</CardIcon>
+        items.map((item) => (
+          <BlackoutCard key={item.no}>
+            <CardIcon>{REASON_ICON[item.reasonType] ?? '📋'}</CardIcon>
             <div style={{ flex: 1, minWidth: 0 }}>
               <div style={{ display: 'flex', gap: 6, marginBottom: 5 }}>
-                <ReasonTag>{item.reason}</ReasonTag>
-                <span style={{ fontSize: 12, color: COLOR.gray400 }}>
-                  📍 {item.space}
-                </span>
+                <ReasonTag>{REASON_LABEL[item.reasonType] ?? item.reasonType}</ReasonTag>
               </div>
-              <div style={{ fontSize: 15, fontWeight: 700, marginBottom: 2 }}>
-                {item.title}
-              </div>
+              <div style={{ fontSize: 15, fontWeight: 700, marginBottom: 2 }}>{item.title}</div>
               <div style={{ fontSize: 12, color: COLOR.gray400 }}>
-                📅 {item.date}
-                {item.time && <span> · ⏰ {item.time}</span>}
+                📅 {formatDt(item.startDate)} ~ {formatDt(item.endDate)}
+                {item.startTime && <span> · ⏰ {item.startTime?.slice(11, 16)} ~ {item.endTime?.slice(11, 16)}</span>}
               </div>
+              {item.memo && <div style={{ fontSize: 12, color: COLOR.gray400, marginTop: 2 }}>{item.memo}</div>}
             </div>
             <div style={{ display: 'flex', gap: 8, flexShrink: 0 }}>
-              <EditBtn
-                onClick={() =>
-                  navigate(`/host/reservation/block/edit/${item.id}`)
-                }
-              >
+              <EditBtn onClick={() => navigate(`/host/reservation/block/edit/${item.no}`, { state: { blackout: item } })}>
                 ✏️ 수정
               </EditBtn>
-              <DelBtn onClick={() => handleDelete(item.id)}>🗑️ 삭제</DelBtn>
+              <DelBtn onClick={() => handleDelete(item.no)}>🗑️ 삭제</DelBtn>
             </div>
           </BlackoutCard>
         ))

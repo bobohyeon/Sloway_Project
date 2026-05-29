@@ -55,13 +55,11 @@ public class PayEntity extends BaseEntity {
     private LocalDateTime approvedAt;
     private LocalDateTime canceledAt;
 
-    public void completeAsLevel1(String tid) {
+    public void assignTid(String tid) {
         if (this.status != PayStatus.READY) {
             throw new CustomException(PayErrorCode.PAY_ALREADY_COMPLETED);
         }
         this.tid = tid;
-        this.status = PayStatus.COMPLETED;
-        this.approvedAt = LocalDateTime.now();
     }
 
     public void cancelPay() {
@@ -70,6 +68,14 @@ public class PayEntity extends BaseEntity {
         }
         this.status = PayStatus.CANCELED;
         this.canceledAt = LocalDateTime.now();
+    }
+
+    public void approvePay() {
+        if (this.status != PayStatus.READY) {
+            throw new CustomException(PayErrorCode.PAY_ALREADY_COMPLETED);
+        }
+        this.status = PayStatus.COMPLETED;
+        this.approvedAt = LocalDateTime.now();
     }
 
 }

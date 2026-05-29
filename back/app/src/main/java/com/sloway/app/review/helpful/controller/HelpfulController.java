@@ -44,4 +44,14 @@ public class HelpfulController {
         Long count = helpfulService.countByReview(reviewNo);
         return ResponseEntity.ok(count);
     }
+
+    // 내 도움됨 entity no 조회 (없으면 null — 도움됨 취소 시 사용)
+    @GetMapping("/{reviewNo}/mine")
+    public ResponseEntity<Long> findMyNo(
+            @AuthenticationPrincipal CustomUserDetails userDetails,
+            @PathVariable Long reviewNo
+    ) {
+        Long helpfulNo = helpfulService.findMyNo(userDetails.getMemberNo(), reviewNo);
+        return ResponseEntity.ok(helpfulNo);
+    }
 }

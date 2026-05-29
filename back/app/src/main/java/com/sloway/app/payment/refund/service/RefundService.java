@@ -4,6 +4,8 @@ import com.sloway.app.common.exception.CustomException;
 import com.sloway.app.payment.pay.common.PayErrorCode;
 import com.sloway.app.payment.pay.common.PayStatus;
 import com.sloway.app.payment.pay.entity.PayEntity;
+import com.sloway.app.payment.pay.pg.kakao.KakaoPayClient;
+import com.sloway.app.payment.pay.pg.kakao.dto.request.KakaoCancelReqDto;
 import com.sloway.app.payment.pay.repository.PayRepository;
 import com.sloway.app.payment.point.service.PointService;
 import com.sloway.app.payment.refund.common.RefundErrorCode;
@@ -37,6 +39,7 @@ public class RefundService {
     private final PayRepository payRepository;
     private final RsvnRepository rsvnRepository;
     private final PointService pointService;
+    private final KakaoPayClient kakaoPayClient;
 
     @Transactional
     public RefundResDto createRefund(RefundCreateReqDto refundCreateReqDto) {
@@ -138,6 +141,12 @@ public class RefundService {
 
         pointService.refundUsedPoint(payEntity);
         pointService.cancelEarnedPoint(payEntity);
+        KakaoCancelReqDto cancelReqDto = KakaoCancelReqDto.builder()
+                .tid(payEntity.getTid())
+                .cancelAmount(payEntity.getFinalAmt())
+                .cancelTaxFreeAmount(0)
+                .build();
+        kakaoPayClient.cancel(cancelReqDto);
         payEntity.cancelPay();
         refundEntity.completeRefund();
 

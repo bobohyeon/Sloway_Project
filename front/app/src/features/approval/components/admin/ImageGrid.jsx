@@ -1,21 +1,33 @@
 import React from 'react';
 import styled from 'styled-components';
-
 const GridContainer = styled.div`
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  grid-template-rows: repeat(2, 180px);
   gap: 12px;
   background: white;
   padding: 20px;
   border-radius: 15px;
   border: 1px solid #eee;
 
+  /* 기본 5열 유지 
+     대표 이미지(2x2)가 포함된 경우: 5열, 3행(혹은 그 이상)
+     이미지가 적을 때도 유연하게 대응
+  */
+  grid-template-columns: repeat(5, 1fr);
+  grid-auto-rows: 180px;
+
   ${(props) =>
-    props.$count > 5 &&
+    props.$hasMain &&
     `
-    grid-template-rows: repeat(3, 180px);
   `}
+
+  ${(props) =>
+    props.$count <= 3 &&
+    `
+  .is-main { 
+    grid-column: span 1; 
+    grid-row: span 1; 
+  }
+`}
 `;
 
 const ImageItem = styled.div`
@@ -24,7 +36,6 @@ const ImageItem = styled.div`
   position: relative;
   border: 1px solid #f0f0f0;
 
-  /* sort 번호가 1인 이미지는 대표 영역(2x2) 차지 */
   ${(props) =>
     props.$isMain &&
     `
@@ -42,34 +53,37 @@ const ImageItem = styled.div`
       font-weight: bold;
     }
   `}
-
-  /* 6번째(인덱스 5) 이미지부터는 3행에 배치 */
-  ${(props) =>
-    props.$index >= 5 &&
-    `
-    grid-row: 3;
-  `}
 `;
 
 const ImageGrid = ({ images = [], title }) => {
-  // sort 번호 오름차순 정렬
-  const sortedImages = [...images].sort((a, b) => a.sort - b.sort).slice(0, 10);
+  const safeImages = Array.isArray(images) ? images : [];
+
+  const sortedImages = [...safeImages]
+    .sort((a, b) => (a.sortNo || 0) - (b.sortNo || 0))
+    .slice(0, 10);
 
   return (
     <div style={{ marginBottom: '30px' }}>
       <h3 style={{ marginBottom: '15px', fontSize: '16px', color: '#333' }}>
-        {title} <span style={{ color: '#a8b89f' }}>({images.length}장)</span>
+        {title}{' '}
+        <span style={{ color: '#a8b89f' }}>({safeImages.length}장)</span>
       </h3>
-      <GridContainer $count={sortedImages.length}>
-        {sortedImages.map((img, idx) => (
-          <ImageItem
-            key={idx}
-            $src={img.url}
-            $isMain={img.sort === 1}
-            $index={idx}
-          />
-        ))}
-      </GridContainer>
+      {sortedImages.length > 0 ? (
+        <GridContainer $count={sortedImages.length}>
+          {sortedImages.map((img, idx) => (
+            <ImageItem
+              key={img.no || idx} // key 값도 안전하게 img.no 사용
+              $src={img.url}
+              $isMain={img.sortNo === 1}
+              $index={idx}
+            />
+          ))}
+        </GridContainer>
+      ) : (
+        <p style={{ fontSize: '14px', color: '#888' }}>
+          등록된 이미지가 없습니다.
+        </p>
+      )}
       <p style={{ fontSize: '12px', color: '#aaa', marginTop: '10px' }}>
         * 부적합한 이미지가 있다면 반려 사유에 기재해 주세요. (이미지 순서는
         sort 번호 기준입니다.)

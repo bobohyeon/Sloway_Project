@@ -1,18 +1,12 @@
-import React, { useMemo, useState, useCallback } from 'react';
+import React, { useState, useEffect } from 'react';
 import styled from 'styled-components';
 import { useNavigate } from 'react-router-dom';
-import ProfileImageField from '../../components/user/ProfileImageField';
-import EmailVerifyField from '../../components/user/EmailVerifyField';
+import { useDispatch } from 'react-redux';
 import PageLayout from '../../../../app/layouts/page/PageLayout';
-
-// ─── 더미 초기 데이터 (백엔드 연동 후 GET API로 교체) ───────
-const DUMMY_INITIAL = {
-  email: 'hong@sloway.co.kr',
-  name: '홍길동',
-  phone: '010-1234-5678',
-  birth: '1990-01-01',
-  imgUrl: null,
-};
+import EmailVerifyField from '../../components/user/EmailVerifyField';
+import { useMyPage } from '../../hooks/useMyPage';
+import { updateMyPage, changeMyEmail } from '../../api/userApi';
+import { logout } from '../../../auth/store/authSlice';
 
 // ─── 검증 규칙 ──────────────────────────────────────────────
 const NAME_MIN = 2;
@@ -130,70 +124,40 @@ const GhostBtn = styled.button`
 // ─── 컴포넌트 ──────────────────────────────────────────────
 function ProfileEditPage() {
   const navigate = useNavigate();
-  const [initial] = useState(DUMMY_INITIAL);
+  const dispatch = useDispatch();
+  const { data: initial, loading } = useMyPage();
 
-  // 폼 값
-  const [form, setForm] = useState({
-    email: initial.email,
-    name: initial.name,
-    phone: initial.phone,
-  });
-
-  // 자식 컴포넌트가 알려주는 결과만 받음
-  const [imgFile, setImgFile] = useState(null);
-  const [imgRemoved, setImgRemoved] = useState(false);
-  const [emailVerified, setEmailVerified] = useState(false);
-
+  // 기본 정보(이름·휴대폰) 폼
+  const [form, setForm] = useState({ name: '', phone: '' });
   const [errors, setErrors] = useState({});
   const [saving, setSaving] = useState(false);
 
-  // 자식 콜백은 useCallback으로 감싸서 자식 useEffect의 무한 루프 방지
-  const handleImageChange = useCallback((file, removed) => {
-    setImgFile(file);
-    setImgRemoved(removed);
-  }, []);
+  // 이메일 변경 폼 (별도)
+  const [newEmail, setNewEmail] = useState('');
+  const [emailVerified, setEmailVerified] = useState(false);
+  const [changingEmail, setChangingEmail] = useState(false);
 
-  const handleEmailChange = useCallback(
-    (email) => {
-      setForm((prev) => ({ ...prev, email }));
-      if (errors.email) setErrors((prev) => ({ ...prev, email: null }));
-    },
-    [errors.email]
-  );
+  useEffect(() => {
+    if (initial) {
+      setForm({ name: initial.name ?? '', phone: initial.phone ?? '' });
+      setNewEmail(initial.email ?? '');
+    }
+  }, [initial]);
 
-  const handleVerifiedChange = useCallback((verified) => {
-    setEmailVerified(verified);
-  }, []);
+  const isDirty =
+    initial && (form.name !== initial.name || form.phone !== initial.phone);
+  const canSave = isDirty && !saving;
 
-  // ─── 파생 상태 ───
-  const emailChanged = form.email !== initial.email;
-
-  const isDirty = useMemo(() => {
-    return (
-      form.email !== initial.email ||
-      form.name !== initial.name ||
-      form.phone !== initial.phone ||
-      imgFile !== null ||
-      imgRemoved
-    );
-  }, [form, initial, imgFile, imgRemoved]);
-
-  const canSave = isDirty && !saving && (!emailChanged || emailVerified);
-
-  // ─── 핸들러 ───
   const handleChange = (e) => {
     const { name, value } = e.target;
     const next = name === 'phone' ? formatPhone(value) : value;
     setForm((prev) => ({ ...prev, [name]: next }));
-    if (errors[name]) {
-      setErrors((prev) => ({ ...prev, [name]: null }));
-    }
+    if (errors[name]) setErrors((prev) => ({ ...prev, [name]: null }));
   };
 
   const validate = () => {
     const next = {};
     const name = form.name.trim();
-
     if (name.length < NAME_MIN || name.length > NAME_MAX) {
       next.name = `이름은 ${NAME_MIN}~${NAME_MAX}자로 입력해주세요.`;
     }
@@ -204,22 +168,37 @@ function ProfileEditPage() {
     return Object.keys(next).length === 0;
   };
 
+  // ── 기본 정보 저장 (이름·휴대폰) ──
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (saving) return;
-    if (!validate()) return;
+    if (saving || !validate()) return;
 
     setSaving(true);
     try {
-      // TODO: PATCH /api/user/me (multipart/form-data)
-      await new Promise((r) => setTimeout(r, 500));
+      await updateMyPage({ name: form.name.trim(), phone: form.phone });
       alert('저장되었습니다.');
       navigate('/user/profile');
     } catch (err) {
-      console.error(err);
-      alert('저장에 실패했습니다. 잠시 후 다시 시도해주세요.');
+      alert(err.response?.data?.message ?? '저장에 실패했습니다.');
     } finally {
       setSaving(false);
+    }
+  };
+
+  // ── 이메일 변경 (인증 완료 시에만) → 성공하면 로그아웃 ──
+  const handleEmailChange = async () => {
+    if (!emailVerified || changingEmail) return;
+
+    setChangingEmail(true);
+    try {
+      await changeMyEmail(newEmail);
+      alert('이메일이 변경되었습니다. 보안을 위해 다시 로그인해주세요.');
+      dispatch(logout()); // 토큰의 email claim이 옛 값이라 폐기
+      navigate('/login');
+    } catch (err) {
+      alert(err.response?.data?.message ?? '이메일 변경에 실패했습니다.');
+    } finally {
+      setChangingEmail(false);
     }
   };
 
@@ -233,17 +212,17 @@ function ProfileEditPage() {
     navigate('/user/profile');
   };
 
+  if (loading || !initial) {
+    return (
+      <PageLayout title="내 정보 수정">
+        <div style={{ padding: 40, color: '#888' }}>불러오는 중...</div>
+      </PageLayout>
+    );
+  }
+
   return (
     <PageLayout title="내 정보 수정">
       <Form onSubmit={handleSubmit} noValidate>
-        {/* 프로필 이미지 */}
-        <Card>
-          <ProfileImageField
-            initialUrl={initial.imgUrl}
-            onChange={handleImageChange}
-          />
-        </Card>
-
         {/* 기본 정보 */}
         <Card>
           <FormGroup>
@@ -259,15 +238,6 @@ function ProfileEditPage() {
             <HelpText $error={!!errors.name}>
               {errors.name || `${NAME_MIN}~${NAME_MAX}자`}
             </HelpText>
-          </FormGroup>
-
-          <FormGroup>
-            <EmailVerifyField
-              value={form.email}
-              onChange={handleEmailChange}
-              initialEmail={initial.email}
-              onVerifiedChange={handleVerifiedChange}
-            />
           </FormGroup>
 
           <FormGroup>
@@ -287,7 +257,7 @@ function ProfileEditPage() {
 
           <FormGroup>
             <Label>생년월일</Label>
-            <Input value={initial.birth} disabled />
+            <Input value={initial.birthDate ?? ''} disabled />
             <HelpText>생년월일은 변경할 수 없습니다.</HelpText>
           </FormGroup>
         </Card>
@@ -301,8 +271,29 @@ function ProfileEditPage() {
           </PrimaryBtn>
         </ButtonRow>
       </Form>
+
+      {/* 이메일 변경 — 별도 섹션 (저장과 분리, 성공 시 로그아웃) */}
+      <Card style={{ marginTop: 24 }}>
+        <FormGroup>
+          <EmailVerifyField
+            value={newEmail}
+            onChange={setNewEmail}
+            initialEmail={initial.email}
+            onVerifiedChange={setEmailVerified}
+          />
+        </FormGroup>
+        <ButtonRow>
+          <PrimaryBtn
+            type="button"
+            onClick={handleEmailChange}
+            disabled={!emailVerified || changingEmail}
+          >
+            {changingEmail ? '변경 중...' : '이메일 변경'}
+          </PrimaryBtn>
+        </ButtonRow>
+        <HelpText>이메일 변경 시 보안을 위해 다시 로그인해야 합니다.</HelpText>
+      </Card>
     </PageLayout>
   );
 }
-
 export default ProfileEditPage;

@@ -30,41 +30,15 @@ const STATUS_MAP = {
 };
 
 // ─── Props ────────────────────────────────────────────────────────────────────
-// isAdmin: true → 관리자 뷰 (답변 등록 UI 표시)
-// isAdmin: false → 유저 뷰 (수정/삭제 버튼 표시)
-export default function InquiryDetailPage({ isAdmin = false }) {
+export default function InquiryDetailPage() {
   const navigate = useNavigate();
   const { id } = useParams();
 
   // 백엔드 연동 시 useQuery로 대체
   const inquiry = MOCK_INQUIRY;
 
-  // ─── 관리자 답변 등록 상태 ────────────────────────────────────────────────
-  const [answerText, setAnswerText] = useState(inquiry.answer?.content ?? '');
-  const [answerError, setAnswerError] = useState('');
-  const [isSavingAnswer, setIsSavingAnswer] = useState(false);
-  const [answerSaved, setAnswerSaved] = useState(!!inquiry.answer);
-
   // ─── 유저 삭제 모달 ──────────────────────────────────────────────────────
   const [deleteModal, setDeleteModal] = useState(false);
-
-  const handleAnswerSubmit = async () => {
-    if (!answerText.trim()) {
-      setAnswerError('답변 내용을 입력해 주세요.');
-      return;
-    }
-    setIsSavingAnswer(true);
-    try {
-      // 백엔드 연동 시:
-      // POST /api/admin/inquiries/:id/answer  { content: answerText }
-      // 또는 이미 답변 있으면 PUT /api/admin/inquiries/:id/answer
-      await new Promise((r) => setTimeout(r, 600));
-      setAnswerSaved(true);
-      setAnswerError('');
-    } finally {
-      setIsSavingAnswer(false);
-    }
-  };
 
   const handleDelete = async () => {
     // 백엔드 연동 시: DELETE /api/inquiries/:id
@@ -72,19 +46,15 @@ export default function InquiryDetailPage({ isAdmin = false }) {
     navigate('/user/inquiry');
   };
 
-  const canEdit = !isAdmin && inquiry.status === 'pending';
-  const canDelete = !isAdmin && inquiry.status === 'pending';
+  const canEdit = inquiry.status === 'pending';
+  const canDelete = inquiry.status === 'pending';
 
   return (
     <Wrap>
       {/* 브레드크럼 */}
       <Breadcrumb>
-        <BreadcrumbBtn
-          onClick={() =>
-            navigate(isAdmin ? '/admin/inquiry/manage' : '/user/inquiry')
-          }
-        >
-          {isAdmin ? '문의사항 관리' : '내 문의사항'}
+        <BreadcrumbBtn onClick={() => navigate('/user/inquiry')}>
+          내 문의사항
         </BreadcrumbBtn>
         <BreadcrumbSep>›</BreadcrumbSep>
         <BreadcrumbCurrent>상세보기</BreadcrumbCurrent>
@@ -117,79 +87,36 @@ export default function InquiryDetailPage({ isAdmin = false }) {
         </ContentSection>
 
         {/* 유저: 수정/삭제 버튼 */}
-        {!isAdmin && (
-          <UserActionRow>
-            {canEdit && (
-              <Button
-                size="sm"
-                variant="secondary"
-                onClick={() => navigate(`/user/inquiry/form/${id}`)}
-              >
-                수정
-              </Button>
-            )}
-            {canDelete && (
-              <Button
-                size="sm"
-                variant="danger"
-                onClick={() => setDeleteModal(true)}
-              >
-                삭제
-              </Button>
-            )}
-            {!canEdit && !canDelete && (
-              <StatusNote>
-                {inquiry.status === 'processing'
-                  ? '처리 중인 문의는 수정/삭제할 수 없습니다.'
-                  : '답변이 완료된 문의는 수정/삭제할 수 없습니다.'}
-              </StatusNote>
-            )}
-          </UserActionRow>
-        )}
-      </DetailCard>
-
-      {/* ─── 답변 영역 ────────────────────────────────────────────────────── */}
-      {isAdmin ? (
-        /* 관리자: 답변 작성/수정 에디터 */
-        <AnswerEditorCard padded elevated>
-          <AnswerEditorHeader>
-            <SectionLabel>
-              {answerSaved ? '답변 수정' : '답변 등록'}
-            </SectionLabel>
-            {answerSaved && (
-              <Badge size="sm" variant="success">
-                답변 완료
-              </Badge>
-            )}
-          </AnswerEditorHeader>
-          <AnswerTextarea
-            placeholder="문의에 대한 답변을 입력하세요."
-            value={answerText}
-            onChange={(e) => {
-              setAnswerText(e.target.value);
-              if (answerError) setAnswerError('');
-            }}
-            rows={8}
-            $error={!!answerError}
-            aria-label="답변 내용"
-          />
-          {answerError && <ErrorMsg>{answerError}</ErrorMsg>}
-          <AnswerEditorFooter>
-            <CharCount>{answerText.length}자</CharCount>
+        <UserActionRow>
+          {canEdit && (
             <Button
               size="sm"
-              onClick={handleAnswerSubmit}
-              disabled={isSavingAnswer}
+              variant="secondary"
+              onClick={() => navigate(`/user/inquiry/form/${id}`)}
             >
-              {isSavingAnswer
-                ? '저장 중...'
-                : answerSaved
-                  ? '답변 수정'
-                  : '답변 등록'}
+              수정
             </Button>
-          </AnswerEditorFooter>
-        </AnswerEditorCard>
-      ) : inquiry.answer ? (
+          )}
+          {canDelete && (
+            <Button
+              size="sm"
+              variant="danger"
+              onClick={() => setDeleteModal(true)}
+            >
+              삭제
+            </Button>
+          )}
+          {!canEdit && !canDelete && (
+            <StatusNote>
+              {inquiry.status === 'processing'
+                ? '처리 중인 문의는 수정/삭제할 수 없습니다.'
+                : '답변이 완료된 문의는 수정/삭제할 수 없습니다.'}
+            </StatusNote>
+          )}
+        </UserActionRow>
+      </DetailCard>
+
+      {inquiry.answer ? (
         /* 유저: 답변 읽기 전용 */
         <AnswerCard padded>
           <AnswerHeader>
@@ -214,12 +141,7 @@ export default function InquiryDetailPage({ isAdmin = false }) {
 
       {/* 하단 버튼 */}
       <BackBtn>
-        <Button
-          variant="secondary"
-          onClick={() =>
-            navigate(isAdmin ? '/admin/inquiry/manage' : '/user/inquiry')
-          }
-        >
+        <Button variant="secondary" onClick={() => navigate('/user/inquiry')}>
           ← 목록으로
         </Button>
       </BackBtn>
@@ -364,62 +286,6 @@ const UserActionRow = styled.div`
 
 const StatusNote = styled.span`
   font-size: 0.78rem;
-  color: var(--gray-400);
-`;
-
-/* ─── 관리자 답변 에디터 ─────────────────────────────────────────────────── */
-const AnswerEditorCard = styled(Card)`
-  margin-bottom: var(--space-3);
-  border-color: rgba(168, 184, 159, 0.4);
-`;
-
-const AnswerEditorHeader = styled.div`
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-bottom: var(--space-3);
-`;
-
-const AnswerTextarea = styled.textarea`
-  width: 100%;
-  padding: 12px;
-  font-size: 0.9rem;
-  font-family: inherit;
-  border: 1px solid ${(p) => (p.$error ? '#b85a4e' : 'var(--gray-200)')};
-  border-radius: var(--radius-md);
-  background: var(--white);
-  color: var(--gray-800);
-  outline: none;
-  resize: vertical;
-  line-height: 1.7;
-  min-height: 180px;
-  box-sizing: border-box;
-  transition: border-color 160ms ease;
-
-  &:focus {
-    border-color: var(--sage);
-  }
-  &::placeholder {
-    color: var(--gray-300);
-  }
-`;
-
-const ErrorMsg = styled.span`
-  display: block;
-  font-size: 0.78rem;
-  color: #b85a4e;
-  margin-top: 4px;
-`;
-
-const AnswerEditorFooter = styled.div`
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-top: var(--space-3);
-`;
-
-const CharCount = styled.span`
-  font-size: 0.75rem;
   color: var(--gray-400);
 `;
 

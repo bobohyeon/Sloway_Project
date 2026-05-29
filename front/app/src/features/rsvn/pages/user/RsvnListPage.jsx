@@ -1,17 +1,16 @@
-import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import styled, { keyframes } from 'styled-components';
+import { useState, useEffect } from 'react';
+import dayjs from 'dayjs';
+import styled from 'styled-components';
 import PageLayout from '../../../../app/layouts/page/PageLayout';
 import RsvnCard from '../../components/user/RsvnCard';
 import {
   TabBar,
   TabBtn,
-  TabCount,} from '../../components/user/RsvnStyled';
+  TabCount,
+  COLOR,
+} from '../../components/user/RsvnStyled';
+import { findMyRsvns } from '../../api/rsvnApi';
 
-const fadeInUp = keyframes`
-  from { opacity: 0; transform: translateY(10px); }
-  to   { opacity: 1; transform: translateY(0); }
-`;
 const List = styled.div`
   display: flex;
   flex-direction: column;
@@ -19,92 +18,66 @@ const List = styled.div`
 `;
 
 const TABS = [
-  { label: '전체', status: null },
-  { label: '이용 예정', status: '이용 예정' },
-  { label: '이용 완료', status: '이용 완료' },
-  { label: '취소', status: '취소됨' },
+  { label: '전체', statuses: null },
+  { label: '이용 예정', statuses: ['S'] },
+  { label: '이용 완료', statuses: ['E'] },
+  { label: '취소/거절', statuses: ['C', 'R'] },
 ];
 
-const DUMMY = [
-  {
-    id: 1,
-    type: '워크앤스테이',
-    status: '이용 예정',
-    dday: 'D-14',
-    title: '청평 숲속 파인뷰 스테이',
-    date: '5월 8일 ~ 5월 10일 · 2박',
-    code: 'SW-20260508-000847',
-    price: '372,000원',
-    icon: '🌲',
-    action: '취소/환불',
-    spaceType: 'workstays',
-  },
-  {
-    id: 2,
-    type: '오피스',
-    status: '이용 예정',
-    dday: 'D-4',
-    title: '성수 브릭라운지',
-    date: '4월 26일 14:00 ~ 18:00',
-    code: 'SW-20260428-000523',
-    price: '28,000원',
-    icon: '🧱',
-    action: '취소/환불',
-    spaceType: 'coworking-offices',
-  },
-  {
-    id: 3,
-    type: '숙소',
-    status: '이용 완료',
-    dday: null,
-    title: '제주 돌담집 리트릿',
-    date: '4월 15일 ~ 4월 17일 · 2박',
-    code: 'SW-20260415-000412',
-    price: '444,000원',
-    icon: '🌴',
-    action: '리뷰 작성',
-    spaceType: 'accommodations',
-  },
-  {
-    id: 4,
-    type: '오피스',
-    status: '이용 완료',
-    dday: null,
-    title: '강릉 바다향 커먼워크',
-    date: '4월 2일 10:00 ~ 14:00',
-    code: 'SW-20260402-000331',
-    price: '28,000원',
-    icon: '🌊',
-    action: '리뷰 작성',
-    spaceType: 'coworking-offices',
-  },
-  {
-    id: 5,
-    type: '워크앤스테이',
-    status: '취소됨',
-    dday: null,
-    title: '남해 올리브 팜스테이',
-    date: '3월 20일 ~ 3월 22일 · 2박',
-    code: 'SW-20260320-000218',
-    price: '330,000원',
-    icon: '✉️',
-    action: null,
-    spaceType: 'workstays',
-  },
-];
+const STATUS_LABEL = { S: '예약확정', E: '이용완료', C: '예약취소', R: '예약거절' };
+const ACTION_MAP = { S: '취소/환불', E: '리뷰 작성', C: null, R: null };
+const SPACE_ROUTE = { office: 'coworking-offices', workstay: 'workstays', station: 'stations' };
+
+const toCardItem = (rsvn) => {
+  const ci = dayjs(rsvn.checkIn);
+  const co = dayjs(rsvn.checkOut);
+  const diff = ci.diff(dayjs(), 'day');
+  const dday = rsvn.status === 'S'
+    ? (diff >= 0 ? `D-${diff}` : `D+${Math.abs(diff)}`)
+    : null;
+
+  const spaceRoute = rsvn.officeNo ? 'coworking-offices'
+    : rsvn.workStayNo ? 'workstays'
+    : rsvn.stationNo ? 'stations'
+    : null;
+
+  return {
+    id: rsvn.no,
+    type: rsvn.spaceType ?? '공간',
+    status: STATUS_LABEL[rsvn.status] ?? rsvn.status,
+    dday,
+    title: rsvn.spaceName ?? `예약 ${rsvn.no}`,
+    date: `${ci.format('M월 D일')} ~ ${co.format('M월 D일')}`,
+    code: `SW-${String(rsvn.no).padStart(8, '0')}`,
+    price: `${rsvn.amt?.toLocaleString()}원`,
+    icon: spaceRoute === 'workstays' ? '🌲' : spaceRoute === 'coworking-offices' ? '🏢' : '🏠',
+    action: ACTION_MAP[rsvn.status] ?? null,
+    spaceType: null, // 카드 클릭 시 예약 상세로 이동
+  };
+};
 
 function RsvnListPage() {
   const [activeTab, setActiveTab] = useState(0);
+  const [rsvns, setRsvns] = useState([]);
 
-  const filtered =
-    activeTab === 0
-      ? DUMMY
-      : DUMMY.filter((i) => i.status === TABS[activeTab].status);
+  useEffect(() => {
+    const fetch = async () => {
+      try {
+        const data = await findMyRsvns();
+        setRsvns(data);
+      } catch {
+        setRsvns([]);
+      }
+    };
+    fetch();
+  }, []);
 
-  const counts = TABS.map((tab, idx) =>
-    idx === 0
-      ? DUMMY.length
-      : DUMMY.filter((i) => i.status === tab.status).length
+  const filtered = TABS[activeTab].statuses
+    ? rsvns.filter((r) => TABS[activeTab].statuses.includes(r.status))
+    : rsvns;
+
+  const counts = TABS.map((tab) =>
+    tab.statuses ? rsvns.filter((r) => tab.statuses.includes(r.status)).length : rsvns.length
   );
 
   return (
@@ -113,23 +86,24 @@ function RsvnListPage() {
       description="내가 예약한 공간의 이용 현황을 확인하세요"
       maxWidth={960}
     >
-
       <TabBar>
         {TABS.map((tab, idx) => (
-          <TabBtn
-            key={idx}
-            $active={activeTab === idx}
-            onClick={() => setActiveTab(idx)}
-          >
+          <TabBtn key={idx} $active={activeTab === idx} onClick={() => setActiveTab(idx)}>
             {tab.label}
             <TabCount $active={activeTab === idx}>{counts[idx]}</TabCount>
           </TabBtn>
         ))}
       </TabBar>
 
+      {filtered.length === 0 && (
+        <div style={{ textAlign: 'center', padding: '40px 0', color: COLOR.gray400, fontSize: 14 }}>
+          해당하는 예약이 없어요
+        </div>
+      )}
+
       <List>
-        {filtered.map((item) => (
-          <RsvnCard key={item.id} item={item} />
+        {filtered.map((rsvn) => (
+          <RsvnCard key={rsvn.no} item={toCardItem(rsvn)} />
         ))}
       </List>
     </PageLayout>

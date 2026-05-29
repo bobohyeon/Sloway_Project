@@ -174,7 +174,9 @@ function ApprovalTable({ data }) {
                 <td style={{ textAlign: 'center' }}>
                   {/* ✅ 클릭 시 상세 페이지로 이동 */}
                   <DetailButton
-                    onClick={() => navigate(`/admin/space/review/${item.id}`)}
+                    onClick={() =>
+                      navigate(`/admin/space/review/${item.type}/${item.id}`)
+                    }
                   >
                     검수하기
                   </DetailButton>

@@ -36,7 +36,8 @@ public class AdminDetailsService implements UserDetailsService {
                 admin.getNo(),
                 admin.getEmail(),
                 admin.getPassword(),
-                MemberRole.A
+                MemberRole.A,
+                admin.getName()
         );
     }
 }

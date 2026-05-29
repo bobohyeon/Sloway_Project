@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useState, useRef } from 'react';
+import { useLocation, useNavigate } from 'react-router-dom';
 import styled from 'styled-components';
 import PageLayout from '../../../../app/layouts/page/PageLayout';
 import RsvnStatusBadge from '../../../rsvn/components/user/RsvnStatusBadge';
@@ -15,6 +15,7 @@ import {
   Req,
   Textarea,
 } from '../../components/user/ReviewStyled';
+import { saveReview } from '../../api/reviewApi';
 
 const SCORE_ITEMS = [
   { icon: '🌟', label: '종합 만족도', desc: '전반적인 만족도는 어떠셨나요?' },
@@ -145,14 +146,68 @@ const CharCount = styled.div`
 
 function ReviewWritePage() {
   const navigate = useNavigate();
-  const [scores, setScores] = useState([4, 5, 3, 4]);
+  const location = useLocation();
+  const rsvnNo = location.state?.rsvnNo;
+
+  const [scores, setScores] = useState([0, 0, 0, 0]);
   const [text, setText] = useState('');
-  const [photos, setPhotos] = useState([true, true]);
+  const [photos, setPhotos] = useState([]);
+  const [agreed, setAgree] = useState(false);
+  const fileInputRef = useRef(null);
 
   const setScore = (idx, val) => {
     const next = [...scores];
     next[idx] = val;
     setScores(next);
+  };
+
+  const handleFileChange = (e) => {
+    const file = e.target.files[0];
+    if (photos.length >= 5) {
+      return;
+    }
+    setPhotos((p) => [...p, file]);
+    e.target.value = '';
+  };
+
+  const handleSubmit = async () => {
+    if (scores.some((s) => s === 0)) {
+      alert('모든 항목에 별점을 선택 해 주세요');
+      return;
+    }
+    if (text.length < 10) {
+      alert('리뷰 내용을 10자 이상 입력해주세요');
+      return;
+    }
+    if (!agreed) {
+      alert('동의 체크박스를 확인해주세요');
+      return;
+    }
+
+    const formData = new FormData();
+    formData.append(
+      'dto',
+      new Blob(
+        [
+          JSON.stringify({
+            rsvnNo,
+            scoreTotal: scores[0],
+            scoreOffice: scores[1],
+            scoreAmenity: scores[2],
+            scoreFocus: scores[3],
+            content: text,
+          }),
+        ],
+        { type: 'application/json' }
+      )
+    );
+    photos.forEach((file) => formData.append('images', file));
+    try {
+      await saveReview(formData);
+      navigate('/user/review');
+    } catch {
+      alert('등록에 실패했어요');
+    }
   };
 
   return (
@@ -163,7 +218,6 @@ function ReviewWritePage() {
       backLabel="내 리뷰"
       maxWidth={800}
     >
-
       <FormBox>
         <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
           <div
@@ -240,9 +294,24 @@ function ReviewWritePage() {
           최대 5장까지 업로드 가능해요
         </div>
         <PhotoGrid>
-          {photos.map((_, i) => (
+          <input
+            type="file"
+            accept="image/*"
+            ref={fileInputRef}
+            style={{ display: 'none' }}
+            onChange={handleFileChange}
+          />
+          {photos.map((file, i) => (
             <PhotoSlot key={i} $filled>
-              <span style={{ fontSize: 28 }}>📷</span>
+              <img
+                src={URL.createObjectURL(file)}
+                style={{
+                  width: '100%',
+                  height: '100%',
+                  objectFit: 'cover',
+                  borderRadius: 8,
+                }}
+              />
               <RemoveBtn
                 onClick={() => setPhotos((p) => p.filter((__, j) => j !== i))}
               >
@@ -252,7 +321,7 @@ function ReviewWritePage() {
           ))}
           {photos.length < 5 && (
             <PhotoSlot
-              onClick={() => setPhotos((p) => [...p, true])}
+              onClick={() => fileInputRef.current.click()}
               style={{ fontSize: 11 }}
             >
               <span style={{ fontSize: 20 }}>+</span>
@@ -295,7 +364,12 @@ function ReviewWritePage() {
       </CautionBox>
 
       <AgreeBox>
-        <input type="checkbox" id="agree" />
+        <input
+          type="checkbox"
+          id="agree"
+          checked={agreed}
+          onChange={(e) => setAgree(e.target.checked)}
+        />
         <label htmlFor="agree">
           * 위 내용을 확인했으며, 허위 리뷰 작성 시 제재를 받을 수 있음에
           동의합니다
@@ -304,7 +378,7 @@ function ReviewWritePage() {
 
       <BottomBtns>
         <BtnOutline onClick={() => navigate('/user/review')}>취소</BtnOutline>
-        <BtnPrimary>리뷰 등록</BtnPrimary>
+        <BtnPrimary onClick={handleSubmit}>리뷰 등록</BtnPrimary>
       </BottomBtns>
     </PageLayout>
   );
