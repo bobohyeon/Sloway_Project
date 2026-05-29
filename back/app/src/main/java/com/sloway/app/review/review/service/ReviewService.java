@@ -1,5 +1,6 @@
 package com.sloway.app.review.review.service;
 
+import com.sloway.app.aws.service.S3Service;
 import com.sloway.app.common.exception.CustomException;
 import com.sloway.app.place.entity.place.PlaceEntity;
 import com.sloway.app.place.repository.place.PlaceRepository;
@@ -14,14 +15,19 @@ import com.sloway.app.review.review.dto.request.ReviewCreateReqDto;
 import com.sloway.app.review.review.dto.request.ReviewEditReqDto;
 import com.sloway.app.review.review.dto.response.ReviewResDto;
 import com.sloway.app.review.review.entity.ReviewEntity;
+import com.sloway.app.review.review.entity.ReviewImgEntity;
+import com.sloway.app.review.review.repository.ReviewImgRepository;
 import com.sloway.app.review.review.repository.ReviewRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
 import java.time.LocalDateTime;
 import java.util.List;
+
 
 @Slf4j
 @RequiredArgsConstructor
@@ -33,10 +39,16 @@ public class ReviewService {
     private final RsvnRepository rsvnRepository;
     private final PlaceRepository placeRepository;
     private final ReviewReplyRepository reviewReplyRepository;
+    private final S3Service s3Service;
+    private final ReviewImgRepository reviewImgRepository;
 
     //리뷰 작성
     @Transactional
-    public void save(Long memberNo, ReviewCreateReqDto reqDto){
+    public void save(
+            Long memberNo
+            , ReviewCreateReqDto reqDto
+            , List<MultipartFile> images
+    ) throws IOException {
         RsvnEntity rsvn = rsvnRepository.findById(reqDto.getRsvnNo())
                 .orElseThrow(()-> new CustomException(RsvnErrorCode.RESERVATION_NOT_FOUND));
 
@@ -53,7 +65,8 @@ public class ReviewService {
         if(reviewRepository.findByRsvnNoAndDelYn(rsvn, "N").isPresent()){
             throw new CustomException(ReviewErrorCode.ALREADY_REVIEWED);
         }
-        reviewRepository.save(ReviewEntity.builder()
+        ReviewEntity savedReview =
+                reviewRepository.save(ReviewEntity.builder()
                         .rsvnNo(rsvn)
                         .content(reqDto.getContent())
                         .scoreTotal(reqDto.getScoreTotal())
@@ -61,6 +74,17 @@ public class ReviewService {
                         .scoreFocus(reqDto.getScoreFocus())
                         .scoreAmenity(reqDto.getScoreAmenity())
                 .build());
+
+        if(images != null){
+            for (MultipartFile image : images){
+                String s3Key = s3Service.upload(image, "review");
+               ReviewImgEntity img = ReviewImgEntity.builder()
+                       .reviewNo(savedReview)
+                       .currentUrl(s3Key)
+                       .build();
+            reviewImgRepository.save(img);
+            }
+        }
     }
 
     //해당 공간의 리뷰 목록
