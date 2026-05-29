@@ -121,6 +121,14 @@ public class ReviewService {
         );
     }
 
+    // 내 리뷰 목록
+    public List<ReviewResDto> findMyReviews(Long memberNo) {
+        return reviewRepository.findMyReviews(memberNo)
+                .stream()
+                .map(entity -> ReviewResDto.from(entity, toReplyDtos(entity)))
+                .toList();
+    }
+
     // 관리자용 리뷰 삭제 (소유자 확인 없이 바로 삭제)
     @Transactional
     public void adminDeleteReview(Long no){

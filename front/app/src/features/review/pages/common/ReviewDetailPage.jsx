@@ -1,35 +1,9 @@
-import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useState, useEffect } from 'react';
+import { useNavigate, useParams } from 'react-router-dom';
 import styled from 'styled-components';
 import PageLayout from '../../../../app/layouts/page/PageLayout';
 import { COLOR } from '../../../rsvn/components/user/RsvnStyled';
-
-const DUMMY = {
-  id: 1,
-  isMine: true, // 본인 리뷰 여부 — 백엔드 연결 시 로그인 유저와 비교
-  name: '민정',
-  avatar: '민',
-  avatarColor: '#A8B89F',
-  date: '2026.04.22',
-  usedDate: '2026.04.18 ~ 2026.04.20',
-  space: '청평 숲속 파인뷰 스테이',
-  spaceType: '워크앤스테이',
-  spaceId: 1,
-  scores: [
-    { label: '종합 만족도', val: 5 },
-    { label: '업무 환경', val: 5 },
-    { label: '편의시설', val: 4 },
-    { label: '집중도', val: 5 },
-  ],
-  text: '조용하고 몰입감 있어요. 듀얼모니터도 잘 쓰고 왔습니다. 다음에 팀원들이랑 또 오고 싶어요! 회의실도 넓고 쾌적했고, 와이파이도 빠릿빠릿해서 화상회의도 문제없었어요. 숲 속이라 공기도 너무 좋고 저녁에 산책도 할 수 있어서 좋았습니다.',
-  helpful: 24,
-  imgs: 3,
-  reply: {
-    hostName: '청평스테이',
-    date: '2026.04.23',
-    text: '감사합니다! 다음에도 좋은 시간 보내러 오세요. 언제든 환영합니다 🌲',
-  },
-};
+import api from '../../../../app/api/axiosApi';
 
 const SpaceChip = styled.div`
   display: flex;
@@ -41,9 +15,7 @@ const SpaceChip = styled.div`
   margin-bottom: 20px;
   cursor: pointer;
   transition: background 0.15s;
-  &:hover {
-    background: ${COLOR.greenLight};
-  }
+  &:hover { background: ${COLOR.greenLight}; }
 `;
 
 const SpaceTag = styled.span`
@@ -72,7 +44,7 @@ const Avatar = styled.div`
   width: 44px;
   height: 44px;
   border-radius: 50%;
-  background: ${({ $color }) => $color};
+  background: ${COLOR.sage};
   display: flex;
   align-items: center;
   justify-content: center;
@@ -94,10 +66,7 @@ const EditBtn = styled.button`
   font-size: 12px;
   font-family: 'Noto Sans KR', sans-serif;
   cursor: pointer;
-  &:hover {
-    border-color: ${COLOR.sage};
-    color: ${COLOR.green};
-  }
+  &:hover { border-color: ${COLOR.sage}; color: ${COLOR.green}; }
 `;
 
 const DeleteBtn = styled.button`
@@ -109,9 +78,7 @@ const DeleteBtn = styled.button`
   color: ${COLOR.red};
   font-family: 'Noto Sans KR', sans-serif;
   cursor: pointer;
-  &:hover {
-    background: #fff0f0;
-  }
+  &:hover { background: #fff0f0; }
 `;
 
 const ScoreGrid = styled.div`
@@ -148,23 +115,6 @@ const ReviewText = styled.p`
   margin-bottom: 16px;
 `;
 
-const ImgRow = styled.div`
-  display: flex;
-  gap: 8px;
-  margin-bottom: 20px;
-`;
-
-const ImgSlot = styled.div`
-  width: 80px;
-  height: 80px;
-  border-radius: 8px;
-  background: ${COLOR.gray200};
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 28px;
-`;
-
 const MetaRow = styled.div`
   display: flex;
   align-items: center;
@@ -180,8 +130,7 @@ const HelpfulBtn = styled.button`
   gap: 6px;
   padding: 8px 16px;
   border-radius: 20px;
-  border: 1.5px solid
-    ${({ $active }) => ($active ? COLOR.green : COLOR.gray200)};
+  border: 1.5px solid ${({ $active }) => ($active ? COLOR.green : COLOR.gray200)};
   background: ${({ $active }) => ($active ? COLOR.greenLight : '#fff')};
   color: ${({ $active }) => ($active ? COLOR.green : COLOR.gray600)};
   font-size: 13px;
@@ -189,11 +138,7 @@ const HelpfulBtn = styled.button`
   font-family: 'Noto Sans KR', sans-serif;
   cursor: pointer;
   transition: all 0.2s;
-  &:hover {
-    border-color: ${COLOR.green};
-    color: ${COLOR.green};
-    background: ${COLOR.greenLight};
-  }
+  &:hover { border-color: ${COLOR.green}; color: ${COLOR.green}; background: ${COLOR.greenLight}; }
 `;
 
 const ReportBtn = styled.button`
@@ -204,9 +149,7 @@ const ReportBtn = styled.button`
   cursor: pointer;
   margin-left: auto;
   text-decoration: underline;
-  &:hover {
-    color: ${COLOR.red};
-  }
+  &:hover { color: ${COLOR.red}; }
 `;
 
 const ReplyBox = styled.div`
@@ -229,120 +172,136 @@ const ReplyText = styled.p`
   line-height: 1.6;
 `;
 
+const SCORE_LABELS = ['종합 만족도', '업무 환경', '편의시설', '집중도'];
+
 function ReviewDetailPage() {
   const navigate = useNavigate();
-  const [helped, setHelped] = useState(false);
-  const [helpCount, setHelpCount] = useState(DUMMY.helpful);
+  const { id } = useParams();
 
-  const toggleHelp = () => {
-    setHelped((v) => !v);
-    setHelpCount((c) => (helped ? c - 1 : c + 1));
+  const [review, setReview] = useState(null);
+  const [helpCount, setHelpCount] = useState(0);
+  const [myHelpfulNo, setMyHelpfulNo] = useState(null); // null이면 아직 도움됨 안 함
+
+  useEffect(() => {
+    const fetchAll = async () => {
+      try {
+        const [reviewRes, countRes, mineRes] = await Promise.all([
+          api.get(`/review/${id}`),
+          api.get(`/review/helpful/${id}`),
+          api.get(`/review/helpful/${id}/mine`),
+        ]);
+        setReview(reviewRes.data);
+        setHelpCount(countRes.data);
+        setMyHelpfulNo(mineRes.data); // helpful entity no 또는 null
+      } catch {
+        alert('리뷰 데이터를 불러오지 못했어요');
+      }
+    };
+    fetchAll();
+  }, [id]);
+
+  const toggleHelp = async () => {
+    try {
+      if (myHelpfulNo) {
+        // 이미 도움됨 → 취소
+        await api.delete(`/review/helpful/${myHelpfulNo}`);
+        setMyHelpfulNo(null);
+        setHelpCount((c) => c - 1);
+      } else {
+        // 도움됨 등록
+        await api.post('/review/helpful', { reviewNo: Number(id) });
+        // 등록 후 내 helpful no 다시 조회
+        const mineRes = await api.get(`/review/helpful/${id}/mine`);
+        setMyHelpfulNo(mineRes.data);
+        setHelpCount((c) => c + 1);
+      }
+    } catch {
+      alert('처리 중 오류가 발생했어요');
+    }
   };
 
-  const handleDelete = () => {
-    const ok = window.confirm(
-      '리뷰를 삭제하시겠어요?\n삭제한 리뷰는 복구할 수 없습니다.'
-    );
-    if (ok) navigate('/user/review');
+  const handleDelete = async () => {
+    const ok = window.confirm('리뷰를 삭제하시겠어요?\n삭제한 리뷰는 복구할 수 없습니다.');
+    if (!ok) return;
+    try {
+      await api.delete(`/review/${id}`);
+      navigate('/user/review');
+    } catch {
+      alert('삭제에 실패했어요');
+    }
   };
 
-  const goSpace = () => {
-    const path =
-      DUMMY.spaceType === '워크앤스테이'
-        ? `/workstays/${DUMMY.spaceId}`
-        : DUMMY.spaceType === '오피스'
-          ? `/coworking-offices/${DUMMY.spaceId}`
-          : `/accommodations/${DUMMY.spaceId}`;
-    navigate(path);
-  };
+  const formatDate = (dt) => dt?.slice(0, 10).replaceAll('-', '.') ?? '';
+
+  if (!review) {
+    return <PageLayout maxWidth={720}><div style={{ textAlign: 'center', padding: 40, color: COLOR.gray400 }}>불러오는 중...</div></PageLayout>;
+  }
+
+  const scores = [
+    { label: '종합 만족도', val: review.scoreTotal },
+    { label: '업무 환경', val: review.scoreOffice },
+    { label: '편의시설', val: review.scoreAmenity },
+    { label: '집중도', val: review.scoreFocus },
+  ];
 
   return (
     <PageLayout maxWidth={720}>
 
       {/* 공간 정보 */}
-      <SpaceChip onClick={goSpace}>
-        <SpaceTag>{DUMMY.spaceType}</SpaceTag>
-        <span style={{ fontSize: 13, fontWeight: 600 }}>{DUMMY.space}</span>
-        <span
-          style={{ fontSize: 12, color: COLOR.gray400, marginLeft: 'auto' }}
-        >
-          공간 보기 →
-        </span>
+      <SpaceChip>
+        <SpaceTag>{review.spaceType}</SpaceTag>
+        <span style={{ fontSize: 13, fontWeight: 600 }}>{review.spaceName}</span>
+        <span style={{ fontSize: 12, color: COLOR.gray400, marginLeft: 'auto' }}>공간 보기 →</span>
       </SpaceChip>
 
-      {/* 작성자 + 수정/삭제 버튼 */}
+      {/* 작성자 + 수정/삭제 */}
       <ReviewerRow>
         <ReviewerLeft>
-          <Avatar $color={DUMMY.avatarColor}>{DUMMY.avatar}</Avatar>
+          <Avatar>{review.memberName?.[0] ?? '?'}</Avatar>
           <div>
-            <div style={{ fontSize: 15, fontWeight: 700 }}>{DUMMY.name}</div>
+            <div style={{ fontSize: 15, fontWeight: 700 }}>{review.memberName}</div>
             <div style={{ fontSize: 12, color: COLOR.gray400 }}>
-              작성일 {DUMMY.date} · 이용일 {DUMMY.usedDate}
+              작성일 {formatDate(review.createdAt)} · 이용일 {formatDate(review.checkIn)} ~ {formatDate(review.checkOut)}
             </div>
           </div>
         </ReviewerLeft>
-
-        {/* 본인 리뷰일 때만 표시 */}
-        {DUMMY.isMine && (
-          <MyActionBtns>
-            <EditBtn onClick={() => navigate(`/user/review/edit/${DUMMY.id}`)}>
-              ✏️ 수정
-            </EditBtn>
-            <DeleteBtn onClick={handleDelete}>🗑 삭제</DeleteBtn>
-          </MyActionBtns>
-        )}
+        <MyActionBtns>
+          <EditBtn onClick={() => navigate(`/user/review/edit/${id}`)}>✏️ 수정</EditBtn>
+          <DeleteBtn onClick={handleDelete}>🗑 삭제</DeleteBtn>
+        </MyActionBtns>
       </ReviewerRow>
 
       {/* 항목별 평점 */}
       <ScoreGrid>
-        {DUMMY.scores.map((s, i) => (
+        {scores.map((s, i) => (
           <ScoreItem key={i}>
             <ScoreLabel>{s.label}</ScoreLabel>
-            <Stars>
-              {'★'.repeat(s.val)}
-              {'☆'.repeat(5 - s.val)}
-            </Stars>
-            <span style={{ fontSize: 13, fontWeight: 600, color: '#C97D4C' }}>
-              {s.val}.0
-            </span>
+            <Stars>{'★'.repeat(s.val)}{'☆'.repeat(5 - s.val)}</Stars>
+            <span style={{ fontSize: 13, fontWeight: 600, color: '#C97D4C' }}>{s.val}.0</span>
           </ScoreItem>
         ))}
       </ScoreGrid>
 
       {/* 리뷰 본문 */}
-      <ReviewText>{DUMMY.text}</ReviewText>
-
-      {/* 사진 */}
-      {DUMMY.imgs > 0 && (
-        <ImgRow>
-          {Array(DUMMY.imgs)
-            .fill(0)
-            .map((_, i) => (
-              <ImgSlot key={i}>📷</ImgSlot>
-            ))}
-        </ImgRow>
-      )}
+      <ReviewText>{review.content}</ReviewText>
 
       {/* 도움돼요 + 신고 */}
       <MetaRow>
-        <HelpfulBtn $active={helped} onClick={toggleHelp}>
+        <HelpfulBtn $active={!!myHelpfulNo} onClick={toggleHelp}>
           👍 도움돼요 {helpCount}
         </HelpfulBtn>
-        {/* 본인 리뷰면 신고 버튼 숨김 */}
-        {!DUMMY.isMine && (
-          <ReportBtn onClick={() => navigate('/user/review/report')}>
-            🚩 신고
-          </ReportBtn>
-        )}
+        <ReportBtn
+          onClick={() => navigate('/user/review/report', { state: { reviewNo: review.no } })}
+        >
+          🚩 신고
+        </ReportBtn>
       </MetaRow>
 
       {/* 호스트 답글 */}
-      {DUMMY.reply && (
+      {review.replies?.length > 0 && (
         <ReplyBox>
-          <ReplyLabel>
-            🏠 {DUMMY.reply.hostName} · {DUMMY.reply.date}
-          </ReplyLabel>
-          <ReplyText>{DUMMY.reply.text}</ReplyText>
+          <ReplyLabel>🏠 호스트 답글 · {formatDate(review.replies[0].createdAt)}</ReplyLabel>
+          <ReplyText>{review.replies[0].content}</ReplyText>
         </ReplyBox>
       )}
     </PageLayout>
