@@ -4,7 +4,6 @@ import com.sloway.app.common.entity.BaseEntity;
 import com.sloway.app.inquiry.enums.InquiryCategory;
 import com.sloway.app.inquiry.enums.InquiryStatus;
 import com.sloway.app.member.entity.MemberEntity;
-import com.sloway.app.notice.enums.NoticeStatus;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -52,4 +51,7 @@ public class InquiryEntity extends BaseEntity {
         this.status = InquiryStatus.ANSWERED;
     }
 
+    public void cancelAnswer() {
+        this.status = InquiryStatus.PENDING;
+    }
 }
