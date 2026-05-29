@@ -1,4 +1,4 @@
-package com.sloway.app.inquiry.dto.request;
+package com.sloway.app.inquiry.dto.request.admin;
 
 import com.sloway.app.admin.entity.AdminEntity;
 import com.sloway.app.inquiry.entity.InquiryEntity;
@@ -8,7 +8,7 @@ import lombok.NoArgsConstructor;
 
 @Getter
 @NoArgsConstructor
-public class InquiryReplyWriteReqDto {
+public class InquiryReplyCreateReqDto {
 
     private String content;
 
