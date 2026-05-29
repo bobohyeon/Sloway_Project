@@ -1,10 +1,5 @@
 import api from '../../../app/api/axiosApi';
 
-export async function createPay(payCreateReqDto) {
-  const resp = await api.post(`/payment/pay`, payCreateReqDto);
-  return resp.data;
-}
-
 export async function readyPay(payReadyReqDto) {
   const resp = await api.post(`/payment/pay/ready`, payReadyReqDto);
   return resp.data;
