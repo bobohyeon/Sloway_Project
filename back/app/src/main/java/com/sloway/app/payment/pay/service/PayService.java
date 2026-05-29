@@ -11,10 +11,12 @@ import com.sloway.app.payment.pay.dto.response.PayReadyResDto;
 import com.sloway.app.payment.pay.dto.response.PayResDto;
 import com.sloway.app.payment.pay.entity.PayEntity;
 import com.sloway.app.payment.pay.pg.kakao.KakaoPayClient;
+import com.sloway.app.payment.pay.pg.kakao.dto.request.KakaoApproveReqDto;
 import com.sloway.app.payment.pay.pg.kakao.dto.request.KakaoReadyReqDto;
 import com.sloway.app.payment.pay.pg.kakao.dto.response.KakaoReadyResDto;
 import com.sloway.app.payment.pay.repository.PayRepository;
 import com.sloway.app.payment.point.service.PointService;
+import com.sloway.app.reservation.RsvnErrorCode;
 import com.sloway.app.reservation.rsvn.entity.RsvnEntity;
 import com.sloway.app.reservation.rsvn.repository.RsvnRepository;
 import jakarta.persistence.EntityNotFoundException;
@@ -86,6 +88,37 @@ public class PayService {
         return PayReadyResDto.of(payEntity, readyResDto);
     }
 
+    @Transactional
+    public PayEntity approvePay(Long payNo, String pgToken) {
+        PayEntity payEntity = payRepository.findById(payNo)
+                .orElseThrow(() -> new CustomException(PayErrorCode.PAY_NOT_FOUND));
+
+        RsvnEntity rsvnEntity = rsvnRepository.findById(payEntity.getRsvnNo().getNo())
+                .orElseThrow(() -> new CustomException(RsvnErrorCode.RESERVATION_NOT_FOUND));
+
+        Long memberNo = payEntity.getRsvnNo().getMemberNo().getNo();
+
+        KakaoApproveReqDto kakaoApproveReqDto = KakaoApproveReqDto.builder()
+                .tid(payEntity.getTid())
+                .partnerOrderId(payNo.toString())
+                .partnerUserId(memberNo.toString())
+                .pgToken(pgToken)
+                .build();
+
+        kakaoPayClient.approve(kakaoApproveReqDto);
+        payEntity.approvePay();
+
+        if (payEntity.getUcNo() != null) {
+            payEntity.getUcNo().useCoupon(payEntity);
+        }
+
+        Integer usedPoint = payEntity.getUsedPoint();
+        if (usedPoint != null && usedPoint > 0) {
+            pointService.usePointInternal(memberNo, payEntity.getUsedPoint(), payEntity);
+        }
+        return payEntity;
+    }
+
 
     private int calculateDcAmt(CouponEntity coupon, Integer baseAmt) {
         if (coupon == null) return 0;
@@ -136,6 +169,5 @@ public class PayService {
             throw new CustomException(PayErrorCode.PAY_AMOUNT_NEGATIVE);
         }
     }
-
 
 }

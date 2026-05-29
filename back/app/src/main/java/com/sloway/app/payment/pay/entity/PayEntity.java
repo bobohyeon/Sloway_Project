@@ -70,8 +70,12 @@ public class PayEntity extends BaseEntity {
         this.canceledAt = LocalDateTime.now();
     }
 
-
-
-
+    public void approvePay() {
+        if (this.status != PayStatus.READY) {
+            throw new CustomException(PayErrorCode.PAY_ALREADY_COMPLETED);
+        }
+        this.status = PayStatus.COMPLETED;
+        this.approvedAt = LocalDateTime.now();
+    }
 
 }
