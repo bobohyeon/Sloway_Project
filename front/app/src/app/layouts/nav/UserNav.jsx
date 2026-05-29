@@ -98,7 +98,6 @@ const userMenuGroups = [
 
 function UserNav() {
   const { user } = useAuth();
-  console.log('userNav : ', user);
 
   return (
     <Wrapper>
