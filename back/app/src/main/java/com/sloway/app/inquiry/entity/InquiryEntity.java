@@ -2,6 +2,7 @@ package com.sloway.app.inquiry.entity;
 
 import com.sloway.app.common.entity.BaseEntity;
 import com.sloway.app.inquiry.enums.InquiryCategory;
+import com.sloway.app.inquiry.enums.InquiryStatus;
 import com.sloway.app.member.entity.MemberEntity;
 import com.sloway.app.notice.enums.NoticeStatus;
 import jakarta.persistence.*;
@@ -36,12 +37,19 @@ public class InquiryEntity extends BaseEntity {
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 20)
     @Builder.Default
-    private NoticeStatus status = NoticeStatus.ACTIVE;
+    private InquiryStatus status = InquiryStatus.PENDING;
+
+    @OneToOne(mappedBy = "inquiry", fetch = FetchType.LAZY)
+    private InquiryReplyEntity reply;
 
     public void update(String title, String content, InquiryCategory category) {
         this.title = title;
         this.content = content;
         this.category = category;
+    }
+
+    public void answer() {
+        this.status = InquiryStatus.ANSWERED;
     }
 
 }

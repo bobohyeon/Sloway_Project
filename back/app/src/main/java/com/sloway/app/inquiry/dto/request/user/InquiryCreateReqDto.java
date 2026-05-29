@@ -1,14 +1,13 @@
-package com.sloway.app.inquiry.dto.request;
+package com.sloway.app.inquiry.dto.request.user;
 
 import com.sloway.app.inquiry.entity.InquiryEntity;
 import com.sloway.app.inquiry.enums.InquiryCategory;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-import lombok.Setter;
 
 @Getter
 @NoArgsConstructor
-public class InquiryWriteReqDto {
+public class InquiryCreateReqDto {
 
     private String title;
     private String content;
