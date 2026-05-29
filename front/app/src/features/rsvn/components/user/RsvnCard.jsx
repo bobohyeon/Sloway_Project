@@ -34,7 +34,7 @@ function RsvnCard({ item }) {
     if (item.action === '취소/환불') {
       navigate('/user/refund/request');
     } else if (item.action === '리뷰 작성') {
-      navigate('/user/review/write');
+      navigate('/user/review/write', { state: { rsvnNo: item.id } });
     }
   };
 
