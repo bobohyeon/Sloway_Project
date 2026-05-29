@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { FaHotel, FaBriefcase, FaLeaf, FaImage } from 'react-icons/fa';
 // 훅에서 선언해둔 한글 치환 매핑 테이블 가져오기
 import { STATUS_TEXT } from '../../../hooks/host/place/useSpaceList';
+import RejectButtonWithModal from '../approvalCheck/RejectButtonWithModal';
 
 const SpaceCard = styled.div`
   background: white;
@@ -82,19 +83,19 @@ const StatusTag = styled.span`
 
   ${({ $status }) => {
     switch ($status) {
-      case 'PENDING': // 검수 대기 (그레이 계열)
+      case 'P': // 검수 대기 (그레이 계열)
         return `
           background: #f5f5f5;
           color: #888888;
           border-color: #e0e0e0;
         `;
-      case 'REJECTED': // 반려됨 (붉은 계열)
+      case 'R': // 반려됨 (붉은 계열)
         return `
           background: #ffebee;
           color: #c62828;
           border-color: #ffcdd2;
         `;
-      case 'APPROVED': // 운영 중 (시그니처 그린 계열)
+      case 'A': // 운영 중 (시그니처 그린 계열)
       default:
         return `
           background: #76896610;
@@ -235,6 +236,9 @@ function SpaceListComponent({ data = [] }) {
                 <StatusTag $status={space.status}>
                   {STATUS_TEXT[space.status] || space.status}
                 </StatusTag>
+                {space.status === 'R' && (
+                  <RejectButtonWithModal no={space.id} type={'place'} />
+                )}
               </div>
 
               <h3>{space.title}</h3>

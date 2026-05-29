@@ -427,7 +427,7 @@ function App() {
         {/* 공간 검수 */}
         <Route path="/admin/space/review" element={<SpaceApprovalPage />} />
         <Route
-          path="/admin/space/review/:id"
+          path="/admin/space/review/:type/:id"
           element={<SpaceApprovalDetailPage />}
         />
         {/* 편의시설 관리 */}
