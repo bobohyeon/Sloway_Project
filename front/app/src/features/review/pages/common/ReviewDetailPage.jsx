@@ -3,7 +3,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 import styled from 'styled-components';
 import PageLayout from '../../../../app/layouts/page/PageLayout';
 import { COLOR } from '../../../rsvn/components/user/RsvnStyled';
-import api from '../../../../app/api/axiosApi';
+import { findOneReview, countHelpful, findMyHelpfulNo, saveHelpful, deleteHelpful, deleteReview } from '../../api/reviewApi';
 
 const SpaceChip = styled.div`
   display: flex;
@@ -185,14 +185,14 @@ function ReviewDetailPage() {
   useEffect(() => {
     const fetchAll = async () => {
       try {
-        const [reviewRes, countRes, mineRes] = await Promise.all([
-          api.get(`/review/${id}`),
-          api.get(`/review/helpful/${id}`),
-          api.get(`/review/helpful/${id}/mine`),
+        const [reviewData, count, myNo] = await Promise.all([
+          findOneReview(id),
+          countHelpful(id),
+          findMyHelpfulNo(id),
         ]);
-        setReview(reviewRes.data);
-        setHelpCount(countRes.data);
-        setMyHelpfulNo(mineRes.data); // helpful entity no 또는 null
+        setReview(reviewData);
+        setHelpCount(count);
+        setMyHelpfulNo(myNo);
       } catch {
         alert('리뷰 데이터를 불러오지 못했어요');
       }
@@ -204,15 +204,14 @@ function ReviewDetailPage() {
     try {
       if (myHelpfulNo) {
         // 이미 도움됨 → 취소
-        await api.delete(`/review/helpful/${myHelpfulNo}`);
+        await deleteHelpful(myHelpfulNo);
         setMyHelpfulNo(null);
         setHelpCount((c) => c - 1);
       } else {
         // 도움됨 등록
-        await api.post('/review/helpful', { reviewNo: Number(id) });
-        // 등록 후 내 helpful no 다시 조회
-        const mineRes = await api.get(`/review/helpful/${id}/mine`);
-        setMyHelpfulNo(mineRes.data);
+        await saveHelpful(id);
+        const myNo = await findMyHelpfulNo(id);
+        setMyHelpfulNo(myNo);
         setHelpCount((c) => c + 1);
       }
     } catch {
@@ -224,7 +223,7 @@ function ReviewDetailPage() {
     const ok = window.confirm('리뷰를 삭제하시겠어요?\n삭제한 리뷰는 복구할 수 없습니다.');
     if (!ok) return;
     try {
-      await api.delete(`/review/${id}`);
+      await deleteReview(id);
       navigate('/user/review');
     } catch {
       alert('삭제에 실패했어요');

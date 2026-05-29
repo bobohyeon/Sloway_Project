@@ -15,7 +15,7 @@ import {
   Textarea,
 } from '../../components/user/ReviewStyled';
 
-import api from '../../../../app/api/axiosApi';
+import { findOneReview, editReview } from '../../api/reviewApi';
 
 const SCORE_ITEMS = [
   { icon: '🌟', label: '종합 만족도', desc: '전반적인 만족도는 어떠셨나요?' },
@@ -134,8 +134,7 @@ function ReviewEditPage() {
   useEffect(() => {
     const fetchReview = async () => {
       try {
-        const resp = await api.get(`/review/${id}`);
-        const data = resp.data;
+        const data = await findOneReview(id);
         setScores([
           data.scoreTotal,
           data.scoreOffice,
@@ -165,7 +164,7 @@ function ReviewEditPage() {
 
   async function handleSubmit() {
     try {
-      await api.put(`/review/${id}`, {
+      await editReview(id, {
         scoreTotal: scores[0],
         scoreOffice: scores[1],
         scoreAmenity: scores[2],

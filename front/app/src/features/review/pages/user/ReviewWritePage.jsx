@@ -15,7 +15,7 @@ import {
   Req,
   Textarea,
 } from '../../components/user/ReviewStyled';
-import api from '../../../../app/api/axiosApi';
+import { saveReview } from '../../api/reviewApi';
 
 const SCORE_ITEMS = [
   { icon: '🌟', label: '종합 만족도', desc: '전반적인 만족도는 어떠셨나요?' },
@@ -203,7 +203,7 @@ function ReviewWritePage() {
     );
     photos.forEach((file) => formData.append('images', file));
     try {
-      await api.post('/review', formData);
+      await saveReview(formData);
       navigate('/user/review');
     } catch {
       alert('등록에 실패했어요');

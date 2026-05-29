@@ -13,7 +13,7 @@ import {
   Req,
   Textarea,
 } from '../../components/user/ReviewStyled';
-import api from '../../../../app/api/axiosApi';
+import { saveReport } from '../../api/reviewApi';
 
 // 백엔드 enum ReviewReportReasonType 값과 매핑
 const REASONS = [
@@ -110,7 +110,7 @@ function ReviewReportPage() {
     if (selected === null) { alert('신고 사유를 선택해주세요'); return; }
     if (!agreed) { alert('동의 체크박스를 확인해주세요'); return; }
     try {
-      await api.post('/review/report', {
+      await saveReport({
         reviewNo,
         reasonType: REASONS[selected].value,
         reasonDetail: detail,

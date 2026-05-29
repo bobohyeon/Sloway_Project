@@ -16,7 +16,7 @@ import {
   COLOR,
 } from '../../../rsvn/components/user/RsvnStyled';
 import RsvnStatusBadge from '../../../rsvn/components/user/RsvnStatusBadge';
-import api from '../../../../app/api/axiosApi';
+import { findMyReviews } from '../../api/reviewApi';
 
 const fadeInUp = keyframes`
   from { opacity: 0; transform: translateY(10px); }
@@ -80,8 +80,8 @@ function MyReviewPage() {
   useEffect(() => {
     const fetchMyReviews = async () => {
       try {
-        const res = await api.get('/review/my');
-        setMyReviews(res.data);
+        const data = await findMyReviews();
+        setMyReviews(data);
       } catch {
         setMyReviews([]);
       }
