@@ -49,7 +49,8 @@ public class HostDetailService implements UserDetailsService {
                 member.getNo(),
                 member.getEmail(),
                 host.getPassword(),
-                MemberRole.H
+                MemberRole.H,
+                member.getName()
         );
 
 

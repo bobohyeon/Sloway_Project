@@ -4,11 +4,20 @@ function parseToken(token) {
   if (!token) return null;
 
   try {
-    // 'Bearer xxx.yyy.zzz' → 'xxx.yyy.zzz'
     const raw = token.startsWith('Bearer ') ? token.slice(7) : token;
-    const payload = JSON.parse(atob(raw.split('.')[1]));
 
-    // 만료 확인 (exp는 초 단위, Date.now()는 ms 단위)
+    // JWT는 base64url(-, _ 사용, 패딩 생략)이라 표준 base64로 먼저 변환
+    const base64 = raw.split('.')[1].replace(/-/g, '+').replace(/_/g, '/');
+
+    const json = decodeURIComponent(
+      atob(base64)
+        .split('')
+        .map((c) => '%' + c.charCodeAt(0).toString(16).padStart(2, '0'))
+        .join('')
+    );
+
+    const payload = JSON.parse(json);
+
     if (payload.exp && payload.exp * 1000 < Date.now()) {
       return null; // 만료된 토큰
     }
@@ -17,13 +26,12 @@ function parseToken(token) {
       memberNo: payload.memberNo,
       email: payload.email,
       role: payload.role,
+      name: payload.name,
     };
   } catch (e) {
-    // 토큰 형식 잘못됐거나 Base64 디코딩 실패
     return null;
   }
 }
-
 // ─── 초기 상태 ────────────────────────────────────────────
 // 새로고침 시 localStorage 토큰 → user 정보 복구
 const token = localStorage.getItem('accessToken');

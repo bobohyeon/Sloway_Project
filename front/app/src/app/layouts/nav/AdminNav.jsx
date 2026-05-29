@@ -2,6 +2,7 @@ import React from 'react';
 import styled from 'styled-components';
 import NavItem from './NavItem';
 import ProfileBox from './ProfileBox';
+import { useAuth } from '../../../features/auth/hooks/useAuth';
 import {
   FaHome,
   FaUserFriends,
@@ -114,6 +115,7 @@ const adminMenuGroups = [
 ];
 
 function AdminNav() {
+  const { user } = useAuth();
   return (
     <Wrapper>
       <ProfileBox
@@ -122,9 +124,9 @@ function AdminNav() {
             <FaCrown /> 관리자 콘솔
           </>
         }
-        name="Sloway Admin"
-        subInfo="김관리자 · super_admin"
-        stats={[{ value: '7', label: '미처리 업무' }]}
+        name={`${user?.name ?? '관리자'}님`}
+        subInfo={user?.email}
+        stats={[]}
       />
       {adminMenuGroups.map((group) => (
         <div key={group.title}>

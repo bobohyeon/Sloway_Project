@@ -18,24 +18,40 @@ import java.util.List;
  *
  */
 @Getter
-@RequiredArgsConstructor
 public class CustomUserDetails implements UserDetails {
 
     private final Long memberNo;
     private final String email;
     private final String password;
     private final MemberRole role;
+    private final String name;   // 표시용 (nullable 허용)
 
     /**
      * Spring Security 권한.
-     *
-     * {@code role.getCode()}로 풀네임 가져와 "ROLE_" prefix 붙임.
-     * 결과: {@code "ROLE_USER"} / {@code "ROLE_HOST"} / {@code "ROLE_ADMIN"}
-     *
-     * 이렇게 해야 {@code hasRole("USER")} 같은 Spring 표준 매칭이 동작.
      */
+
+    /**
+     * 비밀번호는 토큰 기반 인증에서 사용하지 않음.
+     * UserDetails 인터페이스 요구사항만 충족.
+     */
+    /** 정식 생성자 (전체 필드) */
+    public CustomUserDetails(Long memberNo, String email, String password,
+                             MemberRole role, String name) {
+        this.memberNo = memberNo;
+        this.email = email;
+        this.password = password;
+        this.role = role;
+        this.name = name;
+    }
+
+    /** 로그인용 (name 없이) — 기존 호출부 호환 */
+    public CustomUserDetails(Long memberNo, String email, String password, MemberRole role) {
+        this(memberNo, email, password, role, null);
+    }
+
+    /** 토큰 재구성용 (password·name 없이) — JwtAuthenticationFilter 호환 */
     public CustomUserDetails(Long memberNo, String email, MemberRole role) {
-        this(memberNo, email, null, role);
+        this(memberNo, email, null, role, null);
     }
 
     @Override
@@ -43,10 +59,6 @@ public class CustomUserDetails implements UserDetails {
         return List.of(new SimpleGrantedAuthority("ROLE_" + role.getCode()));
     }
 
-    /**
-     * 비밀번호는 토큰 기반 인증에서 사용하지 않음.
-     * UserDetails 인터페이스 요구사항만 충족.
-     */
     @Override
     public String getPassword() {
         return password;
@@ -56,4 +68,5 @@ public class CustomUserDetails implements UserDetails {
     public String getUsername() {
         return email;
     }
-}
+
+}//class
