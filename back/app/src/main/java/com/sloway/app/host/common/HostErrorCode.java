@@ -25,8 +25,7 @@ public enum HostErrorCode implements ErrorCode {
     HOST_NOT_FOUND(HttpStatus.NOT_FOUND, "호스트 신청 정보를 찾을 수 없습니다"),
     INVALID_APPROVAL_STATE(HttpStatus.CONFLICT, "대기 중인 신청만 처리할 수 있습니다"),
     REJECT_REASON_REQUIRED(HttpStatus.BAD_REQUEST, "반려 사유를 입력해주세요"),
-    DUPLICATE_BUSINESS_NO(HttpStatus.CONFLICT, "이미 등록된 사업자등록번호입니다"),
-    MEMBER_NOT_FOUND(HttpStatus.NOT_FOUND, "회원 정보를 찾을 수 없습니다");
+    DUPLICATE_BUSINESS_NO(HttpStatus.CONFLICT, "이미 등록된 사업자등록번호입니다");
 
     private final HttpStatus status;
     private final String msg;

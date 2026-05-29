@@ -44,4 +44,14 @@ public class AdminEntity extends BaseEntity {
     public void changePassword(String encodedPassword) {
         this.password = encodedPassword;
     }
+
+    // ↓↓↓ 새로 추가 ↓↓↓
+    public void changeName(String name) {
+        this.name = name;
+    }
+
+    public void changePhone(String phone) {
+        this.phone = phone;
+    }
+
 }

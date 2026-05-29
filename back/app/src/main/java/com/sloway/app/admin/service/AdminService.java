@@ -1,6 +1,7 @@
 package com.sloway.app.admin.service;
 
 import com.sloway.app.admin.common.AdminErrorCode;
+import com.sloway.app.admin.dto.request.UpdateAdminRequestDto;
 import com.sloway.app.admin.dto.response.AdminMyPageResponseDto;
 import com.sloway.app.admin.entity.AdminEntity;
 import com.sloway.app.admin.repository.AdminRepository;
@@ -26,7 +27,26 @@ public class AdminService {
     public AdminMyPageResponseDto getMyInfo(Long adminNo) {
         AdminEntity admin = adminRepository.findById(adminNo)
                 .orElseThrow(()-> new CustomException(AdminErrorCode.ADMIN_NOT_FOUND));
-        return AdminMyPageResponseDto.fron(admin);
+        return AdminMyPageResponseDto.from(admin);
     }
 
+    @Transactional
+    public AdminMyPageResponseDto update(Long adminNo, UpdateAdminRequestDto request) {
+
+        // 1) 어드민 조회 (없으면 404)
+        AdminEntity admin = adminRepository.findById(adminNo)
+                .orElseThrow(() -> new CustomException(AdminErrorCode.ADMIN_NOT_FOUND));
+
+        // 2) 필드별 null 체크 후 변경 (PATCH)
+        if (request.getName() != null && !request.getName().isBlank()) {
+            admin.changeName(request.getName());
+        }
+        if (request.getPhone() != null && !request.getPhone().isBlank()) {
+            admin.changePhone(request.getPhone());
+        }
+
+        log.info("어드민 본인 정보 수정 완료: adminNo={}", adminNo);
+
+        return AdminMyPageResponseDto.from(admin);
+    }
 }//class

@@ -2,7 +2,9 @@ package com.sloway.app.auth.service;
 
 import com.sloway.app.auth.dto.request.JoinRequestDto;
 import com.sloway.app.auth.dto.response.EmailCheckResponseDto;
+import com.sloway.app.common.exception.CustomException;
 import com.sloway.app.member.common.AuthType;
+import com.sloway.app.member.common.MemberErrorCode;
 import com.sloway.app.member.common.MemberStatus;
 import com.sloway.app.member.entity.MemberEntity;
 import com.sloway.app.member.entity.UserEntity;
@@ -38,6 +40,7 @@ public class AuthService {
     private final MemberRepository memberRepository;
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
+    private final EmailService emailService;
 
     @Transactional
     public void userJoin(JoinRequestDto request) {
@@ -57,6 +60,10 @@ public class AuthService {
         // 2) 이메일 중복 체크
         if (memberRepository.existsByEmail(request.getEmail())) {
             throw new IllegalArgumentException("이미 가입된 이메일 입니다");
+        }
+        // 이메일 인증 완료 여부 검증
+        if (!emailService.isVerified(request.getEmail())) {
+            throw new CustomException(MemberErrorCode.EMAIL_NOT_VERIFIED);
         }
         // 3) 비밀번호 암호화 (평문 저장 절대 금지)
         String encoded = passwordEncoder.encode(request.getPassword());

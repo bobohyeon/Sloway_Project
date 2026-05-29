@@ -4,6 +4,7 @@ import com.sloway.app.admin.common.AdminErrorCode;
 import com.sloway.app.admin.dto.response.MemberDetailResponseDto;
 import com.sloway.app.admin.dto.response.MemberListResponseDto;
 import com.sloway.app.common.exception.CustomException;
+import com.sloway.app.member.common.MemberErrorCode;
 import com.sloway.app.member.common.MemberStatus;
 import com.sloway.app.member.entity.MemberEntity;
 import com.sloway.app.member.repository.MemberRepository;
@@ -51,7 +52,7 @@ public class AdminMemberService {
 
         // 회원 조회 — 없으면 404
         MemberEntity member = memberRepository.findById(memberNo)
-                .orElseThrow(() -> new CustomException(AdminErrorCode.MEMBER_NOT_FOUND));
+                .orElseThrow(() -> new CustomException(MemberErrorCode.MEMBER_NOT_FOUND));
 
         return MemberDetailResponseDto.from(member);
     }
@@ -61,16 +62,16 @@ public class AdminMemberService {
 
         // 1) 사유 검증 — DB 조회 전에 빠르게 실패
         if (reason == null || reason.isBlank()) {
-            throw new CustomException(AdminErrorCode.SUSPEND_REASON_REQUIRED);
+            throw new CustomException(MemberErrorCode.SUSPEND_REASON_REQUIRED);
         }
 
         // 2) 회원 조회
         MemberEntity member = memberRepository.findById(memberNo)
-                .orElseThrow(() -> new CustomException(AdminErrorCode.MEMBER_NOT_FOUND));
+                .orElseThrow(() -> new CustomException(MemberErrorCode.MEMBER_NOT_FOUND));
 
         // 3) 활성 상태가 아니면 정지 불가 — 이미 정지/탈퇴 회원은 거절
         if (member.getStatus() != MemberStatus.A) {
-            throw new CustomException(AdminErrorCode.INVALID_MEMBER_STATE);
+            throw new CustomException(MemberErrorCode.INVALID_MEMBER_STATE);
         }
 
         // 4) 정지 해제 시각 계산 — days가 null/음수면 영구(null), 양수면 미래 시각
@@ -91,12 +92,12 @@ public class AdminMemberService {
 
         // 1) 회원 조회
         MemberEntity member = memberRepository.findById(memberNo)
-                .orElseThrow(() -> new CustomException(AdminErrorCode.MEMBER_NOT_FOUND));
+                .orElseThrow(() -> new CustomException(MemberErrorCode.MEMBER_NOT_FOUND));
 
         // 2) 정지 상태(S/B)가 아니면 해제 불가
         MemberStatus current = member.getStatus();
         if (current != MemberStatus.S && current != MemberStatus.B) {
-            throw new CustomException(AdminErrorCode.INVALID_MEMBER_STATE);
+            throw new CustomException(MemberErrorCode.INVALID_MEMBER_STATE);
         }
 
         // 3) Entity 의미 메서드 호출 (status A로 복원 + 사유/시각 초기화)

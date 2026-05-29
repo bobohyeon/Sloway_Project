@@ -1,15 +1,14 @@
 package com.sloway.app.host.controller;
 
 import com.sloway.app.auth.user.CustomUserDetails;
+import com.sloway.app.host.dto.request.UpdateHostRequestDto;
 import com.sloway.app.host.dto.response.HostMyPageResponseDto;
 import com.sloway.app.host.service.HostService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 /**
  * 호스트 — 본인 영역 API.
@@ -49,4 +48,16 @@ public class HostController {
         return ResponseEntity.ok(hostMyPageResponseDto);
     }
 
-}
+    //호스트 마이페이지 수정
+    @PatchMapping
+    public ResponseEntity<HostMyPageResponseDto> update(
+            @RequestBody UpdateHostRequestDto request,
+            @AuthenticationPrincipal CustomUserDetails host) {
+
+        log.info("호스트 마이페이지 수정: memberNo={}", host.getMemberNo());
+        HostMyPageResponseDto result = hostService.update(host.getMemberNo(), request);
+        return ResponseEntity.ok(result);
+
+
+    }
+}//class

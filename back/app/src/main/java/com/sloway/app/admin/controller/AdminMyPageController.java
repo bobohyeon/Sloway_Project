@@ -1,5 +1,6 @@
 package com.sloway.app.admin.controller;
 
+import com.sloway.app.admin.dto.request.UpdateAdminRequestDto;
 import com.sloway.app.admin.dto.response.AdminMyPageResponseDto;
 import com.sloway.app.admin.service.AdminService;
 import com.sloway.app.auth.user.CustomUserDetails;
@@ -7,9 +8,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 /**
  * 어드민 — 본인 영역 API.
@@ -38,6 +37,15 @@ public class AdminMyPageController {
     public ResponseEntity<AdminMyPageResponseDto> getMyInfo(@AuthenticationPrincipal CustomUserDetails admin){
         log.info("어드민 본인 정보 조회 : adminNo={}" , admin.getMemberNo());
         AdminMyPageResponseDto result = adminService.getMyInfo(admin.getMemberNo());
+        return ResponseEntity.ok(result);
+    }
+    @PatchMapping
+    public ResponseEntity<AdminMyPageResponseDto> update(
+            @RequestBody UpdateAdminRequestDto request,
+            @AuthenticationPrincipal CustomUserDetails admin) {
+
+        log.info("어드민 본인 정보 수정: adminNo={}", admin.getMemberNo());
+        AdminMyPageResponseDto result = adminService.update(admin.getMemberNo(), request);
         return ResponseEntity.ok(result);
     }
 }
