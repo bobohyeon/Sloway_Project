@@ -46,7 +46,6 @@ public class RsvnService {
     private final WorkStayRepository workStayRepository;
     private final OfficeRepository officeRepository;
     private final StationRepository stationRepository;
-    private final PayService payService;
     private final PayRepository payRepository;
     private final RefundService refundService;
     private final HostRepository hostRepository;
@@ -73,7 +72,7 @@ public class RsvnService {
         }
 
 
-        RsvnEntity savedRsvn = rsvnRepository.save(
+        rsvnRepository.save(
                 RsvnEntity.builder()
                         .memberNo(member)
                         .officeNo(office)
@@ -86,17 +85,6 @@ public class RsvnService {
                         .checkOut(dto.getCheckOut())
                         .build()
         );
-
-        PayCreateReqDto payCreateReqDto = PayCreateReqDto.builder()
-                .rsvnNo(savedRsvn.getNo())
-                .baseAmt(savedRsvn.getAmt())
-                .addAmt(dto.getAddAmt())
-                .method(dto.getMethod())
-                .ucNo(dto.getUcNo())
-                .usedPoint(dto.getUsedPoint())
-                .build();
-
-        payService.createPay(payCreateReqDto);
     }
 
     //내 예약 목록 조회
