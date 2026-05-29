@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import styled from 'styled-components';
 import PageLayout from '../../../../app/layouts/page/PageLayout';
@@ -14,6 +14,8 @@ import {
   Req,
   Textarea,
 } from '../../components/user/ReviewStyled';
+
+import api from '../../../../app/api/axiosApi';
 
 const SCORE_ITEMS = [
   { icon: '🌟', label: '종합 만족도', desc: '전반적인 만족도는 어떠셨나요?' },
@@ -118,23 +120,42 @@ const BottomBtns = styled.div`
   gap: 10px;
 `;
 
-// 기존 리뷰 데이터 — 백엔드 연결 시 useParams id로 fetch
-const EXISTING = {
-  space: '청평 숲속 파인뷰 스테이',
-  spaceType: '워크앤스테이',
-  usedDate: '2026.04.18 ~ 2026.04.20',
-  scores: [5, 5, 4, 5],
-  text: '조용하고 몰입감 있어요. 듀얼모니터도 잘 쓰고 왔습니다.',
-  photos: [true, true, true],
-};
-
 function ReviewEditPage() {
   const navigate = useNavigate();
   const { id } = useParams();
 
-  const [scores, setScores] = useState(EXISTING.scores);
-  const [text, setText] = useState(EXISTING.text);
-  const [photos, setPhotos] = useState(EXISTING.photos);
+  const [scores, setScores] = useState([0, 0, 0, 0]);
+  const [text, setText] = useState('');
+  const [photos, setPhotos] = useState([]);
+  const [spaceType, setSpaceType] = useState(null);
+  const [spaceName, setSpaceName] = useState(null);
+  const [usedDate, setUsedDate] = useState('');
+
+  useEffect(() => {
+    const fetchReview = async () => {
+      try {
+        const resp = await api.get(`/review/${id}`);
+        const data = resp.data;
+        setScores([
+          data.scoreTotal,
+          data.scoreOffice,
+          data.scoreAmenity,
+          data.scoreFocus,
+        ]);
+        setText(data.content);
+        setSpaceName(data.spaceName);
+        setSpaceType(data.spaceType);
+
+        const checkIn = data.checkIn?.slice(0, 10).replaceAll('-', '.');
+        const checkOut = data.checkOut?.slice(0, 10).replaceAll('-', '.');
+        setUsedDate(`${checkIn} ~ ${checkOut}`);
+      } catch {
+        alert('리뷰 데이터를 불러오지 못했어요');
+      }
+    };
+
+    fetchReview();
+  }, [id]);
 
   const setScore = (idx, val) => {
     const next = [...scores];
@@ -142,10 +163,21 @@ function ReviewEditPage() {
     setScores(next);
   };
 
-  const handleSubmit = () => {
-    alert('구현예정 💕💕');
-    navigate('/user/review');
-  };
+  async function handleSubmit() {
+    try {
+      await api.put(`/review/${id}`, {
+        scoreTotal: scores[0],
+        scoreOffice: scores[1],
+        scoreAmenity: scores[2],
+        scoreFocus: scores[3],
+        content: text,
+        imgUrls: [],
+      });
+      navigate('/user/review');
+    } catch {
+      alert('수정에 실패했어요');
+    }
+  }
 
   return (
     <PageLayout
@@ -155,7 +187,6 @@ function ReviewEditPage() {
       backLabel="내 리뷰"
       maxWidth={800}
     >
-
       {/* 공간 정보 */}
       <FormBox>
         <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
@@ -174,12 +205,12 @@ function ReviewEditPage() {
             🌲
           </div>
           <div>
-            <RsvnStatusBadge type="type" label={EXISTING.spaceType} />
+            <RsvnStatusBadge type="type" label={spaceType} />
             <div style={{ fontSize: 15, fontWeight: 700, margin: '4px 0 2px' }}>
-              {EXISTING.space}
+              {spaceName}
             </div>
             <div style={{ fontSize: 12, color: COLOR.gray400 }}>
-              📅 이용일 · {EXISTING.usedDate}
+              📅 이용일 · {usedDate}
             </div>
           </div>
         </div>
