@@ -1,5 +1,6 @@
 package com.sloway.app.host.controller;
 
+import com.sloway.app.auth.dto.request.ChangePasswordRequestDto;
 import com.sloway.app.auth.user.CustomUserDetails;
 import com.sloway.app.host.dto.request.UpdateHostRequestDto;
 import com.sloway.app.host.dto.response.HostMyPageResponseDto;
@@ -59,5 +60,21 @@ public class HostController {
         return ResponseEntity.ok(result);
 
 
+    }
+
+    /**
+     * 호스트 비밀번호 변경.
+     *
+     * <p>비밀번호는 HostEntity에 저장됨 (Member 아님).
+     * 호스트는 일반회원과 별도 비번 — 같은 사람이 두 도메인 가입 가능 구조.
+     */
+    @PatchMapping("/password")
+    public ResponseEntity<Void> changePassword(
+            @RequestBody ChangePasswordRequestDto request,
+            @AuthenticationPrincipal CustomUserDetails host) {
+
+        log.info("호스트 비밀번호 변경: memberNo={}", host.getMemberNo());
+        hostService.changePassword(host.getMemberNo(), request);
+        return ResponseEntity.ok().build();
     }
 }//class
