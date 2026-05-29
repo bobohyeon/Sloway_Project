@@ -55,6 +55,7 @@ public class KakaoPayClient {
     }
 
     public KakaoCancelResDto cancel(KakaoCancelReqDto reqDto) {
+        reqDto = reqDto.toBuilder().cid(this.cid).build();
         HttpHeaders headers = new HttpHeaders();
         headers.set("Authorization", "DEV_SECRET_KEY " + secretKey);
         headers.setContentType(MediaType.APPLICATION_JSON);
