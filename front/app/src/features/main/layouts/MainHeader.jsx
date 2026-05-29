@@ -1,6 +1,6 @@
 import { useNavigate } from 'react-router-dom';
 import styled from 'styled-components';
-
+import { useAuth } from '../../auth/hooks/useAuth';
 const HeaderWrapper = styled.header`
   display: flex;
   justify-content: space-between;
@@ -75,9 +75,81 @@ const LoginBtn = styled.button`
     background: #2d6a4f;
   }
 `;
+const UserArea = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 12px;
+`;
+
+const UserChip = styled.button`
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: none;
+  border: 1px solid #d0c8b8;
+  border-radius: 20px;
+  padding: 5px 14px 5px 6px; /* ← Header의 UserButton과 동일하게 */
+  cursor: pointer;
+  transition: background 0.2s;
+  &:hover {
+    background: rgba(255, 255, 255, 0.6);
+  }
+`;
+
+const Avatar = styled.div`
+  width: 28px;
+  height: 28px;
+  flex-shrink: 0;
+  border-radius: 50%;
+  background: #a8b89f;
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 13px;
+  font-weight: bold;
+`;
+
+const UserEmail = styled.span`
+  font-size: 13px;
+  color: #333;
+  max-width: 160px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+`;
+
+const LogoutBtn = styled.button`
+  padding: 7px 16px;
+  border-radius: 8px;
+  background: none;
+  border: 1px solid #d0c8b8;
+  color: #555;
+  font-size: 13px;
+  font-weight: 600;
+  font-family: 'Noto Sans KR', sans-serif;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 0.2s;
+  &:hover {
+    border-color: #2d6a4f;
+    color: #2d6a4f;
+  }
+`;
+
+// role → 마이페이지 진입 경로 (한 곳에서 관리: 경로 바뀌면 여기만 고침)
+const MYPAGE_PATH = {
+  U: '/user/mypage',
+  H: '/host/profile',
+  A: '/admin/dashboard',
+};
 
 function MainHeader({ activePage = 'home' }) {
   const navigate = useNavigate();
+  const { isAuthenticated, user, myPagePath, handleLogout } = useAuth();
+
+  // role이 예상 밖(또는 null)이면 일반회원 마이페이지로 폴백
+  const goMyPage = () => navigate(myPagePath);
 
   return (
     <HeaderWrapper>
@@ -101,7 +173,20 @@ function MainHeader({ activePage = 'home' }) {
         </NavLink>
         <NavLink onClick={() => navigate('/notices')}>공지사항</NavLink>
         <NavLink onClick={() => navigate('/faqs')}>자주 묻는 질문</NavLink>
-        <LoginBtn onClick={() => navigate('/login')}>로그인 / 가입</LoginBtn>
+
+        {isAuthenticated ? (
+          <UserArea>
+            <UserChip onClick={goMyPage} title="마이페이지로 이동">
+              <Avatar>
+                {(user?.name ?? user?.email).toUpperCase() ?? 'U'}
+              </Avatar>
+              <UserEmail>{user?.name ?? user?.email}</UserEmail>
+            </UserChip>
+            <LogoutBtn onClick={() => handleLogout('/')}>로그아웃</LogoutBtn>
+          </UserArea>
+        ) : (
+          <LoginBtn onClick={() => navigate('/login')}>로그인 / 가입</LoginBtn>
+        )}
       </Nav>
     </HeaderWrapper>
   );

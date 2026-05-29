@@ -43,11 +43,12 @@ public class UserDetailsServiceImpl implements UserDetailsService {
                 .orElseThrow(() -> new UsernameNotFoundException("이메일 또는 비밀번호가 일치하지 않습니다"));
 
         // 3) 두 테이블 정보 합쳐 CustomUserDetails 반환 (로그인용 생성자 - password 포함)
-            return new CustomUserDetails(
-                    member.getNo(),
-                    member.getEmail(),
-                    user.getPassword(),
-                    MemberRole.U
-            );
+        return new CustomUserDetails(
+                member.getNo(),
+                member.getEmail(),
+                user.getPassword(),
+                MemberRole.U,
+                member.getName()        // ← 추가
+        );
     }
 }//class

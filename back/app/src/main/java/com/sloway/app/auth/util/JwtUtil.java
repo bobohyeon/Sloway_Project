@@ -47,17 +47,17 @@ public class JwtUtil {
         this.refreshTokenExpirationMs = refreshTokenExpirationMs;
     }
 
-    public String createAccessToken(Long memberNo, String email, String role) {
+    public String createAccessToken(Long memberNo, String email, String role, String name) {
         return Jwts.builder()
                 .claim("memberNo", memberNo)
                 .claim("email", email)
                 .claim("role", role)
+                .claim("name", name)   // name이 null이면 jjwt가 이 claim을 생략함 → 프론트는 폴백
                 .claim("type", "ACCESS")
                 .issuedAt(new Date(System.currentTimeMillis()))
                 .expiration(new Date(System.currentTimeMillis() + accessTokenExpirationMs))
                 .signWith(secretKey)
-                .compact()
-                ;
+                .compact();
     }
 
     //RefreshToken
