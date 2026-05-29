@@ -7,7 +7,6 @@ import com.sloway.app.review.review.dto.response.ReviewResDto;
 import com.sloway.app.review.review.service.ReviewService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
@@ -23,7 +22,7 @@ public class ReviewController {
 
     private final ReviewService reviewService;
 
-    @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @PostMapping
     public ResponseEntity<Void> save(
             @AuthenticationPrincipal CustomUserDetails userDetails,
             @RequestPart("dto") ReviewCreateReqDto dto,

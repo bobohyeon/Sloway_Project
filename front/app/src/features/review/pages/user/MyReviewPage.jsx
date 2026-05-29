@@ -5,7 +5,8 @@ import PageLayout from '../../../../app/layouts/page/PageLayout';
 import {
   TabBar,
   TabBtn,
-  TabCount,Card,
+  TabCount,
+  Card,
   CardRow,
   Thumb,
   CardBody,
@@ -134,7 +135,6 @@ function MyReviewPage() {
       description="이용한 공간에 리뷰를 작성하고 관리하세요"
       maxWidth={960}
     >
-
       <TabBar>
         {TABS.map((tab, idx) => (
           <TabBtn
@@ -167,7 +167,13 @@ function MyReviewPage() {
                     <span>{item.date}</span>
                   </CardMeta>
                 </CardBody>
-                <WriteBtn onClick={() => navigate('/user/review/write')}>
+                <WriteBtn
+                  onClick={() =>
+                    navigate('/user/review/write', {
+                      state: { rsvnNo: item.id },
+                    })
+                  }
+                >
                   ⭐ 리뷰 작성
                 </WriteBtn>
               </CardRow>
