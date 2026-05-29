@@ -4,13 +4,14 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.*;
 
 @Getter
-@Builder
+@Builder(toBuilder = true)
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @AllArgsConstructor(access = AccessLevel.PRIVATE)
 public class KakaoReadyReqDto {
 
     private String cid;
 
+    @JsonProperty("partner_order_id")
     private String partnerOrderId;
 
     @JsonProperty("partner_user_id")

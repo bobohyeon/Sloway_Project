@@ -33,6 +33,7 @@ public class KakaoPayClient {
 
 
     public KakaoReadyResDto ready(KakaoReadyReqDto reqDto) {
+        reqDto = reqDto.toBuilder().cid(this.cid).build();
         HttpHeaders headers = new HttpHeaders();
         headers.set("Authorization", "SECRET_KEY " + secretKey);
         headers.setContentType(MediaType.APPLICATION_JSON);
@@ -61,5 +62,6 @@ public class KakaoPayClient {
 
         return restTemplate.postForObject(baseUrl + "/payment/cancel", entity, KakaoCancelResDto.class);
     }
+
 
 }
