@@ -1,6 +1,9 @@
 package com.sloway.app.member.repository;
 
+import com.sloway.app.member.common.MemberStatus;
 import com.sloway.app.member.entity.MemberEntity;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.List;
@@ -28,4 +31,6 @@ public interface MemberRepository extends JpaRepository<MemberEntity  , Long> , 
      * 빈 리스트 넘기면 빈 결과 반환 (예외 안 남).
      */
     List<MemberEntity> findByNoIn(List<Long> memberNos);
+
+    Page<MemberEntity> findByStatus(MemberStatus status, Pageable pageable);
 }
