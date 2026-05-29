@@ -1,12 +1,15 @@
 package com.sloway.app.place.controller.hostPlace;
 
 import com.sloway.app.place.dto.request.hostPlace.HostPlaceRejectReqDto;
+import com.sloway.app.place.dto.response.hostPlace.ApprovalCheckRespDto;
+import com.sloway.app.place.dto.response.hostPlace.ApprovalDetailRespDto;
 import com.sloway.app.place.dto.response.hostPlace.HostPlaceListRespDto;
 import com.sloway.app.place.service.hostPlace.HostPlaceService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -22,6 +25,7 @@ public class HostPlaceApiController {
     @PutMapping("/approved/{no}")
     public ResponseEntity<Object> approveHostPlace(@PathVariable Long no){
         hostPlaceService.approveHostPlace(no);
+        System.out.println("조회하려는 번호: " + no);
 
         return ResponseEntity
                 .status(HttpStatus.OK)
@@ -45,4 +49,22 @@ public class HostPlaceApiController {
                 .status(HttpStatus.OK)
                 .body(dtoList);
     }
+
+    @GetMapping("/check/{type}/{no}")
+    public ResponseEntity<ApprovalCheckRespDto> checkRejectReason(
+            @PathVariable String type,
+            @PathVariable Long no,
+            @AuthenticationPrincipal Long memberNo){
+        ApprovalCheckRespDto dto = hostPlaceService.checkRejectReason(type,no,Long.valueOf(2));
+
+        return ResponseEntity.ok(dto);
+    }
+
+    @GetMapping("/detail/{type}/{no}")
+    public ResponseEntity<ApprovalDetailRespDto> detailApproval(@PathVariable String type, @PathVariable Long no){
+        ApprovalDetailRespDto dto = hostPlaceService.detailApproval(type,no);
+
+        return ResponseEntity.ok(dto);
+    }
+
 }

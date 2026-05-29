@@ -15,6 +15,8 @@ public class PlaceDetailListRespDto {
 
     private String thumbnail;
 
+    private String status;
+
     private String title;
 
     private String createdAt;

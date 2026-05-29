@@ -56,16 +56,6 @@ const Tag = styled.span`
 `;
 
 const InfoSection = ({ data }) => {
-  const dayLabels = {
-    mon: '월요일',
-    tue: '화요일',
-    wed: '수요일',
-    thu: '목요일',
-    fri: '금요일',
-    sat: '토요일',
-    sun: '일요일',
-  };
-
   return (
     <InfoGrid>
       <Card>
@@ -80,7 +70,7 @@ const InfoSection = ({ data }) => {
             </tr>
             <tr>
               <td style={{ color: '#aaa' }}>공간명</td>
-              <td style={{ fontWeight: 'bold' }}>{data.name}</td>
+              <td style={{ fontWeight: 'bold' }}>{data.title}</td>
             </tr>
             <tr>
               <td style={{ color: '#aaa' }}>주소</td>
@@ -96,89 +86,45 @@ const InfoSection = ({ data }) => {
         <div style={{ marginTop: '20px' }}>
           <SectionTitle>공간 소개</SectionTitle>
           <p style={{ fontSize: '14px', color: '#555', lineHeight: '1.6' }}>
-            {data.description}
+            {data.content}
           </p>
         </div>
       </Card>
 
       <Card>
         <SectionTitle>가격 및 편의시설</SectionTitle>
-        {data.type === 'OFFICE' ? (
-          Object.keys(data.officePeriods || {}).map((day) => (
-            <div key={day} style={{ marginBottom: '15px' }}>
-              <span style={{ fontSize: '13px', fontWeight: 'bold' }}>
-                {dayLabels[day]}
-              </span>
-              <PriceGrid>
-                {Object.entries(data.officePeriods[day]).map(
-                  ([time, price]) => (
-                    <PriceItem key={time}>
-                      <span className="time">{time}시~</span>
-                      <span className="amt">
-                        ₩{Number(price).toLocaleString()}
-                      </span>
-                    </PriceItem>
-                  )
-                )}
-              </PriceGrid>
-            </div>
-          ))
-        ) : (
-          <div style={{ marginBottom: '20px' }}>
+        <div style={{ marginBottom: '20px' }}>
+          <div
+            style={{
+              padding: '15px',
+              background: '#fcfdfb',
+              borderRadius: '10px',
+            }}
+          >
+            <span style={{ fontSize: '13px', color: '#888' }}>
+              {data.type === 'OFFICE'
+                ? '기본 요금 (1시간당)'
+                : '기본 요금 (1박/하루)'}
+            </span>
             <div
-              style={{
-                padding: '15px',
-                background: '#fcfdfb',
-                borderRadius: '10px',
-              }}
+              style={{ fontSize: '20px', fontWeight: 'bold', color: '#d4a373' }}
             >
-              <span style={{ fontSize: '13px', color: '#888' }}>
-                기본 요금 (1박/하루)
-              </span>
-              <div
-                style={{
-                  fontSize: '20px',
-                  fontWeight: 'bold',
-                  color: '#d4a373',
-                }}
-              >
-                ₩{Number(data.basePrice).toLocaleString()}
-              </div>
+              ₩{Number(data.price || 0).toLocaleString()}
             </div>
           </div>
-        )}
+        </div>
 
         <div style={{ marginTop: '20px' }}>
           <h5 style={{ fontSize: '13px', marginBottom: '10px' }}>
             등록된 편의시설
           </h5>
-          {data.amenities?.map((a) => (
-            <Tag key={a}>✓ {a}</Tag>
-          ))}
 
-          {data.type === 'WORK_STAY' && (
-            <div
-              style={{
-                marginTop: '15px',
-                padding: '15px',
-                background: '#f8f9ff',
-                borderRadius: '10px',
-              }}
-            >
-              <h5
-                style={{
-                  fontSize: '13px',
-                  marginBottom: '10px',
-                  color: '#5a67d8',
-                }}
-              >
-                내부 오피스 편의시설
-              </h5>
-              {data.officeAmenities?.map((a) => (
-                <Tag key={a} $isOffice>
-                  💻 {a}
-                </Tag>
-              ))}
+          {/* 데이터가 있을 때만 Tag를 보여줌 */}
+          {data.amenities && data.amenities.length > 0 ? (
+            data.amenities.map((a) => <Tag key={a.no}>✓ {a.name}</Tag>)
+          ) : (
+            <div style={{ fontSize: '12px', color: '#888' }}>
+              등록된 편의시설이 없습니다.
             </div>
           )}
         </div>

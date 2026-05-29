@@ -10,7 +10,7 @@ function SpaceDetailPage() {
 
   return (
     <SpaceDetailLayout
-      title={`${placeInfo.name} ${getTypeLabel(placeInfo.type)} 목록`}
+      title={`${placeInfo.name} 내 ${getTypeLabel(placeInfo.type)} 유닛 목록`}
       description={`등록된 ${getTypeLabel(placeInfo.type)}를 관리하고 정보를 수정하세요.`}
       onBack={'/host/space/list'}
     >

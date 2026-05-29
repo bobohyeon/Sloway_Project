@@ -54,10 +54,28 @@ public class PlaceRepositoryImpl implements PlaceRepositoryCustom {
                                 .or(rsvnEntity.stationNo.no.eq(stationEntity.no))
                 );
 
-        // 2. 메인 유닛 리스트 조회 쿼리
+        // 2. 유닛 상태값 조회 쿼리
+        var subQueryStatus = JPAExpressions
+                .select(hostPlaceEntity.status.stringValue())
+                .from(hostPlaceEntity)
+                .where(
+                        // 타입별로 HostPlace의 외래키와 비교해야 합니다.
+                        new CaseBuilder()
+                                .when(placeEntity.type.eq("WORK_STAY")).then(hostPlaceEntity.workStayEntity.no)
+                                .when(placeEntity.type.eq("OFFICE")).then(hostPlaceEntity.officeEntity.no)
+                                .when(placeEntity.type.eq("STATION")).then(hostPlaceEntity.stationEntity.no)
+                                .otherwise((Long) null)
+                                .eq(
+                                        new CaseBuilder()
+                                                .when(placeEntity.type.eq("WORK_STAY")).then(workStayEntity.no)
+                                                .when(placeEntity.type.eq("OFFICE")).then(officeEntity.no)
+                                                .when(placeEntity.type.eq("STATION")).then(stationEntity.no)
+                                                .otherwise((Long) null)
+                                )
+                );
+
         return queryFactory
                 .select(Projections.constructor(PlaceDetailListRespDto.class,
-                        // NO동적 선택
                         new CaseBuilder()
                                 .when(placeEntity.type.eq("WORK_STAY")).then(workStayEntity.no)
                                 .when(placeEntity.type.eq("OFFICE")).then(officeEntity.no)
@@ -66,12 +84,14 @@ public class PlaceRepositoryImpl implements PlaceRepositoryCustom {
 
                         placeEntity.type,
 
-                        // S3 URL을 동적선택
                         new CaseBuilder()
                                 .when(placeEntity.type.eq("WORK_STAY")).then(imgWorkStayEntity.currentUrl)
                                 .when(placeEntity.type.eq("OFFICE")).then(imgOfficeEntity.currentUrl)
                                 .when(placeEntity.type.eq("STATION")).then(imgStationEntity.currentUrl)
-                                .otherwise((String) null),                              // thumbnail (AWS S3 경로)
+                                .otherwise((String) null),
+
+                        // [수정] 서브쿼리로 처리
+                        subQueryStatus,
 
                         new CaseBuilder()
                                 .when(placeEntity.type.eq("WORK_STAY")).then(workStayEntity.title)
@@ -79,37 +99,27 @@ public class PlaceRepositoryImpl implements PlaceRepositoryCustom {
                                 .when(placeEntity.type.eq("STATION")).then(stationEntity.title)
                                 .otherwise((String) null),
 
-                        placeEntity.createdAt.stringValue(),                    // createdAt
-                        Expressions.numberTemplate(Double.class, "COALESCE(ROUND({0}, 1), 0.0)", subQueryReviewAvg) // rating
+                        placeEntity.createdAt.stringValue(),
+                        Expressions.numberTemplate(Double.class, "COALESCE(ROUND({0}, 1), 0.0)", subQueryReviewAvg)
                 ))
                 .from(placeEntity)
                 .join(hostPlaceEntity).on(hostPlaceEntity.placeEntity.eq(placeEntity))
-                .join(hostEntity).on(hostPlaceEntity.hostEntity.eq(hostEntity))
+                .join(hostPlaceEntity.hostEntity, hostEntity)
 
-                // 각 메인 서브 개념 공간 조인
+                // 불필요한 중복 조인 제거
                 .leftJoin(workStayEntity).on(workStayEntity.placeEntity.eq(placeEntity))
                 .leftJoin(officeEntity).on(officeEntity.placeEntity.eq(placeEntity))
                 .leftJoin(stationEntity).on(stationEntity.placeEntity.eq(placeEntity))
 
-                .leftJoin(imgWorkStayEntity).on(
-                        imgWorkStayEntity.workStayEntity.eq(workStayEntity).and(imgWorkStayEntity.sort.eq(1))
-                )
-                .leftJoin(imgOfficeEntity).on(
-                        imgOfficeEntity.officeEntity.eq(officeEntity).and(imgOfficeEntity.sort.eq(1))
-                )
-                .leftJoin(imgStationEntity).on(
-                        imgStationEntity.stationEntity.eq(stationEntity).and(imgStationEntity.sort.eq(1))
-                )
+                .leftJoin(imgWorkStayEntity).on(imgWorkStayEntity.workStayEntity.eq(workStayEntity).and(imgWorkStayEntity.sort.eq(1)))
+                .leftJoin(imgOfficeEntity).on(imgOfficeEntity.officeEntity.eq(officeEntity).and(imgOfficeEntity.sort.eq(1)))
+                .leftJoin(imgStationEntity).on(imgStationEntity.stationEntity.eq(stationEntity).and(imgStationEntity.sort.eq(1)))
 
                 .where(
                         placeEntity.delYn.eq("N"),
-                        memberNo != null ? hostEntity.memberNo.eq(memberNo) : null,
-                        placeEntity.no.eq(placeNo),
-                        ExpressionUtils.anyOf(
-                                placeEntity.type.eq("WORK_STAY").and(workStayEntity.no.isNotNull()),
-                                placeEntity.type.eq("OFFICE").and(officeEntity.no.isNotNull()),
-                                placeEntity.type.eq("STATION").and(stationEntity.no.isNotNull())
-                        ))
+                        memberNo != null ? hostEntity.memberNo.eq(memberNo) : null, // hostEntity 조인이 필요하면 추가
+                        placeEntity.no.eq(placeNo)
+                )
                 .fetch();
     }
 

@@ -3,6 +3,8 @@ package com.sloway.app.place.service.hostPlace;
 import com.sloway.app.host.entity.HostEntity;
 import com.sloway.app.host.repository.HostRepository;
 import com.sloway.app.place.dto.request.hostPlace.HostPlaceRejectReqDto;
+import com.sloway.app.place.dto.response.hostPlace.ApprovalCheckRespDto;
+import com.sloway.app.place.dto.response.hostPlace.ApprovalDetailRespDto;
 import com.sloway.app.place.dto.response.hostPlace.HostPlaceListRespDto;
 import com.sloway.app.place.entity.hostPlace.HostPlaceEntity;
 import com.sloway.app.place.entity.office.OfficeEntity;
@@ -21,6 +23,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Optional;
 
 @Service
 @Slf4j
@@ -94,20 +97,40 @@ public class HostPlaceService {
     @Transactional
     public void approveHostPlace(Long no) {
         HostPlaceEntity hostPlace = hostPlaceRepository.findById(no)
-                .orElseThrow(()->new EntityNotFoundException("[HOST_PLACE-210]HostPlace Not Found For Approve"));
-
+                .orElseThrow(()-> new EntityNotFoundException("[H.P-281]HostPlace Not Found For Approve"));
         hostPlace.approve();
+        hostPlaceRepository.save(hostPlace);
     }
 
     @Transactional
     public void rejectHostPlace(Long no, HostPlaceRejectReqDto dto) {
+        System.out.println("dto = " + dto);
         HostPlaceEntity hostPlace = hostPlaceRepository.findById(no)
-                .orElseThrow(()->new EntityNotFoundException("[HOST_PLACE-211]HostPlace Not Found For Reject"));
-
+                .orElseThrow(()-> new EntityNotFoundException("[H.P-282]HostPlace Not Found For Reject"));
         hostPlace.reject(dto.getRejectedReason());
+        hostPlaceRepository.save(hostPlace);
     }
 
     public List<HostPlaceListRespDto> hostPlaceList() {
         return hostPlaceRepository.findHostPlaceList();
+    }
+
+    public ApprovalCheckRespDto checkRejectReason(String type, Long no, Long memberNo) {
+        return hostPlaceRepository.checkRejectReason(type, no, memberNo);
+    }
+
+    public ApprovalDetailRespDto detailApproval(String type, Long no) {
+        // 2. 타입에 따른 상세 정보 및 이미지 조회 (분기)
+        switch (type) {
+            case "PLACE":
+                return hostPlaceRepository.findCommonData(no);
+            case "STATION":
+                return hostPlaceRepository.findStationDetail(no);
+            case "OFFICE":
+                return hostPlaceRepository.findOfficeDetail(no);
+            case "WORK_STAY":
+                return hostPlaceRepository.findWorkStayDetail(no);
+        }
+        return null;
     }
 }//class

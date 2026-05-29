@@ -5,12 +5,14 @@ import ImageGrid from '../../components/admin/ImageGrid';
 import InfoSection from '../../components/admin/InfoSection';
 import styled from 'styled-components';
 import ChecklistSection from '../../components/admin/ChecklistSection';
+import { useSpaceApproval } from '../../hooks/admin/useSpaceApproval';
+import RejectModal from '../../components/admin/RejectModal';
 
 const ContentWrapper = styled.div`
   display: flex;
   flex-direction: column;
   gap: 25px;
-  max-width: 1200px;
+  min-width: 1200px;
   margin: 0 auto;
 `;
 
@@ -48,57 +50,10 @@ const ActionButton = styled.button`
 `;
 
 const SpaceApprovalDetailPage = () => {
-  const { id } = useParams();
-  const [loading, setLoading] = useState(true);
-  const [spaceData, setSpaceData] = useState(null);
-
-  useEffect(() => {
-    // API 호출 시뮬레이션
-    setTimeout(() => {
-      setSpaceData({
-        id: id,
-        type: 'STATION',
-        name: '제주 돌담집 리트릿',
-        address: '제주특별자치도 서귀포시 성산읍...',
-        hostName: '폴인제주 리조트',
-        description: '제주의 전통 돌담 안에서 즐기는 고즈넉한 휴식...',
-        basePrice: 220000,
-        // 이미지 객체 배열 (sort 포함)
-        images: [
-          { url: 'https://via.placeholder.com/600x400', sort: 1 },
-          { url: 'https://via.placeholder.com/300x200', sort: 2 },
-          { url: 'https://via.placeholder.com/300x200', sort: 3 },
-          { url: 'https://via.placeholder.com/300x200', sort: 4 },
-          { url: 'https://via.placeholder.com/300x200', sort: 5 },
-          { url: 'https://via.placeholder.com/300x200', sort: 6 },
-          { url: 'https://via.placeholder.com/300x200', sort: 7 },
-          { url: 'https://via.placeholder.com/300x200', sort: 8 },
-          { url: 'https://via.placeholder.com/300x200', sort: 9 },
-          { url: 'https://via.placeholder.com/300x200', sort: 10 },
-        ],
-        // 워크앤스테이 전용 내부 오피스 이미지
-        officeImages: [
-          { url: 'https://via.placeholder.com/300x200?text=Office1', sort: 1 },
-          { url: 'https://via.placeholder.com/300x200?text=Office2', sort: 2 },
-          { url: 'https://via.placeholder.com/300x200?text=Office3', sort: 3 },
-          { url: 'https://via.placeholder.com/300x200?text=Office4', sort: 4 },
-          { url: 'https://via.placeholder.com/300x200?text=Office5', sort: 5 },
-          { url: 'https://via.placeholder.com/300x200?text=Office6', sort: 6 },
-          { url: 'https://via.placeholder.com/300x200?text=Office7', sort: 7 },
-          { url: 'https://via.placeholder.com/300x200?text=Office8', sort: 8 },
-          { url: 'https://via.placeholder.com/300x200?text=Office9', sort: 9 },
-          {
-            url: 'https://via.placeholder.com/300x200?text=Office10',
-            sort: 10,
-          },
-        ],
-        amenities: ['WiFi', '주방', '세탁기', '주차', 'TV', '에어컨'],
-        officeAmenities: ['고속인터넷', '모션데스크', '듀얼모니터', '커피머신'],
-      });
-      setLoading(false);
-    }, 500);
-  }, [id]);
-
+  const { type, id } = useParams();
+  const { spaceData, loading, reason, setReason, handleApprove, handleReject } =
+    useSpaceApproval(type, id);
+  const [isModalOpen, setIsModalOpen] = useState(false);
   if (loading)
     return (
       <div style={{ padding: '50px', textAlign: 'center' }}>
@@ -112,21 +67,13 @@ const SpaceApprovalDetailPage = () => {
       description={`[${spaceData.id}] 공간 정보를 확인하고 승인 여부를 결정하세요.`}
     >
       <ContentWrapper>
-        {/* 메인 공간 이미지 그리드 */}
         <ImageGrid images={spaceData.images} title="공간 이미지" />
 
-        {/* 워크앤스테이인 경우 내부 오피스 이미지 그리드 추가 */}
         {spaceData.type === 'WORK_STAY' && (
-          <ImageGrid
-            images={spaceData.officeImages}
-            title="내부 오피스 이미지"
-          />
+          <ImageGrid images={spaceData.subImages} title="내부 오피스 이미지" />
         )}
 
-        {/* 상세 정보 및 요금/편의시설 섹션 */}
         <InfoSection data={spaceData} />
-
-        {/* 검수 체크리스트 (이전 답변에서 드린 컴포넌트) */}
         <ChecklistSection />
 
         <FloatingFooter>
@@ -139,11 +86,21 @@ const SpaceApprovalDetailPage = () => {
             </p>
           </div>
           <ButtonGroup>
-            <ActionButton>반려</ActionButton>
-            <ActionButton
-              $primary
-              onClick={() => alert('최종 승인 처리되었습니다.')}
-            >
+            <ActionButton onClick={() => setIsModalOpen(true)}>
+              반려
+            </ActionButton>
+
+            <RejectModal
+              isOpen={isModalOpen}
+              onClose={() => setIsModalOpen(false)}
+              reason={reason}
+              setReason={setReason}
+              onConfirm={() => {
+                handleReject(); // 훅의 API 함수 호출
+                setIsModalOpen(false);
+              }}
+            />
+            <ActionButton $primary onClick={handleApprove}>
               공간 승인
             </ActionButton>
           </ButtonGroup>
