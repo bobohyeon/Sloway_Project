@@ -13,17 +13,8 @@ import {
 } from 'react-icons/fa';
 import PageLayout from '../../../../app/layouts/page/PageLayout';
 import { useMyPage } from '../../hooks/useMyPage';
-
-// ─── 더미 데이터 (백엔드 연동 후 API로 교체) ───────────────
-const DUMMY_USER = {
-  name: '홍길동',
-  email: 'hong@sloway.co.kr',
-  grade: '새싹 등급',
-  profileImg: null,
-  point: 2450,
-  coupon: 3,
-  joinDate: '2024.03.15',
-};
+import { useMyPageSummary } from '../../hooks/useMyPageSummary';
+import { useAuth } from '../../../auth/hooks/useAuth';
 
 const DUMMY_RESERVATIONS = [
   {
@@ -323,7 +314,8 @@ const BannerArrow = styled.div`
 function MyPage() {
   const navigate = useNavigate();
   const { data: profile } = useMyPage(); // 프로필(이름/이메일/사진) 실데이터
-  const user = DUMMY_USER; // 통계·예약용 더미 (나중에 본인이 교체)
+  const { user } = useAuth(); // 토큰 정보 (memberNo)
+  const { point, couponCount } = useMyPageSummary(user?.memberNo);
 
   return (
     <PageLayout>
@@ -349,7 +341,6 @@ function MyPage() {
           <ProfileInfo>
             <UserName>{profile?.name ?? '회원'}님</UserName>
             <UserMeta>{profile?.email ?? ''}</UserMeta>
-            <GradeBadge>{user.grade}</GradeBadge>
           </ProfileInfo>
           <ProfileActions>
             <ActionBtn onClick={() => navigate('/user/profile')}>
@@ -361,10 +352,9 @@ function MyPage() {
           </ProfileActions>
         </ProfileCard>
 
-        {/* ↓ 통계·퀵메뉴·최근예약 카드는 그대로 (네가 알아서 할 부분) */}
-
         {/* 통계 카드 3개 */}
         <StatsRow>
+          {/* 진행중 예약 — 예약 API 연동 전까지 더미 '2' 유지 */}
           <StatCard onClick={() => navigate('/user/reservation')}>
             <StatIcon $bg="rgba(168,184,159,0.15)" $color="#5b6b53">
               <FaCalendarAlt />
@@ -375,22 +365,24 @@ function MyPage() {
             </StatInfo>
           </StatCard>
 
+          {/* 포인트 — 실데이터 */}
           <StatCard onClick={() => navigate('/user/point')}>
             <StatIcon $bg="rgba(212,134,31,0.12)" $color="#b8730f">
               <FaCoins />
             </StatIcon>
             <StatInfo>
-              <StatValue>{user.point.toLocaleString()}P</StatValue>
+              <StatValue>{point.toLocaleString()}P</StatValue>
               <StatLabel>보유 포인트</StatLabel>
             </StatInfo>
           </StatCard>
 
+          {/* 쿠폰 — 실데이터 */}
           <StatCard onClick={() => navigate('/user/coupon')}>
             <StatIcon $bg="rgba(184,90,78,0.12)" $color="#a04c42">
               <FaTicketAlt />
             </StatIcon>
             <StatInfo>
-              <StatValue>{user.coupon}장</StatValue>
+              <StatValue>{couponCount}장</StatValue>
               <StatLabel>사용 가능한 쿠폰</StatLabel>
             </StatInfo>
           </StatCard>

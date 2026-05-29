@@ -27,6 +27,7 @@ import {
   FaCog,
   FaUserCircle,
 } from 'react-icons/fa';
+import { useMyPageSummary } from '../../../features/account/hooks/useMyPageSummary';
 
 const Wrapper = styled.div`
   display: flex;
@@ -98,7 +99,7 @@ const userMenuGroups = [
 
 function UserNav() {
   const { user } = useAuth();
-
+  const { point, couponCount } = useMyPageSummary(user?.memberNo);
   return (
     <Wrapper>
       <ProfileBox
@@ -108,10 +109,9 @@ function UserNav() {
           </>
         }
         name={`${user?.name ?? '회원'}님`}
-        subInfo="새싹 등급"
         stats={[
-          { value: '2,450 P', label: '포인트' },
-          { value: '3', label: '쿠폰' },
+          { value: `${point.toLocaleString()} P`, label: '포인트' },
+          { value: `${couponCount}`, label: '쿠폰' },
         ]}
       />
       {userMenuGroups.map((group) => (
