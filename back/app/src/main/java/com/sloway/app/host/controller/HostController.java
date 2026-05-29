@@ -5,6 +5,7 @@ import com.sloway.app.auth.user.CustomUserDetails;
 import com.sloway.app.host.dto.request.UpdateHostRequestDto;
 import com.sloway.app.host.dto.response.HostMyPageResponseDto;
 import com.sloway.app.host.service.HostService;
+import com.sloway.app.member.dto.request.ChangeEmailRequestDto;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
@@ -75,6 +76,16 @@ public class HostController {
 
         log.info("호스트 비밀번호 변경: memberNo={}", host.getMemberNo());
         hostService.changePassword(host.getMemberNo(), request);
+        return ResponseEntity.ok().build();
+    }
+
+    @PatchMapping("/email")
+    public ResponseEntity<Void> changeEmail(
+            @RequestBody ChangeEmailRequestDto request,
+            @AuthenticationPrincipal CustomUserDetails host) {
+
+        log.info("호스트 이메일 변경: memberNo={}", host.getMemberNo());
+        hostService.changeEmail(host.getMemberNo(), request);
         return ResponseEntity.ok().build();
     }
 }//class

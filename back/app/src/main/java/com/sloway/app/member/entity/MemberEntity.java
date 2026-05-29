@@ -106,6 +106,8 @@ public class MemberEntity extends BaseEntity {
         this.suspendReason = null;
         this.suspendUntil = null;
     }
-
+    public void changeEmail(String email) {
+        this.email = email;
+    }
 
 }//class

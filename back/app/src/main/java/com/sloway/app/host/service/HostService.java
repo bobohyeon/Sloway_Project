@@ -1,6 +1,7 @@
 package com.sloway.app.host.service;
 
 import com.sloway.app.auth.dto.request.ChangePasswordRequestDto;
+import com.sloway.app.auth.service.EmailService;
 import com.sloway.app.common.exception.CustomException;
 import com.sloway.app.host.common.HostErrorCode;
 import com.sloway.app.host.dto.request.UpdateHostRequestDto;
@@ -8,6 +9,7 @@ import com.sloway.app.host.dto.response.HostMyPageResponseDto;
 import com.sloway.app.host.entity.HostEntity;
 import com.sloway.app.host.repository.HostRepository;
 import com.sloway.app.member.common.MemberErrorCode;
+import com.sloway.app.member.dto.request.ChangeEmailRequestDto;
 import com.sloway.app.member.entity.MemberEntity;
 import com.sloway.app.member.repository.MemberRepository;
 import lombok.RequiredArgsConstructor;
@@ -31,6 +33,7 @@ public class HostService {
     private final MemberRepository memberRepository;
     private final HostRepository hostRepository;
     private final PasswordEncoder passwordEncoder;
+    private final EmailService emailService;
 
     public HostMyPageResponseDto hostMyInfo(Long memberNo) {
         // 1) 회원 조회 (없으면 404)
@@ -108,5 +111,37 @@ public class HostService {
         host.changePassword(encoded);
 
         log.info("호스트 비밀번호 변경 완료: memberNo={}", memberNo);
+    }
+
+    /**
+     * 호스트 이메일 변경.
+     *
+     * <p>이메일은 공통 MemberEntity에 저장되므로 일반회원과 동일 로직.
+     * 새 이메일은 (1) 인증 완료 (2) 미사용 조건을 서버에서 재검증.
+     * <p>변경 후 프론트는 재로그인 유도 (JWT email claim이 옛 값).
+     */
+    @Transactional
+    public void changeEmail(Long memberNo, ChangeEmailRequestDto request) {
+        String newEmail = request.getNewEmail();
+
+        if (newEmail == null || newEmail.isBlank()) {
+            throw new IllegalArgumentException("새 이메일을 입력하세요");
+        }
+
+        MemberEntity member = memberRepository.findById(memberNo)
+                .orElseThrow(() -> new CustomException(MemberErrorCode.MEMBER_NOT_FOUND));
+
+        if (newEmail.equals(member.getEmail())) {
+            throw new CustomException(MemberErrorCode.SAME_AS_OLD_EMAIL);
+        }
+        if (memberRepository.existsByEmail(newEmail)) {
+            throw new CustomException(MemberErrorCode.EMAIL_DUPLICATED);
+        }
+        if (!emailService.isVerified(newEmail)) {
+            throw new CustomException(MemberErrorCode.EMAIL_NOT_VERIFIED);
+        }
+
+        member.changeEmail(newEmail);
+        log.info("호스트 이메일 변경 완료: memberNo={}", memberNo);
     }
 }

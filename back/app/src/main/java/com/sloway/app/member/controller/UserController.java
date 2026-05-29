@@ -2,6 +2,7 @@ package com.sloway.app.member.controller;
 
 import com.sloway.app.auth.dto.request.ChangePasswordRequestDto;
 import com.sloway.app.auth.user.CustomUserDetails;
+import com.sloway.app.member.dto.request.ChangeEmailRequestDto;
 import com.sloway.app.member.dto.request.UpdateUserRequestDto;
 import com.sloway.app.member.dto.response.UserResponseDto;
 import com.sloway.app.member.service.UserService;
@@ -66,6 +67,18 @@ public class UserController {
 
         log.info("일반회원 비밀번호 변경: memberNo={}", user.getMemberNo());
         userService.changePassword(user.getMemberNo(), request);
+        return ResponseEntity.ok().build();
+    }
+    /**
+     * 일반회원 이메일 변경.
+     */
+    @PatchMapping("/email")
+    public ResponseEntity<Void> changeEmail(
+            @RequestBody ChangeEmailRequestDto request,
+            @AuthenticationPrincipal CustomUserDetails user) {
+
+        log.info("일반회원 이메일 변경: memberNo={}", user.getMemberNo());
+        userService.changeEmail(user.getMemberNo(), request);
         return ResponseEntity.ok().build();
     }
 
