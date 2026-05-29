@@ -116,6 +116,7 @@ public class PayService {
         if (usedPoint != null && usedPoint > 0) {
             pointService.usePointInternal(memberNo, payEntity.getUsedPoint(), payEntity);
         }
+        pointService.earnPointInternal(memberNo,payEntity);
         return payEntity;
     }
 

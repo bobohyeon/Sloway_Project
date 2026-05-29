@@ -4,6 +4,7 @@ import com.sloway.app.common.exception.CustomException;
 import com.sloway.app.member.entity.MemberEntity;
 import com.sloway.app.member.repository.MemberRepository;
 import com.sloway.app.payment.pay.common.PayErrorCode;
+import com.sloway.app.payment.pay.common.PayStatus;
 import com.sloway.app.payment.pay.entity.PayEntity;
 import com.sloway.app.payment.pay.repository.PayRepository;
 import com.sloway.app.payment.point.common.PointDealType;
@@ -121,6 +122,25 @@ public class PointService {
         pointRepository.save(entity);
     }
 
+
+    @Transactional
+    public void earnPointInternal(Long memberNo, PayEntity payEntity) {
+        int savePoint = (int) (payEntity.getFinalAmt() * 0.01);
+        LocalDateTime expiredAt = LocalDateTime.now().plusYears(1);
+        MemberEntity memberEntity = memberRepository.findById(memberNo)
+                .orElseThrow(() -> new EntityNotFoundException("회원 정보를 조회할 수 없습니다."));
+
+        PointEntity pointEntity = PointEntity.builder()
+                .memberNo(memberEntity)
+                .payNo(payEntity)
+                .amount(savePoint)
+                .dealType(PointDealType.EARN)
+                .expiredAt(expiredAt)
+                .status(PointStatus.WAIT)
+                .build();
+        pointRepository.save(pointEntity);
+    }
+
     public PointBalanceResDto findPointBalanceByMemberNo(Long memberNo) {
         MemberEntity memberEntity = memberRepository.findById(memberNo)
                 .orElseThrow(() -> new EntityNotFoundException("회원 정보를 조회할 수 없습니다."));
@@ -156,5 +176,7 @@ public class PointService {
                 .filter(p -> p.getStatus() == PointStatus.WAIT || p.getStatus() == PointStatus.SAVE)
                 .forEach(PointEntity::cancel);
     }
+
+
 
 }
