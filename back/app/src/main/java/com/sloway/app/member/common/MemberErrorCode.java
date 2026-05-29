@@ -30,7 +30,12 @@ public enum MemberErrorCode implements ErrorCode {
     INVALID_VERIFY_CODE(HttpStatus.BAD_REQUEST, "인증번호가 일치하지 않습니다"),
     EXPIRED_VERIFY_CODE(HttpStatus.BAD_REQUEST, "인증번호가 만료되었습니다. 재발송해주세요"),
     ALREADY_VERIFIED(HttpStatus.CONFLICT, "이미 인증된 코드입니다"),
-    EMAIL_NOT_VERIFIED(HttpStatus.BAD_REQUEST, "이메일 인증이 완료되지 않았습니다");
+    EMAIL_NOT_VERIFIED(HttpStatus.BAD_REQUEST, "이메일 인증이 완료되지 않았습니다"),
+
+    // ─── 비밀번호 변경 ─────────────────────── ← 새로 추가
+    WRONG_CURRENT_PASSWORD(HttpStatus.BAD_REQUEST, "현재 비밀번호가 일치하지 않습니다"),
+    SAME_AS_OLD_PASSWORD(HttpStatus.BAD_REQUEST, "새 비밀번호는 현재 비밀번호와 달라야 합니다"),
+    PASSWORD_TOO_SHORT(HttpStatus.BAD_REQUEST, "비밀번호는 4자 이상이어야 합니다");
 
 
     private final HttpStatus status;

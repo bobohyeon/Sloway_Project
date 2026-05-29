@@ -1,5 +1,6 @@
 package com.sloway.app.member.controller;
 
+import com.sloway.app.auth.dto.request.ChangePasswordRequestDto;
 import com.sloway.app.auth.user.CustomUserDetails;
 import com.sloway.app.member.dto.request.UpdateUserRequestDto;
 import com.sloway.app.member.dto.response.UserResponseDto;
@@ -50,6 +51,22 @@ public class UserController {
         log.info("일반회원 마이페이지 수정: memberNo={}", user.getMemberNo());
         UserResponseDto result = userService.update(user.getMemberNo(), request);
         return ResponseEntity.ok(result);
+    }
+
+    /**
+     * 일반회원 비밀번호 변경.
+     *
+     * <p>현재 비밀번호 검증 후 새 비밀번호로 교체.
+     * <p>변경 후 FE에서 토큰 폐기 + 재로그인 안내 (백엔드는 비번만 변경).
+     */
+    @PatchMapping("/password")
+    public ResponseEntity<Void> changePassword(
+            @RequestBody ChangePasswordRequestDto request,
+            @AuthenticationPrincipal CustomUserDetails user) {
+
+        log.info("일반회원 비밀번호 변경: memberNo={}", user.getMemberNo());
+        userService.changePassword(user.getMemberNo(), request);
+        return ResponseEntity.ok().build();
     }
 
 }

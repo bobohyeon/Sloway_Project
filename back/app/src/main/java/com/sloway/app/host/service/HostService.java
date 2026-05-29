@@ -1,5 +1,6 @@
 package com.sloway.app.host.service;
 
+import com.sloway.app.auth.dto.request.ChangePasswordRequestDto;
 import com.sloway.app.common.exception.CustomException;
 import com.sloway.app.host.common.HostErrorCode;
 import com.sloway.app.host.dto.request.UpdateHostRequestDto;
@@ -11,6 +12,7 @@ import com.sloway.app.member.entity.MemberEntity;
 import com.sloway.app.member.repository.MemberRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -28,7 +30,7 @@ public class HostService {
 
     private final MemberRepository memberRepository;
     private final HostRepository hostRepository;
-
+    private final PasswordEncoder passwordEncoder;
 
     public HostMyPageResponseDto hostMyInfo(Long memberNo) {
         // 1) 회원 조회 (없으면 404)
@@ -72,5 +74,39 @@ public class HostService {
         // 5) 수정된 정보를 응답 DTO로 변환 (조회 DTO 재활용)
         return HostMyPageResponseDto.from(member, host);
 
+    }
+
+    /**
+     * 호스트 비밀번호 변경.
+     *
+     * <p>비밀번호는 HostEntity에 BCrypt 해시로 저장.
+     */
+    @Transactional
+    public void changePassword(Long memberNo, ChangePasswordRequestDto request) {
+
+        // 1) 새 비번 길이 검증
+        if (request.getNewPassword() == null || request.getNewPassword().length() < 4) {
+            throw new CustomException(MemberErrorCode.PASSWORD_TOO_SHORT);
+        }
+
+        // 2) 호스트 조회 (비번은 HostEntity에 있음)
+        HostEntity host = hostRepository.findByMemberNo(memberNo)
+                .orElseThrow(() -> new CustomException(HostErrorCode.HOST_NOT_FOUND));
+
+        // 3) 현재 비번 검증
+        if (!passwordEncoder.matches(request.getCurrentPassword(), host.getPassword())) {
+            throw new CustomException(MemberErrorCode.WRONG_CURRENT_PASSWORD);
+        }
+
+        // 4) 새 비번이 기존과 동일한지 검증
+        if (passwordEncoder.matches(request.getNewPassword(), host.getPassword())) {
+            throw new CustomException(MemberErrorCode.SAME_AS_OLD_PASSWORD);
+        }
+
+        // 5) 새 비번 암호화 후 저장
+        String encoded = passwordEncoder.encode(request.getNewPassword());
+        host.changePassword(encoded);
+
+        log.info("호스트 비밀번호 변경 완료: memberNo={}", memberNo);
     }
 }
