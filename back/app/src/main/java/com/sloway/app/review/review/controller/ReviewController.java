@@ -34,6 +34,12 @@ public class ReviewController {
                 .build();
     }
 
+    @GetMapping("/my")
+    public ResponseEntity<List<ReviewResDto>> findMyReviews(
+            @AuthenticationPrincipal CustomUserDetails userDetails) {
+        return ResponseEntity.ok(reviewService.findMyReviews(userDetails.getMemberNo()));
+    }
+
     @GetMapping
     public ResponseEntity<List<ReviewResDto>> findAll(@RequestParam Long placeNo){
         List<ReviewResDto> dtoList = reviewService.findAll(placeNo);

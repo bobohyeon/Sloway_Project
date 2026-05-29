@@ -57,6 +57,17 @@ public class HelpfulService {
 
     }
 
+    // 내 도움됨 entity no 조회 (없으면 null)
+    public Long findMyNo(Long memberNo, Long reviewNo) {
+        MemberEntity member = memberRepository.findById(memberNo)
+                .orElseThrow(() -> new CustomException(RsvnErrorCode.MEMBER_NOT_FOUND));
+        ReviewEntity review = reviewRepository.findById(reviewNo)
+                .orElseThrow(() -> new CustomException(ReviewErrorCode.REVIEW_NOT_FOUND));
+        return helpfulRepository.findByMemberNoAndReviewNo(member, review)
+                .map(HelpfulEntity::getNo)
+                .orElse(null);
+    }
+
     // 도움됨 카운트 조회
     public Long countByReview(Long reviewNo) {
 
