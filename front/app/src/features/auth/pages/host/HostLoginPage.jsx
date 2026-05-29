@@ -14,18 +14,27 @@ import {
   AuthLink,
 } from '../../components/common/AuthStyled';
 import SlowyLogo from '../../components/common/SlowyLogo';
+import ErrorMessage from '../../components/common/ErrorMessage';
+import { useHostLoginForm } from '../../hooks/useHostLoginForm';
 
+/**
+ * 호스트 로그인 페이지.
+ *
+ * <p>레이아웃과 폼 조립만 담당. 폼 상태/제출 로직은 useHostLoginForm 훅에 격리.
+ */
 function HostLoginPage() {
   const navigate = useNavigate();
 
-  // TODO: 실제 로그인 처리 (백엔드 연동 시)
-  // - POST /api/auth/login (role=HOST 강제)
-  // - 응답의 role이 HOST가 아니면 거부
-  // - 성공 시 /host/dashboard 이동
-  const handleLogin = (e) => {
-    e.preventDefault();
-    navigate('/host/dashboard');
-  };
+  // 폼 상태 + 제출 로직은 훅에 전부 위임
+  const {
+    email,
+    password,
+    error,
+    loading,
+    setEmail,
+    setPassword,
+    handleSubmit,
+  } = useHostLoginForm();
 
   return (
     <AuthCard>
@@ -35,13 +44,16 @@ function HostLoginPage() {
       <AuthTitle>호스트 로그인</AuthTitle>
       <AuthSubtitle>Sloway 호스트 센터에 오신 것을 환영합니다</AuthSubtitle>
 
-      <form onSubmit={handleLogin} noValidate>
+      <form onSubmit={handleSubmit} noValidate>
         <FormGroup>
           <FormLabel>이메일</FormLabel>
           <FormInput
             type="email"
             placeholder="host@sloway.co.kr"
             autoComplete="email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            disabled={loading}
           />
         </FormGroup>
 
@@ -51,8 +63,13 @@ function HostLoginPage() {
             type="password"
             placeholder="비밀번호 입력"
             autoComplete="current-password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            disabled={loading}
           />
         </FormGroup>
+
+        <ErrorMessage message={error} />
 
         <div
           style={{
@@ -71,7 +88,9 @@ function HostLoginPage() {
           </AuthLink>
         </div>
 
-        <BtnPrimary type="submit">호스트 로그인</BtnPrimary>
+        <BtnPrimary type="submit" disabled={loading}>
+          {loading ? '로그인 중...' : '호스트 로그인'}
+        </BtnPrimary>
       </form>
 
       <AuthFooter>
