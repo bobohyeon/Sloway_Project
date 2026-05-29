@@ -92,10 +92,6 @@ public class PayService {
     public PayEntity approvePay(Long payNo, String pgToken) {
         PayEntity payEntity = payRepository.findById(payNo)
                 .orElseThrow(() -> new CustomException(PayErrorCode.PAY_NOT_FOUND));
-
-        RsvnEntity rsvnEntity = rsvnRepository.findById(payEntity.getRsvnNo().getNo())
-                .orElseThrow(() -> new CustomException(RsvnErrorCode.RESERVATION_NOT_FOUND));
-
         Long memberNo = payEntity.getRsvnNo().getMemberNo().getNo();
 
         KakaoApproveReqDto kakaoApproveReqDto = KakaoApproveReqDto.builder()

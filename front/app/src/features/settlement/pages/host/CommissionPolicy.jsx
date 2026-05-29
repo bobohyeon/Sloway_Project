@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import styled from 'styled-components';
 import { FaInfoCircle } from 'react-icons/fa';
 
@@ -6,10 +6,11 @@ import PageLayout from '../../../../app/layouts/page/PageLayout';
 import { Card, Section, Badge } from '../../../pay_shared/components';
 import { findFeeAll } from '../../api/feeApi';
 
+// 백엔드 PlaceType enum 영영 camelCase 소문자
 const PLACE_TYPE_LABEL = {
-  STATION: '숙소',
-  WORK_STAY: '워크앤스테이',
-  OFFICE: '코워킹오피스',
+  station: '숙소',
+  workStay: '워크앤스테이',
+  office: '코워킹오피스',
 };
 
 export default function CommissionPolicy() {
@@ -28,6 +29,18 @@ export default function CommissionPolicy() {
       .finally(() => { if (alive) setLoading(false); });
     return () => { alive = false; };
   }, []);
+
+  // 적용 중 정책만 노출 — startAt <= NOW <= endAt (endAt null 영영 무기한)
+  const activeFees = useMemo(() => {
+    const now = Date.now();
+    return fees
+      .filter((f) => f.delYn !== 'Y')
+      .filter((f) => {
+        const start = f.startAt ? new Date(f.startAt).getTime() : 0;
+        const end = f.endAt ? new Date(f.endAt).getTime() : Infinity;
+        return start <= now && now <= end;
+      });
+  }, [fees]);
 
   return (
     <PageLayout
@@ -56,19 +69,17 @@ export default function CommissionPolicy() {
               <Col>수수료율</Col>
               <Col>적용 시작</Col>
             </TableHeader>
-            {fees.length === 0 && !loading ? (
+            {activeFees.length === 0 && !loading ? (
               <EmptyRow>등록된 정책이 없습니다.</EmptyRow>
             ) : (
-              fees.map((fee) => (
+              activeFees.map((fee) => (
                 <TableRow key={fee.no}>
                   <Col>{PLACE_TYPE_LABEL[fee.placeType] ?? fee.placeType}</Col>
-                  <Col><Rate>{Number(fee.commissionRate ?? fee.feeRate ?? 0)}%</Rate></Col>
+                  <Col><Rate>{Number(fee.rate ?? 0)}%</Rate></Col>
                   <Col>
                     <DateText>
-                      {fee.appliedAt
-                        ? new Date(fee.appliedAt).toLocaleDateString()
-                        : fee.createdAt
-                        ? new Date(fee.createdAt).toLocaleDateString()
+                      {fee.startAt
+                        ? new Date(fee.startAt).toLocaleDateString()
                         : '—'}
                     </DateText>
                   </Col>

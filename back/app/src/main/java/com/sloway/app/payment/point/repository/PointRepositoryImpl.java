@@ -8,6 +8,7 @@ import com.sloway.app.payment.point.entity.QPointEntity;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Repository
@@ -39,6 +40,19 @@ public class PointRepositoryImpl implements PointRepositoryCustom {
                 .fetch();
         return pointList;
     }
+
+    @Override
+    public List<PointEntity> findExpiredWaitForEarn(LocalDateTime cutoff) {
+        return jpaQueryFactory
+                .selectFrom(qPointEntity)
+                .where(
+                        qPointEntity.status.eq(PointStatus.WAIT),
+                        qPointEntity.dealType.eq(PointDealType.EARN),
+                        qPointEntity.createdAt.loe(cutoff)
+                )
+                .fetch();
+    }
+
 
 
 }

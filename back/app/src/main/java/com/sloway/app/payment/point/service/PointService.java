@@ -175,5 +175,15 @@ public class PointService {
                 .forEach(PointEntity::cancel);
     }
 
+    @Transactional
+    public void confirmEarnPointsScheduled() {
+        List<PointEntity> pointEntityList = pointRepository.findExpiredWaitForEarn(LocalDateTime.now().minusDays(7));
+        pointEntityList.stream()
+                .filter(p -> p.getStatus() == PointStatus.WAIT)
+                .forEach(PointEntity::confirmEarn);
+
+
+    }
+
 
 }
