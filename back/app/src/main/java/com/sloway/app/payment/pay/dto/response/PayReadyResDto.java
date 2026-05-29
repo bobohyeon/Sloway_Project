@@ -21,6 +21,7 @@ public class PayReadyResDto {
                 .nextRedirectAppUrl(kakaoReadyResDto.getNextRedirectAppUrl())
                 .nextRedirectMobileUrl(kakaoReadyResDto.getNextRedirectMobileUrl())
                 .nextRedirectPcUrl(kakaoReadyResDto.getNextRedirectPcUrl())
+                .createdAt(kakaoReadyResDto.getCreatedAt())
                 .build();
     }
 
