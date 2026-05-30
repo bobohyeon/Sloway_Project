@@ -50,6 +50,22 @@ public class PayApiController {
         return ResponseEntity.ok(payResDtoList);
     }
 
+    // TODO: 토스 결제 준비 — 프론트가 SDK 결제창 열기 직전 호출
+    //   @PostMapping("/toss/prepare")
+    //   public ResponseEntity<TossPrepareResDto> prepareTossPay(@RequestBody PayCreateReqDto reqDto) {
+    //     payService.prepareTossPay(reqDto) 호출 → 201 Created 또는 200 OK 반환
+    //   }
+    //   ※ 카카오 readyPay 핸들러 패턴 참고. 단 RedirectView 아님 — JSON 응답 (프론트가 SDK 호출)
+
+    // TODO: 토스 결제 승인 — 프론트 success 페이지가 paymentKey/orderId/amount 들고 호출
+    //   @PostMapping("/toss/confirm")
+    //   public ResponseEntity<???> confirmTossPay(@RequestBody TossConfirmReqDto reqDto) {
+    //     payService.confirmTossPay(reqDto.getPaymentKey(), reqDto.getOrderId(), reqDto.getAmount())
+    //     → 완료 후 payNo 또는 PayResDto 반환 (프론트가 complete 화면 그릴 값)
+    //   }
+    //   ※ 카카오는 GET /approve(RedirectView)였지만, 토스는 프론트가 직접 호출하는 POST + JSON
+    //   ※ @RequestBody DTO: pg/toss의 TossConfirmReqDto 재활용 vs 별도 요청 DTO 신규 — 택1
+
     @GetMapping("/approve")
     public RedirectView approvePay(
             @RequestParam Long payNo,
