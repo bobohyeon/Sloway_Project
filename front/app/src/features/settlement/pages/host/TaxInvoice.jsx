@@ -6,7 +6,7 @@ import { Card, Section, EmptyState, Badge } from '../../../pay_shared/components
 
 const POLICY_ITEMS = [
   { title: '발행 주기', description: '정산 회차마다 4일 단위로 자동 발행됩니다.' },
-  { title: '발행 시점', description: '정산 완료(COMPLETE) 후 세금계산서 발행(INVOICE)으로 전이됩니다.' },
+  { title: '발행 시점', description: '정산 완료 후 세금계산서가 발행됩니다.' },
   { title: '발행 대상', description: '사업자 등록을 마친 호스트에 한해 발행됩니다.' },
 ];
 
@@ -20,8 +20,8 @@ export default function TaxInvoice() {
       <NoticeCard padded>
         <NoticeIcon><FaInfoCircle /></NoticeIcon>
         <NoticeText>
-          세금계산서는 정산 회차 완료 후 4일 단위 자동 발행입니다.
-          Settle 도메인 본인(4번) 보류 영역 — 정산 본체 구현 후 활성화됩니다.
+          세금계산서는 정산 회차 완료 후 4일 단위로 자동 발행됩니다.
+          발행 기능을 준비 중입니다.
         </NoticeText>
       </NoticeCard>
 
@@ -36,7 +36,7 @@ export default function TaxInvoice() {
         </PolicyCard>
       </Section>
 
-      <Section title="발행 내역" action={<Badge>Settle 통합 대기</Badge>}>
+      <Section title="발행 내역" action={<Badge>준비 중</Badge>}>
         <ListCard padded>
           <TableHeader>
             <Col>발행 번호</Col>

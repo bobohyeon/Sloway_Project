@@ -18,8 +18,7 @@ export default function MemberStats() {
       <NoticeCard padded>
         <NoticeIcon><FaInfoCircle /></NoticeIcon>
         <NoticeText>
-          회원 통계는 1번 도메인(회원·인증) Entity 채움 + 통계 적재 합류 후 활성화됩니다.
-          현재 MemberEntity는 빈 껍데기 상태(본인 SSOT).
+          회원 통계 기능을 준비 중입니다. 회원 데이터 연동 후 활성화됩니다.
         </NoticeText>
       </NoticeCard>
 
@@ -29,12 +28,12 @@ export default function MemberStats() {
         ))}
       </KPIGrid>
 
-      <Section title="회원 분포" action={<Badge>회원 도메인 통합 대기</Badge>}>
+      <Section title="회원 분포" action={<Badge>준비 중</Badge>}>
         <EmptyCard padded>
           <EmptyState
             icon="👤"
-            title="회원 통계 통합 대기"
-            description="1번 도메인 회원 Entity 완성 + 통계 적재 파이프라인 합류 후 노출됩니다."
+            title="회원 통계 준비 중"
+            description="회원 데이터 연동 후 노출됩니다."
           />
         </EmptyCard>
       </Section>

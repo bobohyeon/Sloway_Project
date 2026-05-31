@@ -39,8 +39,8 @@ public class HostPlaceService {
     private final StationRepository stationRepository;
 
     @Transactional
-    public void insertHostPlace(String type, Long hostNo, Long entityNo) {
-        HostEntity host = hostRepository.findById(Long.valueOf(1))
+    public void insertHostPlace(String type, Long memberNo, Long entityNo) {
+        HostEntity host = hostRepository.findByMemberNo(memberNo)
                   .orElseThrow(()->new EntityNotFoundException("[HOST-280] Host Not Found For Save HostPlace"));
         switch (type) {
             case "W" -> {

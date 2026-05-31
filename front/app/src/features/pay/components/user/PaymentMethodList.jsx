@@ -9,16 +9,8 @@ const DEFAULT_METHODS = [
     icon: '💬',
     bg: '#FEE500',
     color: '#191919',
-    desc: '카카오페이 Ready API 연동',
+    desc: '카카오페이로 간편하게 결제하세요',
     primary: true,
-  },
-  {
-    id: 'naver',
-    name: '네이버페이',
-    icon: 'N',
-    bg: '#03C75A',
-    color: '#FFFFFF',
-    desc: 'UI 시뮬레이션',
   },
   {
     id: 'toss',
@@ -26,7 +18,8 @@ const DEFAULT_METHODS = [
     icon: 'T',
     bg: '#0064FF',
     color: '#FFFFFF',
-    desc: 'UI 시뮬레이션',
+    desc: '토스페이로 간편하게 결제하세요',
+    primary: true,
   },
 ];
 

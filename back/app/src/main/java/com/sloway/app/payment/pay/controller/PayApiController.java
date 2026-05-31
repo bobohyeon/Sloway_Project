@@ -3,6 +3,8 @@ package com.sloway.app.payment.pay.controller;
 import com.sloway.app.payment.pay.dto.request.PayCreateReqDto;
 import com.sloway.app.payment.pay.dto.response.PayReadyResDto;
 import com.sloway.app.payment.pay.dto.response.PayResDto;
+import com.sloway.app.payment.pay.dto.response.TossPrepareResDto;
+import com.sloway.app.payment.pay.pg.toss.dto.request.TossConfirmReqDto;
 import com.sloway.app.payment.pay.service.PayService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -48,6 +50,19 @@ public class PayApiController {
     public ResponseEntity<List<PayResDto>> findPaysByMemberNo(@PathVariable Long no) {
         List<PayResDto> payResDtoList = payService.findPaysByMemberNo(no);
         return ResponseEntity.ok(payResDtoList);
+    }
+
+    @PostMapping("/toss/prepare")
+    public ResponseEntity<TossPrepareResDto> prepareTossPay(@RequestBody PayCreateReqDto payCreateReqDto) {
+        TossPrepareResDto resDto = payService.prepareTossPay(payCreateReqDto);
+        return ResponseEntity.status(HttpStatus.CREATED).body(resDto);
+    }
+
+    @PostMapping("/toss/confirm")
+    public ResponseEntity<PayResDto> confirmTossPay(@RequestBody TossConfirmReqDto reqDto) {
+        PayResDto payResDto = payService.confirmTossPay(
+                reqDto.getPaymentKey(), reqDto.getOrderId(), reqDto.getAmount());
+        return ResponseEntity.ok(payResDto);
     }
 
     @GetMapping("/approve")

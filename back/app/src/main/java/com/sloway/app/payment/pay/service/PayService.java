@@ -9,11 +9,15 @@ import com.sloway.app.payment.pay.common.PayErrorCode;
 import com.sloway.app.payment.pay.dto.request.PayCreateReqDto;
 import com.sloway.app.payment.pay.dto.response.PayReadyResDto;
 import com.sloway.app.payment.pay.dto.response.PayResDto;
+import com.sloway.app.payment.pay.dto.response.TossPrepareResDto;
 import com.sloway.app.payment.pay.entity.PayEntity;
 import com.sloway.app.payment.pay.pg.kakao.KakaoPayClient;
 import com.sloway.app.payment.pay.pg.kakao.dto.request.KakaoApproveReqDto;
 import com.sloway.app.payment.pay.pg.kakao.dto.request.KakaoReadyReqDto;
 import com.sloway.app.payment.pay.pg.kakao.dto.response.KakaoReadyResDto;
+import com.sloway.app.payment.pay.pg.toss.client.TossPayClient;
+import com.sloway.app.payment.pay.pg.toss.dto.request.TossConfirmReqDto;
+import com.sloway.app.payment.pay.pg.toss.dto.response.TossConfirmResDto;
 import com.sloway.app.payment.pay.repository.PayRepository;
 import com.sloway.app.payment.point.service.PointService;
 import com.sloway.app.reservation.RsvnErrorCode;
@@ -39,6 +43,7 @@ public class PayService {
     private final RsvnRepository rsvnRepository;
     private final PointService pointService;
     private final KakaoPayClient kakaoPayClient;
+    private final TossPayClient tossPayClient;
 
     @Value("${app.base-url}")
     private String baseUrl;
@@ -102,6 +107,11 @@ public class PayService {
                 .build();
 
         kakaoPayClient.approve(kakaoApproveReqDto);
+        completePayAfterApprove(payEntity, memberNo);
+        return payEntity;
+    }
+
+    private void completePayAfterApprove(PayEntity payEntity, Long memberNo) {
         payEntity.approvePay();
 
         if (payEntity.getUcNo() != null) {
@@ -112,10 +122,67 @@ public class PayService {
         if (usedPoint != null && usedPoint > 0) {
             pointService.usePointInternal(memberNo, payEntity.getUsedPoint(), payEntity);
         }
-        pointService.earnPointInternal(memberNo,payEntity);
-        return payEntity;
+        pointService.earnPointInternal(memberNo, payEntity);
     }
 
+
+    // ============================================================
+    // 토스페이 (Level 3 두 번째 PG) — 옵션 A: prepare 선행 방식
+    // ============================================================
+
+    @Transactional
+    public TossPrepareResDto prepareTossPay(PayCreateReqDto payCreateReqDto) {
+        validAmt(payCreateReqDto);
+        RsvnEntity rsvn = validRsvn(payCreateReqDto);
+
+        CouponEntity coupon = null;
+        if (payCreateReqDto.getUcNo() != null) {
+            coupon = couponRepository.findById(payCreateReqDto.getUcNo())
+                    .orElseThrow(() -> new CustomException(CouponErrorCode.COUPON_NOT_FOUND));
+        }
+
+        int dcAmt = calculateDcAmt(coupon, payCreateReqDto.getBaseAmt());
+        int usedPoint = payCreateReqDto.getUsedPoint() == null
+                ? 0 : payCreateReqDto.getUsedPoint();
+
+        int finalAmt = payCreateReqDto.getBaseAmt() + payCreateReqDto.getAddAmt()
+                - dcAmt - usedPoint;
+
+        validFinalAmt(payCreateReqDto, finalAmt, dcAmt, usedPoint);
+
+        PayEntity payEntity = payCreateReqDto.toEntity(rsvn, coupon, dcAmt, finalAmt);
+        payRepository.save(payEntity);
+
+        String orderId = "SLOWAY_" + payEntity.getNo();
+        return TossPrepareResDto.of(payEntity, orderId);
+    }
+
+    @Transactional
+    public PayResDto confirmTossPay(String paymentKey, String orderId, Integer amount) {
+        Long payNo = Long.parseLong(orderId.replace("SLOWAY_", ""));
+        PayEntity payEntity = payRepository.findById(payNo)
+                .orElseThrow(() -> new CustomException(PayErrorCode.PAY_NOT_FOUND));
+
+        if (!amount.equals(payEntity.getFinalAmt())) {
+            log.warn("토스 결제 금액 불일치 payNo={}, 요청={}, 서버={}", payNo, amount, payEntity.getFinalAmt());
+            throw new CustomException(PayErrorCode.PAY_AMOUNT_INVALID);
+        }
+
+        TossConfirmResDto confirmResDto = tossPayClient.confirm(TossConfirmReqDto.builder()
+                .paymentKey(paymentKey)
+                .orderId(orderId)
+                .amount(amount)
+                .build());
+
+        if (!"DONE".equals(confirmResDto.getStatus())) {
+            throw new CustomException(PayErrorCode.PAY_PROCESS_FAILED);
+        }
+
+        Long memberNo = payEntity.getRsvnNo().getMemberNo().getNo();
+        payEntity.assignTid(paymentKey);
+        completePayAfterApprove(payEntity, memberNo);
+        return PayResDto.from(payEntity);
+    }
 
     private int calculateDcAmt(CouponEntity coupon, Integer baseAmt) {
         if (coupon == null) return 0;

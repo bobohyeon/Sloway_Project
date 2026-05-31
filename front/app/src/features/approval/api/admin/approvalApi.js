@@ -11,3 +11,7 @@ export async function approvePlace(id) {
 export async function rejectPlace(id, vo) {
   return await api.put(`/hostPlace/rejected/${id}`, vo);
 }
+
+export async function fetchApprovalList() {
+  return await api.get(`/hostPlace`)
+}

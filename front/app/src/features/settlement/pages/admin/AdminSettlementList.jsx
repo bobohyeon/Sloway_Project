@@ -34,9 +34,8 @@ export default function AdminSettlementList() {
           <FaInfoCircle />
         </NoticeIcon>
         <NoticeText>
-          정산 도메인은 본인(4번) 보류 영역입니다. `SettleService` 본체 구현 + 자동집계 체인
-          (Pay → Rsvn → 공간 3분기 → HostPlace → Host)이 완성된 후 활성화됩니다.
-          외부 PG(6/1) 이후 진입 예정.
+          정산 자동집계 기능을 준비 중입니다. 이용 완료 건을 4일 단위로 집계해
+          호스트 정산 내역을 제공할 예정입니다.
         </NoticeText>
       </NoticeCard>
 
@@ -53,7 +52,7 @@ export default function AdminSettlementList() {
           </FilterBtn>
         ))}
         <Spacer />
-        <Badge>Settle 통합 대기</Badge>
+        <Badge>준비 중</Badge>
       </FilterBar>
 
       <ListCard padded>
@@ -68,7 +67,7 @@ export default function AdminSettlementList() {
         <EmptyWrap>
           <EmptyState
             title="정산 데이터가 없습니다"
-            description="SettleService.createSettle 집계 구현 + 4일 자동배치 진입 후 노출됩니다."
+            description="정산 자동집계 기능 준비 후 노출됩니다."
             action={
               <DummyBtn onClick={() => nav('/admin/commission-policy')}>
                 수수료 정책 관리로 이동

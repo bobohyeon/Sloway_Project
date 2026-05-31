@@ -18,8 +18,7 @@ export default function SalesStats() {
       <NoticeCard padded>
         <NoticeIcon><FaInfoCircle /></NoticeIcon>
         <NoticeText>
-          호스트별 매출 통계는 본인 5/27 SSOT에서 제외 결정 — Pay→Rsvn→공간 3분기 체인이 차단되어
-          호스트 필터링이 어려운 구조입니다. 최종 발표 단계에서 자동집계 체인 완성 후 재진입 검토.
+          매출 통계 기능을 준비 중입니다. 호스트별 매출 집계는 추후 제공될 예정입니다.
         </NoticeText>
       </NoticeCard>
 
@@ -29,12 +28,12 @@ export default function SalesStats() {
         ))}
       </KPIGrid>
 
-      <Section title="매출 추이" action={<Badge>호스트 필터 부재</Badge>}>
+      <Section title="매출 추이" action={<Badge>준비 중</Badge>}>
         <EmptyCard padded>
           <EmptyState
             icon="📈"
-            title="호스트별 매출 통계 통합 대기"
-            description="Pay→Rsvn→공간→Host 체인이 완성된 후 호스트별 필터링이 활성화됩니다."
+            title="매출 통계 준비 중"
+            description="호스트별 매출 통계 기능을 준비 중입니다."
           />
         </EmptyCard>
       </Section>

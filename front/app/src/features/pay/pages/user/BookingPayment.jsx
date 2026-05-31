@@ -12,7 +12,8 @@ import { TermsAgreement } from '../../components/user/TermsAgreement';
 import { PaymentSummary } from '../../components/user/PaymentSummary';
 import { useCheckoutForm } from '../../hooks/useCheckoutForm';
 import { useCheckoutCalc } from '../../hooks/useCheckoutCalc';
-import { readyPay } from '../../api/payApi';
+import { readyPay, prepareTossPay } from '../../api/payApi';
+import { requestTossPayment } from '../../lib/tossSdk';
 import { toPayMethod } from '../../constants/payMethod';
 import { findCouponsByMemberNo } from '../../../coupon/api/couponApi';
 import { findPointBalanceByMemberNo } from '../../../point/api/pointApi';
@@ -126,20 +127,35 @@ export default function BookingPaymentPage() {
     const method = toPayMethod(paymentMethod);
     if (!method) return;
     setPaying(true);
+
+    const reqDto = {
+      rsvnNo: RSVN_NO,
+      ucNo: selectedCoupon?.no ?? null,
+      usedPoint: points,
+      method,
+      baseAmt: subtotal,
+      addAmt: SERVICE_FEE,
+    };
+
     try {
-      const { nextRedirectPcUrl } = await readyPay({
-        rsvnNo: RSVN_NO,
-        ucNo: selectedCoupon?.no ?? null,
-        usedPoint: points,
-        method,
-        baseAmt: subtotal,
-        addAmt: SERVICE_FEE,
-      });
-      window.location.href = nextRedirectPcUrl;
+      if (method === 'TOSSPAY') {
+        const { orderId, amount, orderName } = await prepareTossPay(reqDto);
+        await requestTossPayment({
+          orderId,
+          amount,
+          orderName,
+          customerKey: `MEMBER_${MEMBER_NO}`,
+        });
+      } else {
+        const { nextRedirectPcUrl } = await readyPay(reqDto);
+        window.location.href = nextRedirectPcUrl;
+      }
     } catch (err) {
-      console.error('결제 준비 실패', err);
+      console.error('결제 처리 실패', err);
       setPaying(false);
-      nav('/user/payment/fail');
+      if (method !== 'TOSSPAY') {
+        nav('/user/payment/fail');
+      }
     }
   };
 

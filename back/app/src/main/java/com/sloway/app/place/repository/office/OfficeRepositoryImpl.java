@@ -3,6 +3,7 @@ package com.sloway.app.place.repository.office;
 import com.querydsl.core.Tuple;
 import com.querydsl.core.types.Projections;
 import com.querydsl.core.types.dsl.Expressions;
+import com.querydsl.jpa.JPAExpressions;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import com.sloway.app.place.dto.response.office.OfficeUpdateDetailReqDto;
 import com.sloway.app.place.dto.response.place.PlaceImgListRespDto;
@@ -73,6 +74,13 @@ public class OfficeRepositoryImpl implements OfficeRepositoryCustom {
     }
 
     private Tuple fetchPlaceBasicInfo(Long officeId, Long memberNo) {
+        // 1. 최신 HOST_PLACE ID 서브쿼리
+        var latestHostPlaceIdSubQuery = JPAExpressions
+                .select(hostPlaceEntity.no.max())
+                .from(hostPlaceEntity)
+                .where(hostPlaceEntity.officeEntity.no.eq(officeId));
+
+        // 2. 쿼리 실행
         return queryFactory
                 .select(
                         officeEntity.title,
@@ -80,18 +88,19 @@ public class OfficeRepositoryImpl implements OfficeRepositoryCustom {
                         placeEntity.type,
                         hostPlaceEntity.status,
                         placeEntity.address,
-                        officeEntity.cnt,
-                        officeEntity.cnt,
+                        officeEntity.cnt,   // 첫 번째 cnt
+                        officeEntity.cnt,   // 두 번째 cnt (DTO 생성자 파라미터 확인 필요)
                         imgOfficeEntity.currentUrl
                 )
                 .from(officeEntity)
                 .join(placeEntity).on(officeEntity.placeEntity.eq(placeEntity))
                 .leftJoin(imgOfficeEntity).on(imgOfficeEntity.officeEntity.no.eq(officeId).and(imgOfficeEntity.sort.eq(1)))
-                .join(hostPlaceEntity).on(placeEntity.eq(hostPlaceEntity.placeEntity))
-                .join(hostEntity).on(hostPlaceEntity.hostEntity.eq(hostEntity))
+                .join(hostPlaceEntity).on(hostPlaceEntity.officeEntity.no.eq(officeEntity.no))
+                .join(hostPlaceEntity.hostEntity, hostEntity)
                 .where(
                         officeEntity.no.eq(officeId),
-                        hostEntity.memberNo.eq(memberNo)
+                        hostEntity.memberNo.eq(memberNo),
+                        hostPlaceEntity.no.in(latestHostPlaceIdSubQuery)
                 )
                 .fetchOne();
     }
@@ -229,17 +238,26 @@ public class OfficeRepositoryImpl implements OfficeRepositoryCustom {
     }
 
     private OfficeUpdateDetailReqDto fetchOfficeMainUpdateInfo(Long officeId, Long memberNo) {
+        var latestHostPlaceIdSubQuery = JPAExpressions
+                .select(hostPlaceEntity.no.max())
+                .from(hostPlaceEntity)
+                .where(hostPlaceEntity.officeEntity.no.eq(officeId));
+
+        // 2. 쿼리 실행
         return queryFactory
                 .select(Projections.fields(OfficeUpdateDetailReqDto.class,
                         placeEntity.no.as("placeNo"),
                         placeEntity.title.as("placeTitle"),
                         officeEntity.title,
                         officeEntity.content,
-                        officeEntity.cnt.as("basePeople") // 엔티티의 cnt를 basePeople로 매핑
+                        officeEntity.cnt.as("basePeople")
                 ))
                 .from(officeEntity)
-                .join(placeEntity).on(placeEntity.no.eq(officeEntity.placeEntity.no)) // 관계 설정 확인 필요
-                .join(hostPlaceEntity).on(hostPlaceEntity.officeEntity.no.eq(officeEntity.no))
+                .join(placeEntity).on(officeEntity.placeEntity.eq(placeEntity))
+                .join(hostPlaceEntity).on(
+                        hostPlaceEntity.officeEntity.eq(officeEntity)
+                                .and(hostPlaceEntity.no.in(latestHostPlaceIdSubQuery))
+                )
                 .where(
                         officeEntity.no.eq(officeId),
                         hostPlaceEntity.hostEntity.memberNo.eq(memberNo)

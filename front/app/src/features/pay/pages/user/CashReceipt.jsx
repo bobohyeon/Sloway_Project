@@ -45,13 +45,13 @@ export default function CashReceipt() {
 
       <Section
         title="발급 내역"
-        action={<Badge>PG 통합 대기</Badge>}
+        action={<Badge>준비 중</Badge>}
       >
         <EmptyCard padded>
           <EmptyState
             icon="🧾"
             title="발급 내역이 없습니다"
-            description="외부 PG(카카오/토스) 통합 단계 진입 후 발급 내역이 노출됩니다."
+            description="아직 발급된 현금영수증이 없습니다."
           />
         </EmptyCard>
       </Section>
@@ -60,8 +60,8 @@ export default function CashReceipt() {
         <EmptyCard padded>
           <EmptyState
             icon="📱"
-            title="발급 신청 통합 대기"
-            description="결제 시점에 휴대폰 번호 또는 사업자등록번호를 입력해 발급 신청합니다. PG 연동 완료 후 활성화됩니다."
+            title="발급 신청 준비 중"
+            description="결제 시점에 휴대폰 번호 또는 사업자등록번호를 입력해 발급 신청하는 기능을 준비 중입니다."
           />
         </EmptyCard>
       </Section>

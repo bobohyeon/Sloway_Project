@@ -23,7 +23,7 @@ export default function SettlementHistory() {
       <NoticeCard padded>
         <NoticeIcon><FaInfoCircle /></NoticeIcon>
         <NoticeText>
-          Settle 도메인 본인(4번) 보류 영역. 자동집계 본체 구현 후 회차별 이력이 노출됩니다.
+          정산 자동집계 기능을 준비 중입니다. 준비 완료 후 회차별 이력이 노출됩니다.
         </NoticeText>
       </NoticeCard>
 
@@ -32,7 +32,7 @@ export default function SettlementHistory() {
           <FilterBtn key={tab.value} disabled>{tab.label}</FilterBtn>
         ))}
         <Spacer />
-        <Badge>Settle 통합 대기</Badge>
+        <Badge>준비 중</Badge>
       </FilterBar>
 
       <ListCard padded>

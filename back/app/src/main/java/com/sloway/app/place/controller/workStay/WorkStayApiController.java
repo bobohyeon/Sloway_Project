@@ -37,9 +37,9 @@ public class WorkStayApiController {
             @RequestPart(name = "officeFiles", required = false) List<MultipartFile> officeFiles,
             @RequestPart("sortList") List<ImgSortReqDto> sortList,
             @RequestPart("officeSortList") List<ImgSortReqDto> officeSortList,
-            @AuthenticationPrincipal Long hostNo) {
+            @AuthenticationPrincipal Long memberNo) {
 
-        workStayService.saveWorkStay(dto, officeDto, files, officeFiles,sortList, officeSortList, hostNo);
+        workStayService.saveWorkStay(dto, officeDto, files, officeFiles,sortList, officeSortList, Long.valueOf(2));
 
         return ResponseEntity
                 .status(HttpStatus.CREATED)
@@ -50,10 +50,11 @@ public class WorkStayApiController {
     @PutMapping("/update/{no}")
     public ResponseEntity<Object> updateWorkStay(
             @PathVariable Long no,
-            @RequestBody WorkUpdateDtoWrapper wrapper
+            @RequestBody WorkUpdateDtoWrapper wrapper,
+            @AuthenticationPrincipal Long memberNo
     ) {
 
-        workStayService.updateWorkStay(no, wrapper.getStay(), wrapper.getOffice());
+        workStayService.updateWorkStay(no, wrapper.getStay(), wrapper.getOffice(), Long.valueOf(2));
 
         return ResponseEntity
                 .status(HttpStatus.OK)
@@ -68,9 +69,10 @@ public class WorkStayApiController {
             @RequestPart(name = "files", required = false) List<MultipartFile> files,
             @RequestPart(name = "officeFiles", required = false) List<MultipartFile> officeFiles,
             @RequestPart("sortList") List<ImgUpdateSortReqDto> sortList,
-            @RequestPart("officeSortList") List<ImgUpdateSortReqDto> officeSortList) {
+            @RequestPart("officeSortList") List<ImgUpdateSortReqDto> officeSortList,
+            @AuthenticationPrincipal Long memberNo) {
 
-        workStayService.updateImageWorkStay(no, files, sortList, officeFiles, officeSortList);
+        workStayService.updateImageWorkStay(no, files, sortList, officeFiles, officeSortList, Long.valueOf(2));
 
         return ResponseEntity
                 .status(HttpStatus.OK)

@@ -9,12 +9,14 @@ import com.sloway.app.place.dto.response.station.StationDetailRespDto;
 import com.sloway.app.place.dto.response.station.StationUpdateDetailRespDto;
 import com.sloway.app.place.entity.amenity.AmenityEntity;
 import com.sloway.app.place.entity.amenity.station.StationAmenityEntity;
+import com.sloway.app.place.entity.hostPlace.HostPlaceEntity;
 import com.sloway.app.place.entity.place.ImgPlaceEntity;
 import com.sloway.app.place.entity.place.PlaceEntity;
 import com.sloway.app.place.entity.station.ImgStationEntity;
 import com.sloway.app.place.entity.station.StationEntity;
 import com.sloway.app.place.entity.station.StationExceptionPeriodEntity;
 import com.sloway.app.place.repository.amenity.AmenityRepository;
+import com.sloway.app.place.repository.hostPlace.HostPlaceRepository;
 import com.sloway.app.place.repository.place.PlaceRepository;
 import com.sloway.app.place.repository.station.ImgStationRepository;
 import com.sloway.app.place.repository.station.StationRepository;
@@ -42,6 +44,7 @@ public class StationService {
     private final StationRepository stationRepository;
     private final ImgStationRepository imgStationRepository;
     private final HostPlaceService hostPlaceService;
+    private final HostPlaceRepository hostPlaceRepository;
 
     //저장
     @Transactional
@@ -63,7 +66,7 @@ public class StationService {
         StationEntity station = stationRepository.save(entity);
 
         //검수 등록
-        hostPlaceService.insertHostPlace("S",hostNo,station.getNo());
+        hostPlaceService.insertHostPlace("S", hostNo, station.getNo());
 
         // 이미지 aws로 수정
         List<String> dummyUrls = files.stream()
@@ -89,18 +92,27 @@ public class StationService {
 
     //수정
     @Transactional
-    public void updateStation(Long no, StationUpdateReqDto dto) {
+    public void updateStation(Long no, StationUpdateReqDto dto, Long memberNo) {
         // 1. 기존 엔티티 조회
         StationEntity stationEntity = stationRepository.findById(no)
                 .orElseThrow(() -> new EntityNotFoundException("[STATION-200] Station Not Found"));
 
-// 2. 편의시설 엔티티 조회
+        // 검수 추가
+        HostPlaceEntity hostPlaceEntity =hostPlaceRepository.findHostStationLatest(no, memberNo);
+
+        if(hostPlaceEntity != null){
+            hostPlaceRepository.delete(hostPlaceEntity);
+        }
+
+        hostPlaceService.insertHostPlace("S", memberNo, stationEntity.getNo());
+
+        // 2. 편의시설 엔티티 조회
         List<Long> amenityNos = dto.getFacilityList().stream()
                 .map(facility -> (long) facility.getAmenityNo())
                 .collect(Collectors.toList());
         List<AmenityEntity> amenityEntities = amenityRepository.findAllByNoIn(amenityNos);
 
-// 3. 필드 업데이트 (더티 체킹 활용)
+        // 3. 필드 업데이트 (더티 체킹 활용)
         stationEntity.updateInfo(dto);
 
         stationEntity.getStationAmenityEntities().clear();
@@ -114,8 +126,8 @@ public class StationService {
 
         stationEntity.getStationAmenityEntities().addAll(newAmenities);
 
-
         stationEntity.getStationExceptionPeriodEntities().clear();
+
         if (dto.getExceptionPeriods() != null) {
             List<StationExceptionPeriodEntity> newExceptionPeriods = dto.getExceptionPeriods().stream()
                     .map(exDto -> StationExceptionPeriodEntity.builder()
@@ -147,10 +159,20 @@ public class StationService {
 
     // 이미지 수정 로직 (saveStation 로직 반영)
     @Transactional
-    public void updateStationImg(Long no, List<MultipartFile> files, List<ImgUpdateSortReqDto> sortList) {
+    public void updateStationImg(Long no, List<MultipartFile> files, List<ImgUpdateSortReqDto> sortList, Long memberNo) {
         // Station 조회
         StationEntity stationEntity = stationRepository.findById(no)
                 .orElseThrow(() -> new EntityNotFoundException("[STATION-305] Station Not Found For Update Images"));
+
+        // 검수 추가
+        HostPlaceEntity hostPlaceEntity =hostPlaceRepository.findHostStationLatest(no, memberNo);
+
+        if(hostPlaceEntity != null){
+            hostPlaceRepository.delete(hostPlaceEntity);
+        }
+
+        hostPlaceService.insertHostPlace("S", memberNo, stationEntity.getNo());
+
 
         // 2. 화면에 살아남은 기존 이미지 ID 추출 (새로 추가된 파일인 null은 제외)
         List<Long> aliveImageNos = sortList.stream()
@@ -190,7 +212,7 @@ public class StationService {
     }
 
     public PlaceImgListRespDto selectImageList(Long no, Long memberNo) {
-        return stationRepository.selectImageList(no,memberNo);
+        return stationRepository.selectImageList(no, memberNo);
     }
 
     public StationDetailRespDto selectStationDetailDashBoard(Long no, Long memberNo) {
@@ -198,6 +220,6 @@ public class StationService {
     }
 
     public StationUpdateDetailRespDto selectDetailForUpdate(Long no, Long memberNo) {
-        return stationRepository.selectDetailForUpdate(no,memberNo);
+        return stationRepository.selectDetailForUpdate(no, memberNo);
     }
 }
