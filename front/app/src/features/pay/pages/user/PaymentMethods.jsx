@@ -17,14 +17,7 @@ const SUPPORTED_METHODS = [
     label: '토스페이',
     emoji: '🔵',
     color: '#0064FF',
-    note: '토스 결제위젯 SDK 연동',
-  },
-  {
-    code: 'NAVERPAY',
-    label: '네이버페이',
-    emoji: '🟢',
-    color: '#03C75A',
-    note: '최종 발표 단계 진입 예정',
+    note: '토스 인증 후 결제 즉시 승인',
   },
 ];
 
@@ -40,8 +33,8 @@ export default function PaymentMethods() {
           <FaInfoCircle />
         </NoticeIcon>
         <NoticeText>
-          결제 수단은 결제 진행 시점에 선택합니다. 별도 등록 절차 없이 카카오·토스 인증으로 진행되며,
-          외부 PG 통합 단계(6/1~) 진입 후 실제 결제창이 연결됩니다.
+          결제 수단은 결제 진행 시점에 선택합니다. 별도 등록 절차 없이 카카오·토스 인증으로
+          간편하게 결제할 수 있습니다.
         </NoticeText>
       </NoticeCard>
 
@@ -52,11 +45,10 @@ export default function PaymentMethods() {
               <MethodHeader>
                 <MethodEmoji>{method.emoji}</MethodEmoji>
                 <MethodLabel>{method.label}</MethodLabel>
-                <MethodCode>{method.code}</MethodCode>
               </MethodHeader>
               <MethodNote>{method.note}</MethodNote>
               <MethodFooter>
-                <Badge>PG 통합 대기</Badge>
+                <Badge variant="sage">사용 가능</Badge>
               </MethodFooter>
             </MethodCard>
           ))}
@@ -72,7 +64,7 @@ export default function PaymentMethods() {
             <RegisterTitle>현재 별도 등록은 지원하지 않습니다</RegisterTitle>
             <RegisterDesc>
               결제 시점에 수단을 선택하는 단건 결제 방식입니다. 정기 결제·간편 등록은
-              최종 발표 이후 단계에서 검토 예정입니다.
+              추후 제공될 예정입니다.
             </RegisterDesc>
           </RegisterText>
         </RegisterCard>

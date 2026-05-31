@@ -18,8 +18,7 @@ export default function BookingStats() {
       <NoticeCard padded>
         <NoticeIcon><FaInfoCircle /></NoticeIcon>
         <NoticeText>
-          예약 통계는 3번 도메인(예약·리뷰) Repository 합류 후 적재 파이프라인이 연결됩니다.
-          Pay 도메인 Stats와 별개로, 예약 상태(확정/취소) 기반 집계가 필요합니다.
+          예약 통계 기능을 준비 중입니다. 예약 상태(확정/취소) 기반 집계 데이터 연동 후 노출됩니다.
         </NoticeText>
       </NoticeCard>
 
@@ -29,12 +28,12 @@ export default function BookingStats() {
         ))}
       </KPIGrid>
 
-      <Section title="예약 추이" action={<Badge>예약 도메인 통합 대기</Badge>}>
+      <Section title="예약 추이" action={<Badge>준비 중</Badge>}>
         <EmptyCard padded>
           <EmptyState
             icon="📅"
-            title="예약 통계 통합 대기"
-            description="3번 도메인 예약·리뷰 Repository 및 통계 적재 파이프라인 합류 후 노출됩니다."
+            title="예약 통계 준비 중"
+            description="예약 데이터 연동 후 노출됩니다."
           />
         </EmptyCard>
       </Section>
