@@ -24,9 +24,6 @@ function StationDetailPage() {
     navigate(`/host/${typePath}/${id}/images`);
   };
 
-  const handleBack = () => {
-    navigate('/host/space/list');
-  };
 
   if (loading) return <div>데이터 로딩 중...</div>;
   if (error) return <div>데이터를 불러오는 중 에러가 발생했습니다.</div>;
@@ -35,7 +32,7 @@ function StationDetailPage() {
   return (
     <StationDetailLayout
       data={spaceData}
-      onBack={handleBack}
+      onBack={'/host/space/list'}
       handleUpdateDetail={handleUpdateDetail}
       handleImageUpdate={handleImageUpdate}
     />

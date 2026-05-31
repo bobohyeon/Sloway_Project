@@ -33,10 +33,10 @@ public class OfficeApiController {
             @RequestPart("dto") OfficeReqDto dto,
             @RequestPart("files") List<MultipartFile> files,
             @RequestPart("sortList") List<ImgSortReqDto> sortList,
-            @AuthenticationPrincipal Long hostNo) {
+            @AuthenticationPrincipal Long memberNo) {
 
         // userNo값 필요 파라미터 추가예정
-        officeService.saveOffice(dto, files, sortList, hostNo);
+        officeService.saveOffice(dto, files, sortList, Long.valueOf(2));
 
         return ResponseEntity
                 .status(HttpStatus.CREATED)
@@ -47,9 +47,10 @@ public class OfficeApiController {
     @PutMapping("/update/{no}")
     public ResponseEntity<Object> updateOffice(
             @PathVariable Long no,
-            @RequestBody OfficeUpdateReqDto dto) {
+            @RequestBody OfficeUpdateReqDto dto,
+            @AuthenticationPrincipal Long memberNo) {
 
-        officeService.updateOffice(no, dto);
+        officeService.updateOffice(no, dto, Long.valueOf(2));
 
         return ResponseEntity
                 .status(HttpStatus.OK)
@@ -61,9 +62,10 @@ public class OfficeApiController {
     public ResponseEntity<Object> updateImageOffice(
             @PathVariable Long no,
             @RequestPart(name = "files", required = false) List<MultipartFile> files,
-            @RequestPart("sortList") List<ImgUpdateSortReqDto> sortList) {
+            @RequestPart("sortList") List<ImgUpdateSortReqDto> sortList,
+            @AuthenticationPrincipal Long memberNo) {
 
-        officeService.updateOfficeImg(no, files, sortList);
+        officeService.updateOfficeImg(no, files, sortList, Long.valueOf(2));
 
         return ResponseEntity
                 .status(HttpStatus.OK)

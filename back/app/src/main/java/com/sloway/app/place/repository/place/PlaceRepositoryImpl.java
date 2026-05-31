@@ -42,6 +42,11 @@ public class PlaceRepositoryImpl implements PlaceRepositoryCustom {
 
     @Override
     public List<PlaceDetailListRespDto> findPlaceDetailListByHostNo(Long placeNo, Long memberNo) {
+        // 해당 placeNo의 가장 최신 HOST_PLACE ID를 가져오는 서브쿼리
+        var latestHostPlaceIdSubQuery = JPAExpressions
+                .select(hostPlaceEntity.no.max())
+                .from(hostPlaceEntity)
+                .where(hostPlaceEntity.placeEntity.no.eq(placeNo));
 
         // 1. 리뷰 평균값 계산 서브쿼리
         var subQueryReviewAvg = JPAExpressions
@@ -59,19 +64,25 @@ public class PlaceRepositoryImpl implements PlaceRepositoryCustom {
                 .select(hostPlaceEntity.status.stringValue())
                 .from(hostPlaceEntity)
                 .where(
-                        // 타입별로 HostPlace의 외래키와 비교해야 합니다.
-                        new CaseBuilder()
-                                .when(placeEntity.type.eq("WORK_STAY")).then(hostPlaceEntity.workStayEntity.no)
-                                .when(placeEntity.type.eq("OFFICE")).then(hostPlaceEntity.officeEntity.no)
-                                .when(placeEntity.type.eq("STATION")).then(hostPlaceEntity.stationEntity.no)
-                                .otherwise((Long) null)
-                                .eq(
-                                        new CaseBuilder()
-                                                .when(placeEntity.type.eq("WORK_STAY")).then(workStayEntity.no)
-                                                .when(placeEntity.type.eq("OFFICE")).then(officeEntity.no)
-                                                .when(placeEntity.type.eq("STATION")).then(stationEntity.no)
-                                                .otherwise((Long) null)
-                                )
+                        // 타입별로 최신 ID를 찾기 위한 조건
+                        hostPlaceEntity.no.eq(
+                                JPAExpressions.select(hostPlaceEntity.no.max())
+                                        .from(hostPlaceEntity)
+                                        .where(
+                                                new CaseBuilder()
+                                                        .when(placeEntity.type.eq("WORK_STAY")).then(hostPlaceEntity.workStayEntity.no)
+                                                        .when(placeEntity.type.eq("OFFICE")).then(hostPlaceEntity.officeEntity.no)
+                                                        .when(placeEntity.type.eq("STATION")).then(hostPlaceEntity.stationEntity.no)
+                                                        .otherwise((Long) null)
+                                                        .eq(
+                                                                new CaseBuilder()
+                                                                        .when(placeEntity.type.eq("WORK_STAY")).then(workStayEntity.no)
+                                                                        .when(placeEntity.type.eq("OFFICE")).then(officeEntity.no)
+                                                                        .when(placeEntity.type.eq("STATION")).then(stationEntity.no)
+                                                                        .otherwise((Long) null)
+                                                        )
+                                        )
+                        )
                 );
 
         return queryFactory
@@ -99,11 +110,18 @@ public class PlaceRepositoryImpl implements PlaceRepositoryCustom {
                                 .when(placeEntity.type.eq("STATION")).then(stationEntity.title)
                                 .otherwise((String) null),
 
-                        placeEntity.createdAt.stringValue(),
+                        new CaseBuilder()
+                                .when(placeEntity.type.eq("WORK_STAY")).then(workStayEntity.createdAt)
+                                .when(placeEntity.type.eq("OFFICE")).then(officeEntity.createdAt)
+                                .when(placeEntity.type.eq("STATION")).then(stationEntity.createdAt)
+                                .otherwise((LocalDateTime) null).stringValue(),
                         Expressions.numberTemplate(Double.class, "COALESCE(ROUND({0}, 1), 0.0)", subQueryReviewAvg)
                 ))
                 .from(placeEntity)
-                .join(hostPlaceEntity).on(hostPlaceEntity.placeEntity.eq(placeEntity))
+                .join(hostPlaceEntity).on(
+                        hostPlaceEntity.placeEntity.eq(placeEntity)
+                                .and(hostPlaceEntity.no.in(latestHostPlaceIdSubQuery))
+                )
                 .join(hostPlaceEntity.hostEntity, hostEntity)
 
                 // 불필요한 중복 조인 제거
@@ -120,6 +138,12 @@ public class PlaceRepositoryImpl implements PlaceRepositoryCustom {
                         memberNo != null ? hostEntity.memberNo.eq(memberNo) : null, // hostEntity 조인이 필요하면 추가
                         placeEntity.no.eq(placeNo)
                 )
+                .orderBy(new CaseBuilder()
+                        .when(placeEntity.type.eq("WORK_STAY")).then(workStayEntity.createdAt)
+                        .when(placeEntity.type.eq("OFFICE")).then(officeEntity.createdAt)
+                        .when(placeEntity.type.eq("STATION")).then(stationEntity.createdAt)
+                        .otherwise((LocalDateTime) null).stringValue()
+                        .desc())
                 .fetch();
     }
 
@@ -129,6 +153,13 @@ public class PlaceRepositoryImpl implements PlaceRepositoryCustom {
         LocalDateTime startOfMonth = now.with(TemporalAdjusters.firstDayOfMonth()).withHour(0).withMinute(0).withSecond(0).withNano(0);
         LocalDateTime endOfMonth = now.with(TemporalAdjusters.lastDayOfMonth()).withHour(23).withMinute(59).withSecond(59).withNano(999999999);
 
+        // 1. PLACE별 가장 최신 HOST_PLACE ID를 구하는 서브쿼리 (PK인 no 사용)
+        var latestHostPlaceIdSubQuery = JPAExpressions
+                .select(hostPlaceEntity.no.max())
+                .from(hostPlaceEntity)
+                .groupBy(hostPlaceEntity.placeEntity.no);
+
+        // 2. 리뷰 평점 서브쿼리
         var subQueryReviewAvg = JPAExpressions
                 .select(reviewEntity.scoreTotal.avg())
                 .from(reviewEntity)
@@ -161,44 +192,36 @@ public class PlaceRepositoryImpl implements PlaceRepositoryCustom {
                         rsvnEntity.createdAt.between(startOfMonth, endOfMonth)
                 );
 
-        // [메인 쿼리]
+        // 메인 쿼리
         return queryFactory
                 .select(Projections.constructor(PlaceListRespDto.class,
-                        placeEntity.no,
+                        placeEntity.no.as("id"),
                         placeEntity.type,
                         hostPlaceEntity.status.stringValue(),
                         placeEntity.title,
                         placeEntity.address,
-
-                        // 집계 연산 데이터 매핑
                         Expressions.numberTemplate(Double.class, "COALESCE(ROUND({0}, 1), 0.0)", subQueryReviewAvg),
                         Expressions.numberTemplate(Integer.class, "COALESCE({0}, 0)", subQueryReviewCount),
                         Expressions.numberTemplate(Integer.class, "COALESCE({0}, 0)", subQueryMonthlyBookings),
-
-                        // 가격정보
                         new CaseBuilder()
                                 .when(placeEntity.type.eq("WORK_STAY")).then(workStayEntity.monPrice.min())
                                 .when(placeEntity.type.eq("OFFICE")).then(officePeriodEntity.price.min())
                                 .when(placeEntity.type.eq("STATION")).then(stationEntity.monPrice.min())
-                                .otherwise(0)
-                                .coalesce(0).as("price"),
-
+                                .otherwise(0).intValue(),
                         imgPlaceEntity.currentUrl
                 ))
                 .from(placeEntity)
-                .join(hostPlaceEntity).on(hostPlaceEntity.placeEntity.eq(placeEntity))
+                // 최신 상태값(hostPlaceEntity) 조인
+                .join(hostPlaceEntity).on(
+                        hostPlaceEntity.placeEntity.eq(placeEntity)
+                                .and(hostPlaceEntity.no.in(latestHostPlaceIdSubQuery))
+                )
                 .join(hostEntity).on(hostPlaceEntity.hostEntity.eq(hostEntity))
-
                 .leftJoin(workStayEntity).on(workStayEntity.placeEntity.eq(placeEntity))
                 .leftJoin(officeEntity).on(officeEntity.placeEntity.eq(placeEntity))
-                .leftJoin(officePeriodEntity).on(officePeriodEntity.officeEntity.eq(officeEntity)) // ★ 오피스 가격 연동을 위한 조인 추가
+                .leftJoin(officePeriodEntity).on(officePeriodEntity.officeEntity.eq(officeEntity))
                 .leftJoin(stationEntity).on(stationEntity.placeEntity.eq(placeEntity))
-
-                // 대표 썸네일 이미지 조인
-                .leftJoin(imgPlaceEntity).on(
-                        imgPlaceEntity.placeEntity.eq(placeEntity)
-                                .and(imgPlaceEntity.sort.eq(1))
-                )
+                .leftJoin(imgPlaceEntity).on(imgPlaceEntity.placeEntity.eq(placeEntity).and(imgPlaceEntity.sort.eq(1)))
                 .where(
                         placeEntity.delYn.eq("N"),
                         memberNo != null ? hostEntity.memberNo.eq(memberNo) : null
@@ -211,11 +234,19 @@ public class PlaceRepositoryImpl implements PlaceRepositoryCustom {
                         placeEntity.address,
                         imgPlaceEntity.currentUrl
                 )
+                .orderBy(hostPlaceEntity.no.max().desc())
                 .fetch();
     }
 
     @Override
     public List<MasterPlaceRespDto> findMasterPlaceListByTypeAndMemberNo(String type, Long memberNo) {
+        var latestHostPlaceIds = JPAExpressions
+                .select(hostPlaceEntity.no.max())
+                .from(hostPlaceEntity)
+                .where(hostPlaceEntity.hostEntity.memberNo.eq(memberNo))
+                .groupBy(hostPlaceEntity.placeEntity.no);
+
+        // 2. 메인 쿼리 실행
         return queryFactory
                 .select(Projections.constructor(MasterPlaceRespDto.class,
                         placeEntity.no,
@@ -227,13 +258,22 @@ public class PlaceRepositoryImpl implements PlaceRepositoryCustom {
                 .where(
                         placeEntity.delYn.eq("N"),
                         placeEntity.type.eq(type),
-                        hostPlaceEntity.hostEntity.memberNo.eq(memberNo) // 본인 소유의 마스터 공간만 조회
+                        // 위에서 구한 최신 이력 ID 리스트에 포함된 경우만 조회
+                        hostPlaceEntity.no.in(latestHostPlaceIds)
                 )
                 .fetch();
     }
 
     @Override
     public PlaceUpdateReqDto selectPlaceForUpdate(Long memberNo, Long no) {
+
+        // 1. 해당 PLACE에 대한 가장 최신 HOST_PLACE ID 서브쿼리
+        var latestHostPlaceIdSubQuery = JPAExpressions
+                .select(hostPlaceEntity.no.max())
+                .from(hostPlaceEntity)
+                .where(hostPlaceEntity.placeEntity.no.eq(no));
+
+        // 2. 쿼리 실행
         return queryFactory
                 .select(Projections.constructor(PlaceUpdateReqDto.class,
                         placeEntity.no,
@@ -241,17 +281,28 @@ public class PlaceRepositoryImpl implements PlaceRepositoryCustom {
                         placeEntity.content
                 ))
                 .from(placeEntity)
-                .join(hostPlaceEntity).on(hostPlaceEntity.placeEntity.eq(placeEntity))
+                .join(hostPlaceEntity).on(
+                        hostPlaceEntity.placeEntity.eq(placeEntity)
+                                .and(hostPlaceEntity.no.in(latestHostPlaceIdSubQuery))
+                )
+                .join(hostPlaceEntity.hostEntity, hostEntity)
                 .where(
                         placeEntity.delYn.eq("N"),
                         placeEntity.no.eq(no),
-                        hostPlaceEntity.hostEntity.memberNo.eq(memberNo)
+                        hostEntity.memberNo.eq(memberNo)
                 )
                 .fetchOne();
     }
 
     @Override
     public PlaceImgListRespDto selectImageList(Long no, Long memberNo) {
+        // 1. 해당 장소의 가장 최신 HOST_PLACE ID 서브쿼리
+        var latestHostPlaceIdSubQuery = JPAExpressions
+                .select(hostPlaceEntity.no.max())
+                .from(hostPlaceEntity)
+                .where(hostPlaceEntity.placeEntity.no.eq(no));
+
+        // 2. 이미지 리스트 조회
         List<PlaceImgListRespDto.ImageInfo> placeList = queryFactory
                 .select(Projections.constructor(PlaceImgListRespDto.ImageInfo.class,
                         imgPlaceEntity.no,
@@ -259,8 +310,12 @@ public class PlaceRepositoryImpl implements PlaceRepositoryCustom {
                         imgPlaceEntity.sort
                 ))
                 .from(imgPlaceEntity)
-                .join(hostPlaceEntity).on(imgPlaceEntity.placeEntity.eq(hostPlaceEntity.placeEntity))
-                .join(hostEntity).on(hostPlaceEntity.hostEntity.eq(hostEntity))
+                // [핵심] 최신 HOST_PLACE와 조인하여 권한 검증 및 중복 방지
+                .join(hostPlaceEntity).on(
+                        imgPlaceEntity.placeEntity.eq(hostPlaceEntity.placeEntity)
+                                .and(hostPlaceEntity.no.in(latestHostPlaceIdSubQuery))
+                )
+                .join(hostPlaceEntity.hostEntity, hostEntity)
                 .where(
                         imgPlaceEntity.placeEntity.no.eq(no),
                         hostEntity.memberNo.eq(memberNo)
@@ -272,4 +327,5 @@ public class PlaceRepositoryImpl implements PlaceRepositoryCustom {
                 .placeImages(placeList != null ? placeList : List.of())
                 .build();
     }
+
 }

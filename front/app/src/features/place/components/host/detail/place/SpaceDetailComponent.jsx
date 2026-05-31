@@ -53,7 +53,6 @@ const ImageArea = styled.div`
 const Content = styled.div`
   padding: 20px;
 
-  /* 상단 영역을 감싸는 컨테이너 추가 */
   .header-row {
     display: flex;
     justify-content: space-between;
@@ -64,7 +63,6 @@ const Content = styled.div`
   .date-row {
     font-size: 12px;
     color: #999;
-    /* margin-bottom은 header-row가 담당하므로 삭제 */
   }
 
   h3 {
@@ -92,7 +90,6 @@ const Content = styled.div`
   }
 `;
 
-// [수정] PENDING, APPROVED, REJECTED 상태별로 색상이 명확하게 분기되도록 리팩토링
 const StatusTag = styled.span`
   padding: 4px 12px;
   border-radius: 6px;
@@ -187,7 +184,7 @@ function SpaceDetailComponent({ data = [], onCardClick, typeLabel }) {
               )}
             </div>
             <div className="date-row">
-              등록일 {item.created_at || '2026.05.12'}
+              등록일 {item.createdAt?.split(' ')[0]}
             </div>
 
             <h3>{item.title || '이름 없음'}</h3>

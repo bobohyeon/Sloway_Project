@@ -26,16 +26,16 @@ public class PlaceApiController {
 
     private final PlaceService placeService;
 
-     // 장소 등록 (정보 + 이미지 + 정렬정보)
+    // 장소 등록 (정보 + 이미지 + 정렬정보)
     @PostMapping(value = "/insert", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<Object> savePlace(
             @RequestPart("dto") PlaceReqDto dto,
             @RequestPart("files") List<MultipartFile> files,
             @RequestPart("sortList") List<ImgSortReqDto> sortList,
-            @AuthenticationPrincipal Long hostNo) {
+            @AuthenticationPrincipal Long memberNo) {
 
         // userNo값 필요 파라미터 추가예정
-        placeService.savePlace(dto, files, sortList, Long.valueOf(1));
+        placeService.savePlace(dto, files, sortList, Long.valueOf(2));
 
         return ResponseEntity
                 .status(HttpStatus.CREATED)
@@ -46,23 +46,25 @@ public class PlaceApiController {
     @PutMapping("/update/{no}")
     public ResponseEntity<Object> updatePlace(
             @PathVariable Long no,
-            @RequestBody PlaceUpdateReqDto dto) {
+            @RequestBody PlaceUpdateReqDto dto,
+            @AuthenticationPrincipal Long memberNo) {
 
-        placeService.updatePlace(no, dto);
+        placeService.updatePlace(no, dto, Long.valueOf(2));
 
         return ResponseEntity
                 .status(HttpStatus.OK)
                 .build();
     }
 
-     // 장소 이미지 수정 (기존 이미지 삭제 후 재생성)
+    // 장소 이미지 수정 (기존 이미지 삭제 후 재생성)
     @PutMapping(value = "/update/image/{no}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<Object> updateImagePlace(
             @PathVariable Long no,
             @RequestPart(name = "files", required = false) List<MultipartFile> files,
-            @RequestPart("sortList") List<ImgUpdateSortReqDto> sortList) {
+            @RequestPart("sortList") List<ImgUpdateSortReqDto> sortList,
+            @AuthenticationPrincipal Long memberNo) {
 
-        placeService.updatePlaceImg(no, files, sortList);
+        placeService.updatePlaceImg(no, files, sortList, Long.valueOf(2));
 
         return ResponseEntity
                 .status(HttpStatus.OK)
@@ -81,41 +83,41 @@ public class PlaceApiController {
     }
 
     @GetMapping("/list/detail/{placeNo}")
-    public ResponseEntity<List<PlaceDetailListRespDto>> placeDetailList(@PathVariable Long placeNo, @AuthenticationPrincipal Long memberNo){
-        List<PlaceDetailListRespDto> placeList =placeService.placeDetailList(placeNo, Long.valueOf(2));
+    public ResponseEntity<List<PlaceDetailListRespDto>> placeDetailList(@PathVariable Long placeNo, @AuthenticationPrincipal Long memberNo) {
+        List<PlaceDetailListRespDto> placeList = placeService.placeDetailList(placeNo, Long.valueOf(2));
         return ResponseEntity.ok(placeList);
     }
 
     @GetMapping("/list/brief/{placeNo}")
-    public ResponseEntity<PlaceBriefRespDto> placeBrief(@PathVariable Long placeNo){
+    public ResponseEntity<PlaceBriefRespDto> placeBrief(@PathVariable Long placeNo) {
         PlaceBriefRespDto dto = placeService.placeBrief(placeNo);
 
         return ResponseEntity.ok(dto);
     }
 
     @GetMapping("/list")
-    public ResponseEntity<List<PlaceListRespDto>> placeList(@AuthenticationPrincipal Long memberNo){
+    public ResponseEntity<List<PlaceListRespDto>> placeList(@AuthenticationPrincipal Long memberNo) {
         List<PlaceListRespDto> placeList = placeService.placeList(Long.valueOf(2));
 
         return ResponseEntity.ok(placeList);
     }
 
     @GetMapping("/master")
-    public ResponseEntity<List<MasterPlaceRespDto>> selectMasterPlaceList(@RequestParam("type") String type, @AuthenticationPrincipal Long memberNo){
+    public ResponseEntity<List<MasterPlaceRespDto>> selectMasterPlaceList(@RequestParam("type") String type, @AuthenticationPrincipal Long memberNo) {
         List<MasterPlaceRespDto> placeList = placeService.selectMasterPlaceList(type, Long.valueOf(2));
 
         return ResponseEntity.ok(placeList);
     }
 
     @GetMapping("/detail/update/{no}")
-    public ResponseEntity<PlaceUpdateReqDto> selectPlaceForUpdate(@AuthenticationPrincipal Long memberNo, @PathVariable Long no){
+    public ResponseEntity<PlaceUpdateReqDto> selectPlaceForUpdate(@AuthenticationPrincipal Long memberNo, @PathVariable Long no) {
         PlaceUpdateReqDto dto = placeService.selectPlaceForUpdate(Long.valueOf(2), no);
 
         return ResponseEntity.ok(dto);
     }
 
     @GetMapping("/update/image/{no}")
-    public ResponseEntity<PlaceImgListRespDto> selectImageList(@PathVariable Long no, @AuthenticationPrincipal Long memberNo){
+    public ResponseEntity<PlaceImgListRespDto> selectImageList(@PathVariable Long no, @AuthenticationPrincipal Long memberNo) {
         PlaceImgListRespDto dto = placeService.selectImageList(no, Long.valueOf(2));
         return ResponseEntity.ok(dto);
     }

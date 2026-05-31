@@ -22,6 +22,7 @@ export default function useSpaceList() {
         const response = await fetchPlaceListByHostNo();
 
         if (response && response.data) {
+          
           setSpaces(response.data);
         }
       } catch (error) {
