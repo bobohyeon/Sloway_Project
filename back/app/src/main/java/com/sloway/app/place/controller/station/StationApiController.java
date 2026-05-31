@@ -46,9 +46,10 @@ public class StationApiController {
     @PutMapping("/update/{no}")
     public ResponseEntity<Object> updateStation(
             @PathVariable Long no,
-            @RequestBody StationUpdateReqDto dto) {
+            @RequestBody StationUpdateReqDto dto,
+            @AuthenticationPrincipal Long memberNo) {
 
-        stationService.updateStation(no, dto);
+        stationService.updateStation(no, dto, Long.valueOf(2));
 
         return ResponseEntity
                 .status(HttpStatus.OK)
@@ -61,9 +62,10 @@ public class StationApiController {
     public ResponseEntity<Object> updateImageStation(
             @PathVariable Long no,
             @RequestPart(name = "files", required = false) List<MultipartFile> files,
-            @RequestPart("sortList") List<ImgUpdateSortReqDto> sortList) {
+            @RequestPart("sortList") List<ImgUpdateSortReqDto> sortList,
+            @AuthenticationPrincipal Long memberNo) {
 
-        stationService.updateStationImg(no, files, sortList);
+        stationService.updateStationImg(no, files, sortList, Long.valueOf(2));
 
         return ResponseEntity
                 .status(HttpStatus.OK)

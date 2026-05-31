@@ -9,12 +9,14 @@ import com.sloway.app.place.dto.response.place.PlaceImgListRespDto;
 import com.sloway.app.place.dto.response.station.StationDetailRespDto;
 import com.sloway.app.place.entity.amenity.AmenityEntity;
 import com.sloway.app.place.entity.amenity.office.OfficeAmenityEntity;
+import com.sloway.app.place.entity.hostPlace.HostPlaceEntity;
 import com.sloway.app.place.entity.office.ImgOfficeEntity;
 import com.sloway.app.place.entity.office.OfficeEntity;
 import com.sloway.app.place.entity.office.OfficePeriodEntity;
 import com.sloway.app.place.entity.place.PlaceEntity;
 import com.sloway.app.place.entity.station.ImgStationEntity;
 import com.sloway.app.place.repository.amenity.AmenityRepository;
+import com.sloway.app.place.repository.hostPlace.HostPlaceRepository;
 import com.sloway.app.place.repository.office.ImgOfficeRepository;
 import com.sloway.app.place.repository.office.OfficeRepository;
 import com.sloway.app.place.repository.place.PlaceRepository;
@@ -43,10 +45,11 @@ public class OfficeService {
     private final AmenityRepository amenityRepository;
     private final ImgOfficeRepository imgOfficeRepository;
     private final HostPlaceService hostPlaceService;
+    private final HostPlaceRepository hostPlaceRepository;
 
     //저장
     @Transactional
-    public void saveOffice(OfficeReqDto dto, List<MultipartFile> files, List<ImgSortReqDto> sortList, Long hostNo) {
+    public void saveOffice(OfficeReqDto dto, List<MultipartFile> files, List<ImgSortReqDto> sortList, Long memberNo) {
         //부모 테이블 엔티티 조회
         PlaceEntity place = placeRepository.findByNo(dto.getPlaceNo())
                 .orElseThrow(() -> new EntityNotFoundException("[OFFICE-210] Place Not Found For Save Office"));
@@ -64,7 +67,7 @@ public class OfficeService {
         OfficeEntity office = officeRepository.save(entity);
 
         //검수 등록
-        hostPlaceService.insertHostPlace("C", hostNo, office.getNo());
+        hostPlaceService.insertHostPlace("C", memberNo, office.getNo());
 
         //이미지 aws로 수정
         List<String> dummyUrls = files.stream()
@@ -89,7 +92,7 @@ public class OfficeService {
     }
 
     @Transactional
-    public void updateOffice(Long no, OfficeUpdateReqDto dto) {
+    public void updateOffice(Long no, OfficeUpdateReqDto dto, Long memberNo) {
         // 1. 기존 오피스 엔티티 조회
         OfficeEntity office = officeRepository.findById(no)
                 .orElseThrow(() -> new EntityNotFoundException("[OFFICE-305] Office Not Found For Update"));
@@ -102,6 +105,15 @@ public class OfficeService {
 
         // 3. 기본 정보 업데이트 (더티 체킹)
         office.updateInfo(dto);
+
+        // 검수 추가
+        HostPlaceEntity hostPlaceEntity =hostPlaceRepository.findHostOfficeLatest(no, memberNo);
+
+        if(hostPlaceEntity != null){
+            hostPlaceRepository.delete(hostPlaceEntity);
+        }
+
+        hostPlaceService.insertHostPlace("C", memberNo, office.getNo());
 
         // 4. 편의시설 업데이트 (Clear & AddAll)
         office.getOfficeAmenityEntities().clear();
@@ -149,10 +161,19 @@ public class OfficeService {
     }
 
     @Transactional
-    public void updateOfficeImg(Long no, List<MultipartFile> files, List<ImgUpdateSortReqDto> sortList) {
+    public void updateOfficeImg(Long no, List<MultipartFile> files, List<ImgUpdateSortReqDto> sortList, Long memberNo) {
         // Station 조회
         OfficeEntity officeEntity = officeRepository.findById(no)
                 .orElseThrow(() -> new EntityNotFoundException("[OFFICE-305] Office Not Found For Update Images"));
+
+        // 검수 추가
+        HostPlaceEntity hostPlaceEntity =hostPlaceRepository.findHostOfficeLatest(no, memberNo);
+
+        if(hostPlaceEntity != null){
+            hostPlaceRepository.delete(hostPlaceEntity);
+        }
+
+        hostPlaceService.insertHostPlace("C", memberNo, officeEntity.getNo());
 
         // 2. 화면에 살아남은 기존 이미지 ID 추출 (새로 추가된 파일인 null은 제외)
         List<Long> aliveImageNos = sortList.stream()

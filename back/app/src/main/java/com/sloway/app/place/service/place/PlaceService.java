@@ -5,8 +5,10 @@ import com.sloway.app.place.dto.request.place.PlaceReqDto;
 import com.sloway.app.place.dto.request.place.PlaceUpdateReqDto;
 import com.sloway.app.place.dto.request.sort.ImgUpdateSortReqDto;
 import com.sloway.app.place.dto.response.place.*;
+import com.sloway.app.place.entity.hostPlace.HostPlaceEntity;
 import com.sloway.app.place.entity.place.ImgPlaceEntity;
 import com.sloway.app.place.entity.place.PlaceEntity;
+import com.sloway.app.place.repository.hostPlace.HostPlaceRepository;
 import com.sloway.app.place.repository.place.ImgPlaceRepository;
 import com.sloway.app.place.repository.place.PlaceRepository;
 import com.sloway.app.place.service.hostPlace.HostPlaceService;
@@ -31,13 +33,14 @@ public class PlaceService {
     private final PlaceRepository placeRepository;
     private final ImgPlaceRepository imgPlaceRepository;
     private final HostPlaceService hostPlaceService;
+    private final HostPlaceRepository hostPlaceRepository;
 
     @Transactional
-    public void savePlace(PlaceReqDto dto, List<MultipartFile> files, List<ImgSortReqDto> sortList, Long hostNo) {
+    public void savePlace(PlaceReqDto dto, List<MultipartFile> files, List<ImgSortReqDto> sortList, Long memberNo) {
         PlaceEntity place = dto.toEntity();
 
         PlaceEntity placeEntity = placeRepository.save(place);
-        hostPlaceService.insertHostPlace("P",hostNo, place.getNo());
+        hostPlaceService.insertHostPlace("P", memberNo, place.getNo());
         // 이미지 aws로 수정
         List<String> dummyUrls = files.stream()
                 .map(img -> "https://temp-bucket.s3.amazonaws.com/temp_"
@@ -61,10 +64,17 @@ public class PlaceService {
     }
 
     @Transactional
-    public void updatePlace(Long no, PlaceUpdateReqDto dto) {
+    public void updatePlace(Long no, PlaceUpdateReqDto dto, Long hostNo) {
         PlaceEntity placeEntity = placeRepository.findByNo(no)
                 .orElseThrow(() -> new EntityNotFoundException("[PLACE-303] Not Exist Place On Update Place"));
 
+        HostPlaceEntity hostPlaceEntity =hostPlaceRepository.findHostPlaceLatest(no, hostNo);
+
+        if(hostPlaceEntity != null){
+            hostPlaceRepository.delete(hostPlaceEntity);
+        }
+
+        hostPlaceService.insertHostPlace("P", hostNo, placeEntity.getNo());
         placeEntity.updateTitleAndContent(dto.getTitle(), dto.getContent());
     }
 
@@ -79,10 +89,18 @@ public class PlaceService {
 
     // 이미지 수정 로직 (saveStation 로직 반영)
     @Transactional
-    public void updatePlaceImg(Long no, List<MultipartFile> files, List<ImgUpdateSortReqDto> sortList) {
+    public void updatePlaceImg(Long no, List<MultipartFile> files, List<ImgUpdateSortReqDto> sortList, Long memberNo) {
         // 1. Place 조회
         PlaceEntity placeEntity = placeRepository.findByNo(no)
                 .orElseThrow(() -> new EntityNotFoundException("[PLACE-305] Place Not Found For Update Images"));
+
+        HostPlaceEntity hostPlaceEntity =hostPlaceRepository.findHostPlaceLatest(no, memberNo);
+
+        if(hostPlaceEntity != null){
+            hostPlaceRepository.delete(hostPlaceEntity);
+        }
+
+        hostPlaceService.insertHostPlace("P", memberNo, placeEntity.getNo());
 
         // 2. 화면에 살아남은 기존 이미지 ID 추출 (새로 추가된 파일인 null은 제외)
         List<Long> aliveImageNos = sortList.stream()
@@ -121,13 +139,13 @@ public class PlaceService {
         }
     }
 
-    public List<PlaceDetailListRespDto> placeDetailList(Long placeNo,Long hostNo) {
-        return placeRepository.findPlaceDetailListByHostNo(placeNo,hostNo);
+    public List<PlaceDetailListRespDto> placeDetailList(Long placeNo, Long hostNo) {
+        return placeRepository.findPlaceDetailListByHostNo(placeNo, hostNo);
     }
 
     public PlaceBriefRespDto placeBrief(Long placeNo) {
         PlaceEntity placeEntity = placeRepository.findByNo(placeNo)
-                .orElseThrow(()->new EntityNotFoundException("[PLACE-291]Place Not Found For Find Brief"));
+                .orElseThrow(() -> new EntityNotFoundException("[PLACE-291]Place Not Found For Find Brief"));
         return new PlaceBriefRespDto(placeEntity.getNo(), placeEntity.getTitle(), placeEntity.getType());
     }
 
@@ -144,6 +162,6 @@ public class PlaceService {
     }
 
     public PlaceImgListRespDto selectImageList(Long no, Long memberNo) {
-        return placeRepository.selectImageList(no,memberNo);
+        return placeRepository.selectImageList(no, memberNo);
     }
 }

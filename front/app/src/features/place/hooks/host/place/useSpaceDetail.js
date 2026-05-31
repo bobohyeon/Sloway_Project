@@ -35,13 +35,15 @@ export default function useSpaceDetail() {
       ]);
 
       if (briefRes && briefRes.data) {
+        
         setPlaceInfo({
           name: briefRes.data.title || briefRes.data.name, // 백엔드 DTO 필드명에 맞게 선택
           type: briefRes.data.type,
         });
       }
-
+      
       if (detailRes && detailRes.data) {
+        console.log(detailRes);
         setUnits(detailRes.data);
       }
     } catch (error) {

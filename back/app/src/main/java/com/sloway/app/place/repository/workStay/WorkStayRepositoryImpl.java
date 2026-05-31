@@ -2,6 +2,7 @@ package com.sloway.app.place.repository.workStay;
 
 import com.querydsl.core.Tuple;
 import com.querydsl.core.types.Projections;
+import com.querydsl.jpa.JPAExpressions;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import com.sloway.app.place.dto.response.station.StationDetailRespDto;
 import com.sloway.app.place.dto.response.station.StationUpdateDetailRespDto;
@@ -32,7 +33,7 @@ import static com.sloway.app.place.entity.workStay.QWorkExceptionPeriodEntity.wo
 import static com.sloway.app.place.entity.amenity.workStay.workOffice.QWorkOfficeAmenityEntity.workOfficeAmenityEntity;
 
 @RequiredArgsConstructor
-public class WorkStayRepositoryImpl implements WorkStayRepositoryCustom{
+public class WorkStayRepositoryImpl implements WorkStayRepositoryCustom {
 
     private final JPAQueryFactory queryFactory;
 
@@ -112,6 +113,13 @@ public class WorkStayRepositoryImpl implements WorkStayRepositoryCustom{
 
 
     private Tuple fetchWorkStayBasicInfo(Long workStayId, Long memberNo) {
+        // 1. 최신 HOST_PLACE ID 서브쿼리
+        var latestHostPlaceIdSubQuery = JPAExpressions
+                .select(hostPlaceEntity.no.max())
+                .from(hostPlaceEntity)
+                .where(hostPlaceEntity.workStayEntity.no.eq(workStayId));
+
+        // 2. 쿼리 실행
         return queryFactory
                 .select(
                         workStayEntity.title,
@@ -130,15 +138,24 @@ public class WorkStayRepositoryImpl implements WorkStayRepositoryCustom{
                 .from(workStayEntity)
                 .join(placeEntity).on(placeEntity.no.eq(workStayEntity.placeEntity.no))
                 .leftJoin(imgWorkStayEntity).on(imgWorkStayEntity.workStayEntity.no.eq(workStayId).and(imgWorkStayEntity.sort.eq(1)))
-                .leftJoin(hostPlaceEntity).on(hostPlaceEntity.placeEntity.no.eq(placeEntity.no))
+                .join(hostPlaceEntity).on(hostPlaceEntity.workStayEntity.no.eq(workStayEntity.no))
+                .join(hostPlaceEntity.hostEntity, hostEntity)
                 .where(
                         workStayEntity.no.eq(workStayId),
-                        hostPlaceEntity.hostEntity.memberNo.eq(memberNo)
+                        hostEntity.memberNo.eq(memberNo),
+                        hostPlaceEntity.no.in(latestHostPlaceIdSubQuery)
                 )
                 .fetchOne();
     }
 
     private WorkStayUpdateDetailRespDto fetchWorkStayMainUpdateInfo(Long workStayId, Long memberNo) {
+        // 1. 해당 워케이션의 가장 최신 HOST_PLACE ID 서브쿼리
+        var latestHostPlaceIdSubQuery = JPAExpressions
+                .select(hostPlaceEntity.no.max())
+                .from(hostPlaceEntity)
+                .where(hostPlaceEntity.workStayEntity.no.eq(workStayId));
+
+        // 2. 쿼리 실행
         return queryFactory
                 .select(Projections.fields(WorkStayUpdateDetailRespDto.class,
                         placeEntity.no.as("placeNo"),
@@ -161,7 +178,10 @@ public class WorkStayRepositoryImpl implements WorkStayRepositoryCustom{
                 ))
                 .from(workStayEntity)
                 .join(placeEntity).on(placeEntity.no.eq(workStayEntity.placeEntity.no))
-                .join(hostPlaceEntity).on(hostPlaceEntity.placeEntity.no.eq(placeEntity.no))
+                .join(hostPlaceEntity).on(
+                        hostPlaceEntity.workStayEntity.eq(workStayEntity)
+                                .and(hostPlaceEntity.no.in(latestHostPlaceIdSubQuery))
+                )
                 .where(
                         workStayEntity.no.eq(workStayId),
                         hostPlaceEntity.hostEntity.memberNo.eq(memberNo)
@@ -352,7 +372,7 @@ public class WorkStayRepositoryImpl implements WorkStayRepositoryCustom{
                 ))
                 .from(workOfficeEntity)
                 .where(workOfficeEntity.workStayEntity.no.eq(workStayId))
-                .fetchOne(); 
+                .fetchOne();
     }
 
     private List<Long> fetchOfficeAmenityIds(Long officeNo) {

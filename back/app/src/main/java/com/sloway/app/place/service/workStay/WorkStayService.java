@@ -12,6 +12,7 @@ import com.sloway.app.place.dto.response.workStay.WorkStayUpdateDetailRespDto;
 import com.sloway.app.place.entity.amenity.AmenityEntity;
 import com.sloway.app.place.entity.amenity.workStay.WorkAmenityEntity;
 import com.sloway.app.place.entity.amenity.workStay.workOffice.WorkOfficeAmenityEntity;
+import com.sloway.app.place.entity.hostPlace.HostPlaceEntity;
 import com.sloway.app.place.entity.place.PlaceEntity;
 import com.sloway.app.place.entity.workStay.ImgWorkStayEntity;
 import com.sloway.app.place.entity.workStay.WorkExceptionPeriodEntity;
@@ -19,6 +20,7 @@ import com.sloway.app.place.entity.workStay.WorkStayEntity;
 import com.sloway.app.place.entity.workStay.workOffice.ImgWorkStayOfficeEntity;
 import com.sloway.app.place.entity.workStay.workOffice.WorkOfficeEntity;
 import com.sloway.app.place.repository.amenity.AmenityRepository;
+import com.sloway.app.place.repository.hostPlace.HostPlaceRepository;
 import com.sloway.app.place.repository.place.PlaceRepository;
 import com.sloway.app.place.repository.workStay.WorkStayRepository;
 import com.sloway.app.place.repository.workStay.ImgWorkStayRepository;
@@ -50,6 +52,7 @@ public class WorkStayService {
     private final ImgWorkStayRepository imgWorkStayRepository;
     private final ImgWorkOfficeRepository imgWorkOfficeRepository;
     private final HostPlaceService hostPlaceService;
+    private final HostPlaceRepository hostPlaceRepository;
 
     @Transactional
     public void saveWorkStay(
@@ -59,7 +62,7 @@ public class WorkStayService {
             List<MultipartFile> officeFiles,
             List<ImgSortReqDto> sortList,
             List<ImgSortReqDto> officeSortList,
-            Long hostNo) {
+            Long memberNo) {
 
         //부모 테이블 엔티티 조회
         PlaceEntity place = placeRepository.findByNo(dto.getPlaceNo())
@@ -86,7 +89,7 @@ public class WorkStayService {
         WorkOfficeEntity savedOfficeEntity = workOfficeRepository.save(officeEntity);
 
         //검수 저장
-        hostPlaceService.insertHostPlace("W",hostNo, savedEntity.getNo());
+        hostPlaceService.insertHostPlace("W",memberNo, savedEntity.getNo());
 
         //이미지 aws로 수정
         List<String> dummyUrls = files.stream()
@@ -130,7 +133,7 @@ public class WorkStayService {
     }
 
     @Transactional
-    public void updateWorkStay(Long no, WorkStayUpdateReqDto stayDto, WorkOfficeUpdateReqDto officeDto) {
+    public void updateWorkStay(Long no, WorkStayUpdateReqDto stayDto, WorkOfficeUpdateReqDto officeDto, Long memberNo) {
         // 1. 기존 WorkStay 엔티티 조회
         WorkStayEntity workStay = workStayRepository.findById(no)
                 .orElseThrow(() -> new EntityNotFoundException("[WORKSTAY-301] WorkStay Not Found For Update"));
@@ -138,6 +141,16 @@ public class WorkStayService {
         // 2. 해당 WorkStay에 속한 WorkOffice 엔티티 조회
         WorkOfficeEntity office = workOfficeRepository.findByWorkStayEntityNo(no)
                 .orElseThrow(() -> new EntityNotFoundException("[WORKOFFICE-302] WorkOffice Not Found For Update"));
+
+        // 검수 추가
+        HostPlaceEntity hostPlaceEntity =hostPlaceRepository.findHostWorkLatest(no, memberNo);
+
+        if(hostPlaceEntity != null){
+            hostPlaceRepository.delete(hostPlaceEntity);
+        }
+
+        hostPlaceService.insertHostPlace("W", memberNo, workStay.getNo());
+
 
         // 3. 편의시설 엔티티 조회 (Stay Office 각각)
         List<Long> stayAmenityNos = stayDto.getFacilityList().stream()
@@ -202,13 +215,23 @@ public class WorkStayService {
     @Transactional
     public void updateImageWorkStay(Long no,
                                     List<MultipartFile> files, List<ImgUpdateSortReqDto> sortList,
-                                    List<MultipartFile> officeFiles, List<ImgUpdateSortReqDto> officeSortList) {
+                                    List<MultipartFile> officeFiles, List<ImgUpdateSortReqDto> officeSortList, Long memberNo) {
         // 1. 엔티티 조회
         WorkStayEntity workStay = workStayRepository.findById(no)
                 .orElseThrow(() -> new EntityNotFoundException("[WORKSTAY-315] WorkStay Not Found"));
 
         WorkOfficeEntity workOffice = workOfficeRepository.findByWorkStayEntityNo(no)
                 .orElseThrow(() -> new EntityNotFoundException("[WORKOFFICE-316] WorkOffice Not Found"));
+
+        // 검수 추가
+        HostPlaceEntity hostPlaceEntity =hostPlaceRepository.findHostWorkLatest(no, memberNo);
+
+        if(hostPlaceEntity != null){
+            hostPlaceRepository.delete(hostPlaceEntity);
+        }
+
+        hostPlaceService.insertHostPlace("W", memberNo, workStay.getNo());
+
 
         // 2. WorkStay 숙소 이미지 업데이트 (Upsert & Delete)
         // 화면에 살아남은 기존 이미지 ID 추출 (새로 추가된 파일인 null은 제외)

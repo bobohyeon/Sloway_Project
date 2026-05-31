@@ -12,7 +12,7 @@ export default function useApprovalCheck(no, type) {
       const resp = await checkApproval(type, no);
 
       if (resp && resp.data) {
-        setReason(resp.data.rejectedReason || '사유가 없습니다.');
+        setReason(resp.data.reason || '사유가 없습니다.');
       }
       setIsOpen(true);
     } catch (e) {

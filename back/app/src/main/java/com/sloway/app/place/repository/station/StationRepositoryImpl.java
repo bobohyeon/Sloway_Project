@@ -3,6 +3,7 @@ package com.sloway.app.place.repository.station;
 import com.querydsl.core.Tuple;
 import com.querydsl.core.types.Expression;
 import com.querydsl.core.types.Projections;
+import com.querydsl.jpa.JPAExpressions;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import com.sloway.app.place.dto.response.place.PlaceImgListRespDto;
 import com.sloway.app.place.dto.response.station.StationDetailRespDto;
@@ -129,6 +130,12 @@ public class StationRepositoryImpl implements StationRepositoryCustom{
      * 1. 메인 숙소 및 장소 정보 쿼리 (Projections.fields 사용으로 순서 스트레스 방지)
      */
     private StationUpdateDetailRespDto fetchStationMainUpdateInfo(Long stationId, Long memberNo) {
+        // 1. 해당 스테이션의 가장 최신 HOST_PLACE ID 서브쿼리
+        var latestHostPlaceIdSubQuery = JPAExpressions
+                .select(hostPlaceEntity.no.max())
+                .from(hostPlaceEntity)
+                .where(hostPlaceEntity.stationEntity.no.eq(stationId));
+
         return queryFactory
                 .select(Projections.fields(StationUpdateDetailRespDto.class,
                         placeEntity.no.as("placeNo"),
@@ -151,7 +158,10 @@ public class StationRepositoryImpl implements StationRepositoryCustom{
                 ))
                 .from(stationEntity)
                 .join(placeEntity).on(placeEntity.no.eq(stationEntity.placeEntity.no))
-                .join(hostPlaceEntity).on(hostPlaceEntity.placeEntity.no.eq(placeEntity.no))
+                .join(hostPlaceEntity).on(
+                        hostPlaceEntity.stationEntity.eq(stationEntity)
+                                .and(hostPlaceEntity.no.in(latestHostPlaceIdSubQuery))
+                )
                 .where(
                         stationEntity.no.eq(stationId),
                         hostPlaceEntity.hostEntity.memberNo.eq(memberNo) // 본인 숙소인지 검증
@@ -202,6 +212,13 @@ public class StationRepositoryImpl implements StationRepositoryCustom{
      * 1. 장소 기본 정보 및 대표 이미지 쿼리 (Tuple 반환)
      */
     private Tuple fetchPlaceBasicInfo(Long stationId, Long memberNo) {
+        // 1. 최신 HOST_PLACE ID 서브쿼리
+        var latestHostPlaceIdSubQuery = JPAExpressions
+                .select(hostPlaceEntity.no.max())
+                .from(hostPlaceEntity)
+                .where(hostPlaceEntity.stationEntity.no.eq(stationId));
+
+        // 2. 쿼리 실행
         return queryFactory
                 .select(
                         stationEntity.title,
@@ -220,10 +237,12 @@ public class StationRepositoryImpl implements StationRepositoryCustom{
                 .from(stationEntity)
                 .join(placeEntity).on(placeEntity.no.eq(stationEntity.placeEntity.no))
                 .leftJoin(imgStationEntity).on(imgStationEntity.stationEntity.no.eq(stationId).and(imgStationEntity.sort.eq(1)))
-                .leftJoin(hostPlaceEntity).on(hostPlaceEntity.placeEntity.no.eq(stationEntity.placeEntity.no))
+                .join(hostPlaceEntity).on(hostPlaceEntity.stationEntity.no.eq(stationEntity.no))
+                .join(hostPlaceEntity.hostEntity, hostEntity)
                 .where(
                         stationEntity.no.eq(stationId),
-                        hostPlaceEntity.hostEntity.memberNo.eq(memberNo)
+                        hostEntity.memberNo.eq(memberNo),
+                        hostPlaceEntity.no.in(latestHostPlaceIdSubQuery)
                 )
                 .fetchOne();
     }
