@@ -113,6 +113,7 @@ import AdminReviewReportPage from './features/review/pages/admin/AdminReviewRepo
 import BookingPaymentPage from './features/pay/pages/user/BookingPayment';
 import PaymentComplete from './features/pay/pages/user/PaymentComplete';
 import PaymentFail from './features/pay/pages/user/PaymentFail';
+import TossSuccess from './features/pay/pages/user/TossSuccess';
 import PaymentHistory from './features/pay/pages/user/PaymentHistory';
 import PaymentDetail from './features/pay/pages/user/PaymentDetail';
 import PaymentMethods from './features/pay/pages/user/PaymentMethods';
@@ -234,6 +235,7 @@ function App() {
       <Route path="/user/payment/checkout" element={<BookingPaymentPage />} />
       <Route path="/user/payment/complete" element={<PaymentComplete />} />
       <Route path="/user/payment/fail" element={<PaymentFail />} />
+      <Route path="/user/payment/toss/success" element={<TossSuccess />} />
 
       {/* ════════════════════════════════════════════
           인증 레이아웃 (헤더·사이드바 없음)

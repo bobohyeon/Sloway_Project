@@ -5,6 +5,20 @@ export async function readyPay(payReadyReqDto) {
   return resp.data;
 }
 
+export async function prepareTossPay(payReadyReqDto) {
+  const resp = await api.post(`/payment/pay/toss/prepare`, payReadyReqDto);
+  return resp.data;
+}
+
+export async function confirmTossPay({ paymentKey, orderId, amount }) {
+  const resp = await api.post(`/payment/pay/toss/confirm`, {
+    paymentKey,
+    orderId,
+    amount,
+  });
+  return resp.data;
+}
+
 export async function findPayAll() {
   const resp = await api.get(`/payment/pay`);
   return resp.data;
