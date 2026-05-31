@@ -24,8 +24,8 @@ export default function SettlementDashboard() {
       <NoticeCard padded>
         <NoticeIcon><FaInfoCircle /></NoticeIcon>
         <NoticeText>
-          정산은 이용 완료 건만 4일 단위 자동집계, 환불은 다음 회차에서 차감됩니다.
-          Settle 도메인은 본인(4번) 보류 영역 — 자동집계 본체 구현 후 활성화됩니다.
+          정산은 이용 완료 건만 4일 단위로 자동집계되며, 환불은 다음 회차에서 차감됩니다.
+          자동집계 기능을 준비 중입니다.
         </NoticeText>
       </NoticeCard>
 
@@ -35,12 +35,12 @@ export default function SettlementDashboard() {
         ))}
       </KPIGrid>
 
-      <Section title="이번 회차 요약" action={<Badge>Settle 통합 대기</Badge>}>
+      <Section title="이번 회차 요약" action={<Badge>준비 중</Badge>}>
         <EmptyCard padded>
           <EmptyState
             icon="💰"
             title="집계 데이터가 없습니다"
-            description="SettleService.createSettle 자동집계 + 4일 배치 진입 후 노출됩니다."
+            description="정산 자동집계 기능 준비 후 노출됩니다."
             action={
               <ActionBtn onClick={() => nav('/host/settlement/history')}>
                 정산 이력 보기

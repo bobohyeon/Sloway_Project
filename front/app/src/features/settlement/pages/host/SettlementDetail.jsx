@@ -34,13 +34,13 @@ export default function SettlementDetail() {
       <NoticeCard padded>
         <NoticeIcon><FaInfoCircle /></NoticeIcon>
         <NoticeText>
-          Settle 도메인 본인(4번) 보류 영역. 자동집계 진입 후 실제 회차 데이터가 노출됩니다.
+          정산 자동집계 기능을 준비 중입니다. 준비 완료 후 실제 회차 데이터가 노출됩니다.
         </NoticeText>
       </NoticeCard>
 
       <StatusBar>
         <StatusLabel>현재 상태</StatusLabel>
-        <Badge>Settle 통합 대기</Badge>
+        <Badge>준비 중</Badge>
       </StatusBar>
 
       <Section title="정산 내역">

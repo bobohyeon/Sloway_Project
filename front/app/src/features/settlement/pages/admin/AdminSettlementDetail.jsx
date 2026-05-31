@@ -43,8 +43,7 @@ export default function AdminSettlementDetail() {
           <FaInfoCircle />
         </NoticeIcon>
         <NoticeText>
-          Settle 도메인 본인 보류 영역입니다. 자동집계 본체(SettleService.createSettle) 구현 +
-          4일 배치 진입 후 실제 데이터가 노출됩니다.
+          정산 자동집계 기능을 준비 중입니다. 준비 완료 후 실제 정산 데이터가 노출됩니다.
         </NoticeText>
       </NoticeCard>
 
@@ -83,7 +82,7 @@ export default function AdminSettlementDetail() {
         <ActionBtn disabled>
           <FaFileInvoice /> 세금계산서 발행
         </ActionBtn>
-        <Badge>Settle 통합 대기</Badge>
+        <Badge>준비 중</Badge>
       </ActionRow>
     </PageLayout>
   );

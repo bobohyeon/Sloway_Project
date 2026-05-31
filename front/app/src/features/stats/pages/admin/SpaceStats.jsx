@@ -18,8 +18,7 @@ export default function SpaceStats() {
       <NoticeCard padded>
         <NoticeIcon><FaInfoCircle /></NoticeIcon>
         <NoticeText>
-          공간 통계는 2번 도메인(공간·오피스·액티비티) Repository 합류 후 적재됩니다.
-          공간 타입별(숙소/워크앤스테이/코워킹) 통계는 본인 5/27 SSOT에서 제외 결정 — 본 페이지는 운영 현황 위주.
+          공간 통계 기능을 준비 중입니다. 공간 등록·운영 현황 데이터 연동 후 노출됩니다.
         </NoticeText>
       </NoticeCard>
 
@@ -29,12 +28,12 @@ export default function SpaceStats() {
         ))}
       </KPIGrid>
 
-      <Section title="공간 분포" action={<Badge>공간 도메인 통합 대기</Badge>}>
+      <Section title="공간 분포" action={<Badge>준비 중</Badge>}>
         <EmptyCard padded>
           <EmptyState
             icon="🏠"
-            title="공간 통계 통합 대기"
-            description="2번 도메인 공간 Repository 및 통계 적재 파이프라인 합류 후 노출됩니다."
+            title="공간 통계 준비 중"
+            description="공간 데이터 연동 후 노출됩니다."
           />
         </EmptyCard>
       </Section>

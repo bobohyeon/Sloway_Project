@@ -21,8 +21,8 @@ export default function SettlementAccount() {
       <NoticeCard padded>
         <NoticeIcon><FaInfoCircle /></NoticeIcon>
         <NoticeText>
-          정산 계좌 등록은 Host 도메인 + 본인(4번) Settle 도메인 통합 영역입니다.
-          회원 인증 + 1원 인증 흐름 진입 후 활성화됩니다.
+          정산 계좌 등록 기능을 준비 중입니다. 본인 인증 및 계좌 인증 절차 완료 후
+          활성화됩니다.
         </NoticeText>
       </NoticeCard>
 
@@ -47,8 +47,8 @@ export default function SettlementAccount() {
         <EmptyCard padded>
           <EmptyState
             icon="🏦"
-            title="계좌 등록 통합 대기"
-            description="회원 본인 인증 + 1원 인증 흐름 합류 후 등록 절차가 활성화됩니다."
+            title="계좌 등록 준비 중"
+            description="본인 인증 및 계좌 인증 절차 완료 후 등록할 수 있습니다."
           />
         </EmptyCard>
       </Section>
