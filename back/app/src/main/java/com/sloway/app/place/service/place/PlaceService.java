@@ -1,5 +1,6 @@
 package com.sloway.app.place.service.place;
 
+import com.sloway.app.aws.service.S3Service;
 import com.sloway.app.place.dto.request.sort.ImgSortReqDto;
 import com.sloway.app.place.dto.request.place.PlaceReqDto;
 import com.sloway.app.place.dto.request.place.PlaceUpdateReqDto;
@@ -19,6 +20,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
 import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
@@ -34,6 +36,7 @@ public class PlaceService {
     private final ImgPlaceRepository imgPlaceRepository;
     private final HostPlaceService hostPlaceService;
     private final HostPlaceRepository hostPlaceRepository;
+    private final S3Service s3Service;
 
     @Transactional
     public void savePlace(PlaceReqDto dto, List<MultipartFile> files, List<ImgSortReqDto> sortList, Long memberNo) {
@@ -41,26 +44,24 @@ public class PlaceService {
 
         PlaceEntity placeEntity = placeRepository.save(place);
         hostPlaceService.insertHostPlace("P", memberNo, place.getNo());
-        // 이미지 aws로 수정
-        List<String> dummyUrls = files.stream()
-                .map(img -> "https://temp-bucket.s3.amazonaws.com/temp_"
-                        + System.currentTimeMillis() + "_"
-                        + img.getOriginalFilename())
-                .toList();
 
-        int size = Math.min(dummyUrls.size(), sortList.size());
-        List<ImgPlaceEntity> imgEntities = IntStream.range(0, size)
+        // 파일 리스트가 있다면 S3 업로드 후 엔티티 생성
+        if (files != null && !files.isEmpty()) {
+            List<ImgPlaceEntity> imgEntities = IntStream.range(0, files.size())
+                    .mapToObj(i -> {
+                        try {
+                            // S3 업로드 후 Key 반환 (또는 URL)
+                            String s3Key = s3Service.upload(files.get(i), "place");
+                            int sortValue = sortList.get(i).getSort();
+                            return ImgPlaceEntity.from(placeEntity, s3Key, sortValue);
+                        } catch (IOException e) {
+                            throw new RuntimeException("S3 업로드 실패", e);
+                        }
+                    })
+                    .collect(Collectors.toList());
 
-                .mapToObj(i -> {
-                    String url = dummyUrls.get(i);
-                    int sortValue = sortList.get(i).getSort(); // 정렬 값 추출
-
-                    return ImgPlaceEntity.from(placeEntity, url, sortValue);
-                })
-                .collect(Collectors.toList());
-
-        // 이미지 저장
-        imgPlaceRepository.saveAll(imgEntities);
+            imgPlaceRepository.saveAll(imgEntities);
+        }
     }
 
     @Transactional
@@ -87,36 +88,41 @@ public class PlaceService {
     }
 
 
-    // 이미지 수정 로직 (saveStation 로직 반영)
     @Transactional
     public void updatePlaceImg(Long no, List<MultipartFile> files, List<ImgUpdateSortReqDto> sortList, Long memberNo) {
         // 1. Place 조회
         PlaceEntity placeEntity = placeRepository.findByNo(no)
                 .orElseThrow(() -> new EntityNotFoundException("[PLACE-305] Place Not Found For Update Images"));
 
-        HostPlaceEntity hostPlaceEntity =hostPlaceRepository.findHostPlaceLatest(no, memberNo);
+        HostPlaceEntity hostPlaceEntity = hostPlaceRepository.findHostPlaceLatest(no, memberNo);
 
-        if(hostPlaceEntity != null){
+        if (hostPlaceEntity != null) {
             hostPlaceRepository.delete(hostPlaceEntity);
         }
 
         hostPlaceService.insertHostPlace("P", memberNo, placeEntity.getNo());
 
-        // 2. 화면에 살아남은 기존 이미지 ID 추출 (새로 추가된 파일인 null은 제외)
+        // 2. 화면에 살아남은 기존 이미지 ID 추출
         List<Long> aliveImageNos = sortList.stream()
-                .map(ImgUpdateSortReqDto::getImageNo) // 💡 DTO에 추가된 imageNo 추출
+                .map(ImgUpdateSortReqDto::getImageNo)
                 .filter(Objects::nonNull)
                 .toList();
 
-        // 3. 화면에서 유저가 🗑️ 버튼을 눌러 지워진 이미지들만 DB에서 선택 삭제
-        // (※ Repository에 해당 Querydsl 또는 JPQL 메서드가 선언되어 있어야 합니다)
+        // 3. 삭제될 이미지들 S3에서 실제 파일 삭제 (DB 삭제 전 수행)
+        List<ImgPlaceEntity> toDeleteImages = imgPlaceRepository.findByPlaceEntityNoAndNoNotIn(no, aliveImageNos);
+        for (ImgPlaceEntity img : toDeleteImages) {
+            // S3 삭제 (URL이 저장되어 있으므로 그대로 전달)
+            s3Service.delete(img.getCurrentUrl());
+        }
+
+        // 4. DB에서 선택 삭제
         if (aliveImageNos.isEmpty()) {
             imgPlaceRepository.deleteAllByPlaceEntityNo(no);
         } else {
             imgPlaceRepository.deleteByPlaceEntityNoAndNoNotIn(no, aliveImageNos);
         }
 
-        // 4. 루프를 돌며 순서 교정(Dirty Check) 및 신규 파일 매칭 삽입(Loop Counter 방식)
+        // 5. 순서 교정(Dirty Check) 및 신규 파일 매칭 삽입
         int fileIndex = 0;
         for (ImgUpdateSortReqDto dto : sortList) {
             if (dto.getImageNo() != null) {
@@ -125,15 +131,18 @@ public class PlaceService {
                         .orElseThrow(() -> new EntityNotFoundException("Place Image Not Found"));
                 existingImg.updateSort(dto.getSort());
             } else {
-                // ② 신규 이미지: 드래그 앤 드롭으로 섞인 null 자리에 순서대로 파일을 매칭하여 S3 URL 발급 후 저장
+                // ② 신규 이미지: S3 업로드 후 저장
                 if (files != null && fileIndex < files.size()) {
-                    MultipartFile currentFile = files.get(fileIndex++);
-                    String s3Url = "https://temp-bucket.s3.amazonaws.com/temp_"
-                            + System.currentTimeMillis() + "_"
-                            + currentFile.getOriginalFilename();
+                    try {
+                        MultipartFile currentFile = files.get(fileIndex++);
+                        // S3 업로드 (풀 URL 반환하도록 s3Service 수정 반영)
+                        String s3Url = s3Service.upload(currentFile, "place");
 
-                    ImgPlaceEntity newImg = ImgPlaceEntity.from(placeEntity, s3Url, dto.getSort());
-                    imgPlaceRepository.save(newImg);
+                        ImgPlaceEntity newImg = ImgPlaceEntity.from(placeEntity, s3Url, dto.getSort());
+                        imgPlaceRepository.save(newImg);
+                    } catch (IOException e) {
+                        throw new RuntimeException("S3 이미지 업로드 중 오류 발생", e);
+                    }
                 }
             }
         }
@@ -163,5 +172,17 @@ public class PlaceService {
 
     public PlaceImgListRespDto selectImageList(Long no, Long memberNo) {
         return placeRepository.selectImageList(no, memberNo);
+    }
+
+    public List<PlaceCardDto> getTop4PlacesByType() {
+        return placeRepository.getTop4PlacesByType();
+    }
+
+    public List<PlaceCardDto> getRecommendPlace() {
+        return placeRepository.getRecommendPlace();
+    }
+
+    public WorkStayCardDto getRandomWorkStay() {
+        return placeRepository.getRandomWorkStay();
     }
 }
