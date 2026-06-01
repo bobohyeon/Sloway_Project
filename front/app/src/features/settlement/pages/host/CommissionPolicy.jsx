@@ -10,7 +10,7 @@ import { findFeeAll } from '../../api/feeApi';
 const PLACE_TYPE_LABEL = {
   station: '숙소',
   workStay: '워크앤스테이',
-  office: '코워킹오피스',
+  office: '오피스',
 };
 
 export default function CommissionPolicy() {
