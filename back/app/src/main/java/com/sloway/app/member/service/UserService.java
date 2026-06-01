@@ -21,6 +21,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
 import java.util.List;
 
 /**
@@ -74,7 +75,7 @@ public class UserService {
                 String imgUrl = s3Service.upload(profileImage, "member-profile");
                 member.updateImgUrl(imgUrl);   // 의미 메서드 (없으면 추가)
             } catch (IOException e) {
-                throw new CustomException(/* 적절한 에러코드, 예: FILE_UPLOAD_FAILED */);
+                throw new CustomException(MemberErrorCode.MEMBER_NOT_FOUND);
             }
         }
         log.info("일반회원 마이페이지 수정 완료: memberNo={}", memberNo);

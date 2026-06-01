@@ -5,6 +5,7 @@ import com.sloway.app.auth.service.EmailService;
 import com.sloway.app.common.exception.CustomException;
 import com.sloway.app.host.common.HostErrorCode;
 import com.sloway.app.host.dto.request.UpdateHostRequestDto;
+import com.sloway.app.host.dto.response.HostApplicationResponseDto;
 import com.sloway.app.host.dto.response.HostMyPageResponseDto;
 import com.sloway.app.host.entity.HostEntity;
 import com.sloway.app.host.repository.HostRepository;
@@ -149,4 +150,14 @@ public class HostService {
         log.info("호스트 이메일 변경 완료: memberNo={}", memberNo);
     }
 
+    /**
+     * 호스트 본인 신청 현황 조회.
+     * 토큰의 memberNo로 본인 Host 조회.
+     */
+    public HostApplicationResponseDto getMyApplication(Long memberNo) {
+        HostEntity host = hostRepository.findByMemberNo(memberNo)
+                .orElseThrow(() -> new CustomException(HostErrorCode.HOST_NOT_FOUND));
+
+        return HostApplicationResponseDto.from(host);
+    }
 }
