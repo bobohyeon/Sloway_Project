@@ -7,7 +7,7 @@ import { CommissionPolicyTable } from '../../components/host/CommissionPolicyTab
 
 import { createFee, findFeeAll } from '../../api/feeApi';
 
-// 사용자 노출 명칭 SSOT — station=숙소 / workStay=워크앤스테이 / office=코워킹오피스
+// 사용자 노출 명칭 SSOT — station=숙소 / workStay=워크앤스테이 / office=오피스
 // 백엔드 PlaceType enum 영영 camelCase 소문자
 const PLACE_TYPE_INFO = {
   station: {
@@ -22,7 +22,7 @@ const PLACE_TYPE_INFO = {
   },
   office: {
     icon: '🏢',
-    category: '코워킹오피스',
+    category: '오피스',
     description: '단기 사무·미팅 공간',
   },
 };
@@ -30,7 +30,7 @@ const PLACE_TYPE_INFO = {
 const PLACE_TYPE_OPTIONS = [
   { value: 'station', label: '숙소 (station)' },
   { value: 'workStay', label: '워크앤스테이 (workStay)' },
-  { value: 'office', label: '코워킹오피스 (office)' },
+  { value: 'office', label: '오피스 (office)' },
 ];
 
 const formatDate = (iso) => {
