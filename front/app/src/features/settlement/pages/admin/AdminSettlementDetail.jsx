@@ -1,9 +1,15 @@
+import { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import styled from 'styled-components';
-import { FaInfoCircle, FaCheckCircle, FaFileInvoice } from 'react-icons/fa';
+import { FaCheckCircle, FaFileInvoice } from 'react-icons/fa';
 
 import PageLayout from '../../../../app/layouts/page/PageLayout';
-import { Card, Section, Badge } from '../../../pay_shared/components';
+import { Card, Section } from '../../../pay_shared/components';
+import {
+  findSettleByNo,
+  completeSettle,
+  issueTaxInvoice,
+} from '../../api/settlementApi';
 
 const STATUS_META = {
   WAITING: { label: '정산 대기', color: 'var(--gray-400)' },
@@ -11,104 +17,169 @@ const STATUS_META = {
   INVOICE: { label: '세금계산서 발행', color: '#0064FF' },
 };
 
-const SUMMARY_FIELDS = [
-  { key: 'hostName', label: '호스트' },
-  { key: 'period', label: '회차 기간' },
-  { key: 'totalSales', label: '총 매출' },
-  { key: 'commission', label: '수수료 (정책 적용)' },
-  { key: 'refundOffset', label: '환불 차감' },
-  { key: 'finalAmount', label: '최종 정산액' },
-];
+const won = (n) => `${Number(n ?? 0).toLocaleString()}원`;
 
-const TIMELINE = [
-  { key: 'created', label: '정산 생성', status: '—' },
-  { key: 'completed', label: '정산 완료', status: '—' },
-  { key: 'invoiced', label: '세금계산서 발행', status: '—' },
-];
+const fmtDateTime = (iso) => {
+  if (!iso) return '—';
+  const d = new Date(iso);
+  const pad = (n) => String(n).padStart(2, '0');
+  return `${d.getFullYear()}.${pad(d.getMonth() + 1)}.${pad(d.getDate())} ${pad(
+    d.getHours()
+  )}:${pad(d.getMinutes())}`;
+};
 
 export default function AdminSettlementDetail() {
   const { no } = useParams();
-  const currentStatus = STATUS_META.WAITING;
+  const [settle, setSettle] = useState(null);
+  const [working, setWorking] = useState(false);
+
+  const load = async () => {
+    try {
+      const data = await findSettleByNo(no);
+      setSettle(data);
+    } catch (err) {
+      console.error('정산 상세 조회 실패', err);
+    }
+  };
+
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    load();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [no]);
+
+  const handleComplete = async () => {
+    setWorking(true);
+    try {
+      await completeSettle(no);
+      await load(); // 상태 갱신 (WAITING → COMPLETE)
+    } catch (err) {
+      console.error('정산 완료 처리 실패', err);
+      alert('정산 완료 처리에 실패했습니다.');
+    } finally {
+      setWorking(false);
+    }
+  };
+
+  const handleInvoice = async () => {
+    setWorking(true);
+    try {
+      await issueTaxInvoice(no);
+      await load(); // 상태 갱신 (COMPLETE → INVOICE)
+    } catch (err) {
+      console.error('세금계산서 발행 실패', err);
+      alert('세금계산서 발행에 실패했습니다.');
+    } finally {
+      setWorking(false);
+    }
+  };
+
+  if (!settle) {
+    return (
+      <PageLayout
+        title={`정산 #${no}`}
+        backTo="/admin/settlement/host"
+        backLabel="정산 관리"
+        maxWidth={1000}
+      >
+        <Center>불러오는 중…</Center>
+      </PageLayout>
+    );
+  }
+
+  const meta = STATUS_META[settle.status] ?? {
+    label: settle.status,
+    color: 'var(--gray-400)',
+  };
 
   return (
     <PageLayout
-      title={`정산 #${no ?? '—'}`}
+      title={`정산 #${settle.no}`}
       description="정산 회차 상세 정보와 상태를 확인합니다"
-      backTo="/admin/settlement"
+      backTo="/admin/settlement/host"
       backLabel="정산 관리"
       maxWidth={1000}
     >
-      <NoticeCard padded>
-        <NoticeIcon>
-          <FaInfoCircle />
-        </NoticeIcon>
-        <NoticeText>
-          정산 자동집계 기능을 준비 중입니다. 준비 완료 후 실제 정산 데이터가 노출됩니다.
-        </NoticeText>
-      </NoticeCard>
-
       <StatusBar>
         <StatusLabel>현재 상태</StatusLabel>
-        <StatusBadge $color={currentStatus.color}>{currentStatus.label}</StatusBadge>
+        <StatusBadge $color={meta.color}>{meta.label}</StatusBadge>
       </StatusBar>
 
       <Section title="정산 요약">
         <SummaryCard padded>
-          {SUMMARY_FIELDS.map((field) => (
-            <SummaryRow key={field.key}>
-              <SummaryLabel>{field.label}</SummaryLabel>
-              <SummaryValue>—</SummaryValue>
-            </SummaryRow>
-          ))}
+          <SummaryRow>
+            <SummaryLabel>호스트</SummaryLabel>
+            <SummaryValue>호스트 #{settle.hostNo}</SummaryValue>
+          </SummaryRow>
+          <SummaryRow>
+            <SummaryLabel>회차 기간</SummaryLabel>
+            <SummaryValue>
+              {settle.settleStartDate} ~ {settle.settleEndDate}
+            </SummaryValue>
+          </SummaryRow>
+          <SummaryRow>
+            <SummaryLabel>총 매출</SummaryLabel>
+            <SummaryValue>{won(settle.totalAmt)}</SummaryValue>
+          </SummaryRow>
+          <SummaryRow>
+            <SummaryLabel>수수료 (정책 적용)</SummaryLabel>
+            <SummaryValue>- {won(settle.feeAmt)}</SummaryValue>
+          </SummaryRow>
+          <SummaryRow>
+            <SummaryLabel>환불 차감</SummaryLabel>
+            <SummaryValue>- {won(settle.refundAmt)}</SummaryValue>
+          </SummaryRow>
+          <SummaryRow>
+            <SummaryLabel>최종 정산액</SummaryLabel>
+            <SummaryValue>{won(settle.payoutAmt)}</SummaryValue>
+          </SummaryRow>
         </SummaryCard>
       </Section>
 
       <Section title="진행 이력">
         <TimelineCard padded>
-          {TIMELINE.map((step) => (
-            <TimelineRow key={step.key}>
-              <TimelineDot />
-              <TimelineLabel>{step.label}</TimelineLabel>
-              <TimelineStatus>{step.status}</TimelineStatus>
-            </TimelineRow>
-          ))}
+          <TimelineRow>
+            <TimelineDot />
+            <TimelineLabel>정산 생성</TimelineLabel>
+            <TimelineStatus>{fmtDateTime(settle.createdAt)}</TimelineStatus>
+          </TimelineRow>
+          <TimelineRow>
+            <TimelineDot />
+            <TimelineLabel>정산 완료</TimelineLabel>
+            <TimelineStatus>{fmtDateTime(settle.settledAt)}</TimelineStatus>
+          </TimelineRow>
+          <TimelineRow>
+            <TimelineDot />
+            <TimelineLabel>세금계산서 발행</TimelineLabel>
+            <TimelineStatus>{fmtDateTime(settle.invoicedAt)}</TimelineStatus>
+          </TimelineRow>
         </TimelineCard>
       </Section>
 
       <ActionRow>
-        <ActionBtn disabled>
+        <ActionBtn
+          onClick={handleComplete}
+          disabled={settle.status !== 'WAITING' || working}
+          $enabled={settle.status === 'WAITING'}
+        >
           <FaCheckCircle /> 정산 완료 처리
         </ActionBtn>
-        <ActionBtn disabled>
+        <ActionBtn
+          onClick={handleInvoice}
+          disabled={settle.status !== 'COMPLETE' || working}
+          $enabled={settle.status === 'COMPLETE'}
+        >
           <FaFileInvoice /> 세금계산서 발행
         </ActionBtn>
-        <Badge>준비 중</Badge>
       </ActionRow>
     </PageLayout>
   );
 }
 
-const NoticeCard = styled(Card)`
-  display: flex;
-  align-items: flex-start;
-  gap: var(--space-3);
-  margin-bottom: var(--space-4);
-  background: var(--cream);
-  border-color: var(--sage);
-`;
-
-const NoticeIcon = styled.div`
-  font-size: 1.1rem;
-  color: var(--sage);
-  flex-shrink: 0;
-  margin-top: 2px;
-`;
-
-const NoticeText = styled.p`
-  font-size: 0.85rem;
-  color: var(--gray-800);
-  line-height: 1.6;
-  margin: 0;
+const Center = styled.div`
+  padding: 80px 0;
+  text-align: center;
+  color: var(--gray-600);
 `;
 
 const StatusBar = styled.div`
@@ -215,11 +286,15 @@ const ActionBtn = styled.button`
   align-items: center;
   gap: 6px;
   padding: 8px 14px;
-  background: var(--white);
-  border: 1px solid var(--gray-200);
+  background: ${(p) => (p.$enabled ? 'var(--sage)' : 'var(--white)')};
+  border: 1px solid ${(p) => (p.$enabled ? 'var(--sage)' : 'var(--gray-200)')};
   border-radius: var(--radius-md);
   font-size: 0.85rem;
-  color: var(--gray-400);
-  cursor: not-allowed;
+  color: ${(p) => (p.$enabled ? 'var(--white)' : 'var(--gray-400)')};
+  cursor: ${(p) => (p.$enabled ? 'pointer' : 'not-allowed')};
   font-family: 'Noto Sans KR', sans-serif;
+
+  &:disabled {
+    cursor: not-allowed;
+  }
 `;
