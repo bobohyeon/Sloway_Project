@@ -93,7 +93,6 @@ public class StationApiController {
     @GetMapping("/detail/dash/{no}")
     public ResponseEntity<StationDetailRespDto> selectStationDetailDashBoard(@PathVariable Long no, @AuthenticationPrincipal Long memberNo){
         StationDetailRespDto dto = stationService.selectStationDetailDashBoard(no, Long.valueOf(2));
-        System.out.println("dto = " + dto);
         return ResponseEntity.ok(dto);
     }
 

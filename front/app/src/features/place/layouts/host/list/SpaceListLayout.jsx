@@ -3,19 +3,19 @@ import PageLayout from '../../../../../app/layouts/page/PageLayout';
 
 const PageWrapper = styled.div`
   background-color: #f4efe6;
-  min-height: 100vh;
+  min-height: 100vh; /* 페이지 전체 최소 높이 */
   display: flex;
   flex-direction: column;
   align-items: center;
-  box-sizing: border-box;
+  padding-bottom: 50px; /* 하단 여백 확보 */
 `;
+
 const Container = styled.div`
   width: 100%;
   max-width: 1100px;
   display: flex;
   flex-direction: column;
-  height: 100%;
-  margin-bottom: 150px;
+  margin-bottom: 50px;
 `;
 
 const TabBar = styled.div`
