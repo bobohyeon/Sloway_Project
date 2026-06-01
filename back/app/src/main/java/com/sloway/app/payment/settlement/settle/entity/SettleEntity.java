@@ -44,6 +44,9 @@ public class SettleEntity extends BaseEntity {
     private Integer payoutAmt;
 
     @Column
+    private Integer carryOver;
+
+    @Column
     @Enumerated(EnumType.STRING)
     private SettleStatus status;
 
@@ -68,15 +71,6 @@ public class SettleEntity extends BaseEntity {
         this.status = SettleStatus.INVOICE;
         this.invoicedAt = LocalDateTime.now();
     }
-
-    // TODO: (선택) offsetRefund(Integer refundDeduction)
-    //       다음 회차로 이월된 환불액을 정산에 차감 반영
-    //       전이 없음, 금액 필드만 변경
-    //       힌트:
-    //         this.refundAmt += refundDeduction;
-    //         this.payoutAmt -= refundDeduction;
-    //       호출 시점: completeSettle() 이전에 호출하여 차감 후 확정하는 흐름
-
     public void applyAmounts(Integer totalAmt, Integer feeAmt, Integer refundAmt, Integer payoutAmt) {
         if (this.status != SettleStatus.WAITING) {
             throw new IllegalStateException("정산 대기 상태만 금액 설정 가능");
@@ -86,4 +80,6 @@ public class SettleEntity extends BaseEntity {
         this.refundAmt = refundAmt;
         this.payoutAmt = payoutAmt;
     }
+
+
 }

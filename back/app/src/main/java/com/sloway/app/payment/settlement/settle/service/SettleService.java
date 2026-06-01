@@ -78,6 +78,23 @@ public class SettleService {
 
         int payoutAmt = totalAmt - feeAmt - refundAmt;
 
+        // ─────────────────────────────────────────────────────────────
+        // TODO: carry-over (최소 정산 기준 미달 시 다음 회차 이월) — B 방식 (carryOver 필드)
+        //   1. 이 host 의 직전 정산 조회 → 직전 carryOver 가져오기 (없으면 0)
+        //      (SettleRepositoryCustom 에 추가할 직전 조회 메서드 사용)
+        //   2. 실효 정산액 = 이번 payoutAmt + 직전 carryOver
+        //   3. 실효 정산액이 최소 기준(MIN_PAYOUT, 상수) 이상인지 판정
+        //        - 이상 → 지급: 지급액 = 실효, carryOver = 0, status = WAITING
+        //        - 미달 → 이월: 지급액 = 0, carryOver = 실효, status = CARRIED
+        //   4. entity 에 carryOver 와 status 까지 반영 (applyAmounts 확장 or 별도 Rich)
+        //   ※ MIN_PAYOUT 은 private static final int 상수로 (예: 10000)
+        //
+        //   ⚠️ 함정 — 바로 아래 0원 스킵 가드와 충돌:
+        //     매출 0 이어도 직전 carryOver 가 남아있으면 이월을 계속 굴려야 한다.
+        //     지금처럼 totalAmt == 0 이면 무조건 return null 하면 이월이 끊긴다.
+        //     → "totalAmt == 0 AND 직전 carryOver == 0" 일 때만 스킵하도록 조건을 좁힐지 검토.
+        // ─────────────────────────────────────────────────────────────
+
         if (totalAmt == 0) {
             return null;
         }

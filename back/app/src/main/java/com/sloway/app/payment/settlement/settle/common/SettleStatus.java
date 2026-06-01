@@ -9,7 +9,9 @@ public enum SettleStatus {
 
     WAITING("정산 대기"),
     COMPLETE("정산 완료"),
-    INVOICE("세금계산서 발행");
+    INVOICE("세금계산서 발행"),
+    CARRIED("이월"),
+    HOLD("보류");
 
     private final String label;
 }
