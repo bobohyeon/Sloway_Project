@@ -22,7 +22,7 @@ import SlowyLogo from '../../components/common/SlowyLogo';
 import { KakaoIcon, GoogleIcon } from '../../components/common/SocialIcons';
 import ErrorMessage from '../../components/common/ErrorMessage';
 import { useLoginForm } from '../../hooks/useLoginForm';
-
+import { startKakaoLogin } from '../../api/authApi';
 /**
  * 일반회원 로그인 페이지.
  *
@@ -105,7 +105,7 @@ function LoginPage() {
         <DividerLine />
       </Divider>
 
-      <BtnKakao type="button" disabled={loading}>
+      <BtnKakao type="button" onClick={startKakaoLogin} disabled={loading}>
         <KakaoIcon />
         카카오로 로그인
       </BtnKakao>

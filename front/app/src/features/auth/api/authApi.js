@@ -82,3 +82,15 @@ export const hostSignup = async (data, businessDoc) => {
   const response = await api.post('/host/join', formData);
   return response.data;
 };
+
+// 카카오 로그인 시작 — 카카오 인증 페이지로 이동
+export const startKakaoLogin = () => {
+  const clientId = import.meta.env.VITE_KAKAO_CLIENT_ID;
+  const redirectUri = 'http://localhost:8080/api/auth/oauth/kakao/callback';
+  const url =
+    `https://kauth.kakao.com/oauth/authorize` +
+    `?client_id=${clientId}` +
+    `&redirect_uri=${encodeURIComponent(redirectUri)}` +
+    `&response_type=code`;
+  window.location.href = url;
+};

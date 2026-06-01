@@ -6,16 +6,20 @@ import com.sloway.app.common.exception.CustomException;
 import com.sloway.app.member.common.MemberErrorCode;
 import com.sloway.app.member.dto.request.ChangeEmailRequestDto;
 import com.sloway.app.member.dto.request.UpdateUserRequestDto;
+import com.sloway.app.member.dto.response.SocialAccountResponseDto;
 import com.sloway.app.member.dto.response.UserResponseDto;
 import com.sloway.app.member.entity.MemberEntity;
 import com.sloway.app.member.entity.UserEntity;
 import com.sloway.app.member.repository.MemberRepository;
+import com.sloway.app.member.repository.SocialAccountRepository;
 import com.sloway.app.member.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.util.List;
 
 /**
  * 일반회원 정보 관리 서비스  - 마이페이지
@@ -30,6 +34,8 @@ public class UserService {
     private final PasswordEncoder passwordEncoder;
     private final UserRepository userRepository;
     private final EmailService emailService;
+    private final SocialAccountRepository socialAccountRepository;  // ← 추가
+
 
     public UserResponseDto getMyInfo(Long memberNo) {
         MemberEntity member = memberRepository.findById(memberNo)
@@ -146,4 +152,13 @@ public class UserService {
         member.changeEmail(newEmail);
         log.info("일반회원 이메일 변경 완료: memberNo={}", memberNo);
     }
-}
+    /**
+     * 회원의 연동 소셜 계정 목록 조회.
+     */
+    @Transactional(readOnly = true)
+    public List<SocialAccountResponseDto> getSocialAccounts(Long memberNo) {
+        return socialAccountRepository.findByMemberNo(memberNo).stream()
+                .map(SocialAccountResponseDto::from)
+                .toList();
+    }
+}//class

@@ -26,3 +26,7 @@ export const changeMyPassword = async (currentPassword, newPassword) => {
   });
   return response.data;
 };
+export const getMySocialAccounts = async () => {
+  const response = await api.get('/user/mypage/social-accounts'); // /user/social-accounts → /user/mypage/social-accounts
+  return response.data;
+};
