@@ -1,6 +1,7 @@
 package com.sloway.app.auth.controller;
 
 import com.sloway.app.auth.dto.request.JoinRequestDto;
+import com.sloway.app.auth.dto.request.ResetPasswordRequestDto;
 import com.sloway.app.auth.dto.request.SendCodeRequestDto;
 import com.sloway.app.auth.dto.request.VerifyCodeRequestDto;
 import com.sloway.app.auth.dto.response.EmailCheckResponseDto;
@@ -76,6 +77,19 @@ public class AuthController {
 
         log.info("이메일 인증번호 확인 요청: email={}", request.getEmail());
         emailService.verifyCode(request.getEmail(), request.getCode());
+        return ResponseEntity.ok().build();
+    }
+
+    /**
+     * 비밀번호 찾기(재설정). 비로그인 상태에서 호출.
+     *
+     * <p>흐름: 이메일 인증코드 발송(send-code) → 확인(verify-code) → 본 API로 새 비번 설정.
+     * 서버가 isVerified로 인증 완료를 재검증한 뒤에만 비번을 바꾼다.
+     */
+    @PostMapping("/password/reset")
+    public ResponseEntity<Void> resetPassword(@RequestBody ResetPasswordRequestDto request) {
+        log.info("비밀번호 재설정 요청: email={}", request.getEmail());
+        authService.resetPassword(request);
         return ResponseEntity.ok().build();
     }
 
