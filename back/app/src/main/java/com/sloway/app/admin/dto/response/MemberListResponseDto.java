@@ -9,6 +9,7 @@ import java.time.LocalDateTime;
 
 /**
  * 어드민 — 회원 목록 응답 (한 행).
+ *
  */
 @Getter
 @Builder
@@ -20,9 +21,10 @@ public class MemberListResponseDto {
     private final String phone;
     private final MemberStatus status;
     private final LocalDateTime createdAt;   // 가입일
+    private final String role;
 
 
-    public static MemberListResponseDto from(MemberEntity member) {
+    public static MemberListResponseDto from(MemberEntity member , String role) {
         return MemberListResponseDto.builder()
                 .memberNo(member.getNo())
                 .email(member.getEmail())
@@ -30,6 +32,7 @@ public class MemberListResponseDto {
                 .phone(member.getPhone())
                 .status(member.getStatus())
                 .createdAt(member.getCreatedAt())
+                .role(role)
                 .build();
     }
 }

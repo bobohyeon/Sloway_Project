@@ -1,7 +1,13 @@
 import React from 'react';
 import styled from 'styled-components';
 import { useNavigate } from 'react-router-dom'; // 페이지 이동을 위한 hook
-import { FaHotel, FaBriefcase, FaLeaf, FaCheck, FaMapMarkerAlt } from 'react-icons/fa';
+import {
+  FaHotel,
+  FaBriefcase,
+  FaLeaf,
+  FaCheck,
+  FaMapMarkerAlt,
+} from 'react-icons/fa';
 
 // --- Styled Components ---
 
@@ -96,12 +102,12 @@ const TYPE_CONFIG = {
     bgColor: '#fdf2e9',
     color: '#d4a373',
   },
-  PLACE:{
+  PLACE: {
     label: '공간',
-    icon: <FaMapMarkerAlt/>,
+    icon: <FaMapMarkerAlt />,
     bgColor: '#fff4f4',
-    color: '#e78a8a'
-  }
+    color: '#e78a8a',
+  },
 };
 
 const STATUS_MAP = {
@@ -143,7 +149,7 @@ function ApprovalTable({ data }) {
             };
 
             return (
-              <tr key={item.id}>
+              <tr key={item.no}>
                 <td>
                   <SpaceCell>
                     <div
@@ -179,17 +185,17 @@ function ApprovalTable({ data }) {
                 </td>
                 <td style={{ textAlign: 'center' }}>
                   <DetailButton
-  disabled={item.status !== 'P'} // 'P'가 아닐 때 비활성화
-  onClick={() =>
-    navigate(`/admin/space/review/${item.type}/${item.id}`)
-  }
-  style={{
-    cursor: item.status !== 'P' ? 'not-allowed' : 'pointer',
-    opacity: item.status !== 'P' ? 0.5 : 1, // 비활성화 시 흐리게 표시
-  }}
->
-  {item.status === 'P' ? '검수하기' : '검수 완료'}
-</DetailButton>
+                    disabled={item.status !== 'P'} // 'P'가 아닐 때 비활성화
+                    onClick={() =>
+                      navigate(`/admin/space/review/${item.type}/${item.id}`)
+                    }
+                    style={{
+                      cursor: item.status !== 'P' ? 'not-allowed' : 'pointer',
+                      opacity: item.status !== 'P' ? 0.5 : 1, // 비활성화 시 흐리게 표시
+                    }}
+                  >
+                    {item.status === 'P' ? '검수하기' : '검수 완료'}
+                  </DetailButton>
                 </td>
               </tr>
             );

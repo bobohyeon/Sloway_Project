@@ -32,10 +32,7 @@ import WithdrawPage from './features/account/pages/user/WithdrawPage';
 import HostProfilePage from './features/account/pages/host/HostProfilePage';
 import HostProfileEditPage from './features/account/pages/host/HostProfileEditPage';
 import HostWithdrawPage from './features/account/pages/host/HostWithdrawPage';
-
-// ── 일반회원 — 호스트 신청 ───────────────────────
-import HostApplyPage from './features/account/pages/user/HostApplyPage';
-import HostStatusPage from './features/account/pages/user/HostStatusPage';
+import HostStatusPage from './features/account/pages/host/HostStatusPage';
 
 // ── 관리자 — 회원 관리 ──────────────────────────
 import MemberListPage from './features/account/pages/admin/MemberListPage';
@@ -279,7 +276,6 @@ function App() {
         <Route path="/user/password" element={<ChangePasswordPage />} />
         <Route path="/user/withdraw" element={<WithdrawPage />} />
         {/* 호스트 신청 */}
-        <Route path="/user/host/apply" element={<HostApplyPage />} />
         <Route path="/user/host/status" element={<HostStatusPage />} />
         {/* 예약 */}
         <Route path="/user/reservation" element={<RsvnListPage />} />
@@ -331,6 +327,7 @@ function App() {
         <Route path="/host/profile" element={<HostProfilePage />} />
         <Route path="/host/profile/edit" element={<HostProfileEditPage />} />
         <Route path="/host/withdraw" element={<HostWithdrawPage />} />
+        <Route path="/host/application" element={<HostStatusPage />} />
         <Route
           path="/host/license"
           element={<Todo label="사업자등록증 인증" />}

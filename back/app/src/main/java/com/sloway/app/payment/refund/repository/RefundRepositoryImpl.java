@@ -54,4 +54,40 @@ public class RefundRepositoryImpl implements RefundRepositoryCustom {
                 )
                 .fetchOne();
     }
+    @Override
+    public BigDecimal sumByOfficeIn(List<Long> officeNos, LocalDateTime start, LocalDateTime end) {
+        return jpaQueryFactory
+                .select(qRefundEntity.refundAmt.sum().coalesce(BigDecimal.ZERO))
+                .from(qRefundEntity)
+                .where(
+                        qRefundEntity.rsvnNo.officeNo.no.in(officeNos),
+                        qRefundEntity.status.eq(RefundStatus.COMPLETED),
+                        qRefundEntity.createdAt.between(start, end)
+                )
+                .fetchOne();
+    }
+    @Override
+    public BigDecimal sumByStationIn(List<Long> stationNos, LocalDateTime start, LocalDateTime end) {
+        return jpaQueryFactory
+                .select(qRefundEntity.refundAmt.sum().coalesce(BigDecimal.ZERO))
+                .from(qRefundEntity)
+                .where(
+                        qRefundEntity.rsvnNo.stationNo.no.in(stationNos),
+                        qRefundEntity.status.eq(RefundStatus.COMPLETED),
+                        qRefundEntity.createdAt.between(start, end)
+                )
+                .fetchOne();
+    }
+    @Override
+    public BigDecimal sumByWorkStayIn(List<Long> workStayNos, LocalDateTime start, LocalDateTime end) {
+        return jpaQueryFactory
+                .select(qRefundEntity.refundAmt.sum().coalesce(BigDecimal.ZERO))
+                .from(qRefundEntity)
+                .where(
+                        qRefundEntity.rsvnNo.workStayNo.no.in(workStayNos),
+                        qRefundEntity.status.eq(RefundStatus.COMPLETED),
+                        qRefundEntity.createdAt.between(start, end)
+                )
+                .fetchOne();
+    }
 }

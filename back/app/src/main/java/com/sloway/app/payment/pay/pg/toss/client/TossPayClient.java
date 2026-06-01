@@ -11,6 +11,8 @@ import org.springframework.http.MediaType;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestTemplate;
 
+import java.util.Map;
+
 // 토스페이먼츠 연동 클라이언트 — 카카오와 달리 서버측은 confirm 1단계
 // 카카오 ready/approve 2단계 대신, 프론트 SDK가 결제창을 열고 성공하면 서버가 confirm으로 최종 승인만 함
 @Component
@@ -39,5 +41,19 @@ public class TossPayClient {
         // 성공 시 200 OK + Payment 객체. 실패 시 4xx/5xx → RestTemplate이 HttpStatusCodeException 던짐
         // (예외 변환은 Service 계층에서 try-catch로 PayErrorCode 매핑 — 다음 단계에서 처리)
         return restTemplate.postForObject(baseUrl + "/v1/payments/confirm", entity, TossConfirmResDto.class);
+    }
+
+    // 결제 취소: paymentKey로 토스에 취소 요청 (전액 취소). 카카오 cancel과 짝 — 환불 시 method 보고 분기 호출
+    public void cancel(String paymentKey, String cancelReason) {
+        HttpHeaders headers = new HttpHeaders();
+        headers.setBasicAuth(secretKey, ""); // confirm과 동일한 Basic 인증
+        headers.setContentType(MediaType.APPLICATION_JSON);
+
+        // 전액 취소는 cancelReason만 필수 (부분취소면 cancelAmount 추가)
+        Map<String, String> body = Map.of("cancelReason", cancelReason);
+        HttpEntity<Map<String, String>> entity = new HttpEntity<>(body, headers);
+
+        // POST /v1/payments/{paymentKey}/cancel — paymentKey 는 PayEntity.tid 에 저장된 값
+        restTemplate.postForObject(baseUrl + "/v1/payments/" + paymentKey + "/cancel", entity, TossConfirmResDto.class);
     }
 }

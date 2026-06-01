@@ -46,6 +46,51 @@ export const verifyCode = async (email, code) => {
 
 // ─── 일반회원 가입 ────────────────────────────────────────
 export const userSignup = async (data) => {
-  const response = await api.post('/auth/signup', data);
+  const response = await api.post('/auth/join', data); // /auth/signup → /auth/join
   return response.data;
+};
+
+// ─── 비밀번호 재설정 ────────────────────────────────────────
+export const resetPassword = async (email, newPassword) => {
+  const response = await api.post('/auth/password/reset', {
+    email,
+    newPassword,
+  });
+  return response.data;
+};
+
+/**
+ * 호스트 신청 (사업자등록증 PDF 포함).
+ * 백엔드가 multipart로 받음: dto(JSON) + businessDoc(파일).
+ *
+ * @param {object} data       가입 정보 (email, password, name, phone, birthDate, businessName, businessNo)
+ * @param {File}   businessDoc 사업자등록증 파일
+ */
+export const hostSignup = async (data, businessDoc) => {
+  const formData = new FormData();
+
+  // dto 파트: JSON을 Blob으로 감싸 Content-Type을 application/json으로 명시
+  // (그냥 객체를 append하면 "[object Object]" 문자열이 되어 백엔드 파싱 실패)
+  formData.append(
+    'dto',
+    new Blob([JSON.stringify(data)], { type: 'application/json' })
+  );
+
+  // businessDoc 파트: 파일 그대로
+  formData.append('businessDoc', businessDoc);
+
+  const response = await api.post('/host/join', formData);
+  return response.data;
+};
+
+// 카카오 로그인 시작 — 카카오 인증 페이지로 이동
+export const startKakaoLogin = () => {
+  const clientId = import.meta.env.VITE_KAKAO_CLIENT_ID;
+  const redirectUri = 'http://localhost:8080/api/auth/oauth/kakao/callback';
+  const url =
+    `https://kauth.kakao.com/oauth/authorize` +
+    `?client_id=${clientId}` +
+    `&redirect_uri=${encodeURIComponent(redirectUri)}` +
+    `&response_type=code`;
+  window.location.href = url;
 };

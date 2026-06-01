@@ -104,6 +104,19 @@ public class HostEntity extends BaseEntity {
         this.businessName = businessName;
     }
 
+    /**
+     * 호스트 자격 박탈. 승인 상태(A) → 취소(V) + 사유 저장.
+     */
+    public void revoke(String reason) {
+        this.approvalState = ApprovalState.V;
+        this.rejectReason = reason;   // 박탈 사유 (rejectReason 재활용)
+    }
 
-
+    /**
+     * 호스트 자격 복구. 박탈(V) → 승인(A)으로 되돌림 + 박탈 사유 초기화.
+     */
+    public void restore() {
+        this.approvalState = ApprovalState.A;
+        this.rejectReason = null;
+    }
 }//class

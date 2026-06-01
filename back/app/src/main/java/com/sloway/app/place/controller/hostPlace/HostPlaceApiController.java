@@ -25,7 +25,6 @@ public class HostPlaceApiController {
     @PutMapping("/approved/{no}")
     public ResponseEntity<Object> approveHostPlace(@PathVariable Long no){
         hostPlaceService.approveHostPlace(no);
-        System.out.println("조회하려는 번호: " + no);
 
         return ResponseEntity
                 .status(HttpStatus.OK)
@@ -56,7 +55,6 @@ public class HostPlaceApiController {
             @PathVariable Long no,
             @AuthenticationPrincipal Long memberNo){
         ApprovalCheckRespDto dto = hostPlaceService.checkRejectReason(type,no,Long.valueOf(2));
-        System.out.println("dto = " + dto);
         return ResponseEntity.ok(dto);
     }
 

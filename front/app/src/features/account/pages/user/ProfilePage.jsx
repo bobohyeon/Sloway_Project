@@ -1,30 +1,12 @@
-import React from 'react';
 import styled from 'styled-components';
 import { useNavigate } from 'react-router-dom';
 import { FaPencilAlt, FaExclamationTriangle } from 'react-icons/fa';
 import { RiKakaoTalkFill } from 'react-icons/ri';
 import { FcGoogle } from 'react-icons/fc';
 import PageLayout from '../../../../app/layouts/page/PageLayout';
+import React, { useState, useEffect } from 'react';
 import { useMyPage } from '../../hooks/useMyPage';
-
-// ─── 더미 데이터 (백엔드 연동 후 GET API로 교체) ────────────
-const DUMMY_USER = {
-  email: 'hong@sloway.co.kr',
-  name: '홍길동',
-  phone: '010-1234-5678',
-  birth: '1990-01-01',
-  imgUrl: null,
-  grade: '새싹 등급',
-  joinDate: '2024-03-15',
-  visitCount: 14,
-};
-
-// SOCIAL_ACCOUNT 테이블에서 조회
-const DUMMY_SOCIAL_ACCOUNTS = [
-  { provider: 'KAKAO', connected: false, providerEmail: null },
-  { provider: 'GOOGLE', connected: true, providerEmail: 'hong@gmail.com' },
-];
-
+import { getMySocialAccounts } from '../../api/userApi';
 // 소셜 제공사 메타 정보
 const PROVIDER_META = {
   KAKAO: {
@@ -257,42 +239,24 @@ const WithdrawBtn = styled.button`
 // ─── 컴포넌트 ──────────────────────────────────────────────
 function ProfilePage() {
   const navigate = useNavigate();
-  const { data: user, loading, error } = useMyPage();
-  const socialAccounts = DUMMY_SOCIAL_ACCOUNTS; // 소셜은 회원가입 OAuth 연동 시 교체
+  const { data: user, loading } = useMyPage();
 
-  // 소셜 연동/해제 (실제 OAuth 플로우는 회원가입 OAuth 작업 시 구현)
-  const handleSocialToggle = (provider, connected) => {
-    if (connected) {
-      if (!window.confirm(`${PROVIDER_META[provider].name} 연동을 해제할까요?`))
-        return;
-      // TODO: DELETE /api/user/social/{provider}
-      alert('연동이 해제되었습니다.');
-    } else {
-      // TODO: OAuth 인증 페이지로 이동
-      alert(`${PROVIDER_META[provider].name} 연동을 시작합니다.`);
-    }
-  };
+  // 연동 소셜 계정 (실제 SocialAccount 조회)
+  const [socialAccounts, setSocialAccounts] = useState([]);
 
-  // 로딩/에러 가드 — data가 null인 동안 아래 user.name[0] 같은 접근이 터지는 걸 방지
-  if (loading) {
+  useEffect(() => {
+    getMySocialAccounts()
+      .then(setSocialAccounts)
+      .catch(() => setSocialAccounts([]));
+  }, []);
+
+  if (loading || !user) {
     return (
       <PageLayout
         title="내 정보 관리"
         description="프로필과 연락처를 관리할 수 있어요"
       >
         <div style={{ padding: 40, color: '#888' }}>불러오는 중...</div>
-      </PageLayout>
-    );
-  }
-  if (error || !user) {
-    return (
-      <PageLayout
-        title="내 정보 관리"
-        description="프로필과 연락처를 관리할 수 있어요"
-      >
-        <div style={{ padding: 40, color: '#c0392b' }}>
-          {error || '내 정보를 불러오지 못했습니다.'}
-        </div>
       </PageLayout>
     );
   }
@@ -337,40 +301,33 @@ function ProfilePage() {
           </InfoRow>
           <InfoRow>
             <InfoLabel>휴대폰</InfoLabel>
-            <InfoValue>{user.phone}</InfoValue>
+            <InfoValue>{user.phone || '-'}</InfoValue>
           </InfoRow>
           <InfoRow>
             <InfoLabel>생년월일</InfoLabel>
-            <InfoValue>{formatDate(user.birthDate)}</InfoValue>
+            <InfoValue>{user.birthDate || '-'}</InfoValue>
           </InfoRow>
         </Card>
 
-        {/* 연동 계정 */}
-        <Card>
-          <SectionTitle>연동 계정</SectionTitle>
-          {socialAccounts.map((acc) => {
-            const meta = PROVIDER_META[acc.provider];
-            return (
-              <SocialRow key={acc.provider}>
-                <SocialIcon $bg={meta.bg}>{meta.icon}</SocialIcon>
-                <SocialInfo>
-                  <SocialName>{meta.name}</SocialName>
-                  <SocialEmail>
-                    {acc.connected ? acc.providerEmail : '연결되지 않음'}
-                  </SocialEmail>
-                </SocialInfo>
-                <ConnectBtn
-                  $connected={acc.connected}
-                  onClick={() =>
-                    handleSocialToggle(acc.provider, acc.connected)
-                  }
-                >
-                  {acc.connected ? '해제' : '연결'}
-                </ConnectBtn>
-              </SocialRow>
-            );
-          })}
-        </Card>
+        {/* 연동 계정 — 실제 연동된 소셜만 표시 (해제 버튼 없음) */}
+        {socialAccounts.length > 0 && (
+          <Card>
+            <SectionTitle>연동 계정</SectionTitle>
+            {socialAccounts.map((acc) => {
+              const meta = PROVIDER_META[acc.provider];
+              if (!meta) return null;
+              return (
+                <SocialRow key={acc.provider}>
+                  <SocialIcon $bg={meta.bg}>{meta.icon}</SocialIcon>
+                  <SocialInfo>
+                    <SocialName>{meta.name}</SocialName>
+                    <SocialEmail>연결됨</SocialEmail>
+                  </SocialInfo>
+                </SocialRow>
+              );
+            })}
+          </Card>
+        )}
 
         {/* 계정 관리 */}
         <Card>

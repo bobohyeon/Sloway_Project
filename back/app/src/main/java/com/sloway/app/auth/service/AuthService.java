@@ -1,10 +1,14 @@
 package com.sloway.app.auth.service;
 
 import com.sloway.app.auth.dto.request.JoinRequestDto;
+import com.sloway.app.auth.dto.request.ResetPasswordRequestDto;
 import com.sloway.app.auth.dto.response.EmailCheckResponseDto;
 import com.sloway.app.common.exception.CustomException;
+import com.sloway.app.host.entity.HostEntity;
+import com.sloway.app.host.repository.HostRepository;
 import com.sloway.app.member.common.AuthType;
 import com.sloway.app.member.common.MemberErrorCode;
+import com.sloway.app.member.common.MemberRole;
 import com.sloway.app.member.common.MemberStatus;
 import com.sloway.app.member.entity.MemberEntity;
 import com.sloway.app.member.entity.UserEntity;
@@ -41,6 +45,7 @@ public class AuthService {
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
     private final EmailService emailService;
+    private final HostRepository hostRepository;
 
     @Transactional
     public void userJoin(JoinRequestDto request) {
@@ -89,6 +94,7 @@ public class AuthService {
         log.info("회원가입 완료 : {} (memberNo = {})", saveMember.getEmail(), saveMember.getNo());
 
     }
+
     /**
      * 이메일 중복 확인.
      *
@@ -98,13 +104,66 @@ public class AuthService {
      * @param email 확인할 이메일
      * @return 사용 가능 여부 + 메시지
      */
-    public EmailCheckResponseDto checkEmail(String email){
+    public EmailCheckResponseDto checkEmail(String email) {
 
         boolean isExists = memberRepository.existsByEmail(email);
 
         return isExists
                 ? EmailCheckResponseDto.unavailable()
-                :EmailCheckResponseDto.available();
+                : EmailCheckResponseDto.available();
     }
 
+    /**
+     * 비밀번호 찾기(재설정) — 비로그인 상태.
+     *
+     * <p>이메일 인증(isVerified)으로 본인을 확인한 뒤 새 비번을 저장한다.
+     * <p>일반회원/호스트 모두 이메일은 MemberEntity, 비번은 각자 엔티티(User/Host)에 있다.
+     * MemberEntity엔 role 컬럼이 없으므로, 연장 테이블(User/Host) 존재 여부로 역할을 판별한다.
+     * (로그인 시 role 결정 방식과 동일)
+     */
+    @Transactional
+    public void resetPassword(ResetPasswordRequestDto request) {
+        String email = request.getEmail();
+        String newPassword = request.getNewPassword();
+
+        // 1) 입력 검증
+        if (email == null || email.isBlank()) {
+            throw new IllegalArgumentException("이메일을 입력하세요");
+        }
+        if (newPassword == null || newPassword.length() < 4) {
+            throw new CustomException(MemberErrorCode.PASSWORD_TOO_SHORT);
+        }
+
+        // 2) 인증 완료 여부 재검증 (프론트 우회 방지) — 핵심 보안 게이트
+        if (!emailService.isVerified(email)) {
+            throw new CustomException(MemberErrorCode.EMAIL_NOT_VERIFIED);
+        }
+
+        // 3) 이메일로 회원 조회 (가입된 이메일인지 동시에 확인)
+        MemberEntity member = memberRepository.findByEmail(email)
+                .orElseThrow(() -> new CustomException(MemberErrorCode.MEMBER_NOT_FOUND));
+
+        String encoded = passwordEncoder.encode(newPassword);
+
+        // 4) 연장 테이블로 역할 판별 → 해당 엔티티의 비번 갱신
+        Long memberNo = member.getNo();
+        MemberRole role;
+
+        if (userRepository.existsByMemberNo(memberNo)) {
+            UserEntity user = userRepository.findByMemberNo(memberNo)
+                    .orElseThrow(() -> new CustomException(MemberErrorCode.MEMBER_NOT_FOUND));
+            user.changePassword(encoded);
+            role = MemberRole.U;
+        } else if (hostRepository.existsByMemberNo(memberNo)) {
+            HostEntity host = hostRepository.findByMemberNo(memberNo)
+                    .orElseThrow(() -> new CustomException(MemberErrorCode.MEMBER_NOT_FOUND));
+            host.changePassword(encoded);
+            role = MemberRole.H;
+        } else {
+            // User도 Host도 아님 (어드민이거나 데이터 이상) → 재설정 대상 아님
+            throw new CustomException(MemberErrorCode.MEMBER_NOT_FOUND);
+        }
+
+        log.info("비밀번호 재설정 완료: email={}, role={}", email, role);
+    }
 }//class

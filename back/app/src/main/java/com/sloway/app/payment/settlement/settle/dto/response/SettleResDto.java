@@ -20,6 +20,7 @@ public class SettleResDto {
     private Integer feeAmt;
     private Integer refundAmt;
     private Integer payoutAmt;
+    private Integer carryOver;
     private SettleStatus status;
     private LocalDateTime settledAt;
     private LocalDateTime invoicedAt;
@@ -37,6 +38,7 @@ public class SettleResDto {
                 .feeAmt(entity.getFeeAmt())
                 .refundAmt(entity.getRefundAmt())
                 .payoutAmt(entity.getPayoutAmt())
+                .carryOver(entity.getCarryOver())
                 .status(entity.getStatus())
                 .settledAt(entity.getSettledAt())
                 .invoicedAt(entity.getInvoicedAt())

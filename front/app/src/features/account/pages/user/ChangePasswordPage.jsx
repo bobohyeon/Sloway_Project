@@ -1,7 +1,12 @@
-import React from 'react';
+import React, { useState } from 'react';
 import styled from 'styled-components';
 import { useNavigate } from 'react-router-dom';
+import { useDispatch } from 'react-redux';
 import PageLayout from '../../../../app/layouts/page/PageLayout';
+import EmailVerifyField from '../../components/user/EmailVerifyField';
+import { useMyPage } from '../../hooks/useMyPage';
+import { changeMyPassword } from '../../api/userApi';
+import { logout } from '../../../auth/store/authSlice';
 
 // ─── Styled Components ─────────────────────────────────────
 const CardStack = styled.div`
@@ -102,9 +107,51 @@ const GhostBtn = styled.button`
   }
 `;
 
-// ─── 컴포넌트 ──────────────────────────────────────────────
 function ChangePasswordPage() {
   const navigate = useNavigate();
+  const dispatch = useDispatch();
+  const { data: profile } = useMyPage(); // 본인 이메일 (인증 대상)
+
+  const [currentPw, setCurrentPw] = useState('');
+  const [newPw, setNewPw] = useState('');
+  const [newPwConfirm, setNewPwConfirm] = useState('');
+  const [emailVerified, setEmailVerified] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState('');
+
+  const handleSubmit = async () => {
+    setError('');
+
+    // 클라이언트 검증
+    if (!emailVerified) {
+      setError('이메일 인증을 먼저 완료해주세요.');
+      return;
+    }
+    if (!currentPw) {
+      setError('현재 비밀번호를 입력해주세요.');
+      return;
+    }
+    if (newPw.length < 4) {
+      setError('새 비밀번호는 4자 이상이어야 합니다.');
+      return;
+    }
+    if (newPw !== newPwConfirm) {
+      setError('새 비밀번호가 일치하지 않습니다.');
+      return;
+    }
+
+    setSaving(true);
+    try {
+      await changeMyPassword(currentPw, newPw);
+      alert('비밀번호가 변경되었습니다. 다시 로그인해주세요.');
+      dispatch(logout());
+      navigate('/login');
+    } catch (err) {
+      setError(err.response?.data?.message ?? '비밀번호 변경에 실패했습니다.');
+    } finally {
+      setSaving(false);
+    }
+  };
 
   return (
     <PageLayout
@@ -112,6 +159,16 @@ function ChangePasswordPage() {
       description="안전한 계정 보호를 위해 주기적으로 비밀번호를 변경해주세요."
     >
       <CardStack>
+        {/* 이메일 인증 (본인 이메일로 고정) */}
+        <Card>
+          <EmailVerifyField
+            value={profile?.email ?? ''}
+            onChange={() => {}}
+            initialEmail=""
+            onVerifiedChange={setEmailVerified}
+          />
+        </Card>
+
         <Card>
           <FormGroup>
             <Label htmlFor="currentPw">현재 비밀번호</Label>
@@ -120,6 +177,8 @@ function ChangePasswordPage() {
               type="password"
               placeholder="현재 비밀번호 입력"
               autoComplete="current-password"
+              value={currentPw}
+              onChange={(e) => setCurrentPw(e.target.value)}
             />
             <HelpText>&nbsp;</HelpText>
           </FormGroup>
@@ -129,10 +188,12 @@ function ChangePasswordPage() {
             <Input
               id="newPw"
               type="password"
-              placeholder="영문, 숫자, 특수문자 포함 8자 이상"
+              placeholder="4자 이상"
               autoComplete="new-password"
+              value={newPw}
+              onChange={(e) => setNewPw(e.target.value)}
             />
-            <HelpText>영문 · 숫자 · 특수문자 포함 8자 이상</HelpText>
+            <HelpText>4자 이상 입력해주세요.</HelpText>
           </FormGroup>
 
           <FormGroup>
@@ -142,8 +203,12 @@ function ChangePasswordPage() {
               type="password"
               placeholder="새 비밀번호 재입력"
               autoComplete="new-password"
+              value={newPwConfirm}
+              onChange={(e) => setNewPwConfirm(e.target.value)}
             />
-            <HelpText>&nbsp;</HelpText>
+            <HelpText style={{ color: error ? '#e24b4a' : undefined }}>
+              {error || '\u00A0'}
+            </HelpText>
           </FormGroup>
         </Card>
 
@@ -154,13 +219,12 @@ function ChangePasswordPage() {
 
         <ButtonRow>
           <GhostBtn onClick={() => navigate('/user/mypage')}>취소</GhostBtn>
-          <PrimaryBtn onClick={() => navigate('/login')}>
-            비밀번호 변경
+          <PrimaryBtn onClick={handleSubmit} disabled={saving}>
+            {saving ? '변경 중...' : '비밀번호 변경'}
           </PrimaryBtn>
         </ButtonRow>
       </CardStack>
     </PageLayout>
   );
 }
-
 export default ChangePasswordPage;

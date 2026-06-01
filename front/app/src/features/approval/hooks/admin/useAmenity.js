@@ -85,8 +85,6 @@ export const useAmenity = () => {
       const resp = await addAmenityApi();
 
       setAmenityList((prev) => [resp.data, ...prev]);
-
-      console.log('새 행 추가 완료 (맨 위로 이동)');
     } catch (e) {
       console.error('추가 실패', e);
     }

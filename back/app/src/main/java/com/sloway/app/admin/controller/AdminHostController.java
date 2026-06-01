@@ -112,4 +112,28 @@ public class AdminHostController {
         HostDetailResponseDto result = adminHostService.findOne(id);
         return ResponseEntity.ok(result);
     }
+
+    /**
+     * 호스트 자격 박탈.
+     * approvalState: A(승인) → V(취소) + 사유 저장.
+     */
+    @PostMapping("/{id}/revoke")
+    public ResponseEntity<Object> revoke(@PathVariable Long id,
+                                         @RequestBody RejectRequestDto dto,
+                                         @AuthenticationPrincipal CustomUserDetails admin) {
+        log.info("호스트 자격 박탈 요청 : hostNo={}, adminNo={}", id, admin.getMemberNo());
+        adminHostService.revoke(id, dto.getReason());
+        return ResponseEntity.ok().build();
+    }
+    /**
+     * 호스트 자격 복구.
+     * approvalState: V(취소) → A(승인).
+     */
+    @PostMapping("/{id}/restore")
+    public ResponseEntity<Object> restore(@PathVariable Long id,
+                                          @AuthenticationPrincipal CustomUserDetails admin) {
+        log.info("호스트 자격 복구 요청 : hostNo={}, adminNo={}", id, admin.getMemberNo());
+        adminHostService.restore(id);
+        return ResponseEntity.ok().build();
+    }
 }//class

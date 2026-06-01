@@ -92,7 +92,6 @@ public class OfficeApiController {
     @GetMapping("/detail/dash/{no}")
     public ResponseEntity<StationDetailRespDto> selectStationDetailDashBoard(@PathVariable Long no, @AuthenticationPrincipal Long memberNo){
         StationDetailRespDto dto = officeService.selectOfficeDetailDashBoard(no, Long.valueOf(2));
-        System.out.println("dto = " + dto);
         return ResponseEntity.ok(dto);
     }
 

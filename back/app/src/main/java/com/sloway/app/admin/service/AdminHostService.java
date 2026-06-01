@@ -140,4 +140,34 @@ public class AdminHostService {
         // 3) DTO 변환
         return HostDetailResponseDto.from(host, member);
     }
+    @Transactional
+    public void revoke(Long hostNo, String reason) {
+        if (reason == null || reason.isBlank()) {
+            throw new IllegalArgumentException("박탈 사유는 필수입니다.");
+        }
+
+        HostEntity host = hostRepository.findById(hostNo)
+                .orElseThrow(() -> new CustomException(HostErrorCode.HOST_NOT_FOUND));
+
+        host.revoke(reason);
+
+        log.info("호스트 자격 박탈: hostNo={}, reason={}", hostNo, reason);
+    }
+    /**
+     * 호스트 자격 복구.
+     *
+     * <p>박탈(V) 상태에서만 복구 가능.
+     */
+    @Transactional
+    public void restore(Long hostNo) {
+        HostEntity host = hostRepository.findById(hostNo)
+                .orElseThrow(() -> new CustomException(HostErrorCode.HOST_NOT_FOUND));
+
+        if (host.getApprovalState() != ApprovalState.V) {
+            throw new CustomException(HostErrorCode.INVALID_APPROVAL_STATE);
+        }
+
+        host.restore();
+        log.info("호스트 자격 복구: hostNo={}, memberNo={}", host.getNo(), host.getMemberNo());
+    }
 }//class

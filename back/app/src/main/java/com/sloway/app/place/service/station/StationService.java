@@ -1,5 +1,6 @@
 package com.sloway.app.place.service.station;
 
+import com.sloway.app.aws.service.S3Service;
 import com.sloway.app.place.dto.request.sort.ImgSortReqDto;
 import com.sloway.app.place.dto.request.sort.ImgUpdateSortReqDto;
 import com.sloway.app.place.dto.request.station.StationReqDto;
@@ -28,6 +29,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
 import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
@@ -45,49 +47,39 @@ public class StationService {
     private final ImgStationRepository imgStationRepository;
     private final HostPlaceService hostPlaceService;
     private final HostPlaceRepository hostPlaceRepository;
+    private final S3Service s3Service;
 
     //저장
     @Transactional
     public void saveStation(StationReqDto dto, List<MultipartFile> files, List<ImgSortReqDto> sortList, Long hostNo) {
-        //부모테이블 엔티티조회
+        // 1. 부모 엔티티 및 편의시설 조회
         PlaceEntity place = placeRepository.findByNo(dto.getPlaceNo())
-                .orElseThrow(() -> new EntityNotFoundException("[PLACE-210] Place Not Found For Save Station"));
+                .orElseThrow(() -> new EntityNotFoundException("[PLACE-210] Place Not Found"));
 
-        //편의시설 정보 조회
-        List<Long> amenityNos = dto.getFacilityList().stream()
-                .map(facility -> facility.getAmenityNo())
-                .collect(Collectors.toList());
-        List<AmenityEntity> amenityEntities = amenityRepository.findAllByNoIn(amenityNos);
+        List<AmenityEntity> amenityEntities = amenityRepository.findAllByNoIn(
+                dto.getFacilityList().stream().map(f -> f.getAmenityNo()).toList());
 
-        //Station 저장을 위한 엔티티변환(편의시설 함께 저장)
-        StationEntity entity = dto.toEntity(place, amenityEntities);
-
-        //Station 저장
-        StationEntity station = stationRepository.save(entity);
-
-        //검수 등록
+        // 2. Station 저장 및 검수 등록
+        StationEntity station = stationRepository.save(dto.toEntity(place, amenityEntities));
         hostPlaceService.insertHostPlace("S", hostNo, station.getNo());
 
-        // 이미지 aws로 수정
-        List<String> dummyUrls = files.stream()
-                .map(img -> "https://temp-bucket.s3.amazonaws.com/temp_"
-                        + System.currentTimeMillis() + "_"
-                        + img.getOriginalFilename())
-                .toList();
+        // 3. 이미지 S3 업로드 및 저장
+        if (files != null && !files.isEmpty()) {
+            List<ImgStationEntity> imgEntities = IntStream.range(0, files.size())
+                    .mapToObj(i -> {
+                        try {
+                            // S3 업로드 (풀 URL 반환)
+                            String s3Url = s3Service.upload(files.get(i), "station");
+                            int sortValue = sortList.get(i).getSort();
+                            return ImgStationEntity.from(station, s3Url, sortValue);
+                        } catch (IOException e) {
+                            throw new RuntimeException("Station 이미지 업로드 실패", e);
+                        }
+                    })
+                    .collect(Collectors.toList());
 
-        int size = Math.min(dummyUrls.size(), sortList.size());
-        List<ImgStationEntity> imgEntities = IntStream.range(0, size)
-
-                .mapToObj(i -> {
-                    String url = dummyUrls.get(i);
-                    int sortValue = sortList.get(i).getSort(); // 정렬 값 추출
-
-                    return ImgStationEntity.from(station, url, sortValue);
-                })
-                .collect(Collectors.toList());
-
-        // 이미지 저장
-        imgStationRepository.saveAll(imgEntities);
+            imgStationRepository.saveAll(imgEntities);
+        }
     }
 
     //수정
@@ -157,55 +149,50 @@ public class StationService {
         station.delete();
     }
 
-    // 이미지 수정 로직 (saveStation 로직 반영)
     @Transactional
     public void updateStationImg(Long no, List<MultipartFile> files, List<ImgUpdateSortReqDto> sortList, Long memberNo) {
-        // Station 조회
+        // 1. Station 조회 및 검수 처리
         StationEntity stationEntity = stationRepository.findById(no)
-                .orElseThrow(() -> new EntityNotFoundException("[STATION-305] Station Not Found For Update Images"));
+                .orElseThrow(() -> new EntityNotFoundException("[STATION-305] Station Not Found"));
 
-        // 검수 추가
-        HostPlaceEntity hostPlaceEntity =hostPlaceRepository.findHostStationLatest(no, memberNo);
-
-        if(hostPlaceEntity != null){
+        HostPlaceEntity hostPlaceEntity = hostPlaceRepository.findHostStationLatest(no, memberNo);
+        if (hostPlaceEntity != null) {
             hostPlaceRepository.delete(hostPlaceEntity);
         }
-
         hostPlaceService.insertHostPlace("S", memberNo, stationEntity.getNo());
 
-
-        // 2. 화면에 살아남은 기존 이미지 ID 추출 (새로 추가된 파일인 null은 제외)
+        // 2. 화면에 살아남은 이미지 ID 추출
         List<Long> aliveImageNos = sortList.stream()
-                .map(ImgUpdateSortReqDto::getImageNo) // 💡 DTO에 추가된 imageNo 추출
+                .map(ImgUpdateSortReqDto::getImageNo)
                 .filter(Objects::nonNull)
                 .toList();
 
-        // 3. 화면에서 유저가 🗑️ 버튼을 눌러 지워진 이미지들만 DB에서 선택 삭제
-        // (※ Repository에 해당 Querydsl 또는 JPQL 메서드가 선언되어 있어야 합니다)
+        // 3. 삭제될 이미지들 S3에서 실제 파일 삭제 (DB 삭제 전 수행)
+        List<ImgStationEntity> toDeleteImages = imgStationRepository.findByStationEntityNoAndNoNotIn(no, aliveImageNos);
+        toDeleteImages.forEach(img -> s3Service.delete(img.getCurrentUrl()));
+
+        // 4. DB에서 삭제
         if (aliveImageNos.isEmpty()) {
             imgStationRepository.deleteAllByStationEntityNo(no);
         } else {
             imgStationRepository.deleteByStationEntityNoAndNoNotIn(no, aliveImageNos);
         }
 
-        // 4. 루프를 돌며 순서 교정(Dirty Check) 및 신규 파일 매칭 삽입(Loop Counter 방식)
+        // 5. 순서 교정 및 신규 파일 매칭 삽입
         int fileIndex = 0;
         for (ImgUpdateSortReqDto dto : sortList) {
             if (dto.getImageNo() != null) {
-                // ① 기존 이미지: 삭제되지 않고 화면에 남아있으므로 순서(sort)만 변경
-                ImgStationEntity existingImg = imgStationRepository.findById(dto.getImageNo())
-                        .orElseThrow(() -> new EntityNotFoundException("Station Image Not Found"));
-                existingImg.updateSort(dto.getSort());
-            } else {
-                // ② 신규 이미지: 드래그 앤 드롭으로 섞인 null 자리에 순서대로 파일을 매칭하여 S3 URL 발급 후 저장
-                if (files != null && fileIndex < files.size()) {
-                    MultipartFile currentFile = files.get(fileIndex++);
-                    String s3Url = "https://temp-bucket.s3.amazonaws.com/temp_"
-                            + System.currentTimeMillis() + "_"
-                            + currentFile.getOriginalFilename();
-
+                // 기존 이미지: 순서만 변경
+                imgStationRepository.findById(dto.getImageNo())
+                        .ifPresent(img -> img.updateSort(dto.getSort()));
+            } else if (files != null && fileIndex < files.size()) {
+                // 신규 이미지: S3 업로드 후 저장
+                try {
+                    String s3Url = s3Service.upload(files.get(fileIndex++), "station");
                     ImgStationEntity newImg = ImgStationEntity.from(stationEntity, s3Url, dto.getSort());
                     imgStationRepository.save(newImg);
+                } catch (IOException e) {
+                    throw new RuntimeException("Station 이미지 업로드 중 오류 발생", e);
                 }
             }
         }
