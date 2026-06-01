@@ -2,6 +2,7 @@ package com.sloway.app.member.service;
 
 import com.sloway.app.auth.dto.request.ChangePasswordRequestDto;
 import com.sloway.app.auth.service.EmailService;
+import com.sloway.app.aws.service.S3Service;
 import com.sloway.app.common.exception.CustomException;
 import com.sloway.app.member.common.MemberErrorCode;
 import com.sloway.app.member.dto.request.ChangeEmailRequestDto;
@@ -18,6 +19,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 
@@ -34,7 +36,8 @@ public class UserService {
     private final PasswordEncoder passwordEncoder;
     private final UserRepository userRepository;
     private final EmailService emailService;
-    private final SocialAccountRepository socialAccountRepository;  // ← 추가
+    private final SocialAccountRepository socialAccountRepository;// ← 추가
+    private final S3Service s3Service;
 
 
     public UserResponseDto getMyInfo(Long memberNo) {
@@ -47,7 +50,7 @@ public class UserService {
     }
 
     @Transactional
-    public UserResponseDto update(Long memberNo, UpdateUserRequestDto request) {
+    public UserResponseDto update(Long memberNo, UpdateUserRequestDto request, MultipartFile profileImage) {
         // 1) 회원 조회 (없으면 404)
         MemberEntity member = memberRepository.findById(memberNo)
                 .orElseThrow(() -> new CustomException(MemberErrorCode.MEMBER_NOT_FOUND));
@@ -65,6 +68,15 @@ public class UserService {
             member.changeImgUrl(request.getImgUrl());
         }
 
+        // 프로필 이미지가 들어왔을 때만 S3 업로드 + URL 교체
+        if (profileImage != null && !profileImage.isEmpty()) {
+            try {
+                String imgUrl = s3Service.upload(profileImage, "member-profile");
+                member.updateImgUrl(imgUrl);   // 의미 메서드 (없으면 추가)
+            } catch (IOException e) {
+                throw new CustomException(/* 적절한 에러코드, 예: FILE_UPLOAD_FAILED */);
+            }
+        }
         log.info("일반회원 마이페이지 수정 완료: memberNo={}", memberNo);
 
         // 3) 수정 후 정보를 응답 DTO로 변환해서 반환

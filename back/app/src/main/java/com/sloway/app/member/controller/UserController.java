@@ -12,6 +12,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 
@@ -46,14 +47,16 @@ public class UserController {
 
         return ResponseEntity.ok(myInfo);
     }
-    //일반회원 마이페이지 수정
+
+//일반회원 마이페이지 수정
     @PatchMapping
     public ResponseEntity<UserResponseDto> update(
-            @RequestBody UpdateUserRequestDto request,
+            @RequestPart("dto") UpdateUserRequestDto request,
+            @RequestPart(value = "profileImage", required = false) MultipartFile profileImage,
             @AuthenticationPrincipal CustomUserDetails user) {
 
         log.info("일반회원 마이페이지 수정: memberNo={}", user.getMemberNo());
-        UserResponseDto result = userService.update(user.getMemberNo(), request);
+        UserResponseDto result = userService.update(user.getMemberNo(), request, profileImage);
         return ResponseEntity.ok(result);
     }
 

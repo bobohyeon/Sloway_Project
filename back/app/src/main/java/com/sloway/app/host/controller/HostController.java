@@ -88,4 +88,5 @@ public class HostController {
         hostService.changeEmail(host.getMemberNo(), request);
         return ResponseEntity.ok().build();
     }
+
 }//class
