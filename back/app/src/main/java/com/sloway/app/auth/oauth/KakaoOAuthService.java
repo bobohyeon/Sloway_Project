@@ -115,6 +115,7 @@ public class KakaoOAuthService {
                 .name(info.getNickname() != null ? info.getNickname() : "카카오회원")
                 .phone("")
                 .status(MemberStatus.A)
+                .verifiedAt(java.time.LocalDateTime.now())   // ← 카카오 인증 이메일이므로 인증 완료 처리
                 .build();
         return memberRepository.save(member);
     }
