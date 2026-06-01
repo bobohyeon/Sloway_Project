@@ -87,7 +87,6 @@ public class RefundService {
         refundEntity.applyRefund(rate, refundAmt);
         RefundEntity entity = refundRepository.save(refundEntity);
         doRefundProcess(entity);
-        createRefundByHost(payEntity.getNo());
         return RefundResDto.from(entity);
     }
 
