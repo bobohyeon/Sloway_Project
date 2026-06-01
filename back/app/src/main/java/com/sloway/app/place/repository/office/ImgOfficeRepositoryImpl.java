@@ -1,6 +1,7 @@
 package com.sloway.app.place.repository.office;
 
 import com.querydsl.jpa.impl.JPAQueryFactory;
+import com.sloway.app.place.entity.office.ImgOfficeEntity;
 import lombok.RequiredArgsConstructor;
 
 import static com.sloway.app.place.entity.office.QImgOfficeEntity.imgOfficeEntity;
@@ -21,5 +22,17 @@ public class ImgOfficeRepositoryImpl implements ImgOfficeRepositoryCustom{
                         imgOfficeEntity.no.notIn(aliveImageNos)
                 )
                 .execute();
+    }
+
+    @Override
+    public List<ImgOfficeEntity> findByOfficeEntityNoAndNoNotIn(Long no, List<Long> aliveImageNos) {
+        return queryFactory
+                .selectFrom(imgOfficeEntity)
+                .where(
+                        imgOfficeEntity.officeEntity.no.eq(no),
+                        // 리스트가 비어있으면 삭제할 대상이 없으므로 조회하지 않음
+                        aliveImageNos.isEmpty() ? null : imgOfficeEntity.no.notIn(aliveImageNos)
+                )
+                .fetch();
     }
 }
