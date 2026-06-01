@@ -1,107 +1,73 @@
-import styled, { css } from 'styled-components'
-import { RefundPolicyBadge } from './RefundPolicyBadge'
+import styled from 'styled-components';
 
-export function RefundSummaryCard({
-  paidAmount,
-  refundAmount,
-  rate,
-  daysUntilCheckIn,
-  policyText,
-  canRefund,
-}) {
+// 환불 정책표 = 백엔드 SSOT (RefundRate enum) 그대로 고지용.
+// 프론트는 금액을 계산하지 않는다 — 실제 환불액은 환불 신청 시 백엔드가 예약 일정 기준으로 산정.
+const REFUND_POLICY = [
+  { label: '7일 이전', rate: '100%' },
+  { label: '4~6일 전', rate: '70%' },
+  { label: '2~3일 전', rate: '50%' },
+  { label: '1일 전', rate: '30%' },
+  { label: '당일 · 이용 후', rate: '0%' },
+];
+
+export function RefundSummaryCard({ paidAmount }) {
   return (
-    <Wrap $canRefund={canRefund}>
-      <TopRow>
-        <Status $canRefund={canRefund}>{canRefund ? '환불 가능' : '환불 불가'}</Status>
-        <DaysLabel>체크인 {daysUntilCheckIn}일 전</DaysLabel>
-      </TopRow>
-
+    <Wrap>
       <Center>
-        <Label>환불 예상 금액</Label>
+        <Label>결제 금액</Label>
         <Amount>
-          <Number>{refundAmount.toLocaleString()}</Number>
+          <Number>{Number(paidAmount ?? 0).toLocaleString()}</Number>
           <Unit>원</Unit>
         </Amount>
-        <BadgeWrap>
-          <RefundPolicyBadge rate={rate} />
-        </BadgeWrap>
       </Center>
 
       <Divider />
 
-      <Detail>
-        <DetailRow>
-          <span>결제 금액</span>
-          <strong>{paidAmount.toLocaleString()}원</strong>
-        </DetailRow>
-        <DetailRow>
-          <span>실제 환불 금액</span>
-          <strong>{refundAmount.toLocaleString()}원</strong>
-        </DetailRow>
-      </Detail>
+      <PolicyTitle>환불 정책</PolicyTitle>
+      <PolicyTable>
+        {REFUND_POLICY.map((p) => (
+          <PolicyRow key={p.label}>
+            <span>{p.label}</span>
+            <strong>{p.rate}</strong>
+          </PolicyRow>
+        ))}
+      </PolicyTable>
 
       <PolicyHint>
         <span>💡</span>
-        <span>{policyText}</span>
+        <span>
+          실제 환불 금액은 예약 일정(체크인 기준)에 따라 환불 신청 시 자동
+          계산됩니다.
+        </span>
       </PolicyHint>
     </Wrap>
-  )
+  );
 }
 
 const Wrap = styled.div`
   padding: var(--space-6);
-  background: ${(props) => (props.$canRefund ? 'var(--cream)' : 'var(--gray-100)')};
-  border: 1px solid var(--gray-200);
+  background: var(--cream);
+  border: 1px solid var(--sage);
   border-radius: var(--radius-lg);
-
-  ${(props) =>
-    props.$canRefund &&
-    css`
-      border-color: var(--sage);
-    `}
-`
-
-const TopRow = styled.div`
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: var(--space-4);
-`
-
-const Status = styled.span`
-  display: inline-flex;
-  align-items: center;
-  padding: 4px 12px;
-  background: ${(props) => (props.$canRefund ? 'rgba(168, 184, 159, 0.25)' : 'rgba(184, 90, 78, 0.15)')};
-  color: ${(props) => (props.$canRefund ? '#5b6b53' : '#a04c42')};
-  border-radius: var(--radius-full);
-  font-size: 0.78rem;
-  font-weight: 600;
-`
-
-const DaysLabel = styled.div`
-  font-size: 0.85rem;
-  color: var(--gray-600);
-`
+`;
 
 const Center = styled.div`
   text-align: center;
-  padding: var(--space-4) 0;
-`
+  padding: var(--space-2) 0 var(--space-4);
+`;
 
 const Label = styled.div`
   font-size: 0.85rem;
   color: var(--gray-600);
   margin-bottom: var(--space-2);
-`
+`;
 
 const Amount = styled.div`
   display: flex;
   justify-content: center;
   align-items: baseline;
   gap: 4px;
-  margin-bottom: var(--space-3);
-`
+`;
 
 const Number = styled.span`
   font-family: var(--font-display);
@@ -109,32 +75,34 @@ const Number = styled.span`
   font-weight: 500;
   color: var(--gray-800);
   letter-spacing: -0.02em;
-`
+`;
 
 const Unit = styled.span`
   font-size: 1.1rem;
   color: var(--gray-600);
-`
-
-const BadgeWrap = styled.div`
-  display: flex;
-  justify-content: center;
-`
+`;
 
 const Divider = styled.hr`
   border: none;
   border-top: 1px dashed var(--gray-200);
-  margin: var(--space-3) 0;
-`
+  margin: var(--space-3) 0 var(--space-4);
+`;
 
-const Detail = styled.div`
+const PolicyTitle = styled.div`
+  font-size: 0.88rem;
+  font-weight: 600;
+  color: var(--gray-800);
+  margin-bottom: var(--space-3);
+`;
+
+const PolicyTable = styled.div`
   display: flex;
   flex-direction: column;
   gap: 8px;
-  margin-bottom: var(--space-3);
-`
+  margin-bottom: var(--space-4);
+`;
 
-const DetailRow = styled.div`
+const PolicyRow = styled.div`
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -143,12 +111,11 @@ const DetailRow = styled.div`
   span {
     color: var(--gray-600);
   }
-
   strong {
     color: var(--gray-800);
-    font-weight: 500;
+    font-weight: 600;
   }
-`
+`;
 
 const PolicyHint = styled.div`
   display: flex;
@@ -160,4 +127,4 @@ const PolicyHint = styled.div`
   font-size: 0.82rem;
   color: var(--gray-600);
   line-height: 1.5;
-`
+`;
