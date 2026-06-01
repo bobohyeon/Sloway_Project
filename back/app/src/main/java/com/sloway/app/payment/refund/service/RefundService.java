@@ -86,13 +86,8 @@ public class RefundService {
         BigDecimal refundAmt = finalAmt.multiply(rateBd).divide(divisor, 0, RoundingMode.DOWN);
         refundEntity.applyRefund(rate, refundAmt);
         RefundEntity entity = refundRepository.save(refundEntity);
-        // TODO: 환불 즉시 승인 (B 방식) — 요청과 동시에 처리까지 (어드민 승인 X)
-        //   1) processRefund 의 8단계(approveRefund ~ completeRefund + 쿠폰/포인트/PG취소)를
-        //      private 헬퍼로 추출 → 예: private void doRefundProcess(RefundEntity refund) { ... }
-        //   2) 여기서 doRefundProcess(entity) 호출 → createRefund 가 "요청+처리" 한 번에 완료
-        //   3) processRefund(API 메서드) 도 같은 헬퍼 재사용 (self-invocation 회피, 어드민 재처리용)
-        //   ※ 위 PG 분기도 doRefundProcess 안으로 함께 들어감
-        //   ※ entity 가 COMPLETED 로 바뀐 뒤 from(entity) 되므로 응답 상태도 자동 반영
+        doRefundProcess(entity);
+        createRefundByHost(payEntity.getNo());
         return RefundResDto.from(entity);
     }
 
@@ -124,7 +119,7 @@ public class RefundService {
         RefundEntity refundEntity = RefundEntity.builder()
                 .payNo(payEntity)
                 .rsvnNo(payEntity.getRsvnNo())
-                .refundReason(null)
+                .refundReason(null)//......................................................
                 .requestedAt(LocalDateTime.now())
                 .status(RefundStatus.REQUESTED)
                 .build();
@@ -141,7 +136,11 @@ public class RefundService {
     public RefundResDto processRefund(Long refundNo) {
         RefundEntity refundEntity = refundRepository.findById(refundNo)
                 .orElseThrow(() -> new CustomException(RefundErrorCode.REFUND_NOT_FOUND));
+        doRefundProcess(refundEntity);
+        return RefundResDto.from(refundEntity);
+    }
 
+    private void doRefundProcess(RefundEntity refundEntity) {
         refundEntity.approveRefund();
         PayEntity payEntity = refundEntity.getPayNo();
 
@@ -166,8 +165,6 @@ public class RefundService {
 
         payEntity.cancelPay();
         refundEntity.completeRefund();
-
-        return RefundResDto.from(refundEntity);
     }
 
     public List<RefundResDto> findRefundAll() {
