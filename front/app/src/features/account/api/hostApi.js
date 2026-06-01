@@ -21,3 +21,9 @@ export const changeHostEmail = async (newEmail) => {
   const response = await api.patch('/host/mypage/email', { newEmail });
   return response.data;
 };
+
+/** 호스트 본인 신청 현황. GET /api/host/mypage/application */
+export const getMyHostApplication = async () => {
+  const response = await api.get('/host/mypage/application');
+  return response.data;
+};
