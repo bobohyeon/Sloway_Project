@@ -1,0 +1,274 @@
+import styled from 'styled-components';
+
+export const PageContainer = styled.div`
+  padding: 20px;
+  background-color: #f4efe6;
+  min-height: 95.2%;
+`;
+
+export const StatsGrid = styled.div`
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 14px;
+  margin-bottom: 20px;
+
+  @media (max-width: 900px) {
+    grid-template-columns: repeat(2, 1fr);
+  }
+`;
+
+export const StatCard = styled.div`
+  background: white;
+  border-radius: 12px;
+  border: ${(p) => (p.$active ? '2px solid #a8b89f' : '1px solid #eee')};
+  padding: 18px 20px;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  cursor: pointer;
+  transition: all 200ms ease;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.02);
+
+  &:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
+  }
+`;
+
+export const StatIcon = styled.div`
+  width: 42px;
+  height: 42px;
+  border-radius: 10px;
+  background: ${(p) => p.$bg};
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+  flex-shrink: 0;
+`;
+
+export const StatBody = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+`;
+
+export const StatLabel = styled.span`
+  font-size: 13px;
+  color: #888;
+`;
+
+export const StatValue = styled.span`
+  font-size: 22px;
+  font-weight: 700;
+  color: #333;
+`;
+
+export const FilterBar = styled.div`
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+  background: white;
+  padding: 14px 20px;
+  border-radius: 12px;
+  border: 1px solid #eee;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.02);
+  gap: 16px;
+  flex-wrap: wrap;
+`;
+
+export const SearchWrap = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: 1;
+  min-width: 240px;
+  padding: 8px 14px;
+  border: 1.5px solid #e8e6e0;
+  border-radius: 8px;
+  background: #fff;
+  transition: all 200ms ease;
+
+  &:focus-within {
+    border-color: #a8b89f;
+    box-shadow: 0 0 0 2px rgba(168, 184, 159, 0.2);
+  }
+
+  svg {
+    color: #aaa;
+    flex-shrink: 0;
+  }
+`;
+
+export const SearchInput = styled.input`
+  border: none;
+  outline: none;
+  font-size: 14px;
+  width: 100%;
+  background: transparent;
+  color: #333;
+
+  &::placeholder {
+    color: #bbb;
+  }
+`;
+
+export const FilterRight = styled.div`
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+`;
+
+export const StyledSelect = styled.select`
+  padding: 8px 12px;
+  border-radius: 8px;
+  border: 1.5px solid #a8b89f;
+  background-color: #fff;
+  color: #555;
+  font-size: 14px;
+  outline: none;
+  cursor: pointer;
+  transition: all 200ms ease;
+
+  &:hover {
+    border-color: #86927e;
+    background-color: #f9faf8;
+  }
+
+  &:focus {
+    box-shadow: 0 0 0 2px rgba(168, 184, 159, 0.2);
+  }
+`;
+
+export const TableWrap = styled.div`
+  background: white;
+  border-radius: 12px;
+  border: 1px solid #eee;
+  overflow: hidden;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.02);
+`;
+
+export const Table = styled.table`
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 14px;
+`;
+
+export const Th = styled.th`
+  background: #faf8f3;
+  color: #555;
+  font-weight: 600;
+  text-align: left;
+  padding: 14px 16px;
+  border-bottom: 1px solid #eee;
+  white-space: nowrap;
+  width: ${(p) => p.$w || 'auto'};
+`;
+
+export const Td = styled.td`
+  padding: 14px 16px;
+  border-bottom: 1px solid #f4f1eb;
+  color: #444;
+  vertical-align: middle;
+`;
+
+export const HostCell = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+`;
+
+export const HostName = styled.span`
+  font-weight: 600;
+  color: #333;
+`;
+
+export const HostEmail = styled.span`
+  font-size: 12px;
+  color: #999;
+`;
+
+export const EmptyMessage = styled.div`
+  text-align: center;
+  padding: 40px 20px;
+  color: #aaa;
+  font-size: 14px;
+`;
+
+export const StateBadge = styled.span`
+  display: inline-block;
+  padding: 4px 10px;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 600;
+  white-space: nowrap;
+  background: ${({ $state }) =>
+    $state === 'PENDING'
+      ? '#FBE4C2'
+      : $state === 'APPROVED'
+        ? '#E8F0DF'
+        : $state === 'REJECTED'
+          ? '#F7D4D1'
+          : '#EEE'};
+  color: ${({ $state }) =>
+    $state === 'PENDING'
+      ? '#9B6A1F'
+      : $state === 'APPROVED'
+        ? '#5A6B4F'
+        : $state === 'REJECTED'
+          ? '#9B3A36'
+          : '#888'};
+`;
+
+export const ActionBtn = styled.button`
+  padding: 6px 12px;
+  font-size: 13px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: 500;
+  transition: all 150ms ease;
+  font-family: inherit;
+  background: #fff;
+  color: #555;
+  border: 1px solid #ddd;
+
+  &:hover {
+    background: #f9faf8;
+    border-color: #a8b89f;
+    color: #333;
+  }
+`;
+
+export const Pagination = styled.div`
+  display: flex;
+  justify-content: center;
+  gap: 6px;
+  margin-top: 24px;
+`;
+
+export const PageBtn = styled.button`
+  min-width: 36px;
+  height: 36px;
+  padding: 0 10px;
+  border-radius: 8px;
+  border: 1px solid ${(p) => (p.$active ? '#a8b89f' : '#e0ddd5')};
+  background: ${(p) => (p.$active ? '#a8b89f' : '#fff')};
+  color: ${(p) => (p.$active ? '#fff' : '#555')};
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: ${(p) => (p.$active ? '600' : '400')};
+  font-family: inherit;
+  transition: all 150ms ease;
+
+  &:hover:not(:disabled) {
+    border-color: #a8b89f;
+    color: ${(p) => (p.$active ? '#fff' : '#7A8B71')};
+  }
+
+  &:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+  }
+`;
