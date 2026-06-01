@@ -31,3 +31,31 @@ export const getAdminMemberDetail = async (memberId) => {
   const response = await api.get(`/admin/members/${memberId}`);
   return response.data;
 };
+
+/**
+ * 어드민 호스트 목록. GET /api/admin/hosts
+ * 전체를 받아 클라이언트에서 상태별 필터.
+ */
+export const getAdminHosts = async () => {
+  const response = await api.get('/admin/hosts', {
+    params: { page: 0, size: 1000 },
+  });
+  return response.data; // Page<HostListResponseDto>
+};
+/** 호스트 신청 상세. GET /api/admin/hosts/{id} */
+export const getAdminHostDetail = async (hostId) => {
+  const response = await api.get(`/admin/hosts/${hostId}`);
+  return response.data;
+};
+
+/** 호스트 승인. POST /api/admin/hosts/{id}/approve */
+export const approveHost = async (hostId) => {
+  const response = await api.post(`/admin/hosts/${hostId}/approve`);
+  return response.data;
+};
+
+/** 호스트 반려. POST /api/admin/hosts/{id}/reject (body: reason) */
+export const rejectHost = async (hostId, reason) => {
+  const response = await api.post(`/admin/hosts/${hostId}/reject`, { reason });
+  return response.data;
+};
