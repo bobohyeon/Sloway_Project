@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import styled from 'styled-components';
 
@@ -8,7 +8,6 @@ import { CancelReasonSelector } from '../../components/user/CancelReasonSelector
 import { RefundAgreement } from '../../components/user/RefundAgreement';
 import { RefundMethodCard } from '../../components/user/RefundMethodCard';
 import { RefundSummaryCard } from '../../components/user/RefundSummaryCard';
-import { useRefundCalculation } from '../../hooks/useRefundCalculation';
 
 import { findPayByNo } from '../../../pay/api/payApi';
 import { createRefund } from '../../api/refundApi';
@@ -78,22 +77,9 @@ export default function RefundRequest() {
     load();
   }, [payNo, navigate]);
 
-  // 체크인 날짜 — 예약 도메인(김보현) 미연동이라 placeholder (오늘+5일 = 50% 환불 안내)
-  const checkInDate = useMemo(() => {
-    if (!pay) return null;
-    const d = new Date();
-    d.setDate(d.getDate() + 5);
-    return d.toISOString();
-  }, [pay]);
-
-  const refund = useRefundCalculation({
-    amount: pay?.finalAmt ?? 0,
-    checkInDate: checkInDate ?? new Date().toISOString(),
-  });
-
+  // 환불 금액은 프론트에서 계산하지 않는다 — 백엔드가 예약 일정 기준 SSOT로 산정.
   const canSubmit =
     pay &&
-    refund.canRefund &&
     agreed &&
     reason !== null &&
     (reason !== 'etc' || (reasonDetail && reasonDetail.length >= 10)) &&
@@ -133,18 +119,7 @@ export default function RefundRequest() {
       maxWidth={800}
     >
       <Section>
-        <RefundSummaryCard
-          paidAmount={pay.finalAmt ?? 0}
-          refundAmount={refund.refundAmount}
-          rate={refund.rate}
-          daysUntilCheckIn={refund.daysUntilCheckIn}
-          policyText={refund.policyText}
-          canRefund={refund.canRefund}
-        />
-        <Note>
-          ⓘ 표시된 환불 금액은 안내용입니다. 실제 환불 금액은 정책 기준에 따라
-          서버에서 정확히 계산됩니다.
-        </Note>
+        <RefundSummaryCard paidAmount={pay.finalAmt ?? 0} />
       </Section>
 
       <CancelReasonSelector
@@ -156,11 +131,7 @@ export default function RefundRequest() {
 
       <RefundMethodCard method={refundMethod} />
 
-      <RefundAgreement
-        agreed={agreed}
-        onChange={() => setAgreed(!agreed)}
-        refundAmount={refund.refundAmount}
-      />
+      <RefundAgreement agreed={agreed} onChange={() => setAgreed(!agreed)} />
 
       <Actions>
         <Button variant="secondary" onClick={() => navigate(-1)}>
@@ -171,11 +142,7 @@ export default function RefundRequest() {
           disabled={!canSubmit}
           onClick={handleSubmit}
         >
-          {submitting
-            ? '처리 중...'
-            : refund.canRefund
-              ? '환불 신청하기'
-              : '환불 불가'}
+          {submitting ? '처리 중...' : '환불 신청하기'}
         </Button>
       </Actions>
     </PageLayout>
@@ -184,16 +151,6 @@ export default function RefundRequest() {
 
 const Section = styled.div`
   margin-bottom: var(--space-5);
-`;
-
-const Note = styled.div`
-  margin-top: var(--space-3);
-  padding: var(--space-3) var(--space-4);
-  background: var(--gray-100);
-  border-radius: var(--radius-md);
-  font-size: 0.8rem;
-  color: var(--gray-600);
-  line-height: 1.5;
 `;
 
 const Actions = styled.div`
