@@ -22,33 +22,33 @@ public class SettleApiController {
 
     private final SettleService settleService;
 
-//
-//
-//       @PostMapping
-//       public ResponseEntity<SettleResDto> createSettle(@RequestBody SettleCreateReqDto reqDto) {
-//           SettleResDto resDto = settleService.createSettle(reqDto);
-//           return ResponseEntity.status(HttpStatus.CREATED).body(resDto);
-//       }
-//
-//
-//       @GetMapping
-//       public ResponseEntity<List<SettleResDto>> findSettleAll() {
-//           return ResponseEntity.ok(settleService.findSettleAll());
-//       }
-//
-//       @GetMapping("/{no}")
-//       public ResponseEntity<SettleResDto> findSettleByNo(@PathVariable Long no) {
-//           return ResponseEntity.ok(settleService.findSettleByNo(no));
-//       }
-//
-//
-//       @PatchMapping("/{no}/complete")
-//       public ResponseEntity<SettleResDto> completeSettle(@PathVariable Long no) {
-//           return ResponseEntity.ok(settleService.completeSettle(no));
-//       }
-//
-//       @PatchMapping("/{no}/invoice")
-//       public ResponseEntity<SettleResDto> issueTaxInvoice(@PathVariable Long no) {
-//           return ResponseEntity.ok(settleService.issueTaxInvoice(no));
-//       }
+
+
+       @PostMapping
+       public ResponseEntity<SettleResDto> createSettle(@RequestBody SettleCreateReqDto reqDto) {
+           SettleResDto resDto = settleService.createSettle(reqDto);
+           return ResponseEntity.status(HttpStatus.CREATED).body(resDto);
+       }
+
+
+       @GetMapping
+       public ResponseEntity<List<SettleResDto>> findSettleAll() {
+           return ResponseEntity.ok(settleService.findSettleAll());
+       }
+
+       @GetMapping("/{no}")
+       public ResponseEntity<SettleResDto> findSettleByNo(@PathVariable Long no) {
+           return ResponseEntity.ok(settleService.findSettleByNo(no));
+       }
+
+
+       @PatchMapping("/{no}/complete")
+       public ResponseEntity<SettleResDto> completeSettle(@PathVariable Long no) {
+           return ResponseEntity.ok(settleService.completeSettle(no));
+       }
+
+       @PatchMapping("/{no}/invoice")
+       public ResponseEntity<SettleResDto> issueTaxInvoice(@PathVariable Long no) {
+           return ResponseEntity.ok(settleService.issueTaxInvoice(no));
+       }
 }
