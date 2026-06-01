@@ -4,6 +4,7 @@ import com.sloway.app.auth.dto.request.ChangePasswordRequestDto;
 import com.sloway.app.auth.user.CustomUserDetails;
 import com.sloway.app.member.dto.request.ChangeEmailRequestDto;
 import com.sloway.app.member.dto.request.UpdateUserRequestDto;
+import com.sloway.app.member.dto.response.SocialAccountResponseDto;
 import com.sloway.app.member.dto.response.UserResponseDto;
 import com.sloway.app.member.service.UserService;
 import lombok.RequiredArgsConstructor;
@@ -11,6 +12,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 /**
  * 일반회원 — 본인 영역 API.
@@ -80,6 +83,17 @@ public class UserController {
         log.info("일반회원 이메일 변경: memberNo={}", user.getMemberNo());
         userService.changeEmail(user.getMemberNo(), request);
         return ResponseEntity.ok().build();
+    }
+
+    /**
+     * 내 연동 소셜 계정 목록. GET /api/user/social-accounts
+     */
+    @GetMapping("/social-accounts")
+    public ResponseEntity<List<SocialAccountResponseDto>> getSocialAccounts(
+            @AuthenticationPrincipal CustomUserDetails user) {
+        List<SocialAccountResponseDto> accounts =
+                userService.getSocialAccounts(user.getMemberNo());
+        return ResponseEntity.ok(accounts);
     }
 
 }
