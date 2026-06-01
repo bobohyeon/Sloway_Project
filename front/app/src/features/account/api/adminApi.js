@@ -59,3 +59,15 @@ export const rejectHost = async (hostId, reason) => {
   const response = await api.post(`/admin/hosts/${hostId}/reject`, { reason });
   return response.data;
 };
+
+/** 호스트 자격 박탈. POST /api/admin/hosts/{id}/revoke (body: reason) */
+export const revokeHost = async (hostId, reason) => {
+  const response = await api.post(`/admin/hosts/${hostId}/revoke`, { reason });
+  return response.data;
+};
+
+/** 호스트 자격 복구. POST /api/admin/hosts/{id}/restore */
+export const restoreHost = async (hostId) => {
+  const response = await api.post(`/admin/hosts/${hostId}/restore`);
+  return response.data;
+};

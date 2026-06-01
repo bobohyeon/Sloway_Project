@@ -8,7 +8,19 @@ export const getMyPage = async () => {
 
 /** 일반회원 마이페이지 수정. PATCH /api/user/mypage (name, phone, imgUrl) */
 export const updateMyPage = async (data) => {
-  const response = await api.patch('/user/mypage', data);
+  const formData = new FormData();
+  // dto는 JSON Blob으로 (백엔드 @RequestPart("dto")와 매칭)
+  formData.append(
+    'dto',
+    new Blob([JSON.stringify(data)], { type: 'application/json' })
+  );
+  if (profileImage) {
+    formData.append('profileImage', profileImage); // 파일 객체
+  }
+
+  const response = await api.patch('/user/mypage', formData, {
+    headers: { 'Content-Type': 'multipart/form-data' },
+  });
   return response.data;
 };
 

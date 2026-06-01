@@ -110,4 +110,7 @@ public class MemberEntity extends BaseEntity {
         this.email = email;
     }
 
+    public void updateImgUrl(String imgUrl) {
+        this.imgUrl = imgUrl;
+    }
 }//class

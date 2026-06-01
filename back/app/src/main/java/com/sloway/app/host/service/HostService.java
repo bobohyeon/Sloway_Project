@@ -148,4 +148,5 @@ public class HostService {
         member.changeEmail(newEmail);
         log.info("호스트 이메일 변경 완료: memberNo={}", memberNo);
     }
+
 }
