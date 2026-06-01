@@ -13,6 +13,7 @@ public class RsvnResDto {
 
     private Long no;
     private Long memberNo;
+    private String guestName;
     private Long officeNo;
     private Long stationNo;
     private Long workStayNo;
@@ -43,6 +44,7 @@ public class RsvnResDto {
         return RsvnResDto.builder()
                 .no(entity.getNo())
                 .memberNo(entity.getMemberNo().getNo())
+                .guestName(entity.getMemberNo().getName())
                 .officeNo(entity.getOfficeNo() != null ? entity.getOfficeNo().getNo() : null)
                 .stationNo(entity.getStationNo() != null ? entity.getStationNo().getNo() : null)
                 .workStayNo(entity.getWorkStayNo() != null ? entity.getWorkStayNo().getNo() : null)

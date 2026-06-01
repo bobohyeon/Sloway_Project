@@ -5,8 +5,12 @@ import com.sloway.app.host.entity.HostEntity;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 
+import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 
 /**
  * 호스트 Repository.
@@ -34,4 +38,7 @@ public interface HostRepository
      * <p>어드민 호스트 목록에서 "대기/승인/반려/취소" 필터링용.
      */
     Page<HostEntity> findByApprovalState(ApprovalState state, PageRequest pageable);
+
+    @Query("SELECT h.memberNo FROM HostEntity h WHERE h.memberNo IN :memberNos")
+    Set<Long> findMemberNosByMemberNoIn(@Param("memberNos") List<Long> memberNos);
 }

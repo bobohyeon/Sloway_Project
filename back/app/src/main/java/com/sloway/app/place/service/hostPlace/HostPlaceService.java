@@ -104,7 +104,6 @@ public class HostPlaceService {
 
     @Transactional
     public void rejectHostPlace(Long no, HostPlaceRejectReqDto dto) {
-        System.out.println("dto = " + dto);
         HostPlaceEntity hostPlace = hostPlaceRepository.findById(no)
                 .orElseThrow(()-> new EntityNotFoundException("[H.P-282]HostPlace Not Found For Reject"));
         hostPlace.reject(dto.getRejectedReason());

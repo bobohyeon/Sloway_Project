@@ -13,3 +13,13 @@ export async function findOneRsvn(id) {
 export async function cancelRsvn(id, refundReason) {
   await api.post(`/reservation/${id}/cancel?refundReason=${refundReason}`);
 }
+
+export async function findHostRsvns() {
+  const res = await api.get('/reservation/host');
+  return res.data;
+}
+
+export async function findHostSpaces() {
+  const res = await api.get('/reservation/host/spaces');
+  return res.data;
+}

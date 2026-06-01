@@ -26,6 +26,7 @@ import {
   FaBell,
   FaCog,
   FaStore,
+  FaClipboardCheck,
 } from 'react-icons/fa';
 
 const Wrapper = styled.div`
@@ -47,6 +48,11 @@ const hostMenuGroups = [
     items: [
       { url: '/host/dashboard', str: '대시보드', icon: <FaHome /> },
       { url: '/host/profile', str: '호스트 정보', icon: <FaUserCircle /> },
+      {
+        url: '/host/application',
+        str: '신청 현황',
+        icon: <FaClipboardCheck />,
+      },
     ],
   },
   {

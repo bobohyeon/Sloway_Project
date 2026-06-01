@@ -25,5 +25,4 @@ public class HostJoinRequestDto {
     // 사업자 정보 (호스트만)
     private String businessName;     // 상호명
     private String businessNo;       // 사업자등록번호 (10자리, unique)
-    private String businessDocUrl;   // 사업자등록증 파일 URL
 }

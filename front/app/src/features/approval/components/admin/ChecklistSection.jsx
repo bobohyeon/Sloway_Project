@@ -124,42 +124,12 @@ const ProgressInfo = styled.div`
   }
 `;
 
-const CHECKLIST_DATA = [
-  {
-    id: 'info',
-    label: '기본 정보 확인',
-    desc: '공간명, 주소, 소개글이 적절한지',
-  },
-  {
-    id: 'image',
-    label: '이미지 검수',
-    desc: '실제 공간과 맞고, 선명하며, 부적절한 이미지가 없는지',
-  },
-  {
-    id: 'price',
-    label: '가격 적정성',
-    desc: '유사 공간 대비 과도한 가격이 아닌지',
-  },
-  {
-    id: 'amenity',
-    label: '편의시설 확인',
-    desc: '표기된 시설이 실제 준비되었는지 (사진 대조)',
-  },
-  {
-    id: 'policy',
-    label: '운영 정책 확인',
-    desc: '환불 정책, 체크인 시간 등이 명확한지',
-  },
-  {
-    id: 'legal',
-    label: '법적 요건 확인',
-    desc: '숙박업의 경우 신고증, 허가증 확인',
-  },
-];
-
-function ChecklistSection() {
-  const [checkedItems, setCheckedItems] = useState({});
-
+function ChecklistSection({
+  checkedItems,
+  setCheckedItems,
+  totalCount,
+  CHECKLIST_DATA,
+}) {
   const handleCheck = (id) => {
     setCheckedItems((prev) => ({
       ...prev,
@@ -168,7 +138,7 @@ function ChecklistSection() {
   };
 
   const checkedCount = Object.values(checkedItems).filter(Boolean).length;
-  const totalCount = CHECKLIST_DATA.length;
+
   const percent = (checkedCount / totalCount) * 100;
 
   return (

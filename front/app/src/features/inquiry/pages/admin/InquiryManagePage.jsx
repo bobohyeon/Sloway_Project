@@ -1,120 +1,85 @@
-import { useState } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import styled, { css } from 'styled-components';
 import PageLayout from '../../../../app/layouts/page/PageLayout';
-
-// ─── Mock 데이터 ───────────────────────────────────────────────────────────────
-// 백엔드 연동 시:
-//   목록: GET  /api/admin/inquiries?status=&category=&keyword=&page=
-//   상세: GET  /api/admin/inquiries/:id
-//   답변: POST /api/admin/inquiries/:id/answer   { content: string }
-//   수정: PUT  /api/admin/inquiries/:id/answer   { content: string }
-//   상태 변경: PATCH /api/admin/inquiries/:id/status { status: 'processing' | 'answered' }
-
-const MOCK_INQUIRIES = Array.from({ length: 18 }, (_, i) => ({
-  id: i + 1,
-  title: [
-    '예약 취소 후 환불이 아직 안 됐어요',
-    '결제가 두 번 된 것 같아요',
-    '쿠폰이 적용이 안 돼요',
-    '비밀번호 변경이 안 됩니다',
-    '호스트와 채팅이 안 돼요',
-    '체크인 시간 변경 가능한가요?',
-  ][i % 6],
-  category: [
-    '예약·결제',
-    '취소·환불',
-    '계정',
-    '서비스 이용',
-    '기타',
-    '예약·결제',
-  ][i % 6],
-  status: ['answered', 'pending'][i % 2],
-  userName: ['김민지', '이준호', '박서연', '최재원', '윤하은'][i % 5],
-  userEmail: [
-    'mj@test.com',
-    'jh@test.com',
-    'sy@test.com',
-    'jw@test.com',
-    'he@test.com',
-  ][i % 5],
-  content:
-    '안녕하세요. 지난 주에 예약을 취소했는데 아직 환불이 처리되지 않았습니다. 빠른 처리 부탁드립니다. 예약 번호는 SW-20260501-000123입니다.',
-  createdAt: `2026.0${(i % 5) + 1}.${String((i % 28) + 1).padStart(2, '0')}`,
-  answeredAt:
-    i % 3 === 0
-      ? `2026.0${(i % 5) + 1}.${String((i % 28) + 2).padStart(2, '0')}`
-      : null,
-  answer:
-    i % 3 === 0
-      ? '안녕하세요. 문의 주신 내용 확인했습니다. 환불은 영업일 기준 3~5일 내 처리 예정입니다. 불편을 드려 죄송합니다.'
-      : null,
-  answeredBy: i % 3 === 0 ? '관리자 홍길동' : null,
-}));
-
-const STATUS_CONFIG = {
-  pending: {
-    label: '답변 대기',
-    bg: 'rgba(180,180,180,0.12)',
-    color: 'var(--gray-500)',
-  },
-
-  answered: {
-    label: '답변 완료',
-    bg: 'rgba(80,170,100,0.12)',
-    color: '#2e7d4f',
-  },
-};
+import api from '../../../../app/api/axiosApi';
 
 const CATEGORY_OPTIONS = [
-  '전체',
-  '예약·결제',
-  '취소·환불',
-  '계정',
-  '서비스 이용',
-  '기타',
+  { label: '전체',   value: '' },
+  { label: '예약',   value: 'RESERVATION' },
+  { label: '결제',   value: 'PAYMENT' },
+  { label: '공간',   value: 'PLACE' },
+  { label: '기타',   value: 'OTHER' },
 ];
-const STATUS_OPTIONS = ['전체', '답변 대기', '답변 완료'];
-const STATUS_VALUE_MAP = {
-  '답변 대기': 'pending',
-  '답변 완료': 'answered',
+
+const STATUS_OPTIONS = [
+  { label: '전체',    value: '' },
+  { label: '답변 대기', value: 'PENDING' },
+  { label: '답변 완료', value: 'ANSWERED' },
+];
+
+const STATUS_CONFIG = {
+  PENDING:  { label: '답변 대기', bg: 'rgba(180,180,180,0.12)', color: 'var(--gray-500)' },
+  ANSWERED: { label: '답변 완료', bg: 'rgba(80,170,100,0.12)',  color: '#2e7d4f' },
 };
 
-const PAGE_SIZE = 10;
+const fmtDate = (iso) => (iso ? iso.slice(0, 10).replace(/-/g, '.') : '');
 
 export default function InquiryManagePage() {
   // ── 목록 상태 ──────────────────────────────────────────────────────────────
-  const [filterStatus, setFilterStatus] = useState('전체');
-  const [filterCategory, setFilterCategory] = useState('전체');
+  const [filterStatus, setFilterStatus] = useState('');
+  const [filterCategory, setFilterCategory] = useState('');
   const [keyword, setKeyword] = useState('');
   const [inputKeyword, setInputKeyword] = useState('');
   const [page, setPage] = useState(1);
+  const [inquiries, setInquiries] = useState([]);
+  const [totalPages, setTotalPages] = useState(0);
+  const [counts, setCounts] = useState({ total: 0, pending: 0, answered: 0 });
 
   // ── 상세/답변 패널 상태 ────────────────────────────────────────────────────
-  const [selected, setSelected] = useState(null); // 선택된 문의 객체
+  const [selected, setSelected] = useState(null);
   const [answerText, setAnswerText] = useState('');
   const [isEditing, setIsEditing] = useState(false);
-  // 로컬 낙관적 업데이트용 — 백엔드 연동 시 서버 응답값으로 교체
-  const [localData, setLocalData] = useState(MOCK_INQUIRIES);
+  const [isSaving, setIsSaving] = useState(false);
 
-  // ── 필터링 ────────────────────────────────────────────────────────────────
-  const filtered = localData.filter((inq) => {
-    const statusVal = STATUS_VALUE_MAP[filterStatus];
-    const matchStatus = filterStatus === '전체' || inq.status === statusVal;
-    const matchCategory =
-      filterCategory === '전체' || inq.category === filterCategory;
-    const matchKeyword =
-      !keyword || inq.title.includes(keyword) || inq.userName.includes(keyword);
-    return matchStatus && matchCategory && matchKeyword;
-  });
+  // ── 목록 조회 ─────────────────────────────────────────────────────────────
+  const fetchList = useCallback(() => {
+    api.get('/inquiry', {
+      params: {
+        page: page - 1,
+        size: 10,
+        sort: 'createdAt,DESC',
+        status: filterStatus || undefined,
+        category: filterCategory || undefined,
+        keyword: keyword || undefined,
+      },
+    }).then(({ data }) => {
+      setInquiries(data.content);
+      setTotalPages(data.totalPages);
+    });
+  }, [page, filterStatus, filterCategory, keyword]);
 
-  const totalPages = Math.ceil(filtered.length / PAGE_SIZE);
-  const paged = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
+  // ── 요약 카운트 (최초 마운트 + 목록 갱신 후) ───────────────────────────────
+  const fetchCounts = useCallback(() => {
+    Promise.all([
+      api.get('/inquiry', { params: { size: 1 } }),
+      api.get('/inquiry', { params: { size: 1, status: 'PENDING' } }),
+      api.get('/inquiry', { params: { size: 1, status: 'ANSWERED' } }),
+    ]).then(([all, pending, answered]) => {
+      setCounts({
+        total: all.data.totalElements,
+        pending: pending.data.totalElements,
+        answered: answered.data.totalElements,
+      });
+    });
+  }, []);
 
-  const counts = {
-    total: localData.length,
-    pending: localData.filter((i) => i.status === 'pending').length,
-    answered: localData.filter((i) => i.status === 'answered').length,
-  };
+  useEffect(() => {
+    fetchList();
+  }, [fetchList]);
+
+  useEffect(() => {
+    fetchCounts();
+  }, [fetchCounts]);
 
   // ── 핸들러 ────────────────────────────────────────────────────────────────
   const handleSearch = () => {
@@ -123,60 +88,39 @@ export default function InquiryManagePage() {
   };
 
   const handleSelectRow = (inq) => {
-    setSelected(inq);
-    // 기존 답변이 있으면 수정 모드 초기값 세팅
-    setAnswerText(inq.answer ?? '');
-    setIsEditing(false);
-  };
-
-  // 상태 변경 — 백엔드 연동: PATCH /api/admin/inquiries/:id/status
-  const handleStatusChange = (inqId, newStatus) => {
-    setLocalData((prev) =>
-      prev.map((i) => (i.id === inqId ? { ...i, status: newStatus } : i))
-    );
-    if (selected?.id === inqId) {
-      setSelected((prev) => ({ ...prev, status: newStatus }));
-    }
-    // TODO: await api.patch(`/admin/inquiries/${inqId}/status`, { status: newStatus })
-  };
-
-  // 답변 등록/수정 — 백엔드 연동:
-  //   신규: POST /api/admin/inquiries/:id/answer
-  //   수정: PUT  /api/admin/inquiries/:id/answer
-  const handleAnswerSubmit = () => {
-    if (!answerText.trim()) return;
-    const isNew = !selected.answer;
-    const now = new Date()
-      .toLocaleDateString('ko-KR', {
-        year: 'numeric',
-        month: '2-digit',
-        day: '2-digit',
-      })
-      .replace(/\. /g, '.')
-      .replace('.', '');
-    const updated = {
-      ...selected,
-      answer: answerText,
-      answeredAt: now,
-      answeredBy: '관리자', // 백엔드: JWT에서 추출
-      status: 'answered',
-    };
-
-    setLocalData((prev) =>
-      prev.map((i) => (i.id === selected.id ? updated : i))
-    );
-    setSelected(updated);
-    setIsEditing(false);
-
-    // TODO: isNew
-    //   ? await api.post(`/admin/inquiries/${selected.id}/answer`, { content: answerText })
-    //   : await api.put(`/admin/inquiries/${selected.id}/answer`, { content: answerText })
+    api.get(`/inquiry/${inq.id}`).then(({ data }) => {
+      setSelected(data);
+      setAnswerText(data.replyContent ?? '');
+      setIsEditing(false);
+    });
   };
 
   const handleClosePanel = () => {
     setSelected(null);
     setAnswerText('');
     setIsEditing(false);
+  };
+
+  const handleAnswerSubmit = async () => {
+    if (!answerText.trim() || !selected) return;
+    setIsSaving(true);
+    try {
+      const isNew = !selected.replyContent;
+      if (isNew) {
+        await api.post(`/inquiry/${selected.id}/reply`, { content: answerText });
+      } else {
+        await api.put(`/inquiry/${selected.id}/reply`, { content: answerText });
+      }
+      // 패널 갱신
+      const { data } = await api.get(`/inquiry/${selected.id}`);
+      setSelected(data);
+      setAnswerText(data.replyContent ?? '');
+      setIsEditing(false);
+      fetchList();
+      fetchCounts();
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   return (
@@ -189,12 +133,8 @@ export default function InquiryManagePage() {
       {/* ── 요약 카드 ────────────────────────────────────────────────────── */}
       <SummaryRow>
         {[
-          { label: '전체', value: counts.total, color: 'var(--gray-700)' },
-          {
-            label: '답변 대기',
-            value: counts.pending,
-            color: 'var(--gray-400)',
-          },
+          { label: '전체',    value: counts.total,   color: 'var(--gray-700)' },
+          { label: '답변 대기', value: counts.pending,  color: 'var(--gray-400)' },
           { label: '답변 완료', value: counts.answered, color: '#2e7d4f' },
         ].map(({ label, value, color }) => (
           <SummaryCard key={label}>
@@ -210,14 +150,11 @@ export default function InquiryManagePage() {
           <FilterLabel>상태</FilterLabel>
           <SelectBox
             value={filterStatus}
-            onChange={(e) => {
-              setFilterStatus(e.target.value);
-              setPage(1);
-            }}
+            onChange={(e) => { setFilterStatus(e.target.value); setPage(1); }}
             aria-label="상태 필터"
           >
             {STATUS_OPTIONS.map((s) => (
-              <option key={s}>{s}</option>
+              <option key={s.value} value={s.value}>{s.label}</option>
             ))}
           </SelectBox>
         </FilterGroup>
@@ -226,14 +163,11 @@ export default function InquiryManagePage() {
           <FilterLabel>카테고리</FilterLabel>
           <SelectBox
             value={filterCategory}
-            onChange={(e) => {
-              setFilterCategory(e.target.value);
-              setPage(1);
-            }}
+            onChange={(e) => { setFilterCategory(e.target.value); setPage(1); }}
             aria-label="카테고리 필터"
           >
             {CATEGORY_OPTIONS.map((c) => (
-              <option key={c}>{c}</option>
+              <option key={c.value} value={c.value}>{c.label}</option>
             ))}
           </SelectBox>
         </FilterGroup>
@@ -279,16 +213,17 @@ export default function InquiryManagePage() {
                 </tr>
               </Thead>
               <tbody>
-                {paged.length === 0 ? (
+                {inquiries.length === 0 ? (
                   <tr>
                     <EmptyTd colSpan={7}>
                       <EmptyMsg>조회된 문의가 없습니다</EmptyMsg>
                     </EmptyTd>
                   </tr>
                 ) : (
-                  paged.map((inq) => {
-                    const st = STATUS_CONFIG[inq.status];
+                  inquiries.map((inq) => {
+                    const st = STATUS_CONFIG[inq.status] ?? STATUS_CONFIG.PENDING;
                     const isActive = selected?.id === inq.id;
+                    const categoryLabel = CATEGORY_OPTIONS.find(c => c.value === inq.category)?.label ?? inq.category;
                     return (
                       <Tr
                         key={inq.id}
@@ -297,37 +232,27 @@ export default function InquiryManagePage() {
                         tabIndex={0}
                         role="button"
                         aria-label={`문의 상세 보기: ${inq.title}`}
-                        onKeyDown={(e) =>
-                          e.key === 'Enter' && handleSelectRow(inq)
-                        }
+                        onKeyDown={(e) => e.key === 'Enter' && handleSelectRow(inq)}
                       >
                         <Td center>{inq.id}</Td>
                         <Td>
-                          <CategoryChip>{inq.category}</CategoryChip>
+                          <CategoryChip>{categoryLabel}</CategoryChip>
                         </Td>
                         <Td>
-                          <TitleText $unread={inq.status === 'pending'}>
+                          <TitleText $unread={inq.status === 'PENDING'}>
                             {inq.title}
                           </TitleText>
                         </Td>
                         <Td>
-                          <UserInfo>
-                            <UserName>{inq.userName}</UserName>
-                          </UserInfo>
+                          <UserName>{inq.writerName}</UserName>
                         </Td>
                         <Td center>
-                          <StatusChip
-                            style={{ background: st.bg, color: st.color }}
-                          >
+                          <StatusChip style={{ background: st.bg, color: st.color }}>
                             {st.label}
                           </StatusChip>
                         </Td>
-                        <Td center muted>
-                          {inq.createdAt}
-                        </Td>
-                        <Td center muted>
-                          {inq.answeredAt ?? '—'}
-                        </Td>
+                        <Td center muted>{fmtDate(inq.createdAt)}</Td>
+                        <Td center muted>{inq.answeredAt ? fmtDate(inq.answeredAt) : '—'}</Td>
                       </Tr>
                     );
                   })
@@ -377,54 +302,37 @@ export default function InquiryManagePage() {
             {/* 패널 헤더 */}
             <PanelHeader>
               <PanelTitle>문의 상세</PanelTitle>
-              <PanelHeaderRight>
-                {/* 상태 직접 변경 셀렉트 — 답변 외 처리 흐름 대응 */}
-                <StatusSelect
-                  value={selected.status}
-                  onChange={(e) =>
-                    handleStatusChange(selected.id, e.target.value)
-                  }
-                  aria-label="문의 상태 변경"
-                >
-                  <option value="pending">답변 대기</option>
-                  <option value="answered">답변 완료</option>
-                </StatusSelect>
-                <CloseBtn
-                  type="button"
-                  onClick={handleClosePanel}
-                  aria-label="패널 닫기"
-                >
-                  ✕
-                </CloseBtn>
-              </PanelHeaderRight>
+              <CloseBtn type="button" onClick={handleClosePanel} aria-label="패널 닫기">
+                ✕
+              </CloseBtn>
             </PanelHeader>
 
             {/* 문의 메타 */}
             <MetaGrid>
               <MetaItem>
                 <MetaKey>작성자</MetaKey>
-                <MetaVal>
-                  {selected.userName} ({selected.userEmail})
-                </MetaVal>
+                <MetaVal>{selected.writerName}</MetaVal>
               </MetaItem>
               <MetaItem>
                 <MetaKey>카테고리</MetaKey>
-                <MetaVal>{selected.category}</MetaVal>
+                <MetaVal>
+                  {CATEGORY_OPTIONS.find(c => c.value === selected.category)?.label ?? selected.category}
+                </MetaVal>
               </MetaItem>
               <MetaItem>
                 <MetaKey>등록일</MetaKey>
-                <MetaVal>{selected.createdAt}</MetaVal>
+                <MetaVal>{fmtDate(selected.createdAt)}</MetaVal>
               </MetaItem>
               <MetaItem>
                 <MetaKey>상태</MetaKey>
                 <MetaVal>
                   <StatusChip
                     style={{
-                      background: STATUS_CONFIG[selected.status].bg,
-                      color: STATUS_CONFIG[selected.status].color,
+                      background: STATUS_CONFIG[selected.status]?.bg,
+                      color: STATUS_CONFIG[selected.status]?.color,
                     }}
                   >
-                    {STATUS_CONFIG[selected.status].label}
+                    {STATUS_CONFIG[selected.status]?.label ?? selected.status}
                   </StatusChip>
                 </MetaVal>
               </MetaItem>
@@ -440,13 +348,12 @@ export default function InquiryManagePage() {
             <AnswerSection>
               <AnswerSectionHeader>
                 <AnswerSectionTitle>답변</AnswerSectionTitle>
-                {/* 기존 답변 있을 때만 수정 버튼 노출 */}
-                {selected.answer && !isEditing && (
+                {selected.replyContent && !isEditing && (
                   <EditBtn
                     type="button"
                     onClick={() => {
                       setIsEditing(true);
-                      setAnswerText(selected.answer);
+                      setAnswerText(selected.replyContent);
                     }}
                   >
                     수정
@@ -455,12 +362,12 @@ export default function InquiryManagePage() {
               </AnswerSectionHeader>
 
               {/* 등록된 답변 보기 */}
-              {selected.answer && !isEditing ? (
+              {selected.replyContent && !isEditing ? (
                 <AnswerBox>
-                  <AnswerContent>{selected.answer}</AnswerContent>
-                  <AnswerMeta>
-                    {selected.answeredBy} · {selected.answeredAt}
-                  </AnswerMeta>
+                  <AnswerContent>{selected.replyContent}</AnswerContent>
+                  {selected.answeredAt && (
+                    <AnswerMeta>{fmtDate(selected.answeredAt)}</AnswerMeta>
+                  )}
                 </AnswerBox>
               ) : (
                 /* 답변 입력 폼 */
@@ -483,7 +390,7 @@ export default function InquiryManagePage() {
                           type="button"
                           onClick={() => {
                             setIsEditing(false);
-                            setAnswerText(selected.answer);
+                            setAnswerText(selected.replyContent ?? '');
                           }}
                         >
                           취소
@@ -492,9 +399,9 @@ export default function InquiryManagePage() {
                       <SubmitBtn
                         type="button"
                         onClick={handleAnswerSubmit}
-                        disabled={!answerText.trim()}
+                        disabled={!answerText.trim() || isSaving}
                       >
-                        {isEditing ? '수정 완료' : '답변 등록'}
+                        {isSaving ? '저장 중...' : isEditing ? '수정 완료' : '답변 등록'}
                       </SubmitBtn>
                     </FormActions>
                   </TextareaFooter>
@@ -510,48 +417,11 @@ export default function InquiryManagePage() {
 
 // ─── Styled Components ────────────────────────────────────────────────────────
 
-const PageWrap = styled.div`
-  max-width: 100%;
-  /* width: 1200px; */
-  margin: 0 auto;
-  padding: var(--space-6);
-
-  @media (max-width: 768px) {
-    padding: var(--space-4);
-  }
-`;
-
-const PageHeader = styled.div`
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: var(--space-4);
-  margin-bottom: var(--space-4);
-`;
-
-const HeaderLeft = styled.div``;
-
-const PageTitle = styled.h1`
-  font-family: var(--font-display);
-  font-size: 1.5rem;
-  font-weight: 600;
-  color: var(--gray-800);
-  letter-spacing: -0.02em;
-  margin-bottom: 4px;
-`;
-
-const PageDesc = styled.p`
-  font-size: 0.88rem;
-  color: var(--gray-400);
-`;
-
 const Divider = styled.hr`
   border: none;
   border-top: 1px solid var(--gray-200);
   margin: 0 0 var(--space-4) 0;
 `;
-
-// ── 요약 카드 ─────────────────────────────────────────────────────────────────
 
 const SummaryRow = styled.div`
   display: grid;
@@ -585,8 +455,6 @@ const SummaryLabel = styled.p`
   font-size: 0.78rem;
   color: var(--gray-400);
 `;
-
-// ── 필터 ─────────────────────────────────────────────────────────────────────
 
 const FilterRow = styled.div`
   display: flex;
@@ -656,16 +524,10 @@ const SearchInput = styled.input`
   width: 220px;
   transition: border-color 140ms;
 
-  &:focus {
-    border-color: var(--sage);
-  }
-  &::placeholder {
-    color: var(--gray-400);
-  }
+  &:focus { border-color: var(--sage); }
+  &::placeholder { color: var(--gray-400); }
 
-  @media (max-width: 600px) {
-    width: 100%;
-  }
+  @media (max-width: 600px) { width: 100%; }
 `;
 
 const SearchBtn = styled.button`
@@ -680,13 +542,9 @@ const SearchBtn = styled.button`
   white-space: nowrap;
   transition: filter 140ms;
 
-  &:hover {
-    filter: brightness(0.92);
-  }
+  &:hover { filter: brightness(0.92); }
 `;
 
-// ── 메인 영역 ─────────────────────────────────────────────────────────────────
-// 패널 열릴 때 좌우 분할 레이아웃
 const MainArea = styled.div`
   display: grid;
   grid-template-columns: ${(p) => (p.$panelOpen ? '1fr 420px' : '1fr')};
@@ -698,8 +556,6 @@ const MainArea = styled.div`
     grid-template-columns: 1fr;
   }
 `;
-
-// ── 테이블 ────────────────────────────────────────────────────────────────────
 
 const TableSection = styled.div``;
 
@@ -737,18 +593,9 @@ const Tr = styled.tr`
   transition: background 130ms;
   background: ${(p) => (p.$active ? 'rgba(168,184,159,0.08)' : 'transparent')};
 
-  &:not(:last-child) {
-    border-bottom: 1px solid var(--gray-100);
-  }
-
-  &:hover {
-    background: var(--gray-50, #fafaf9);
-  }
-
-  &:focus-visible {
-    outline: 2px solid var(--sage);
-    outline-offset: -2px;
-  }
+  &:not(:last-child) { border-bottom: 1px solid var(--gray-100); }
+  &:hover { background: var(--gray-50, #fafaf9); }
+  &:focus-visible { outline: 2px solid var(--sage); outline-offset: -2px; }
 
   ${(p) =>
     p.$active &&
@@ -795,8 +642,6 @@ const TitleText = styled.span`
   text-overflow: ellipsis;
 `;
 
-const UserInfo = styled.div``;
-
 const UserName = styled.p`
   font-size: 0.85rem;
   color: var(--gray-700);
@@ -840,14 +685,11 @@ const PageBtn = styled.button`
   }
 `;
 
-// ── 상세 패널 ─────────────────────────────────────────────────────────────────
-
 const DetailPanel = styled.aside`
   background: var(--white);
   border: 1px solid var(--gray-200);
   border-radius: var(--radius-lg);
   overflow: hidden;
-  /* 목록과 높이 독립 — 패널만 스크롤 */
   position: sticky;
   top: 24px;
   max-height: calc(100vh - 120px);
@@ -877,34 +719,6 @@ const PanelTitle = styled.p`
   color: var(--gray-800);
 `;
 
-const PanelHeaderRight = styled.div`
-  display: flex;
-  align-items: center;
-  gap: var(--space-2);
-`;
-
-const StatusSelect = styled.select`
-  height: 30px;
-  padding: 0 24px 0 10px;
-  font-size: 0.78rem;
-  border: 1px solid var(--gray-200);
-  border-radius: var(--radius-md);
-  background: var(--white);
-  color: var(--gray-700);
-  font-family: inherit;
-  outline: none;
-  cursor: pointer;
-  appearance: none;
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='8' height='5'%3E%3Cpath d='M0 0l4 5 4-5z' fill='%23999'/%3E%3C/svg%3E");
-  background-repeat: no-repeat;
-  background-position: right 8px center;
-
-  &:focus {
-    border-color: var(--sage);
-    outline: none;
-  }
-`;
-
 const CloseBtn = styled.button`
   width: 28px;
   height: 28px;
@@ -917,10 +731,7 @@ const CloseBtn = styled.button`
   cursor: pointer;
   transition: background 140ms;
 
-  &:hover {
-    background: var(--gray-100);
-    color: var(--gray-700);
-  }
+  &:hover { background: var(--gray-100); color: var(--gray-700); }
 `;
 
 const MetaGrid = styled.div`
@@ -934,9 +745,7 @@ const MetaItem = styled.div`
   padding: 10px 20px;
   border-bottom: 1px solid var(--gray-100);
 
-  &:nth-child(odd) {
-    border-right: 1px solid var(--gray-100);
-  }
+  &:nth-child(odd) { border-right: 1px solid var(--gray-100); }
 `;
 
 const MetaKey = styled.p`
@@ -973,8 +782,6 @@ const InquiryBoxContent = styled.p`
   white-space: pre-wrap;
 `;
 
-// ── 답변 영역 ─────────────────────────────────────────────────────────────────
-
 const AnswerSection = styled.div`
   padding: 16px 20px;
 `;
@@ -1002,10 +809,7 @@ const EditBtn = styled.button`
   cursor: pointer;
   transition: all 140ms;
 
-  &:hover {
-    background: var(--sage);
-    color: var(--white);
-  }
+  &:hover { background: var(--sage); color: var(--white); }
 `;
 
 const AnswerBox = styled.div`
@@ -1046,12 +850,8 @@ const AnswerTextarea = styled.textarea`
   transition: border-color 140ms;
   box-sizing: border-box;
 
-  &:focus {
-    border-color: var(--sage);
-  }
-  &::placeholder {
-    color: var(--gray-400);
-  }
+  &:focus { border-color: var(--sage); }
+  &::placeholder { color: var(--gray-400); }
 `;
 
 const TextareaFooter = styled.div`
@@ -1083,9 +883,7 @@ const CancelBtn = styled.button`
   cursor: pointer;
   transition: border-color 140ms;
 
-  &:hover {
-    border-color: var(--gray-400);
-  }
+  &:hover { border-color: var(--gray-400); }
 `;
 
 const SubmitBtn = styled.button`
@@ -1093,14 +891,11 @@ const SubmitBtn = styled.button`
   padding: 0 18px;
   font-size: 0.85rem;
   font-weight: 600;
-  color: var(--white);
   background: ${(p) => (p.disabled ? 'var(--gray-200)' : 'var(--sage)')};
   color: ${(p) => (p.disabled ? 'var(--gray-400)' : 'var(--white)')};
   border-radius: var(--radius-md);
   cursor: ${(p) => (p.disabled ? 'not-allowed' : 'pointer')};
   transition: filter 140ms;
 
-  &:hover:not(:disabled) {
-    filter: brightness(0.92);
-  }
+  &:hover:not(:disabled) { filter: brightness(0.92); }
 `;

@@ -27,6 +27,7 @@ public class HostListResponseDto {
     private final String businessNo;
     private final ApprovalState approvalState;
     private final LocalDateTime createdAt;     // 신청일 (Host 생성 시각)
+    private final String rejectReason;
 
     // ─── 회원 정보 (MemberEntity) ──────────────
     private final String memberName;
@@ -46,6 +47,7 @@ public class HostListResponseDto {
                 .createdAt(host.getCreatedAt())   // BaseEntity의 createdAt
                 .memberName(member.getName())
                 .memberEmail(member.getEmail())
+                .rejectReason(host.getRejectReason())
                 .build();
     }
 }

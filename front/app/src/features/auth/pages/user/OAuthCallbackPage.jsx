@@ -1,6 +1,8 @@
 import React, { useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
+import { useDispatch } from 'react-redux';
 import styled, { keyframes } from 'styled-components';
+import { login } from '../../store/authSlice';
 
 const spin = keyframes`to { transform: rotate(360deg); }`;
 
@@ -26,6 +28,7 @@ const Spinner = styled.div`
 
 function OAuthCallbackPage() {
   const navigate = useNavigate();
+  const dispatch = useDispatch();
   const [searchParams] = useSearchParams();
 
   useEffect(() => {
@@ -33,12 +36,13 @@ function OAuthCallbackPage() {
     const error = searchParams.get('error');
 
     if (error || !token) {
+      alert('소셜 로그인에 실패했습니다. 다시 시도해주세요.');
       navigate('/login');
       return;
     }
 
-    // TODO: AccessToken 저장 + 유저 정보 조회 + Recoil 상태 저장
-    localStorage.setItem('accessToken', token);
+    // 백엔드가 보낸 토큰을 Redux login 액션으로 처리 (localStorage 저장 + user 파싱)
+    dispatch(login(token));
     navigate('/');
   }, []);
 

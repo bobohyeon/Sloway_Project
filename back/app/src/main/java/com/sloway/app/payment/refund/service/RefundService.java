@@ -2,10 +2,12 @@ package com.sloway.app.payment.refund.service;
 
 import com.sloway.app.common.exception.CustomException;
 import com.sloway.app.payment.pay.common.PayErrorCode;
+import com.sloway.app.payment.pay.common.PayMethod;
 import com.sloway.app.payment.pay.common.PayStatus;
 import com.sloway.app.payment.pay.entity.PayEntity;
 import com.sloway.app.payment.pay.pg.kakao.KakaoPayClient;
 import com.sloway.app.payment.pay.pg.kakao.dto.request.KakaoCancelReqDto;
+import com.sloway.app.payment.pay.pg.toss.client.TossPayClient;
 import com.sloway.app.payment.pay.repository.PayRepository;
 import com.sloway.app.payment.point.service.PointService;
 import com.sloway.app.payment.refund.common.RefundErrorCode;
@@ -40,6 +42,7 @@ public class RefundService {
     private final RsvnRepository rsvnRepository;
     private final PointService pointService;
     private final KakaoPayClient kakaoPayClient;
+    private final TossPayClient tossPayClient;
 
     @Transactional
     public RefundResDto createRefund(RefundCreateReqDto refundCreateReqDto) {
@@ -83,6 +86,7 @@ public class RefundService {
         BigDecimal refundAmt = finalAmt.multiply(rateBd).divide(divisor, 0, RoundingMode.DOWN);
         refundEntity.applyRefund(rate, refundAmt);
         RefundEntity entity = refundRepository.save(refundEntity);
+        doRefundProcess(entity);
         return RefundResDto.from(entity);
     }
 
@@ -123,6 +127,7 @@ public class RefundService {
 
         refundEntity.applyRefund(RefundRate.FULL, refundAmt);
         RefundEntity entity = refundRepository.save(refundEntity);
+        doRefundProcess(entity);
         return RefundResDto.from(entity);
     }
 
@@ -131,7 +136,11 @@ public class RefundService {
     public RefundResDto processRefund(Long refundNo) {
         RefundEntity refundEntity = refundRepository.findById(refundNo)
                 .orElseThrow(() -> new CustomException(RefundErrorCode.REFUND_NOT_FOUND));
+        doRefundProcess(refundEntity);
+        return RefundResDto.from(refundEntity);
+    }
 
+    private void doRefundProcess(RefundEntity refundEntity) {
         refundEntity.approveRefund();
         PayEntity payEntity = refundEntity.getPayNo();
 
@@ -141,16 +150,21 @@ public class RefundService {
 
         pointService.refundUsedPoint(payEntity);
         pointService.cancelEarnedPoint(payEntity);
-        KakaoCancelReqDto cancelReqDto = KakaoCancelReqDto.builder()
-                .tid(payEntity.getTid())
-                .cancelAmount(payEntity.getFinalAmt())
-                .cancelTaxFreeAmount(0)
-                .build();
-        kakaoPayClient.cancel(cancelReqDto);
+
+        PayMethod method = payEntity.getMethod();
+        if(method == PayMethod.KAKAOPAY){
+            KakaoCancelReqDto cancelReqDto = KakaoCancelReqDto.builder()
+                    .tid(payEntity.getTid())
+                    .cancelAmount(payEntity.getFinalAmt())
+                    .cancelTaxFreeAmount(0)
+                    .build();
+            kakaoPayClient.cancel(cancelReqDto);
+        } else if (method == PayMethod.TOSSPAY) {
+            tossPayClient.cancel(payEntity.getTid(), "고객 환불 요청");
+        }
+
         payEntity.cancelPay();
         refundEntity.completeRefund();
-
-        return RefundResDto.from(refundEntity);
     }
 
     public List<RefundResDto> findRefundAll() {

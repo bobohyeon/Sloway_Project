@@ -5,6 +5,7 @@ import com.querydsl.jpa.impl.JPAQueryFactory;
 import com.sloway.app.payment.pay.common.PayStatus;
 import com.sloway.app.payment.pay.entity.PayEntity;
 import com.sloway.app.payment.pay.entity.QPayEntity;
+import com.sloway.app.reservation.rsvn.entity.QRsvnEntity;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
 
@@ -17,6 +18,7 @@ public class PayRepositoryImpl implements PayRepositoryCustom {
 
     private final JPAQueryFactory jpaQueryFactory;
     private static final QPayEntity qPayEntity = QPayEntity.payEntity;
+    private static final QRsvnEntity qRsvnEntity = QRsvnEntity.rsvnEntity;
 
 
     @Override
@@ -56,6 +58,45 @@ public class PayRepositoryImpl implements PayRepositoryCustom {
                 )
                 .groupBy(qPayEntity.method)
                 .fetch();
+    }
+
+    @Override
+    public Integer sumByOfficeIn(List<Long> officeNos, LocalDateTime start, LocalDateTime end) {
+        return jpaQueryFactory
+                .select(qPayEntity.finalAmt.sum().coalesce(0))
+                .from(qPayEntity)
+                .where(
+                        qPayEntity.rsvnNo.officeNo.no.in(officeNos),
+                        qPayEntity.status.eq(PayStatus.COMPLETED),
+                        qPayEntity.createdAt.between(start, end)
+                )
+                .fetchOne();
+    }
+
+    @Override
+    public Integer sumByStationIn(List<Long> stationNos, LocalDateTime start, LocalDateTime end) {
+        return jpaQueryFactory
+                .select(qPayEntity.finalAmt.sum().coalesce(0))
+                .from(qPayEntity)
+                .where(
+                        qPayEntity.rsvnNo.stationNo.no.in(stationNos),
+                        qPayEntity.status.eq(PayStatus.COMPLETED),
+                        qPayEntity.createdAt.between(start, end)
+                )
+                .fetchOne();
+    }
+
+    @Override
+    public Integer sumByWorkStayIn(List<Long> workStayNos, LocalDateTime start, LocalDateTime end) {
+        return jpaQueryFactory
+                .select(qPayEntity.finalAmt.sum().coalesce(0))
+                .from(qPayEntity)
+                .where(
+                        qPayEntity.rsvnNo.workStayNo.no.in(workStayNos),
+                        qPayEntity.status.eq(PayStatus.COMPLETED),
+                        qPayEntity.createdAt.between(start, end)
+                )
+                .fetchOne();
     }
 
 }

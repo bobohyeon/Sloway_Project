@@ -1,15 +1,27 @@
 package com.sloway.app.payment.settlement.settle.service;
 
+import com.sloway.app.host.entity.HostEntity;
 import com.sloway.app.host.repository.HostRepository;
 import com.sloway.app.payment.pay.repository.PayRepository;
-import com.sloway.app.payment.refund.common.RefundRate;
 import com.sloway.app.payment.refund.repository.RefundRepository;
+import com.sloway.app.payment.settlement.fee.common.PlaceType;
 import com.sloway.app.payment.settlement.fee.repository.FeeRepository;
+import com.sloway.app.payment.settlement.settle.dto.request.SettleCreateReqDto;
+import com.sloway.app.payment.settlement.settle.dto.response.SettleResDto;
+import com.sloway.app.payment.settlement.settle.entity.SettleEntity;
 import com.sloway.app.payment.settlement.settle.repository.SettleRepository;
+import com.sloway.app.place.entity.hostPlace.ApprovalStatus;
+import com.sloway.app.place.entity.hostPlace.HostPlaceEntity;
+import com.sloway.app.place.repository.hostPlace.HostPlaceRepository;
+import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.time.LocalDateTime;
+import java.time.LocalTime;
+import java.util.List;
 
 @Service
 @Transactional(readOnly = true)
@@ -18,104 +30,114 @@ import org.springframework.transaction.annotation.Transactional;
 public class SettleService {
 
     private final SettleRepository settleRepository;
-
     private final HostRepository hostRepository;
     private final PayRepository payRepository;
     private final RefundRepository refundRepository;
     private final FeeRepository feeRepository;
+    private final HostPlaceRepository hostPlaceRepository;
 
-    // ─────────────────────────────────────────────────────────────────
-    // TODO: createSettle(SettleCreateReqDto reqDto) — 시나리오 B (관리자 수동)
-    // ─────────────────────────────────────────────────────────────────
-    //
-    //   @Transactional
-    //   public SettleResDto createSettle(SettleCreateReqDto reqDto) {
-    //
-    //       (1) HostEntity 조회
-    //           HostEntity host = hostRepository.findById(reqDto.getHostNo())
-    //                   .orElseThrow(() -> new EntityNotFoundException("호스트 정보를 조회할 수 없습니다."));
-    //
-    //       (2) totalAmt 집계 — 기간 내 완료 결제 합산
-    //           PayRepository 에 쿼리 메서드 추가 필요:
-    //             ┌──────────────────────────────────────────────────────────────┐
-    //             │ @Query("SELECT COALESCE(SUM(p.finalAmt), 0) FROM PayEntity p │
-    //             │         WHERE p.rsvnNo.placeNo.hostNo.no = :hostNo            │
-    //             │           AND p.status = 'COMPLETED'                          │
-    //             │           AND p.createdAt BETWEEN :start AND :end")           │
-    //             │ Integer sumTotalAmt(Long hostNo, LocalDateTime start, ...);   │
-    //             └──────────────────────────────────────────────────────────────┘
-    //           ※ LocalDate (reqDto) → LocalDateTime 변환:
-    //                start.atStartOfDay() / end.atTime(23, 59, 59)
-    //           ※ host → place → rsvn 의존이 깊어서 본인이 단순화하려면:
-    //              임시로 PayRepository.findAll() 후 stream 으로 필터링 (Level 1 한정)
-    //
-    //       (3) feeAmt 계산 — 수수료 정책 적용
-    //           옵션 A) 일괄 10% 고정 (Level 1 추천, 단순화):
-    //                   int feeAmt = totalAmt * 10 / 100;
-    //           옵션 B) Fee 도메인 정책 적용 (host 공간 타입 매핑 필요):
-    //                   FeeEntity fee = feeRepository.findByPlaceType(host.getPlaceType());
-    //                   int feeAmt = totalAmt * fee.getRate() / 100;
-    //
-    //       (4) refundAmt 집계 — 기간 내 완료 환불 합산
-    //           RefundRepository 에 쿼리 메서드 추가:
-    //             @Query("SELECT COALESCE(SUM(r.refundAmt), 0) FROM RefundEntity r
-    //                     WHERE r.payNo.rsvnNo.placeNo.hostNo.no = :hostNo
-    //                       AND r.status = 'COMPLETED'
-    //                       AND r.requestedAt BETWEEN :start AND :end")
-    //             Integer sumRefundAmt(Long hostNo, LocalDateTime start, ...);
-    //
-    //       (5) payoutAmt 계산
-    //           int payoutAmt = totalAmt - feeAmt - refundAmt;
-    //           ※ 음수 가능 (환불이 매출보다 큰 경우 — 다음 회차 차감 정책).
-    //             Level 1 단순화: 음수 그대로 저장.
-    //
-    //       (6) toEntity(host) → SettleEntity entity
-    //           SettleCreateReqDto.toEntity 에서 status=WAITING 강제 박힘.
-    //
-    //       (7) Rich 메서드로 금액 박기 ← Setter 금지 컨벤션
-    //           entity.applyAmounts(totalAmt, feeAmt, refundAmt, payoutAmt);
-    //           → SettleEntity 에 applyAmounts(Integer, Integer, Integer, Integer) Rich 메서드 추가 필요
-    //           → 가드: this.status != WAITING 이면 throw (선택)
-    //
-    //       (8) save 후 ResDto 반환
-    //           return SettleResDto.from(settleRepository.save(entity));
-    //   }
+    private static final int MIN_PAYOUT = 10000;
 
-    // ─────────────────────────────────────────────────────────────────
-    // TODO: findSettleAll() — Refund/Point 와 동일 패턴
-    // ─────────────────────────────────────────────────────────────────
-    //
-    //   public List<SettleResDto> findSettleAll() {
-    //       return settleRepository.findAll().stream().map(SettleResDto::from).toList();
-    //   }
+    @Transactional
+    public SettleResDto createSettle(SettleCreateReqDto reqDto) {
+        HostEntity host = hostRepository.findById(reqDto.getHostNo())
+                .orElseThrow(() -> new EntityNotFoundException("호스트 정보를 조회할 수 없습니다."));
 
-    // ─────────────────────────────────────────────────────────────────
-    // TODO: findSettleByNo(Long no) — Refund/Point 와 동일 패턴
-    // ─────────────────────────────────────────────────────────────────
-    //
-    //   public SettleResDto findSettleByNo(Long no) {
-    //       SettleEntity entity = settleRepository.findById(no)
-    //               .orElseThrow(() -> new EntityNotFoundException("정산 정보를 조회할 수 없습니다."));
-    //       return SettleResDto.from(entity);
-    //   }
+        List<HostPlaceEntity> hostPlaces =
+                hostPlaceRepository.findByHostEntityNoAndStatus(host.getNo(), ApprovalStatus.A);
 
-    // ─────────────────────────────────────────────────────────────────
-    // TODO: (선택) 상태 전이 메서드 — Rich 메서드 호출 (dirty checking, save 불필요!)
-    // ─────────────────────────────────────────────────────────────────
-    //
-    //   completeSettle(Long no) — WAITING → COMPLETE
-    //       @Transactional
-    //       public SettleResDto completeSettle(Long no) {
-    //           SettleEntity entity = settleRepository.findById(no).orElseThrow(...);
-    //           entity.completeSettle();                  ← Rich 호출, 가드 자동 검사
-    //           return SettleResDto.from(entity);         ← save 불필요, dirty checking
-    //       }
-    //
-    //   issueTaxInvoice(Long no) — COMPLETE → INVOICE
-    //       동일 패턴. entity.issueTaxInvoice() 호출.
+        List<Long> officeNos = hostPlaces.stream()
+                .filter(hp -> hp.getOfficeEntity() != null)
+                .map(hp -> hp.getOfficeEntity().getNo())
+                .toList();
 
-    // ─────────────────────────────────────────────────────────────────
-    // TODO: (Level 후반) 자동 배치 — @Scheduled(cron = "0 0 0 */4 * *") 로 4일마다 실행
-    //                  Level 1 보류.
-    // ─────────────────────────────────────────────────────────────────
+        List<Long> stationNos = hostPlaces.stream()
+                .filter(hp -> hp.getStationEntity() != null)
+                .map(hp -> hp.getStationEntity().getNo())
+                .toList();
+
+        List<Long> workStayNos = hostPlaces.stream()
+                .filter(hp -> hp.getWorkStayEntity() != null)
+                .map(hp -> hp.getWorkStayEntity().getNo())
+                .toList();
+
+        LocalDateTime start = reqDto.getSettleStartDate().atStartOfDay();
+        LocalDateTime end = reqDto.getSettleEndDate().atTime(LocalTime.MAX);
+
+        int officeAmt = payRepository.sumByOfficeIn(officeNos, start, end);
+        int stationAmt = payRepository.sumByStationIn(stationNos, start, end);
+        int workStayAmt = payRepository.sumByWorkStayIn(workStayNos, start, end);
+        int totalAmt = officeAmt + stationAmt + workStayAmt;
+
+        int feeAmt = calcFee(officeAmt, PlaceType.office)
+                + calcFee(stationAmt, PlaceType.station)
+                + calcFee(workStayAmt, PlaceType.workStay);
+
+        int refundAmt = refundRepository.sumByOfficeIn(officeNos, start, end)
+                .add(refundRepository.sumByStationIn(stationNos, start, end))
+                .add(refundRepository.sumByWorkStayIn(workStayNos, start, end))
+                .intValue();
+
+        int payoutAmt = totalAmt - feeAmt - refundAmt;
+
+        Integer prevCarryOver = settleRepository.findLatestByHostNo(host.getNo())
+                .map(SettleEntity::getCarryOver).orElse(0);
+
+        int effectiveAmt = payoutAmt + prevCarryOver;
+
+        if (totalAmt == 0 && prevCarryOver == 0) {
+            return null;
+        }
+
+        SettleEntity entity = reqDto.toEntity(host);
+        entity.applyAmounts(totalAmt, feeAmt, refundAmt, payoutAmt);
+        entity.settleWithCarry(effectiveAmt, MIN_PAYOUT);
+        return SettleResDto.from(settleRepository.save(entity));
+    }
+
+    private int calcFee(int amt, PlaceType placeType) {
+        if (amt == 0) return 0;
+        int rate = feeRepository.findByPlaceTypeAndDelYn(placeType, "N")
+                .orElseThrow(() -> new EntityNotFoundException(placeType + " 수수료 정책이 없습니다."))
+                .getRate();
+        return amt * rate / 100;
+    }
+
+
+    public List<SettleResDto> findSettleAll() {
+        return settleRepository.findAll().stream().map(SettleResDto::from).toList();
+    }
+
+    // TODO: findSettleByHostNo(Long hostNo) — findSettleAll 과 같은 패턴
+    //   settleRepository.findByHostNo(hostNo) 결과를 SettleResDto 리스트로 변환
+    //   (위 findSettleAll 에서 findAll → findByHostNo 로 바꾼 형태. 반환 List<SettleResDto>)
+    public List<SettleResDto> findSettleByHostNo(Long hostNo) {
+        List<SettleEntity> entityList = settleRepository.findByHostNo(hostNo);
+        return entityList.stream().map(SettleResDto::from).toList();
+    }
+
+    public SettleResDto findSettleByNo(Long no) {
+        SettleEntity entity = settleRepository.findById(no)
+                .orElseThrow(() -> new EntityNotFoundException("정산 정보를 조회할 수 없습니다."));
+        return SettleResDto.from(entity);
+    }
+
+
+    @Transactional
+    public SettleResDto completeSettle(Long no) {
+        SettleEntity entity = settleRepository.findById(no)
+                .orElseThrow(() -> new EntityNotFoundException("조회 할 수 없습니다."));
+        entity.completeSettle();
+        return SettleResDto.from(entity);
+    }
+
+    @Transactional
+    public SettleResDto issueTaxInvoice(Long no) {
+        SettleEntity entity = settleRepository.findById(no)
+                .orElseThrow(() -> new EntityNotFoundException("조회 할 수 없습니다."));
+        entity.issueTaxInvoice();   // 이미 SettleEntity에 있는 Rich
+        return SettleResDto.from(entity);
+    }
+
+
 }

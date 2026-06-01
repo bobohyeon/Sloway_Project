@@ -3,6 +3,7 @@ package com.sloway.app.host.controller;
 import com.sloway.app.auth.dto.request.ChangePasswordRequestDto;
 import com.sloway.app.auth.user.CustomUserDetails;
 import com.sloway.app.host.dto.request.UpdateHostRequestDto;
+import com.sloway.app.host.dto.response.HostApplicationResponseDto;
 import com.sloway.app.host.dto.response.HostMyPageResponseDto;
 import com.sloway.app.host.service.HostService;
 import com.sloway.app.member.dto.request.ChangeEmailRequestDto;
@@ -87,5 +88,18 @@ public class HostController {
         log.info("호스트 이메일 변경: memberNo={}", host.getMemberNo());
         hostService.changeEmail(host.getMemberNo(), request);
         return ResponseEntity.ok().build();
+    }
+
+
+    /**
+     * 호스트 본인 신청 현황 조회.
+     * 상태(P/A/R/V) + 반려 사유.
+     */
+    @GetMapping("/application")
+    public ResponseEntity<HostApplicationResponseDto> myApplication(
+            @AuthenticationPrincipal CustomUserDetails host) {
+        log.info("호스트 신청 현황 조회: memberNo={}", host.getMemberNo());
+        HostApplicationResponseDto result = hostService.getMyApplication(host.getMemberNo());
+        return ResponseEntity.ok(result);
     }
 }//class

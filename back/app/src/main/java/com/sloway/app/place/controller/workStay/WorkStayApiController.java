@@ -100,7 +100,6 @@ public class WorkStayApiController {
     @GetMapping("/detail/dash/{no}")
     public ResponseEntity<StationDetailRespDto> selectWorkStayDetailDashBoard(@PathVariable Long no, @AuthenticationPrincipal Long memberNo){
         StationDetailRespDto dto = workStayService.selectWorkStayDetailDashBoard(no, Long.valueOf(2));
-        System.out.println("dto = " + dto);
         return ResponseEntity.ok(dto);
     }
 

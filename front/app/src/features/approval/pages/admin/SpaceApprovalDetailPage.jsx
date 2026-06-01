@@ -49,11 +49,53 @@ const ActionButton = styled.button`
   }
 `;
 
+const CHECKLIST_DATA = [
+  {
+    id: 'info',
+    label: '기본 정보 확인',
+    desc: '공간명, 주소, 소개글이 적절한지',
+  },
+  {
+    id: 'image',
+    label: '이미지 검수',
+    desc: '실제 공간과 맞고, 선명하며, 부적절한 이미지가 없는지',
+  },
+  {
+    id: 'price',
+    label: '가격 적정성',
+    desc: '유사 공간 대비 과도한 가격이 아닌지',
+  },
+  {
+    id: 'amenity',
+    label: '편의시설 확인',
+    desc: '표기된 시설이 실제 준비되었는지 (사진 대조)',
+  },
+  {
+    id: 'policy',
+    label: '운영 정책 확인',
+    desc: '환불 정책, 체크인 시간 등이 명확한지',
+  },
+  {
+    id: 'legal',
+    label: '법적 요건 확인',
+    desc: '숙박업의 경우 신고증, 허가증 확인',
+  },
+];
+
 const SpaceApprovalDetailPage = () => {
+  const totalCount = CHECKLIST_DATA.length;
   const { type, id } = useParams();
   const { spaceData, loading, reason, setReason, handleApprove, handleReject } =
     useSpaceApproval(type, id);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [checkedItems, setCheckedItems] = useState({});
+  const checkedCount = Object.values(checkedItems).filter(
+    (item) => item === true
+  ).length;
+
+  // 2. 모든 항목이 체크되었는지 확인
+  const isAllChecked = checkedCount === totalCount;
+
   if (loading)
     return (
       <div style={{ padding: '50px', textAlign: 'center' }}>
@@ -74,7 +116,12 @@ const SpaceApprovalDetailPage = () => {
         )}
 
         <InfoSection data={spaceData} />
-        <ChecklistSection />
+        <ChecklistSection
+          checkedItems={checkedItems}
+          setCheckedItems={setCheckedItems}
+          totalCount={totalCount}
+          CHECKLIST_DATA={CHECKLIST_DATA}
+        />
 
         <FloatingFooter>
           <div>
@@ -100,7 +147,16 @@ const SpaceApprovalDetailPage = () => {
                 setIsModalOpen(false);
               }}
             />
-            <ActionButton $primary onClick={handleApprove}>
+            <ActionButton
+              $primary
+              onClick={handleApprove}
+              disabled={!isAllChecked}
+              style={{
+                opacity: !isAllChecked ? 0.5 : 1,
+                cursor: !isAllChecked ? 'not-allowed' : 'pointer',
+              }}
+            >
+              {' '}
               공간 승인
             </ActionButton>
           </ButtonGroup>

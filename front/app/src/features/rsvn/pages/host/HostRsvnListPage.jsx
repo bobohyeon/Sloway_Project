@@ -1,8 +1,9 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import styled from 'styled-components';
 import PageLayout from '../../../../app/layouts/page/PageLayout';
 import RsvnStatusBadge from '../../components/user/RsvnStatusBadge';
+import { findHostRsvns } from '../../api/rsvnApi';
 import {
   TabBar,
   TabBtn,
@@ -29,16 +30,6 @@ const FilterRow = styled.div`
   flex-wrap: wrap;
   align-items: center;
   margin-bottom: 16px;
-`;
-
-const Select = styled.select`
-  padding: 8px 12px;
-  border: 1px solid ${COLOR.gray200};
-  border-radius: 8px;
-  font-size: 13px;
-  background: #fff;
-  outline: none;
-  &:focus { border-color: ${COLOR.sage}; }
 `;
 
 const SearchInput = styled.input`
@@ -90,27 +81,46 @@ const STATUS_STYLE = {
   C: { bg: '#FFF0F0', color: '#C0392B' },
 };
 
-// TODO: 호스트 예약 목록 API 연동 — 공간(place) 도메인 API 준비 후 교체
-const DUMMY = [
-  { id: 1, status: 'S', type: '워크앤스테이', guestName: '홍길동', title: '청평 숲속 파인뷰', code: 'SW-20260508-000847', date: '2026.05.08 · 2박', guests: 2, price: '326,500원', icon: '🌲' },
-  { id: 2, status: 'S', type: '오피스', guestName: '이지은', title: '성수 브릭라운지', code: 'SW-20260428-000523', date: '2026.04.28', guests: 1, price: '28,000원', icon: '🧱' },
-  { id: 3, status: 'E', type: '숙소', guestName: '김수현', title: '제주 돌담집 리트릿', code: 'SW-20260415-000412', date: '2026.04.15 · 2박', guests: 2, price: '444,000원', icon: '🌴' },
-  { id: 4, status: 'R', type: '워크앤스테이', guestName: '정유리', title: '청평 숲속 파인뷰', code: 'SW-20260320-000218', date: '2026.03.20 · 2박', guests: 2, price: '330,000원', icon: '🌲' },
-  { id: 5, status: 'C', type: '워크앤스테이', guestName: '박민수', title: '청평 숲속 파인뷰', code: 'SW-20260301-000100', date: '2026.03.01 · 1박', guests: 3, price: '185,000원', icon: '🌲' },
-];
+const SPACE_TYPE_ICON = { 워크앤스테이: '🌲', 오피스: '🧱', 숙소: '🌴' };
 
 function HostRsvnListPage() {
   const navigate = useNavigate();
+  const [list, setList] = useState([]);
   const [activeTab, setActiveTab] = useState(0);
   const [keyword, setKeyword] = useState('');
 
-  const filtered = DUMMY
-    .filter((i) => activeTab === 0 || i.status === TABS[activeTab].status)
-    .filter((i) => !keyword || i.guestName.includes(keyword) || i.code.includes(keyword));
+  useEffect(() => {
+    async function load() {
+      try {
+        const data = await findHostRsvns();
+        setList(data);
+      } catch (e) {
+        console.error(e);
+      }
+    }
+    load();
+  }, []);
+
+  // status 값이 enum 객체로 올 수 있으므로 문자열 변환
+  const statusCode = (item) => (typeof item.status === 'object' ? item.status?.name ?? item.status : item.status);
+
+  const filtered = list
+    .filter((i) => activeTab === 0 || statusCode(i) === TABS[activeTab].status)
+    .filter((i) => !keyword || (i.guestName ?? '').includes(keyword));
 
   const counts = TABS.map((tab, idx) =>
-    idx === 0 ? DUMMY.length : DUMMY.filter((i) => i.status === tab.status).length
+    idx === 0 ? list.length : list.filter((i) => statusCode(i) === tab.status).length
   );
+
+  const formatDate = (checkIn, checkOut) => {
+    if (!checkIn) return '';
+    const inStr = checkIn.slice(0, 10).replaceAll('-', '.');
+    if (!checkOut) return inStr;
+    const inDate = new Date(checkIn);
+    const outDate = new Date(checkOut);
+    const nights = Math.round((outDate - inDate) / (1000 * 60 * 60 * 24));
+    return nights > 0 ? `${inStr} · ${nights}박` : inStr;
+  };
 
   return (
     <PageLayout
@@ -121,7 +131,7 @@ function HostRsvnListPage() {
       <StatCards>
         <StatCard style={{ cursor: 'pointer' }} onClick={() => setActiveTab(0)}>
           <StatLabel>전체 예약</StatLabel>
-          <StatValue>{DUMMY.length}건</StatValue>
+          <StatValue>{list.length}건</StatValue>
         </StatCard>
         <StatCard style={{ cursor: 'pointer' }} onClick={() => setActiveTab(1)}>
           <StatLabel>확정</StatLabel>
@@ -148,11 +158,11 @@ function HostRsvnListPage() {
 
       <FilterRow>
         <SearchInput
-          placeholder="예약자명 · 예약번호"
+          placeholder="예약자명 검색"
           value={keyword}
           onChange={(e) => setKeyword(e.target.value)}
         />
-        <SearchBtn>검색</SearchBtn>
+        <SearchBtn onClick={() => {}}>검색</SearchBtn>
       </FilterRow>
 
       {filtered.length === 0 && (
@@ -162,32 +172,34 @@ function HostRsvnListPage() {
       )}
 
       {filtered.map((item) => {
-        const st = STATUS_STYLE[item.status];
+        const sc = statusCode(item);
+        const st = STATUS_STYLE[sc] ?? { bg: '#f0f0f0', color: '#666' };
+        const icon = SPACE_TYPE_ICON[item.spaceType] ?? '🏠';
         return (
           <Card
-            key={item.id}
-            onClick={() => navigate(`/host/reservation/list/${item.id}`, { state: { rsvn: item } })}
+            key={item.no}
+            onClick={() => navigate(`/host/reservation/list/${item.no}`, { state: { rsvn: item } })}
           >
             <CardRow>
-              <Thumb>{item.icon}</Thumb>
+              <Thumb>{icon}</Thumb>
               <CardBody>
                 <TagRow>
-                  <RsvnStatusBadge type="type" label={item.type} />
+                  <RsvnStatusBadge type="type" label={item.spaceType} />
                   <span style={{ fontSize: 11, fontWeight: 600, padding: '2px 7px', borderRadius: 4, background: st.bg, color: st.color }}>
-                    {STATUS_LABEL[item.status]}
+                    {STATUS_LABEL[sc] ?? sc}
                   </span>
                 </TagRow>
-                <CardTitle>{item.guestName} · {item.title}</CardTitle>
+                <CardTitle>{item.guestName} · {item.spaceName}</CardTitle>
                 <CardMeta>
-                  <span>{item.code}</span>
+                  <span>예약 #{item.no}</span>
                   <span>·</span>
-                  <span>📅 {item.date}</span>
+                  <span>📅 {formatDate(item.checkIn, item.checkOut)}</span>
                   <span>·</span>
-                  <span>👤 {item.guests}명</span>
+                  <span>👤 {item.count}명</span>
                 </CardMeta>
               </CardBody>
               <CardRight>
-                <Price>{item.price}</Price>
+                <Price>{item.amt?.toLocaleString()}원</Price>
                 <MsgBtn onClick={(e) => { e.stopPropagation(); navigate('/host/chat'); }}>
                   💬 메시지
                 </MsgBtn>

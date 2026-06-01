@@ -1,5 +1,6 @@
 package com.sloway.app.place.service.workStay;
 
+import com.sloway.app.aws.service.S3Service;
 import com.sloway.app.place.dto.request.sort.ImgSortReqDto;
 import com.sloway.app.place.dto.request.sort.ImgUpdateSortReqDto;
 import com.sloway.app.place.dto.request.workStay.WorkStayReqDto;
@@ -34,6 +35,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
 import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
@@ -53,6 +55,7 @@ public class WorkStayService {
     private final ImgWorkOfficeRepository imgWorkOfficeRepository;
     private final HostPlaceService hostPlaceService;
     private final HostPlaceRepository hostPlaceRepository;
+    private final S3Service s3Service;
 
     @Transactional
     public void saveWorkStay(
@@ -64,72 +67,54 @@ public class WorkStayService {
             List<ImgSortReqDto> officeSortList,
             Long memberNo) {
 
-        //부모 테이블 엔티티 조회
+        // 1. 엔티티 조회
         PlaceEntity place = placeRepository.findByNo(dto.getPlaceNo())
-                .orElseThrow(() -> new EntityNotFoundException("[PLACE-211] Place Not Found For Save WorkStay"));
+                .orElseThrow(() -> new EntityNotFoundException("[PLACE-211] Place Not Found"));
 
-        //편의시설 정보 조회
-        List<Long> amenityNos = dto.getFacilityList().stream()
-                .map(facility -> facility.getAmenityNo())
-                .collect(Collectors.toList());
-        List<AmenityEntity> amenityEntities = amenityRepository.findAllByNoIn(amenityNos);
+        List<AmenityEntity> amenityEntities = amenityRepository.findAllByNoIn(
+                dto.getFacilityList().stream().map(f -> f.getAmenityNo()).toList());
 
-        //오피스 편의시설 정보 조회
-        List<Long> officeAmenityNos = officeDto.getFacilityList().stream()
-                .map(facility -> facility.getAmenityNo())
-                .collect(Collectors.toList());
-        List<AmenityEntity> officeAmenityEntities = amenityRepository.findAllByNoIn(officeAmenityNos);
+        List<AmenityEntity> officeAmenityEntities = amenityRepository.findAllByNoIn(
+                officeDto.getFacilityList().stream().map(f -> f.getAmenityNo()).toList());
 
-        //workStay 저장을 위한 엔티티 변환
-        WorkStayEntity entity = dto.toEntity(place,amenityEntities);
-        WorkStayEntity savedEntity = workStayRepository.save(entity);
+        // 2. WorkStay 및 WorkOffice 저장
+        WorkStayEntity savedEntity = workStayRepository.save(dto.toEntity(place, amenityEntities));
+        WorkOfficeEntity savedOfficeEntity = workOfficeRepository.save(officeDto.toEntity(savedEntity, officeAmenityEntities));
 
-        //workOffice저장
-        WorkOfficeEntity officeEntity = officeDto.toEntity(savedEntity,officeAmenityEntities);
-        WorkOfficeEntity savedOfficeEntity = workOfficeRepository.save(officeEntity);
+        // 3. 검수 저장
+        hostPlaceService.insertHostPlace("W", memberNo, savedEntity.getNo());
 
-        //검수 저장
-        hostPlaceService.insertHostPlace("W",memberNo, savedEntity.getNo());
+        // 4. WorkStay 이미지 S3 저장
+        if (files != null && !files.isEmpty()) {
+            List<ImgWorkStayEntity> imgEntities = IntStream.range(0, files.size())
+                    .mapToObj(i -> {
+                        try {
+                            String s3Url = s3Service.upload(files.get(i), "workStay");
+                            int sortValue = sortList.get(i).getSort();
+                            return ImgWorkStayEntity.from(savedEntity, s3Url, sortValue);
+                        } catch (IOException e) {
+                            throw new RuntimeException("WorkStay 이미지 업로드 실패", e);
+                        }
+                    })
+                    .collect(Collectors.toList());
+            imgWorkStayRepository.saveAll(imgEntities);
+        }
 
-        //이미지 aws로 수정
-        List<String> dummyUrls = files.stream()
-                .map(img -> "https://temp-bucket.s3.amazonaws.com/temp_"
-                        + System.currentTimeMillis() + "_"
-                        + img.getOriginalFilename())
-                .toList();
-
-        int size = Math.min(dummyUrls.size(), sortList.size());
-        List<ImgWorkStayEntity> imgEntities = IntStream.range(0, size)
-                .mapToObj(i -> {
-                    String url = dummyUrls.get(i);
-                    int sortValue = sortList.get(i).getSort(); // 정렬 값 추출
-
-                    return ImgWorkStayEntity.from(savedEntity, url, sortValue);
-                })
-                .collect(Collectors.toList());
-
-        // 이미지 저장
-        imgWorkStayRepository.saveAll(imgEntities);
-
-        // office이미지 저장
-        //이미지 aws로 수정
-        List<String> currentUrls = officeFiles.stream()
-                .map(img -> "https://temp-bucket.s3.amazonaws.com/temp_"
-                        + System.currentTimeMillis() + "_"
-                        + img.getOriginalFilename())
-                .toList();
-
-        int sort = Math.min(currentUrls.size(), officeSortList.size());
-        List<ImgWorkStayOfficeEntity> imgEntityList = IntStream.range(0, sort)
-                .mapToObj(i -> {
-                    String url = currentUrls.get(i);
-                    int sortValue = officeSortList.get(i).getSort();
-                    return ImgWorkStayOfficeEntity.from(savedOfficeEntity, url, sortValue);
-                })
-                .toList();
-
-        // 이미지 저장
-        imgWorkOfficeRepository.saveAll(imgEntityList);
+        // 5. WorkOffice 이미지 S3 저장
+        if (officeFiles != null && !officeFiles.isEmpty()) {
+            List<ImgWorkStayOfficeEntity> imgEntityList = IntStream.range(0, officeFiles.size())
+                    .mapToObj(i -> {
+                        try {
+                            String s3Url = s3Service.upload(officeFiles.get(i), "workOffice");
+                            int sortValue = officeSortList.get(i).getSort();
+                            return ImgWorkStayOfficeEntity.from(savedOfficeEntity, s3Url, sortValue);
+                        } catch (IOException e) {
+                            throw new RuntimeException("WorkOffice 이미지 업로드 실패", e);
+                        }
+                    })
+                    .toList();
+            imgWorkOfficeRepository.saveAll(imgEntityList);
+        }
     }
 
     @Transactional
@@ -211,7 +196,6 @@ public class WorkStayService {
         office.updateAmenities(newOfficeAmenities);
     }
 
-// imageUpdateReqDto만들어서 구현예정 현재 파일에 대해서만 처리하게 되어있는데
     @Transactional
     public void updateImageWorkStay(Long no,
                                     List<MultipartFile> files, List<ImgUpdateSortReqDto> sortList,
@@ -223,78 +207,58 @@ public class WorkStayService {
         WorkOfficeEntity workOffice = workOfficeRepository.findByWorkStayEntityNo(no)
                 .orElseThrow(() -> new EntityNotFoundException("[WORKOFFICE-316] WorkOffice Not Found"));
 
-        // 검수 추가
-        HostPlaceEntity hostPlaceEntity =hostPlaceRepository.findHostWorkLatest(no, memberNo);
-
-        if(hostPlaceEntity != null){
+        // 검수 처리
+        HostPlaceEntity hostPlaceEntity = hostPlaceRepository.findHostWorkLatest(no, memberNo);
+        if (hostPlaceEntity != null) {
             hostPlaceRepository.delete(hostPlaceEntity);
         }
-
         hostPlaceService.insertHostPlace("W", memberNo, workStay.getNo());
 
+        // 2. WorkStay 숙소 이미지 업데이트
+        List<Long> aliveStayImageNos = sortList.stream().map(ImgUpdateSortReqDto::getImageNo).filter(Objects::nonNull).toList();
 
-        // 2. WorkStay 숙소 이미지 업데이트 (Upsert & Delete)
-        // 화면에 살아남은 기존 이미지 ID 추출 (새로 추가된 파일인 null은 제외)
-        List<Long> aliveStayImageNos = sortList.stream()
-                .map(ImgUpdateSortReqDto::getImageNo)
-                .filter(Objects::nonNull)
-                .toList();
+        // 삭제할 이미지 S3 파일 제거
+        List<ImgWorkStayEntity> toDeleteStay = imgWorkStayRepository.findByWorkStayEntityNoAndNoNotIn(no, aliveStayImageNos);
+        toDeleteStay.forEach(img -> s3Service.delete(img.getCurrentUrl()));
 
-        // 화면에서 지워진 이미지들은 DB에서 일괄 삭제
-        if (aliveStayImageNos.isEmpty()) {
-            imgWorkStayRepository.deleteAllByWorkStayEntityNo(no);
-        } else {
-            imgWorkStayRepository.deleteByWorkStayEntityNoAndNoNotIn(no, aliveStayImageNos);
-        }
+        // DB 삭제
+        if (aliveStayImageNos.isEmpty()) imgWorkStayRepository.deleteAllByWorkStayEntityNo(no);
+        else imgWorkStayRepository.deleteByWorkStayEntityNoAndNoNotIn(no, aliveStayImageNos);
 
-        // 루프를 돌며 순서 교정 및 신규 파일 매칭 삽입
+        // 신규 등록 및 순서 변경
         int fileIndex = 0;
         for (ImgUpdateSortReqDto dto : sortList) {
             if (dto.getImageNo() != null) {
-                // 기존 이미지: 순서(sort)만 변경
-                ImgWorkStayEntity existingImg = imgWorkStayRepository.findById(dto.getImageNo())
-                        .orElseThrow(() -> new EntityNotFoundException("Image Not Found"));
-                existingImg.updateSort(dto.getSort()); // 엔티티 내부 변경 감지(Dirty Check) 작동
-            } else {
-                // 신규 이미지: 순서대로 파일을 꺼내 URL 매핑 후 저장
-                if (files != null && fileIndex < files.size()) {
-                    MultipartFile currentFile = files.get(fileIndex++);
-                    String s3Url = "https://temp-bucket.s3.amazonaws.com/temp_" + System.currentTimeMillis() + "_" + currentFile.getOriginalFilename();
-
-                    ImgWorkStayEntity newImg = ImgWorkStayEntity.from(workStay, s3Url, dto.getSort());
-                    imgWorkStayRepository.save(newImg);
-                }
+                imgWorkStayRepository.findById(dto.getImageNo()).ifPresent(img -> img.updateSort(dto.getSort()));
+            } else if (files != null && fileIndex < files.size()) {
+                try {
+                    String s3Url = s3Service.upload(files.get(fileIndex++), "workStay");
+                    imgWorkStayRepository.save(ImgWorkStayEntity.from(workStay, s3Url, dto.getSort()));
+                } catch (IOException e) { throw new RuntimeException("WorkStay 이미지 업로드 실패", e); }
             }
         }
 
-        // 3. WorkOffice 오피스 이미지 업데이트 (Upsert & Delete)
-        List<Long> aliveOfficeImageNos = officeSortList.stream()
-                .map(ImgUpdateSortReqDto::getImageNo)
-                .filter(Objects::nonNull)
-                .toList();
+        // 3. WorkOffice 오피스 이미지 업데이트
+        List<Long> aliveOfficeImageNos = officeSortList.stream().map(ImgUpdateSortReqDto::getImageNo).filter(Objects::nonNull).toList();
 
-        if (aliveOfficeImageNos.isEmpty()) {
-            imgWorkOfficeRepository.deleteAllByWorkOfficeEntityNo(workOffice.getNo());
-        } else {
-            imgWorkOfficeRepository.deleteByWorkOfficeEntityNoAndNoNotIn(workOffice.getNo(), aliveOfficeImageNos);
-        }
+        // 삭제할 이미지 S3 파일 제거
+        List<ImgWorkStayOfficeEntity> toDeleteOffice = imgWorkOfficeRepository.findByWorkOfficeEntityNoAndNoNotIn(workOffice.getNo(), aliveOfficeImageNos);
+        toDeleteOffice.forEach(img -> s3Service.delete(img.getCurrentUrl()));
 
+        // DB 삭제
+        if (aliveOfficeImageNos.isEmpty()) imgWorkOfficeRepository.deleteAllByWorkOfficeEntityNo(workOffice.getNo());
+        else imgWorkOfficeRepository.deleteByWorkOfficeEntityNoAndNoNotIn(workOffice.getNo(), aliveOfficeImageNos);
+
+        // 신규 등록 및 순서 변경
         int officeFileIndex = 0;
         for (ImgUpdateSortReqDto dto : officeSortList) {
             if (dto.getImageNo() != null) {
-                // 기존 오피스 이미지: 순서(sort)만 변경
-                ImgWorkStayOfficeEntity existingOfficeImg = imgWorkOfficeRepository.findById(dto.getImageNo())
-                        .orElseThrow(() -> new EntityNotFoundException("Office Image Not Found"));
-                existingOfficeImg.updateSort(dto.getSort());
-            } else {
-                // 신규 오피스 이미지: 파일 매칭 저장
-                if (officeFiles != null && officeFileIndex < officeFiles.size()) {
-                    MultipartFile currentFile = officeFiles.get(officeFileIndex++);
-                    String s3Url = "https://temp-bucket.s3.amazonaws.com/temp_" + System.currentTimeMillis() + "_" + currentFile.getOriginalFilename();
-
-                    ImgWorkStayOfficeEntity newOfficeImg = ImgWorkStayOfficeEntity.from(workOffice, s3Url, dto.getSort());
-                    imgWorkOfficeRepository.save(newOfficeImg);
-                }
+                imgWorkOfficeRepository.findById(dto.getImageNo()).ifPresent(img -> img.updateSort(dto.getSort()));
+            } else if (officeFiles != null && officeFileIndex < officeFiles.size()) {
+                try {
+                    String s3Url = s3Service.upload(officeFiles.get(officeFileIndex++), "workOffice");
+                    imgWorkOfficeRepository.save(ImgWorkStayOfficeEntity.from(workOffice, s3Url, dto.getSort()));
+                } catch (IOException e) { throw new RuntimeException("WorkOffice 이미지 업로드 실패", e); }
             }
         }
     }
