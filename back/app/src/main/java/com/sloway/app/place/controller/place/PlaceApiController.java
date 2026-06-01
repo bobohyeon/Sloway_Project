@@ -121,4 +121,24 @@ public class PlaceApiController {
         PlaceImgListRespDto dto = placeService.selectImageList(no, Long.valueOf(2));
         return ResponseEntity.ok(dto);
     }
+
+    @GetMapping("/topSpaces")
+    public ResponseEntity<List<PlaceCardDto>> getTop4PlacesByType(){
+        List<PlaceCardDto> dtoList = placeService.getTop4PlacesByType();
+
+        return ResponseEntity.ok(dtoList);
+    }
+
+    @GetMapping("/recommend")
+    public ResponseEntity<List<PlaceCardDto>> getRecommendPlace(){
+        List<PlaceCardDto> dtoList = placeService.getRecommendPlace();
+
+        return ResponseEntity.ok(dtoList);
+    }
+
+    @GetMapping("/random")
+    public ResponseEntity<WorkStayCardDto> getRandomWorkStay(){
+        WorkStayCardDto dto = placeService.getRandomWorkStay();
+        return ResponseEntity.ok(dto);
+    }
 }
