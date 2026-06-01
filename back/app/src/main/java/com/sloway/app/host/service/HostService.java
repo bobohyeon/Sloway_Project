@@ -84,7 +84,6 @@ public class HostService {
      *
      * <p>비밀번호는 HostEntity에 BCrypt 해시로 저장.
      */
-    @Transactional
     public void changePassword(Long memberNo, ChangePasswordRequestDto request) {
 
         // 1) 새 비번 길이 검증
@@ -92,9 +91,16 @@ public class HostService {
             throw new CustomException(MemberErrorCode.PASSWORD_TOO_SHORT);
         }
 
-        // 2) 호스트 조회 (비번은 HostEntity에 있음)
+        // 2) 호스트 조회 (비번은 HostEntity)
         HostEntity host = hostRepository.findByMemberNo(memberNo)
                 .orElseThrow(() -> new CustomException(HostErrorCode.HOST_NOT_FOUND));
+
+        // ★ 이메일 인증 확인 — 본인 이메일(MemberEntity)이 인증 완료 상태여야 함
+        MemberEntity member = memberRepository.findById(memberNo)
+                .orElseThrow(() -> new CustomException(HostErrorCode.HOST_NOT_FOUND));
+        if (!emailService.isVerified(member.getEmail())) {
+            throw new CustomException(MemberErrorCode.EMAIL_NOT_VERIFIED);
+        }
 
         // 3) 현재 비번 검증
         if (!passwordEncoder.matches(request.getCurrentPassword(), host.getPassword())) {
@@ -109,10 +115,8 @@ public class HostService {
         // 5) 새 비번 암호화 후 저장
         String encoded = passwordEncoder.encode(request.getNewPassword());
         host.changePassword(encoded);
-
         log.info("호스트 비밀번호 변경 완료: memberNo={}", memberNo);
     }
-
     /**
      * 호스트 이메일 변경.
      *

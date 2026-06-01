@@ -31,10 +31,10 @@ public class UserService {
     private final UserRepository userRepository;
     private final EmailService emailService;
 
-    public UserResponseDto getMyInfo(Long memberNo){
+    public UserResponseDto getMyInfo(Long memberNo) {
         MemberEntity member = memberRepository.findById(memberNo)
                 .orElseThrow(
-                        ()->new IllegalArgumentException("회원을 찾을 수 없습니다")
+                        () -> new IllegalArgumentException("회원을 찾을 수 없습니다")
                 );
 
         return UserResponseDto.from(member);
@@ -73,19 +73,25 @@ public class UserService {
      *
      * @throws CustomException 현재 비번 불일치 / 새 비번이 기존과 동일 / 길이 부족 시
      */
-    @Transactional
     public void changePassword(Long memberNo, ChangePasswordRequestDto request) {
 
-        // 1) 새 비번 길이 검증 (4자 이상)
+        // 1) 새 비번 길이 검증
         if (request.getNewPassword() == null || request.getNewPassword().length() < 4) {
             throw new CustomException(MemberErrorCode.PASSWORD_TOO_SHORT);
         }
 
-        // 2) UserEntity 조회 (비번은 여기에 저장됨)
+        // 2) UserEntity 조회 (비번 보유)
         UserEntity user = userRepository.findByMemberNo(memberNo)
                 .orElseThrow(() -> new CustomException(MemberErrorCode.MEMBER_NOT_FOUND));
 
-        // 3) 현재 비번 검증 (BCrypt는 평문 vs 해시 비교 → matches 사용)
+        // ★ 이메일 인증 확인 — 본인 이메일이 인증 완료 상태여야 변경 가능
+        MemberEntity member = memberRepository.findById(memberNo)
+                .orElseThrow(() -> new CustomException(MemberErrorCode.MEMBER_NOT_FOUND));
+        if (!emailService.isVerified(member.getEmail())) {
+            throw new CustomException(MemberErrorCode.EMAIL_NOT_VERIFIED);
+        }
+
+        // 3) 현재 비번 검증
         if (!passwordEncoder.matches(request.getCurrentPassword(), user.getPassword())) {
             throw new CustomException(MemberErrorCode.WRONG_CURRENT_PASSWORD);
         }
@@ -95,10 +101,9 @@ public class UserService {
             throw new CustomException(MemberErrorCode.SAME_AS_OLD_PASSWORD);
         }
 
-        // 5) 새 비번 암호화 후 저장 (의미 메서드 활용)
+        // 5) 새 비번 암호화 후 저장
         String encoded = passwordEncoder.encode(request.getNewPassword());
         user.changePassword(encoded);
-
         log.info("일반회원 비밀번호 변경 완료: memberNo={}", memberNo);
     }
 
