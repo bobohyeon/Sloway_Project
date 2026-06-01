@@ -7,6 +7,7 @@ import com.sloway.app.payment.settlement.settle.entity.SettleEntity;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
 
+import java.util.List;
 import java.util.Optional;
 
 @Repository
@@ -30,8 +31,15 @@ public class SettleRepositoryImpl implements SettleRepositoryCustom {
         );
     }
 
-    // TODO: findByHostNo 본체 — 위 findLatestByHostNo 를 복사한 뒤 3곳만 변경
-    //   ① 반환 타입 List<SettleEntity> (Optional.ofNullable 감싸기 제거)
-    //   ② fetchFirst() → fetch() (여러 건)
-    //   ③ where(hostNo) + orderBy(no.desc()) 는 그대로 (최근순)
+    @Override
+    public List<SettleEntity> findByHostNo(Long hostNo) {
+        return jpaQueryFactory
+                .selectFrom(qSettleEntity)
+                .where(
+                        qSettleEntity.hostNo.no.eq(hostNo)
+                )
+                .orderBy(qSettleEntity.no.desc())
+                .fetch();
+    }
+
 }

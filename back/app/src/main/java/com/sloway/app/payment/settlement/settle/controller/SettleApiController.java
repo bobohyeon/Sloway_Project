@@ -23,37 +23,37 @@ public class SettleApiController {
     private final SettleService settleService;
 
 
-
-       @PostMapping
-       public ResponseEntity<SettleResDto> createSettle(@RequestBody SettleCreateReqDto reqDto) {
-           SettleResDto resDto = settleService.createSettle(reqDto);
-           return ResponseEntity.status(HttpStatus.CREATED).body(resDto);
-       }
-
-
-       @GetMapping
-       public ResponseEntity<List<SettleResDto>> findSettleAll() {
-           return ResponseEntity.ok(settleService.findSettleAll());
-       }
-
-       @GetMapping("/{no}")
-       public ResponseEntity<SettleResDto> findSettleByNo(@PathVariable Long no) {
-           return ResponseEntity.ok(settleService.findSettleByNo(no));
-       }
-
-       // TODO: 호스트별 정산 목록 핸들러 — findSettleByNo 패턴 (PathVariable)
-       //   @GetMapping("/host/{hostNo}") + settleService.findSettleByHostNo(hostNo) → ResponseEntity.ok
-       //   반환 ResponseEntity<List<SettleResDto>>
-       //   ※ 프론트가 GET /api/payment/settlement/settle/host/{hostNo} 로 호출 중
+    @PostMapping
+    public ResponseEntity<SettleResDto> createSettle(@RequestBody SettleCreateReqDto reqDto) {
+        SettleResDto resDto = settleService.createSettle(reqDto);
+        return ResponseEntity.status(HttpStatus.CREATED).body(resDto);
+    }
 
 
-       @PatchMapping("/{no}/complete")
-       public ResponseEntity<SettleResDto> completeSettle(@PathVariable Long no) {
-           return ResponseEntity.ok(settleService.completeSettle(no));
-       }
+    @GetMapping
+    public ResponseEntity<List<SettleResDto>> findSettleAll() {
+        return ResponseEntity.ok(settleService.findSettleAll());
+    }
 
-       @PatchMapping("/{no}/invoice")
-       public ResponseEntity<SettleResDto> issueTaxInvoice(@PathVariable Long no) {
-           return ResponseEntity.ok(settleService.issueTaxInvoice(no));
-       }
+    @GetMapping("/{no}")
+    public ResponseEntity<SettleResDto> findSettleByNo(@PathVariable Long no) {
+        return ResponseEntity.ok(settleService.findSettleByNo(no));
+    }
+
+    @GetMapping("/host/{hostNo}")
+    public ResponseEntity<List<SettleResDto>> findSettleByHostNo(@PathVariable Long hostNo) {
+        List<SettleResDto> settleResDtoList = settleService.findSettleByHostNo(hostNo);
+        return ResponseEntity.ok(settleResDtoList);
+    }
+
+
+    @PatchMapping("/{no}/complete")
+    public ResponseEntity<SettleResDto> completeSettle(@PathVariable Long no) {
+        return ResponseEntity.ok(settleService.completeSettle(no));
+    }
+
+    @PatchMapping("/{no}/invoice")
+    public ResponseEntity<SettleResDto> issueTaxInvoice(@PathVariable Long no) {
+        return ResponseEntity.ok(settleService.issueTaxInvoice(no));
+    }
 }
