@@ -119,7 +119,7 @@ public class RefundService {
         RefundEntity refundEntity = RefundEntity.builder()
                 .payNo(payEntity)
                 .rsvnNo(payEntity.getRsvnNo())
-                .refundReason(null)//......................................................
+                .refundReason(null)
                 .requestedAt(LocalDateTime.now())
                 .status(RefundStatus.REQUESTED)
                 .build();
