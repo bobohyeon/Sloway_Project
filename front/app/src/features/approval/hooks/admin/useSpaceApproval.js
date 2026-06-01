@@ -16,8 +16,6 @@ export const useSpaceApproval = (type, id) => {
     const fetchData = async () => {
       try {
         const response = await fetchApprovalDetail(type, id);
-        console.log(response);
-
         setSpaceData(response.data);
       } catch (error) {
         console.error('데이터 로드 실패', error);
