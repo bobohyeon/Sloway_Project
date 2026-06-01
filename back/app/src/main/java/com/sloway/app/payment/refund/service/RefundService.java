@@ -2,10 +2,12 @@ package com.sloway.app.payment.refund.service;
 
 import com.sloway.app.common.exception.CustomException;
 import com.sloway.app.payment.pay.common.PayErrorCode;
+import com.sloway.app.payment.pay.common.PayMethod;
 import com.sloway.app.payment.pay.common.PayStatus;
 import com.sloway.app.payment.pay.entity.PayEntity;
 import com.sloway.app.payment.pay.pg.kakao.KakaoPayClient;
 import com.sloway.app.payment.pay.pg.kakao.dto.request.KakaoCancelReqDto;
+import com.sloway.app.payment.pay.pg.toss.client.TossPayClient;
 import com.sloway.app.payment.pay.repository.PayRepository;
 import com.sloway.app.payment.point.service.PointService;
 import com.sloway.app.payment.refund.common.RefundErrorCode;
@@ -40,6 +42,7 @@ public class RefundService {
     private final RsvnRepository rsvnRepository;
     private final PointService pointService;
     private final KakaoPayClient kakaoPayClient;
+    private final TossPayClient tossPayClient;
 
     @Transactional
     public RefundResDto createRefund(RefundCreateReqDto refundCreateReqDto) {
@@ -83,6 +86,13 @@ public class RefundService {
         BigDecimal refundAmt = finalAmt.multiply(rateBd).divide(divisor, 0, RoundingMode.DOWN);
         refundEntity.applyRefund(rate, refundAmt);
         RefundEntity entity = refundRepository.save(refundEntity);
+        // TODO: 환불 즉시 승인 (B 방식) — 요청과 동시에 처리까지 (어드민 승인 X)
+        //   1) processRefund 의 8단계(approveRefund ~ completeRefund + 쿠폰/포인트/PG취소)를
+        //      private 헬퍼로 추출 → 예: private void doRefundProcess(RefundEntity refund) { ... }
+        //   2) 여기서 doRefundProcess(entity) 호출 → createRefund 가 "요청+처리" 한 번에 완료
+        //   3) processRefund(API 메서드) 도 같은 헬퍼 재사용 (self-invocation 회피, 어드민 재처리용)
+        //   ※ 위 PG 분기도 doRefundProcess 안으로 함께 들어감
+        //   ※ entity 가 COMPLETED 로 바뀐 뒤 from(entity) 되므로 응답 상태도 자동 반영
         return RefundResDto.from(entity);
     }
 
@@ -141,12 +151,19 @@ public class RefundService {
 
         pointService.refundUsedPoint(payEntity);
         pointService.cancelEarnedPoint(payEntity);
-        KakaoCancelReqDto cancelReqDto = KakaoCancelReqDto.builder()
-                .tid(payEntity.getTid())
-                .cancelAmount(payEntity.getFinalAmt())
-                .cancelTaxFreeAmount(0)
-                .build();
-        kakaoPayClient.cancel(cancelReqDto);
+
+        PayMethod method = payEntity.getMethod();
+        if(method == PayMethod.KAKAOPAY){
+            KakaoCancelReqDto cancelReqDto = KakaoCancelReqDto.builder()
+                    .tid(payEntity.getTid())
+                    .cancelAmount(payEntity.getFinalAmt())
+                    .cancelTaxFreeAmount(0)
+                    .build();
+            kakaoPayClient.cancel(cancelReqDto);
+        } else if (method == PayMethod.TOSSPAY) {
+            tossPayClient.cancel(payEntity.getTid(), "고객 환불 요청");
+        }
+
         payEntity.cancelPay();
         refundEntity.completeRefund();
 

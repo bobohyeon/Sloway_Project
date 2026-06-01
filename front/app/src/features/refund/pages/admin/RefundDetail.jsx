@@ -9,7 +9,7 @@ import { RefundProcessHistory } from '../../components/admin/RefundProcessHistor
 import { RefundStatusBanner } from '../../components/admin/RefundStatusBanner';
 
 import { findPayByNo } from '../../../pay/api/payApi';
-import { findRefundByNo, processRefund } from '../../api/refundApi';
+import { findRefundByNo } from '../../api/refundApi';
 
 const REASON_LABEL = {
   SCHEDULE: '일정이 변경됐어요',
@@ -74,10 +74,10 @@ const buildProcessHistory = (refund) => {
     events.push(
       {
         status: 'done',
-        title: '관리자 승인 완료',
-        description: '환불 승인 및 후속 처리 수행',
+        title: '환불 자동 승인',
+        description: '신청 즉시 자동 승인 및 후속 처리',
         at: formatDate(refund.modifiedAt),
-        actor: '관리자',
+        actor: '시스템',
       },
       {
         status: 'done',
@@ -89,11 +89,11 @@ const buildProcessHistory = (refund) => {
     );
   } else {
     events.push({
-      status: 'pending',
-      title: '관리자 승인 대기',
-      description: '환불 승인 후 자동으로 후속 처리됩니다',
+      status: 'done',
+      title: '환불 처리 중',
+      description: '자동 처리가 진행 중입니다',
       at: '-',
-      actor: '관리자',
+      actor: '시스템',
     });
   }
 
@@ -107,7 +107,6 @@ export default function RefundDetail() {
   const [refund, setRefund] = useState(null);
   const [pay, setPay] = useState(null);
   const [memo, setMemo] = useState('');
-  const [processing, setProcessing] = useState(false);
 
   useEffect(() => {
     if (!no) return;
@@ -128,25 +127,6 @@ export default function RefundDetail() {
     load();
   }, [no, navigate]);
 
-  const handleApprove = async () => {
-    if (!refund || processing) return;
-    if (!window.confirm(`환불을 승인 처리할까요?\n쿠폰 반환·포인트 환원·결제 취소가 자동 진행됩니다.`)) {
-      return;
-    }
-    setProcessing(true);
-    try {
-      await processRefund(refund.no);
-      alert('환불 승인 완료. 사용자에게 환불 처리됐습니다.');
-      // 목록으로 자동 이동 → RefundList re-mount → fetch 자동 갱신
-      navigate('/admin/refund');
-    } catch (err) {
-      console.error('환불 승인 실패', err);
-      const msg = err?.response?.data?.msg ?? err.message;
-      alert(`환불 승인에 실패했습니다.\n${msg}`);
-      setProcessing(false);
-    }
-  };
-
   if (!refund) return null;
 
   const methodInfo = pay
@@ -163,12 +143,10 @@ export default function RefundDetail() {
   const paymentIdStr = `PAY-${String(refund.payNo).padStart(6, '0')}`;
   const bookingIdStr = `RSVN-${String(refund.rsvnNo).padStart(6, '0')}`;
 
-  const canApprove = isRequested(refund.status) && !processing;
-
   return (
     <PageLayout
       title="환불 상세"
-      description="환불 처리 내역을 확인하고 승인하세요"
+      description="환불 처리 내역을 확인합니다"
       backTo="/admin/refund"
       backLabel="환불 관리"
       maxWidth={1200}
@@ -176,8 +154,8 @@ export default function RefundDetail() {
       {isRequested(refund.status) && (
         <RefundStatusBanner
           variant="warning"
-          title="⏳ 관리자 승인 대기 중"
-          description="아래 '환불 승인' 버튼을 눌러 환불을 처리하세요. 쿠폰·포인트·결제가 자동으로 후속 처리됩니다."
+          title="환불 처리 중"
+          description="환불 신청이 접수되어 자동 처리 중입니다."
         />
       )}
       {isCompleted(refund.status) && (
@@ -193,7 +171,7 @@ export default function RefundDetail() {
           <InfoCard padded>
             <InfoHeader>
               {isRequested(refund.status) && (
-                <Badge variant="warning" size="md">⏳ 승인 대기</Badge>
+                <Badge variant="warning" size="md">처리 중</Badge>
               )}
               {isCompleted(refund.status) && (
                 <Badge variant="success" size="md">✓ 완료</Badge>
@@ -300,11 +278,6 @@ export default function RefundDetail() {
         <Button variant="secondary" onClick={() => navigate('/admin/refund')}>
           목록으로
         </Button>
-        {canApprove && (
-          <Button variant="primary" onClick={handleApprove} disabled={processing}>
-            {processing ? '처리 중...' : '✓ 환불 승인하기'}
-          </Button>
-        )}
       </Actions>
     </PageLayout>
   );
