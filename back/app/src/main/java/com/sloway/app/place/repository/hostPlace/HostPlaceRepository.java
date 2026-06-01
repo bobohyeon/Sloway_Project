@@ -8,6 +8,8 @@ import java.util.List;
 
 public interface HostPlaceRepository extends JpaRepository<HostPlaceEntity, Long>, HostPlaceRepositoryCustom {
 
+    List<HostPlaceEntity> findByHostEntityNo(Long hostNo);
+
     boolean existsByHostEntityNoAndOfficeEntityNo(Long hostNo, Long officeNo);
     boolean  existsByHostEntityNoAndStationEntityNo(Long hostNo, Long stationNo);
     boolean  existsByHostEntityNoAndWorkStayEntityNo(Long hostNo, Long workStayNo);
