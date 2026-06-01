@@ -12,4 +12,10 @@ public interface PayRepositoryCustom {
     List<PayEntity> findByRsvn(Long rsvnNo);
 
     List<Tuple> sumByMethodBetween(LocalDateTime startDateTime, LocalDateTime endDateTime);
+
+    Integer sumByOfficeIn(List<Long> officeNos, LocalDateTime start, LocalDateTime end);
+
+    Integer sumByStationIn(List<Long> stationNos, LocalDateTime start, LocalDateTime end);
+
+    Integer sumByWorkStayIn(List<Long> workStayNos, LocalDateTime start, LocalDateTime end);
 }

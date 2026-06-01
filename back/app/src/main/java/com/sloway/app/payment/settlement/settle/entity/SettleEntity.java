@@ -76,4 +76,14 @@ public class SettleEntity extends BaseEntity {
     //         this.refundAmt += refundDeduction;
     //         this.payoutAmt -= refundDeduction;
     //       호출 시점: completeSettle() 이전에 호출하여 차감 후 확정하는 흐름
+
+    public void applyAmounts(Integer totalAmt, Integer feeAmt, Integer refundAmt, Integer payoutAmt) {
+        if (this.status != SettleStatus.WAITING) {
+            throw new IllegalStateException("정산 대기 상태만 금액 설정 가능");
+        }
+        this.totalAmt = totalAmt;
+        this.feeAmt = feeAmt;
+        this.refundAmt = refundAmt;
+        this.payoutAmt = payoutAmt;
+    }
 }
