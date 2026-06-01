@@ -20,7 +20,6 @@ import com.sloway.app.payment.pay.pg.toss.dto.request.TossConfirmReqDto;
 import com.sloway.app.payment.pay.pg.toss.dto.response.TossConfirmResDto;
 import com.sloway.app.payment.pay.repository.PayRepository;
 import com.sloway.app.payment.point.service.PointService;
-import com.sloway.app.reservation.RsvnErrorCode;
 import com.sloway.app.reservation.rsvn.entity.RsvnEntity;
 import com.sloway.app.reservation.rsvn.repository.RsvnRepository;
 import jakarta.persistence.EntityNotFoundException;

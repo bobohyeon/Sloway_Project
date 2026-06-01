@@ -14,13 +14,3 @@ export async function findRefundByNo(no) {
   const resp = await api.get(`/payment/refund/${no}`);
   return resp.data;
 }
-
-export async function findRefundsByMemberNo(memberNo) {
-  const resp = await api.get(`/payment/refund/member/${memberNo}`);
-  return resp.data;
-}
-
-export async function processRefund(no) {
-  const resp = await api.patch(`/payment/refund/${no}/process`);
-  return resp.data;
-}

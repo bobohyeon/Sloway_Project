@@ -11,8 +11,6 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
-// TODO: 정산 컨트롤러 — 패턴은 Refund/Point 핸들러와 동일
-//       URL: /api/payment/settlement/settle
 @RestController
 @RequestMapping("/api/payment/settlement/settle")
 @RequiredArgsConstructor

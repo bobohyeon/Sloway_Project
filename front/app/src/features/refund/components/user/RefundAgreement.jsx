@@ -1,15 +1,14 @@
 import styled from 'styled-components'
 import { Card, Checkbox } from '../../../pay_shared/components'
 
-export function RefundAgreement({ agreed, onChange, refundAmount }) {
+export function RefundAgreement({ agreed, onChange }) {
   return (
     <>
       <AgreementCard>
         <Checkbox
           label={
             <span>
-              위 환불 정책 및 환불 금액{' '}
-              <strong>{refundAmount.toLocaleString()}원</strong>에 동의하며, 예약을 취소합니다
+              위 <strong>환불 정책</strong>에 동의하며, 예약을 취소합니다
             </span>
           }
           required
