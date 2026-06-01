@@ -12,6 +12,12 @@ export async function findSettleByNo(no) {
   return resp.data;
 }
 
+// 호스트별 정산 목록 (최근순) — 호스트 정산 화면용
+export async function findSettleByHostNo(hostNo) {
+  const resp = await api.get(`/payment/settlement/settle/host/${hostNo}`);
+  return resp.data;
+}
+
 // 정산 수동 생성 (hostNo + 기간) — 매출 0이면 백엔드가 null 반환(스킵)
 export async function createSettle(reqDto) {
   const resp = await api.post('/payment/settlement/settle', reqDto);

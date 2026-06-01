@@ -41,6 +41,11 @@ public class SettleApiController {
            return ResponseEntity.ok(settleService.findSettleByNo(no));
        }
 
+       // TODO: 호스트별 정산 목록 핸들러 — findSettleByNo 패턴 (PathVariable)
+       //   @GetMapping("/host/{hostNo}") + settleService.findSettleByHostNo(hostNo) → ResponseEntity.ok
+       //   반환 ResponseEntity<List<SettleResDto>>
+       //   ※ 프론트가 GET /api/payment/settlement/settle/host/{hostNo} 로 호출 중
+
 
        @PatchMapping("/{no}/complete")
        public ResponseEntity<SettleResDto> completeSettle(@PathVariable Long no) {
