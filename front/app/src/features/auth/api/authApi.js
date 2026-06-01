@@ -46,7 +46,7 @@ export const verifyCode = async (email, code) => {
 
 // ─── 일반회원 가입 ────────────────────────────────────────
 export const userSignup = async (data) => {
-  const response = await api.post('/auth/signup', data);
+  const response = await api.post('/auth/join', data); // /auth/signup → /auth/join
   return response.data;
 };
 
