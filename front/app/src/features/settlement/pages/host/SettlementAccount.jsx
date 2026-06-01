@@ -1,77 +1,208 @@
+import { useEffect, useState } from 'react';
 import styled from 'styled-components';
-import { FaInfoCircle, FaUniversity } from 'react-icons/fa';
+import { FaUniversity } from 'react-icons/fa';
 
 import PageLayout from '../../../../app/layouts/page/PageLayout';
-import { Card, Section, EmptyState, Badge } from '../../../pay_shared/components';
+import { Card, Section } from '../../../pay_shared/components';
+import { registerAccount, findAccountByHostNo } from '../../api/accountApi';
 
-const FIELDS = [
-  { key: 'bank', label: '은행' },
-  { key: 'accountNo', label: '계좌번호' },
-  { key: 'holder', label: '예금주' },
-  { key: 'verifiedAt', label: '인증 일시' },
-];
+const HOST_NO = 1;
 
 export default function SettlementAccount() {
+  const [account, setAccount] = useState(null);
+  const [form, setForm] = useState({ bankName: '', accountNo: '', holder: '' });
+  const [saving, setSaving] = useState(false);
+
+  const load = async () => {
+    try {
+      const data = await findAccountByHostNo(HOST_NO); // 미등록이면 null
+      setAccount(data || null);
+      if (data) {
+        setForm({
+          bankName: data.bankName ?? '',
+          accountNo: data.accountNo ?? '',
+          holder: data.holder ?? '',
+        });
+      }
+    } catch (err) {
+      console.error('정산 계좌 조회 실패', err);
+    }
+  };
+
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    load();
+  }, []);
+
+  const handleSave = async () => {
+    if (!form.bankName || !form.accountNo || !form.holder) {
+      alert('은행명, 계좌번호, 예금주를 모두 입력하세요.');
+      return;
+    }
+    setSaving(true);
+    try {
+      await registerAccount({ hostNo: HOST_NO, ...form });
+      await load(); // 저장 후 갱신
+      alert('정산 계좌가 저장되었습니다.');
+    } catch (err) {
+      console.error('정산 계좌 저장 실패', err);
+      alert('계좌 저장에 실패했습니다.');
+    } finally {
+      setSaving(false);
+    }
+  };
+
   return (
     <PageLayout
       title="정산 계좌"
       description="정산 입금 계좌를 관리합니다"
       maxWidth={800}
     >
-      <NoticeCard padded>
-        <NoticeIcon><FaInfoCircle /></NoticeIcon>
-        <NoticeText>
-          정산 계좌 등록 기능을 준비 중입니다. 본인 인증 및 계좌 인증 절차 완료 후
-          활성화됩니다.
-        </NoticeText>
-      </NoticeCard>
-
-      <Section title="등록된 계좌" action={<Badge>등록 대기</Badge>}>
+      <Section title="등록된 계좌">
         <AccountCard padded>
           <AccountHeader>
-            <AccountIcon><FaUniversity /></AccountIcon>
-            <AccountTitle>아직 등록된 계좌가 없습니다</AccountTitle>
+            <AccountIcon>
+              <FaUniversity />
+            </AccountIcon>
+            <AccountTitle>
+              {account ? '정산 입금 계좌' : '아직 등록된 계좌가 없습니다'}
+            </AccountTitle>
           </AccountHeader>
           <Fields>
-            {FIELDS.map((f) => (
-              <FieldRow key={f.key}>
-                <FieldLabel>{f.label}</FieldLabel>
-                <FieldValue>—</FieldValue>
-              </FieldRow>
-            ))}
+            <FieldRow>
+              <FieldLabel>은행</FieldLabel>
+              <FieldValue>{account?.bankName ?? '—'}</FieldValue>
+            </FieldRow>
+            <FieldRow>
+              <FieldLabel>계좌번호</FieldLabel>
+              <FieldValue>{account?.accountNo ?? '—'}</FieldValue>
+            </FieldRow>
+            <FieldRow>
+              <FieldLabel>예금주</FieldLabel>
+              <FieldValue>{account?.holder ?? '—'}</FieldValue>
+            </FieldRow>
           </Fields>
         </AccountCard>
       </Section>
 
-      <Section title="계좌 등록">
-        <EmptyCard padded>
-          <EmptyState
-            icon="🏦"
-            title="계좌 등록 준비 중"
-            description="본인 인증 및 계좌 인증 절차 완료 후 등록할 수 있습니다."
-          />
-        </EmptyCard>
+      <Section title={account ? '계좌 수정' : '계좌 등록'}>
+        <FormCard padded>
+          <Field>
+            <label>은행명</label>
+            <input
+              type="text"
+              value={form.bankName}
+              onChange={(e) => setForm({ ...form, bankName: e.target.value })}
+              placeholder="예: 카카오뱅크"
+            />
+          </Field>
+          <Field>
+            <label>계좌번호</label>
+            <input
+              type="text"
+              value={form.accountNo}
+              onChange={(e) => setForm({ ...form, accountNo: e.target.value })}
+              placeholder="- 없이 입력"
+            />
+          </Field>
+          <Field>
+            <label>예금주</label>
+            <input
+              type="text"
+              value={form.holder}
+              onChange={(e) => setForm({ ...form, holder: e.target.value })}
+              placeholder="예금주명"
+            />
+          </Field>
+          <SaveBtn onClick={handleSave} disabled={saving}>
+            {saving ? '저장 중…' : account ? '계좌 수정' : '계좌 등록'}
+          </SaveBtn>
+        </FormCard>
       </Section>
     </PageLayout>
   );
 }
 
-const NoticeCard = styled(Card)`
-  display: flex; align-items: flex-start; gap: var(--space-3);
-  margin-bottom: var(--space-4);
-  background: var(--cream); border-color: var(--sage);
+const AccountCard = styled(Card)`
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  margin-bottom: var(--space-5);
 `;
-const NoticeIcon = styled.div`font-size: 1.1rem; color: var(--sage); flex-shrink: 0; margin-top: 2px;`;
-const NoticeText = styled.p`font-size: 0.85rem; color: var(--gray-800); line-height: 1.6; margin: 0;`;
-const AccountCard = styled(Card)`display: flex; flex-direction: column; gap: var(--space-4);`;
 const AccountHeader = styled.div`
-  display: flex; align-items: center; gap: var(--space-3);
-  padding-bottom: var(--space-3); border-bottom: 1px solid var(--gray-100);
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding-bottom: var(--space-3);
+  border-bottom: 1px solid var(--gray-100);
 `;
-const AccountIcon = styled.div`font-size: 1.4rem; color: var(--gray-400);`;
-const AccountTitle = styled.span`font-size: 0.95rem; color: var(--gray-600);`;
-const Fields = styled.div`display: flex; flex-direction: column; gap: var(--space-2);`;
-const FieldRow = styled.div`display: flex; justify-content: space-between; align-items: center;`;
-const FieldLabel = styled.span`font-size: 0.85rem; color: var(--gray-600);`;
-const FieldValue = styled.span`font-family: var(--font-mono); font-size: 0.88rem; color: var(--gray-400);`;
-const EmptyCard = styled(Card)`padding: var(--space-6) var(--space-5);`;
+const AccountIcon = styled.div`
+  font-size: 1.4rem;
+  color: var(--sage);
+`;
+const AccountTitle = styled.span`
+  font-size: 0.95rem;
+  color: var(--gray-800);
+  font-weight: 600;
+`;
+const Fields = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+`;
+const FieldRow = styled.div`
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+`;
+const FieldLabel = styled.span`
+  font-size: 0.85rem;
+  color: var(--gray-600);
+`;
+const FieldValue = styled.span`
+  font-family: var(--font-mono);
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--gray-800);
+`;
+
+const FormCard = styled(Card)`
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+`;
+const Field = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+
+  label {
+    font-size: 0.82rem;
+    color: var(--gray-700);
+  }
+
+  input {
+    padding: 9px 12px;
+    border: 1px solid var(--gray-200);
+    border-radius: var(--radius-md);
+    font-size: 0.9rem;
+    font-family: 'Noto Sans KR', sans-serif;
+  }
+`;
+const SaveBtn = styled.button`
+  margin-top: var(--space-2);
+  padding: 10px 16px;
+  background: var(--sage);
+  border: none;
+  border-radius: var(--radius-md);
+  color: var(--white);
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  font-family: 'Noto Sans KR', sans-serif;
+
+  &:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+  }
+`;
