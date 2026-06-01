@@ -23,6 +23,7 @@ public class MemberDetailResponseDto {
     private final String imgUrl;
     private final MemberStatus status;
     private final LocalDateTime createdAt;
+    private final  String role;
 
     // ─── 인증/제재 정보 ─────────────────────
     private final LocalDateTime verifiedAt;
@@ -30,7 +31,7 @@ public class MemberDetailResponseDto {
     private final LocalDateTime suspendUntil;
 
 
-    public static MemberDetailResponseDto from(MemberEntity member) {
+    public static MemberDetailResponseDto from(MemberEntity member ,String role) {
         return MemberDetailResponseDto.builder()
                 .memberNo(member.getNo())
                 .email(member.getEmail())
@@ -43,6 +44,7 @@ public class MemberDetailResponseDto {
                 .verifiedAt(member.getVerifiedAt())
                 .suspendReason(member.getSuspendReason())
                 .suspendUntil(member.getSuspendUntil())
+                .role(role)
                 .build();
     }
 }

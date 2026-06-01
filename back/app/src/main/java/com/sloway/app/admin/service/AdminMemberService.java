@@ -4,6 +4,7 @@ import com.sloway.app.admin.common.AdminErrorCode;
 import com.sloway.app.admin.dto.response.MemberDetailResponseDto;
 import com.sloway.app.admin.dto.response.MemberListResponseDto;
 import com.sloway.app.common.exception.CustomException;
+import com.sloway.app.host.repository.HostRepository;
 import com.sloway.app.member.common.MemberErrorCode;
 import com.sloway.app.member.common.MemberStatus;
 import com.sloway.app.member.entity.MemberEntity;
@@ -18,6 +19,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.util.List;
+import java.util.Set;
 
 /**
  * 어드민 — 회원 관리 서비스.
@@ -32,21 +35,30 @@ import java.time.LocalDateTime;
 
 public class AdminMemberService {
     private final MemberRepository memberRepository;
+    private final HostRepository hostRepository;
 
     //회원 목록 조회
     public Page<MemberListResponseDto> findAll(MemberStatus status, int page, int size) {
-
-
         Pageable pageable = PageRequest.of(page, size, Sort.by("createdAt").descending());
 
-        // 상태 필터 분기: null이면 전체, 있으면 그 상태만
         Page<MemberEntity> memberPage = (status == null)
                 ? memberRepository.findAll(pageable)
                 : memberRepository.findByStatus(status, pageable);
 
+        // 이 페이지 회원들 중 호스트인 memberNo를 한 번에 조회 (N+1 방지)
+        List<Long> memberNos = memberPage.getContent().stream()
+                .map(MemberEntity::getNo)
+                .toList();
+        Set<Long> hostMemberNos = hostRepository.findMemberNosByMemberNoIn(memberNos);
 
-        return memberPage.map(MemberListResponseDto::from);
+        // 각 회원: 호스트 Set에 있으면 HOST, 없으면 USER
+        return memberPage.map(member ->
+                MemberListResponseDto.from(
+                        member,
+                        hostMemberNos.contains(member.getNo()) ? "HOST" : "USER"
+                ));
     }
+
     //회원 상세 조회
     public MemberDetailResponseDto findOne(Long memberNo) {
 
@@ -54,8 +66,10 @@ public class AdminMemberService {
         MemberEntity member = memberRepository.findById(memberNo)
                 .orElseThrow(() -> new CustomException(MemberErrorCode.MEMBER_NOT_FOUND));
 
-        return MemberDetailResponseDto.from(member);
+        String role = hostRepository.existsByMemberNo(memberNo) ? "HOST" : "USER";
+        return MemberDetailResponseDto.from(member, role);
     }
+
     //회원정지
     @Transactional
     public void suspend(Long memberNo, String reason, Integer days) {
