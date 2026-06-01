@@ -232,7 +232,7 @@ public class WorkStayService {
                 imgWorkStayRepository.findById(dto.getImageNo()).ifPresent(img -> img.updateSort(dto.getSort()));
             } else if (files != null && fileIndex < files.size()) {
                 try {
-                    String s3Url = s3Service.upload(files.get(fileIndex++), "workstay");
+                    String s3Url = s3Service.upload(files.get(fileIndex++), "workStay");
                     imgWorkStayRepository.save(ImgWorkStayEntity.from(workStay, s3Url, dto.getSort()));
                 } catch (IOException e) { throw new RuntimeException("WorkStay 이미지 업로드 실패", e); }
             }
@@ -256,7 +256,7 @@ public class WorkStayService {
                 imgWorkOfficeRepository.findById(dto.getImageNo()).ifPresent(img -> img.updateSort(dto.getSort()));
             } else if (officeFiles != null && officeFileIndex < officeFiles.size()) {
                 try {
-                    String s3Url = s3Service.upload(officeFiles.get(officeFileIndex++), "office");
+                    String s3Url = s3Service.upload(officeFiles.get(officeFileIndex++), "workOffice");
                     imgWorkOfficeRepository.save(ImgWorkStayOfficeEntity.from(workOffice, s3Url, dto.getSort()));
                 } catch (IOException e) { throw new RuntimeException("WorkOffice 이미지 업로드 실패", e); }
             }
