@@ -29,4 +29,9 @@ public class SettleRepositoryImpl implements SettleRepositoryCustom {
                         .fetchFirst()
         );
     }
+
+    // TODO: findByHostNo 본체 — 위 findLatestByHostNo 를 복사한 뒤 3곳만 변경
+    //   ① 반환 타입 List<SettleEntity> (Optional.ofNullable 감싸기 제거)
+    //   ② fetchFirst() → fetch() (여러 건)
+    //   ③ where(hostNo) + orderBy(no.desc()) 는 그대로 (최근순)
 }

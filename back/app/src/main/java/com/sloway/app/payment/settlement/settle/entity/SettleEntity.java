@@ -71,6 +71,7 @@ public class SettleEntity extends BaseEntity {
         this.status = SettleStatus.INVOICE;
         this.invoicedAt = LocalDateTime.now();
     }
+
     public void applyAmounts(Integer totalAmt, Integer feeAmt, Integer refundAmt, Integer payoutAmt) {
         if (this.status != SettleStatus.WAITING) {
             throw new IllegalStateException("정산 대기 상태만 금액 설정 가능");
@@ -79,6 +80,18 @@ public class SettleEntity extends BaseEntity {
         this.feeAmt = feeAmt;
         this.refundAmt = refundAmt;
         this.payoutAmt = payoutAmt;
+    }
+
+    public void settleWithCarry(Integer effectiveAmt, int minPayOut) {
+        if (effectiveAmt >= minPayOut) {
+            this.status = SettleStatus.WAITING;
+            this.payoutAmt = effectiveAmt;
+            this.carryOver=0;
+        } else {
+            this.status = SettleStatus.CARRIED;
+            this.payoutAmt =0;
+            this.carryOver = effectiveAmt;
+        }
     }
 
 

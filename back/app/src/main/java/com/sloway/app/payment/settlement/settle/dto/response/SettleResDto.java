@@ -20,6 +20,7 @@ public class SettleResDto {
     private Integer feeAmt;
     private Integer refundAmt;
     private Integer payoutAmt;
+    // TODO: carryOver 필드 추가 (Integer) — 호스트 화면 "이월 대기액" 노출용
     private SettleStatus status;
     private LocalDateTime settledAt;
     private LocalDateTime invoicedAt;
@@ -37,6 +38,7 @@ public class SettleResDto {
                 .feeAmt(entity.getFeeAmt())
                 .refundAmt(entity.getRefundAmt())
                 .payoutAmt(entity.getPayoutAmt())
+                // TODO: .carryOver(entity.getCarryOver()) 추가 (위 필드 추가 후)
                 .status(entity.getStatus())
                 .settledAt(entity.getSettledAt())
                 .invoicedAt(entity.getInvoicedAt())
