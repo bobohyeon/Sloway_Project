@@ -6,6 +6,7 @@ import com.sloway.app.member.common.MemberRole;
 import com.sloway.app.payment.refund.common.RefundReason;
 import com.sloway.app.reservation.RsvnErrorCode;
 import com.sloway.app.reservation.rsvn.dto.request.RsvnReqDto;
+import com.sloway.app.reservation.rsvn.dto.response.HostSpaceResDto;
 import com.sloway.app.reservation.rsvn.dto.response.RsvnResDto;
 import com.sloway.app.reservation.rsvn.service.RsvnService;
 import lombok.RequiredArgsConstructor;
@@ -35,12 +36,30 @@ public class RsvnController {
                 .build();
     }
 
-    //내 예약 목록 조회
+    //내 예약 목록 조회 (일반 회원)
     @GetMapping
     public ResponseEntity<List<RsvnResDto>> findAll(
             @AuthenticationPrincipal CustomUserDetails userDetails
     ){
         List<RsvnResDto> dtoList = rsvnService.findAll(userDetails.getMemberNo());
+        return ResponseEntity.ok(dtoList);
+    }
+
+    //내 공간 목록 조회 (호스트 — blackout 등에서 공간 선택용)
+    @GetMapping("/host/spaces")
+    public ResponseEntity<List<HostSpaceResDto>> findHostSpaces(
+            @AuthenticationPrincipal CustomUserDetails userDetails
+    ){
+        List<HostSpaceResDto> dtoList = rsvnService.findHostSpaces(userDetails.getMemberNo());
+        return ResponseEntity.ok(dtoList);
+    }
+
+    //내 공간 예약 목록 조회 (호스트)
+    @GetMapping("/host")
+    public ResponseEntity<List<RsvnResDto>> findAllByHost(
+            @AuthenticationPrincipal CustomUserDetails userDetails
+    ){
+        List<RsvnResDto> dtoList = rsvnService.findAllByHost(userDetails.getMemberNo());
         return ResponseEntity.ok(dtoList);
     }
 

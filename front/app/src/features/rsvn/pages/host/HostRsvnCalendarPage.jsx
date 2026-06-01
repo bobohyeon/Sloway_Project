@@ -1,8 +1,9 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import dayjs from 'dayjs';
 import { useNavigate } from 'react-router-dom';
 import styled, { css, keyframes } from 'styled-components';
 import PageLayout from '../../../../app/layouts/page/PageLayout';
+import { findHostRsvns } from '../../api/rsvnApi';
 import {
   SectionBox,
   StatCards,
@@ -87,19 +88,60 @@ const LegendDot = styled.div`
 
 const DAYS = ['일', '월', '화', '수', '목', '금', '토'];
 
-// TODO: 호스트 예약 목록 API 연동 — 공간 도메인 API 준비 후 교체
-const DUMMY_EVENTS = {
-  8: [{ title: '홍길동 · 파인뷰', id: 1 }],
-  9: [{ title: '홍길동 · 파인뷰', id: 1 }],
-  22: [{ title: '이지은 · 브릭라운지', id: 2 }],
-};
-
 function HostRsvnCalendarPage() {
   const navigate = useNavigate();
+  const [list, setList] = useState([]);
   const [view, setView] = useState('month');
   const [current, setCurrent] = useState(dayjs().startOf('month'));
   const [weekStart, setWeekStart] = useState(dayjs().startOf('week'));
   const [slideDir, setSlideDir] = useState('none');
+
+  useEffect(() => {
+    async function load() {
+      try {
+        const data = await findHostRsvns();
+        setList(data);
+      } catch (e) {
+        console.error(e);
+      }
+    }
+    load();
+  }, []);
+
+  // checkIn 날짜(일)를 키로 예약 이벤트 맵 생성
+  const eventMap = {};
+  list.forEach((item) => {
+    if (!item.checkIn) return;
+    const d = dayjs(item.checkIn);
+    if (d.year() === current.year() && d.month() === current.month()) {
+      const day = d.date();
+      if (!eventMap[day]) eventMap[day] = [];
+      eventMap[day].push({ title: `${item.guestName} · ${item.spaceName}`, no: item.no, rsvn: item });
+    }
+  });
+
+  const thisMonthRsvns = list.filter((item) => {
+    if (!item.checkIn) return false;
+    const d = dayjs(item.checkIn);
+    return d.year() === current.year() && d.month() === current.month();
+  });
+  const confirmedCount = thisMonthRsvns.filter((i) => {
+    const s = typeof i.status === 'object' ? i.status?.name : i.status;
+    return s === 'S';
+  }).length;
+  const doneCount = thisMonthRsvns.filter((i) => {
+    const s = typeof i.status === 'object' ? i.status?.name : i.status;
+    return s === 'E';
+  }).length;
+
+  // 가장 가까운 확정 예약
+  const now = dayjs();
+  const upcoming = list
+    .filter((i) => {
+      const s = typeof i.status === 'object' ? i.status?.name : i.status;
+      return s === 'S' && i.checkIn && dayjs(i.checkIn).isAfter(now);
+    })
+    .sort((a, b) => dayjs(a.checkIn).diff(dayjs(b.checkIn)))[0];
 
   const goMonth = (dir) => {
     setSlideDir(dir > 0 ? 'left' : 'right');
@@ -129,12 +171,14 @@ function HostRsvnCalendarPage() {
       maxWidth={1200}
     >
       <StatCards>
-        <StatCard><StatLabel>이번 달 예약</StatLabel><StatValue $color={COLOR.terra}>—</StatValue></StatCard>
-        <StatCard><StatLabel>확정</StatLabel><StatValue>—</StatValue></StatCard>
-        <StatCard><StatLabel>완료</StatLabel><StatValue>—</StatValue></StatCard>
+        <StatCard><StatLabel>이번 달 예약</StatLabel><StatValue $color={COLOR.terra}>{thisMonthRsvns.length}건</StatValue></StatCard>
+        <StatCard><StatLabel>확정</StatLabel><StatValue>{confirmedCount}건</StatValue></StatCard>
+        <StatCard><StatLabel>완료</StatLabel><StatValue>{doneCount}건</StatValue></StatCard>
         <StatCard>
           <StatLabel>가장 가까운 일정</StatLabel>
-          <StatValue $color={COLOR.green} style={{ fontSize: 16 }}>—</StatValue>
+          <StatValue $color={COLOR.green} style={{ fontSize: 16 }}>
+            {upcoming ? dayjs(upcoming.checkIn).format('M/D') : '—'}
+          </StatValue>
         </StatCard>
       </StatCards>
 
@@ -156,11 +200,11 @@ function HostRsvnCalendarPage() {
             </DayHeader>
             <CalGrid $dir={slideDir}>
               {cells.map((date, idx) => {
-                const evs = date ? (DUMMY_EVENTS[date] || []) : [];
+                const evs = date ? (eventMap[date] ?? []) : [];
                 const isToday = date && current.date(date).isSame(dayjs(), 'day');
                 return (
                   <CalCell key={idx} $hasEvent={evs.length > 0}
-                    onClick={() => evs.length > 0 && navigate(`/host/reservation/list/${evs[0].id}`)}>
+                    onClick={() => evs.length > 0 && navigate(`/host/reservation/list/${evs[0].no}`, { state: { rsvn: evs[0].rsvn } })}>
                     {date && (
                       <>
                         <CalDate $col={idx % 7} $today={isToday}>{date}</CalDate>

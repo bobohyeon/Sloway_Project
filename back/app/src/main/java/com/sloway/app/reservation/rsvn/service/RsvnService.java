@@ -17,12 +17,14 @@ import com.sloway.app.payment.refund.service.RefundService;
 import com.sloway.app.place.entity.office.OfficeEntity;
 import com.sloway.app.place.entity.station.StationEntity;
 import com.sloway.app.place.entity.workStay.WorkStayEntity;
+import com.sloway.app.place.entity.hostPlace.HostPlaceEntity;
 import com.sloway.app.place.repository.hostPlace.HostPlaceRepository;
 import com.sloway.app.place.repository.office.OfficeRepository;
 import com.sloway.app.place.repository.station.StationRepository;
 import com.sloway.app.place.repository.workStay.WorkStayRepository;
 import com.sloway.app.reservation.RsvnErrorCode;
 import com.sloway.app.reservation.rsvn.dto.request.RsvnReqDto;
+import com.sloway.app.reservation.rsvn.dto.response.HostSpaceResDto;
 import com.sloway.app.reservation.rsvn.dto.response.RsvnResDto;
 import com.sloway.app.reservation.rsvn.entity.RsvnEntity;
 import com.sloway.app.reservation.rsvn.entity.RsvnStatus;
@@ -107,6 +109,50 @@ public class RsvnService {
                 .orElseThrow(() -> new CustomException(RsvnErrorCode.RESERVATION_NOT_FOUND));
 
         return RsvnResDto.from(entity);
+    }
+
+    //호스트 — 내 공간 목록 조회 (placeNo + 공간명)
+    public List<HostSpaceResDto> findHostSpaces(Long memberNo) {
+        HostEntity host = hostRepository.findByMemberNo(memberNo)
+                .orElseThrow(() -> new CustomException(ReviewErrorCode.HOST_NOT_FOUND));
+
+        return hostPlaceRepository.findByHostEntityNo(host.getNo())
+                .stream()
+                .map(HostSpaceResDto::from)
+                .filter(dto -> dto.getPlaceNo() != null)
+                .distinct()
+                .toList();
+    }
+
+    //호스트 — 내 공간의 예약 목록 조회
+    public List<RsvnResDto> findAllByHost(Long memberNo) {
+        HostEntity host = hostRepository.findByMemberNo(memberNo)
+                .orElseThrow(() -> new CustomException(ReviewErrorCode.HOST_NOT_FOUND));
+
+        List<HostPlaceEntity> hostPlaces = hostPlaceRepository.findByHostEntityNo(host.getNo());
+
+        List<OfficeEntity> offices = hostPlaces.stream()
+                .map(hp -> hp.getOfficeEntity())
+                .filter(o -> o != null)
+                .toList();
+        List<StationEntity> stations = hostPlaces.stream()
+                .map(hp -> hp.getStationEntity())
+                .filter(s -> s != null)
+                .toList();
+        List<WorkStayEntity> workStays = hostPlaces.stream()
+                .map(hp -> hp.getWorkStayEntity())
+                .filter(w -> w != null)
+                .toList();
+
+        List<RsvnEntity> result = new java.util.ArrayList<>();
+        if (!offices.isEmpty())  result.addAll(rsvnRepository.findByOfficeNoIn(offices));
+        if (!stations.isEmpty()) result.addAll(rsvnRepository.findByStationNoIn(stations));
+        if (!workStays.isEmpty()) result.addAll(rsvnRepository.findByWorkStayNoIn(workStays));
+
+        return result.stream()
+                .sorted(java.util.Comparator.comparing(RsvnEntity::getCreatedAt).reversed())
+                .map(RsvnResDto::from)
+                .toList();
     }
 
     //내 예약 취소

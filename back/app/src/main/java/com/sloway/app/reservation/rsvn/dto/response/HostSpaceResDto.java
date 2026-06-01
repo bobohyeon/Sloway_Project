@@ -1,0 +1,44 @@
+package com.sloway.app.reservation.rsvn.dto.response;
+
+import com.sloway.app.place.entity.hostPlace.HostPlaceEntity;
+import lombok.Builder;
+import lombok.Getter;
+
+@Getter
+@Builder
+public class HostSpaceResDto {
+
+    private Long placeNo;
+    private String spaceName;
+    private String spaceType;
+
+    public static HostSpaceResDto from(HostPlaceEntity hp) {
+        Long placeNo = null;
+        String spaceName = null;
+        String spaceType = null;
+
+        if (hp.getWorkStayEntity() != null) {
+            placeNo = hp.getWorkStayEntity().getPlaceEntity().getNo();
+            spaceName = hp.getWorkStayEntity().getTitle();
+            spaceType = hp.getWorkStayEntity().getPlaceEntity().getType();
+        } else if (hp.getOfficeEntity() != null) {
+            placeNo = hp.getOfficeEntity().getPlaceEntity().getNo();
+            spaceName = hp.getOfficeEntity().getTitle();
+            spaceType = hp.getOfficeEntity().getPlaceEntity().getType();
+        } else if (hp.getStationEntity() != null) {
+            placeNo = hp.getStationEntity().getPlaceEntity().getNo();
+            spaceName = hp.getStationEntity().getTitle();
+            spaceType = hp.getStationEntity().getPlaceEntity().getType();
+        } else if (hp.getPlaceEntity() != null) {
+            placeNo = hp.getPlaceEntity().getNo();
+            spaceName = hp.getPlaceEntity().getTitle();
+            spaceType = hp.getPlaceEntity().getType();
+        }
+
+        return HostSpaceResDto.builder()
+                .placeNo(placeNo)
+                .spaceName(spaceName)
+                .spaceType(spaceType)
+                .build();
+    }
+}

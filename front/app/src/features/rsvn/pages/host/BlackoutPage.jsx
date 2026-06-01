@@ -4,6 +4,27 @@ import styled from 'styled-components';
 import PageLayout from '../../../../app/layouts/page/PageLayout';
 import { BtnPrimary, COLOR } from '../../components/user/RsvnStyled';
 import { findBlackouts, deleteBlackout } from '../../api/blackoutApi';
+import { findHostSpaces } from '../../api/rsvnApi';
+
+const FilterRow = styled.div`
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 14px;
+  gap: 10px;
+`;
+
+const SpaceSelect = styled.select`
+  padding: 7px 12px;
+  border: 1px solid ${COLOR.gray200};
+  border-radius: 8px;
+  font-size: 13px;
+  background: #fff;
+  outline: none;
+  min-width: 200px;
+  cursor: pointer;
+  &:focus { border-color: ${COLOR.sage}; }
+`;
 
 const InfoBanner = styled.div`
   background: #fffbf0;
@@ -17,36 +38,6 @@ const InfoBanner = styled.div`
   font-size: 12px;
   color: #666;
   line-height: 1.7;
-`;
-
-const FilterRow = styled.div`
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 14px;
-  gap: 10px;
-`;
-
-const PlaceInput = styled.input`
-  padding: 7px 12px;
-  border: 1px solid ${COLOR.gray200};
-  border-radius: 8px;
-  font-size: 13px;
-  outline: none;
-  width: 140px;
-  &:focus { border-color: ${COLOR.sage}; }
-`;
-
-const FetchBtn = styled.button`
-  padding: 7px 14px;
-  border-radius: 8px;
-  background: ${COLOR.green};
-  color: #fff;
-  border: none;
-  font-size: 13px;
-  font-weight: 600;
-  cursor: pointer;
-  &:hover { background: #1a3a2a; }
 `;
 
 const BlackoutCard = styled.div`
@@ -91,31 +82,46 @@ const EmptyBox = styled.div`
 `;
 
 const REASON_LABEL = { M: '정비/보수', C: '청소', P: '개인이용', E: '기타' };
-const REASON_ICON = { M: '🔧', C: '🧹', P: '🏠', E: '📋' };
+const REASON_ICON  = { M: '🔧', C: '🧹', P: '🏠', E: '📋' };
 
 const formatDt = (dt) => dt?.slice(0, 10).replaceAll('-', '.') ?? '';
 
 function BlackoutPage() {
   const navigate = useNavigate();
-  const [placeNoInput, setPlaceNoInput] = useState('');
-  const [placeNo, setPlaceNo] = useState(null);
+  const [spaces, setSpaces] = useState([]);
+  const [selectedSpace, setSelectedSpace] = useState(null); // { placeNo, spaceName }
   const [items, setItems] = useState([]);
 
-  const fetchBlackouts = async (no) => {
+  // 호스트 공간 목록 로드
+  useEffect(() => {
+    async function loadSpaces() {
+      try {
+        const data = await findHostSpaces();
+        setSpaces(data);
+        if (data.length > 0) {
+          setSelectedSpace(data[0]);
+          const blackouts = await findBlackouts(data[0].placeNo);
+          setItems(blackouts);
+        }
+      } catch (e) {
+        console.error(e);
+      }
+    }
+    loadSpaces();
+  }, []);
+
+  // 공간 변경 시 blackout 재조회
+  const handleSpaceChange = async (e) => {
+    const placeNo = Number(e.target.value);
+    const space = spaces.find((s) => s.placeNo === placeNo);
+    setSelectedSpace(space);
     try {
-      const data = await findBlackouts(no);
+      const data = await findBlackouts(placeNo);
       setItems(data);
     } catch {
       alert('이용 불가 목록을 불러오지 못했어요');
       setItems([]);
     }
-  };
-
-  const handleFetch = () => {
-    const no = Number(placeNoInput);
-    if (!no) { alert('공간 번호를 입력해주세요'); return; }
-    setPlaceNo(no);
-    fetchBlackouts(no);
   };
 
   const handleDelete = async (id) => {
@@ -135,8 +141,8 @@ function BlackoutPage() {
       description="예약을 받지 않을 날짜·시간을 관리하세요"
       actions={
         <BtnPrimary
-          onClick={() => navigate('/host/reservation/block/add', { state: { placeNo } })}
-          disabled={!placeNo}
+          onClick={() => navigate('/host/reservation/block/add', { state: { placeNo: selectedSpace?.placeNo } })}
+          disabled={!selectedSpace}
         >
           + 이용 불가 추가
         </BtnPrimary>
@@ -152,23 +158,24 @@ function BlackoutPage() {
       </InfoBanner>
 
       <FilterRow>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-          <span style={{ fontSize: 13, color: COLOR.gray600 }}>공간 번호</span>
-          <PlaceInput
-            type="number"
-            placeholder="placeNo 입력"
-            value={placeNoInput}
-            onChange={(e) => setPlaceNoInput(e.target.value)}
-            onKeyDown={(e) => e.key === 'Enter' && handleFetch()}
-          />
-          <FetchBtn onClick={handleFetch}>조회</FetchBtn>
-        </div>
+        <SpaceSelect
+          value={selectedSpace?.placeNo ?? ''}
+          onChange={handleSpaceChange}
+          disabled={spaces.length === 0}
+        >
+          {spaces.length === 0
+            ? <option>등록된 공간이 없어요</option>
+            : spaces.map((s) => (
+                <option key={s.placeNo} value={s.placeNo}>{s.spaceName}</option>
+              ))
+          }
+        </SpaceSelect>
       </FilterRow>
 
-      {!placeNo ? (
+      {!selectedSpace ? (
         <EmptyBox>
           <div style={{ fontSize: 32, marginBottom: 12 }}>🔍</div>
-          <div>공간 번호를 입력하고 조회하세요</div>
+          <div>공간을 선택해주세요</div>
         </EmptyBox>
       ) : items.length === 0 ? (
         <EmptyBox>

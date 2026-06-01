@@ -1,78 +1,41 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import styled, { keyframes } from 'styled-components';
 import { COLOR } from '../../rsvn/components/user/RsvnStyled';
 import MainHeader from '../layouts/MainHeader';
+import { searchSpaces } from '../../searchPlace/api/searchApi';
 
-const RECOMMENDED = [
-  {
-    id: 1,
-    type: '워크앤스테이',
-    title: '청평 숲속 파인뷰 스테이',
-    location: '경기 가평',
-    score: 4.9,
-    reviewCount: 127,
-    price: 185000,
-    priceUnit: '원/박',
-    badge: '새싹 추천',
-    icon: '🌲',
-  },
-  {
-    id: 2,
-    type: '오피스',
-    title: '강릉 바다향 커먼워크',
-    location: '강원 강릉',
-    score: 4.8,
-    reviewCount: 203,
-    price: 28000,
-    priceUnit: '원/4h',
-    badge: '인기',
-    icon: '🌊',
-  },
-  {
-    id: 3,
-    type: '숙소',
-    title: '제주 돌담집 리트릿',
-    location: '제주 서귀포',
-    score: 4.9,
-    reviewCount: 89,
-    price: 220000,
-    priceUnit: '원/박',
-    badge: null,
-    icon: '🌴',
-  },
-];
+const TYPE_ICON = { 워크앤스테이: '🌿', 오피스: '💻', 숙소: '🛌' };
+const TYPE_UNIT = { 워크앤스테이: '원/박', 오피스: '원/4h', 숙소: '원/박' };
+const BADGES    = ['새싹 추천', '인기', null];
 
-const TOP_SPACES = [
-  {
-    rank: '01',
-    type: '숙소',
-    title: '양양 파도소리 빌라',
-    score: 4.95,
-    icon: '🌅',
-  },
-  {
-    rank: '02',
-    type: '워크앤스테이',
-    title: '남해 올리브 팜스테이',
-    score: 4.92,
-    icon: '✉️',
-  },
-  {
-    rank: '03',
-    type: '오피스',
-    title: '성수 브릭라운지',
-    score: 4.88,
-    icon: '🧱',
-  },
-  {
-    rank: '04',
-    type: '워크앤스테이',
-    title: '속초 설악 글램스테이',
-    score: 4.87,
-    icon: '⛰️',
-  },
-];
+// SearchResDto → 추천 섹션 카드 객체
+function toRecoCard(dto, idx) {
+  return {
+    id: dto.placeNo,
+    type: dto.type,
+    title: dto.title,
+    location: dto.address,
+    score: dto.avgScore != null ? Number(dto.avgScore.toFixed(2)) : null,
+    reviewCount: 0,
+    price: dto.basePrice ?? 0,
+    priceUnit: TYPE_UNIT[dto.type] ?? '원~',
+    badge: BADGES[idx] ?? null,
+    icon: TYPE_ICON[dto.type] ?? '🏠',
+  };
+}
+
+// SearchResDto → 인기 랭킹 카드 객체
+function toRankCard(dto, idx) {
+  return {
+    rank: String(idx + 1).padStart(2, '0'),
+    id: dto.placeNo,
+    type: dto.type,
+    title: dto.title,
+    score: dto.avgScore != null ? Number(dto.avgScore.toFixed(2)) : null,
+    icon: TYPE_ICON[dto.type] ?? '🏠',
+  };
+}
 
 const float = keyframes`
   0%, 100% { transform: translateY(0); }
@@ -543,6 +506,18 @@ function MainPage() {
   const [guests, setGuests] = useState(1);
   const [spaceType, setSpaceType] = useState('전체');
   const [region, setRegion] = useState('전체');
+  const [recommended, setRecommended] = useState([]);
+  const [topSpaces, setTopSpaces] = useState([]);
+
+  // 마운트 시 추천(평점순 상위 3개) · 인기(인기순 상위 4개) 로드
+  useEffect(() => {
+    searchSpaces({ sort: '평점순' })
+      .then((data) => setRecommended(data.slice(0, 3).map(toRecoCard)))
+      .catch((e) => console.error(e));
+    searchSpaces({ sort: '인기순' })
+      .then((data) => setTopSpaces(data.slice(0, 4).map(toRankCard)))
+      .catch((e) => console.error(e));
+  }, []);
 
   const goSearch = () => {
     navigate('/spaces/search', {
@@ -763,7 +738,7 @@ function MainPage() {
           <MoreLink onClick={goSearch}>전체 보기 →</MoreLink>
         </SectionRow>
         <RecoGrid>
-          {RECOMMENDED.map((s) => (
+          {recommended.map((s) => (
             <RecoCard key={s.id} onClick={() => goDetail(s.type, s.id)}>
               <RecoImg>
                 {s.icon}
@@ -780,7 +755,7 @@ function MainPage() {
                 >
                   <RecoType>{s.type}</RecoType>
                   <span style={{ fontSize: 12, color: COLOR.gray400 }}>
-                    ★ {s.score} ({s.reviewCount})
+                    {s.score != null ? `★ ${s.score}` : ''}
                   </span>
                 </div>
                 <div style={{ fontSize: 15, fontWeight: 700, marginBottom: 3 }}>
@@ -796,17 +771,19 @@ function MainPage() {
                   📍 {s.location}
                 </div>
                 <div style={{ fontSize: 15, fontWeight: 700 }}>
-                  {s.price.toLocaleString()}
-                  <span
-                    style={{
-                      fontSize: 12,
-                      fontWeight: 400,
-                      color: COLOR.gray400,
-                    }}
-                  >
-                    {' '}
-                    {s.priceUnit}
-                  </span>
+                  {s.price ? s.price.toLocaleString() : '—'}
+                  {s.price > 0 && (
+                    <span
+                      style={{
+                        fontSize: 12,
+                        fontWeight: 400,
+                        color: COLOR.gray400,
+                      }}
+                    >
+                      {' '}
+                      {s.priceUnit}
+                    </span>
+                  )}
                 </div>
               </RecoBody>
             </RecoCard>
@@ -823,10 +800,10 @@ function MainPage() {
           </div>
         </SectionRow>
         <RankGrid>
-          {TOP_SPACES.map((s, i) => (
+          {topSpaces.map((s, i) => (
             <RankCard
               key={i}
-              onClick={() => navigate(`/spaces/${i + 1}/rooms`)}
+              onClick={() => navigate(`/spaces/${s.id}/rooms`)}
             >
               <RankNum>{s.rank}</RankNum>
               <div style={{ fontSize: 32, marginBottom: 10 }}>{s.icon}</div>
@@ -834,9 +811,11 @@ function MainPage() {
                 {s.title}
               </div>
               <TypeTag>{s.type}</TypeTag>
-              <div style={{ fontSize: 13, color: '#C97D4C', marginTop: 6 }}>
-                ★ {s.score}
-              </div>
+              {s.score != null && (
+                <div style={{ fontSize: 13, color: '#C97D4C', marginTop: 6 }}>
+                  ★ {s.score}
+                </div>
+              )}
             </RankCard>
           ))}
         </RankGrid>

@@ -119,8 +119,12 @@ function RecentCard({ item, onDelete, onClick }) {
           }}
         >
           <span>📍 {item.location}</span>
-          <span>·</span>
-          <Rating>★ {item.rating}</Rating>
+          {item.rating != null && (
+            <>
+              <span>·</span>
+              <Rating>★ {item.rating}</Rating>
+            </>
+          )}
         </div>
       </div>
       <div
@@ -133,8 +137,8 @@ function RecentCard({ item, onDelete, onClick }) {
         }}
       >
         <Price>
-          {item.price.toLocaleString()}
-          <span>원~</span>
+          {item.price != null ? item.price.toLocaleString() : '—'}
+          {item.price != null && <span>원~</span>}
         </Price>
         <DeleteBtn
           onClick={(e) => {

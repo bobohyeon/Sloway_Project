@@ -4,129 +4,29 @@ import styled from 'styled-components';
 import SpaceCard from '../../components/user/SpaceCard';
 import MainHeader from '../../../../main/layouts/MainHeader';
 import { COLOR } from '../../../../rsvn/components/user/RsvnStyled';
+import { searchSpaces } from '../../../api/searchApi';
 
-const ALL_SPACES = [
-  {
-    id: 1,
-    type: '워크앤스테이',
-    title: '청평 숲속 파인뷰 스테이',
-    location: '경기 가평',
-    region: '경기',
-    score: 4.9,
-    reviewCount: 127,
-    price: 185000,
-    priceUnit: '원/박',
-    amenities: ['모니터', '회의실', '와이파이'],
-    roomLeft: 3,
-    soldOut: false,
-    icon: '🌲',
-  },
-  {
-    id: 2,
-    type: '오피스',
-    title: '강릉 바다향 커먼워크',
-    location: '강원 강릉',
-    region: '강원',
-    score: 4.8,
-    reviewCount: 203,
-    price: 28000,
-    priceUnit: '원/4h',
-    amenities: ['프린터', '폰부스', 'webcam'],
-    roomLeft: 0,
-    soldOut: false,
-    icon: '🌊',
-  },
-  {
-    id: 3,
-    type: '숙소',
-    title: '제주 돌담집 리트릿',
-    location: '제주 서귀포',
-    region: '제주',
-    score: 4.9,
-    reviewCount: 89,
-    price: 220000,
-    priceUnit: '원/박',
-    amenities: ['주방', '어메니티', '세탁기'],
-    roomLeft: 1,
-    soldOut: false,
-    icon: '🌴',
-  },
-  {
-    id: 4,
-    type: '워크앤스테이',
-    title: '남해 올리브 팜스테이',
-    location: '경남 남해',
-    region: '경상',
-    score: 4.92,
-    reviewCount: 156,
-    price: 165000,
-    priceUnit: '원/박',
-    amenities: ['모니터', '공용라운지', '와이파이'],
-    roomLeft: 2,
-    soldOut: false,
-    icon: '✉️',
-  },
-  {
-    id: 5,
-    type: '오피스',
-    title: '성수 브릭라운지',
-    location: '서울 성수',
-    region: '서울',
-    score: 4.88,
-    reviewCount: 312,
-    price: 25000,
-    priceUnit: '원/4h',
-    amenities: ['PC', '빔프로젝터', '주차'],
-    roomLeft: 0,
-    soldOut: false,
-    icon: '🧱',
-  },
-  {
-    id: 6,
-    type: '숙소',
-    title: '양양 파도소리 빌라',
-    location: '강원 양양',
-    region: '강원',
-    score: 4.95,
-    reviewCount: 94,
-    price: 240000,
-    priceUnit: '원/박',
-    amenities: ['주방', '세탁기', '스타일러'],
-    roomLeft: 0,
-    soldOut: true,
-    icon: '🌅',
-  },
-  {
-    id: 7,
-    type: '워크앤스테이',
-    title: '속초 설악 글램스테이',
-    location: '강원 속초',
-    region: '강원',
-    score: 4.87,
-    reviewCount: 78,
-    price: 210000,
-    priceUnit: '원/박',
-    amenities: ['모니터', '와이파이', '주방'],
-    roomLeft: 1,
-    soldOut: false,
-    icon: '⛰️',
-  },
-  {
-    id: 8,
-    type: '숙소',
-    title: '전주 한옥 스테이',
-    location: '전북 전주',
-    region: '전라',
-    score: 4.82,
-    reviewCount: 62,
-    price: 180000,
-    priceUnit: '원/박',
-    amenities: ['주방', '어메니티'],
-    roomLeft: 2,
-    soldOut: false,
-    icon: '🏯',
-  },
-];
+// 타입별 기본 아이콘 · 가격 단위
+const TYPE_ICON  = { 워크앤스테이: '🌿', 오피스: '💻', 숙소: '🛌' };
+const TYPE_UNIT  = { 워크앤스테이: '원/박', 오피스: '원/4h', 숙소: '원/박' };
+
+// SearchResDto → SpaceCard 호환 객체
+function toSpaceCard(dto) {
+  return {
+    id: dto.placeNo,
+    type: dto.type,
+    title: dto.title,
+    location: dto.address,
+    score: dto.avgScore ?? 0,
+    reviewCount: 0,
+    price: dto.basePrice ?? 0,
+    priceUnit: TYPE_UNIT[dto.type] ?? '원~',
+    amenities: [],
+    roomLeft: dto.remainCount ?? null,
+    soldOut: dto.available === false,
+    icon: TYPE_ICON[dto.type] ?? '🏠',
+  };
+}
 
 const TYPE_TABS = ['전체', '워크앤스테이', '오피스', '숙소'];
 const REGIONS = [
@@ -390,6 +290,19 @@ const EmptyBox = styled.div`
   grid-column: 1 / -1;
 `;
 
+const DateInput = styled.input`
+  width: 100%;
+  padding: 7px 10px;
+  border: 1px solid ${COLOR.gray200};
+  border-radius: 8px;
+  font-size: 13px;
+  font-family: 'Noto Sans KR', sans-serif;
+  outline: none;
+  cursor: pointer;
+  box-sizing: border-box;
+  &:focus { border-color: ${COLOR.sage}; }
+`;
+
 function SearchResultPage() {
   const navigate = useNavigate();
   const { state } = useLocation();
@@ -406,6 +319,10 @@ function SearchResultPage() {
   const [priceIdx, setPriceIdx] = useState(0);
   const [amenities, setAmenities] = useState([]);
   const [sort, setSort] = useState('인기순');
+  const [spaces, setSpaces] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [checkIn, setCheckIn] = useState('');
+  const [checkOut, setCheckOut] = useState('');
 
   // 페이지 이동할 때 state 반영
   useEffect(() => {
@@ -415,7 +332,27 @@ function SearchResultPage() {
     }
     if (state?.region) setRegion(state.region);
     if (state?.guests) setGuests(state.guests);
+    if (state?.checkIn) setCheckIn(state.checkIn);
+    if (state?.checkOut) setCheckOut(state.checkOut);
   }, [state]);
+
+  // 타입·지역·정렬·날짜 변경 시 API 재조회
+  useEffect(() => {
+    async function load() {
+      setLoading(true);
+      try {
+        const placeType = activeTab > 0 ? TYPE_TABS[activeTab] : null;
+        const data = await searchSpaces({ region, placeType, sort, checkIn, checkOut });
+        setSpaces(data.map(toSpaceCard));
+      } catch (e) {
+        console.error(e);
+        setSpaces([]);
+      } finally {
+        setLoading(false);
+      }
+    }
+    load();
+  }, [activeTab, region, sort, checkIn, checkOut]);
 
   const toggleAmenity = (a) =>
     setAmenities((prev) =>
@@ -428,24 +365,16 @@ function SearchResultPage() {
     setGuests(2);
     setPriceIdx(0);
     setAmenities([]);
+    setCheckIn('');
+    setCheckOut('');
   };
 
+  // 가격 필터만 클라이언트 처리 (타입·지역·정렬·날짜는 서버)
   const filtered = useMemo(() => {
-    let list = [...ALL_SPACES];
-    if (activeTab > 0)
-      list = list.filter((s) => s.type === TYPE_TABS[activeTab]);
-    if (region !== '전체') list = list.filter((s) => s.region === region);
+    if (priceIdx === 0) return spaces;
     const { min, max } = PRICE_RANGES[priceIdx];
-    list = list.filter((s) => s.price >= min && s.price <= max);
-    if (amenities.length > 0)
-      list = list.filter((s) =>
-        amenities.every((a) => s.amenities.includes(a))
-      );
-    if (sort === '가격 낮은순') list.sort((a, b) => a.price - b.price);
-    else if (sort === '가격 높은순') list.sort((a, b) => b.price - a.price);
-    else if (sort === '평점순') list.sort((a, b) => b.score - a.score);
-    return list;
-  }, [activeTab, region, guests, priceIdx, amenities, sort]);
+    return spaces.filter((s) => s.price >= min && s.price <= max);
+  }, [spaces, priceIdx]);
 
   // 카드 클릭 → 방 리스트 페이지
   const handleCardClick = (item) => {
@@ -469,6 +398,37 @@ function SearchResultPage() {
           >
             필터
           </div>
+
+          <FilterSection>
+            <FilterTitle>체크인 · 체크아웃</FilterTitle>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+              <DateInput
+                type="date"
+                value={checkIn}
+                min={new Date().toISOString().slice(0, 10)}
+                onChange={(e) => {
+                  setCheckIn(e.target.value);
+                  // 체크인이 체크아웃보다 늦으면 체크아웃 초기화
+                  if (checkOut && e.target.value >= checkOut) setCheckOut('');
+                }}
+              />
+              <DateInput
+                type="date"
+                value={checkOut}
+                min={checkIn || new Date().toISOString().slice(0, 10)}
+                disabled={!checkIn}
+                onChange={(e) => setCheckOut(e.target.value)}
+                style={{ opacity: checkIn ? 1 : 0.5, cursor: checkIn ? 'pointer' : 'not-allowed' }}
+              />
+              {checkIn && checkOut && (
+                <span style={{ fontSize: 11, color: COLOR.gray400 }}>
+                  {Math.round((new Date(checkOut) - new Date(checkIn)) / 86400000)}박
+                </span>
+              )}
+            </div>
+          </FilterSection>
+
+          <Divider />
 
           <FilterSection>
             <FilterTitle>지역</FilterTitle>
@@ -560,7 +520,12 @@ function SearchResultPage() {
 
           <SearchChips>
             <Chip>📍 {region === '전체' ? '전체 지역' : region}</Chip>
-            <Chip>📅 5월 8일 ~ 5월 10일</Chip>
+            <Chip>
+              📅{' '}
+              {checkIn && checkOut
+                ? `${checkIn.slice(5).replace('-', '월 ')}일 ~ ${checkOut.slice(5).replace('-', '월 ')}일`
+                : '날짜 미선택'}
+            </Chip>
             <Chip>👤 {guests}명</Chip>
           </SearchChips>
 
@@ -616,7 +581,9 @@ function SearchResultPage() {
           </SortRow>
 
           <Grid>
-            {filtered.length > 0 ? (
+            {loading ? (
+              <EmptyBox>🔍 검색 중...</EmptyBox>
+            ) : filtered.length > 0 ? (
               filtered.map((item) => (
                 <SpaceCard
                   key={item.id}
