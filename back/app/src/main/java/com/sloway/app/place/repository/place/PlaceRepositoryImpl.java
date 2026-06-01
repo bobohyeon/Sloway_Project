@@ -1,27 +1,25 @@
 package com.sloway.app.place.repository.place;
 
-import com.querydsl.core.types.ExpressionUtils;
+import com.querydsl.core.Tuple;
 import com.querydsl.core.types.Projections;
-import com.querydsl.core.types.dsl.CaseBuilder; // CaseBuilder 임포트
-import com.querydsl.core.types.dsl.Expressions;
+import com.querydsl.core.types.dsl.*;
 import com.querydsl.jpa.JPAExpressions;
+import com.querydsl.jpa.JPQLQuery;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import com.sloway.app.place.dto.request.place.PlaceUpdateReqDto;
-import com.sloway.app.place.dto.response.place.MasterPlaceRespDto;
-import com.sloway.app.place.dto.response.place.PlaceDetailListRespDto;
-import com.sloway.app.place.dto.response.place.PlaceImgListRespDto;
-import com.sloway.app.place.dto.response.place.PlaceListRespDto;
-import com.sloway.app.place.dto.response.workStay.WorkStayImageListRespDto;
+import com.sloway.app.place.dto.response.place.*;
+import com.sloway.app.place.entity.place.PlaceStatus;
 import lombok.RequiredArgsConstructor;
 
 import java.time.LocalDateTime;
 import java.time.temporal.TemporalAdjusters;
+import java.util.Arrays;
 import java.util.List;
+import java.util.Random;
 
 import static com.sloway.app.place.entity.place.QPlaceEntity.placeEntity;
 import static com.sloway.app.place.entity.hostPlace.QHostPlaceEntity.hostPlaceEntity;
 import static com.sloway.app.host.entity.QHostEntity.hostEntity;
-import static com.sloway.app.member.entity.QMemberEntity.memberEntity;
 import static com.sloway.app.place.entity.workStay.QWorkStayEntity.workStayEntity;
 import static com.sloway.app.place.entity.workStay.QImgWorkStayEntity.imgWorkStayEntity;
 import static com.sloway.app.place.entity.office.QOfficeEntity.officeEntity;
@@ -29,11 +27,11 @@ import static com.sloway.app.place.entity.place.QImgPlaceEntity.imgPlaceEntity;
 import static com.sloway.app.place.entity.office.QImgOfficeEntity.imgOfficeEntity;
 import static com.sloway.app.place.entity.station.QImgStationEntity.imgStationEntity;
 import static com.sloway.app.place.entity.station.QStationEntity.stationEntity;
-import static com.sloway.app.place.entity.workStay.workOffice.QImgWorkStayOfficeEntity.imgWorkStayOfficeEntity;
-import static com.sloway.app.place.entity.workStay.workOffice.QWorkOfficeEntity.workOfficeEntity;
 import static com.sloway.app.reservation.rsvn.entity.QRsvnEntity.rsvnEntity;
 import static com.sloway.app.review.review.entity.QReviewEntity.reviewEntity;
 import static com.sloway.app.place.entity.office.QOfficePeriodEntity.officePeriodEntity;
+import static com.sloway.app.place.entity.amenity.QAmenityEntity.amenityEntity;
+import static com.sloway.app.place.entity.amenity.workStay.QWorkAmenityEntity.workAmenityEntity;
 
 @RequiredArgsConstructor
 public class PlaceRepositoryImpl implements PlaceRepositoryCustom {
@@ -326,6 +324,194 @@ public class PlaceRepositoryImpl implements PlaceRepositoryCustom {
         return PlaceImgListRespDto.builder()
                 .placeImages(placeList != null ? placeList : List.of())
                 .build();
+    }
+
+    @Override
+    public List<PlaceCardDto> getTop4PlacesByType() {
+        LocalDateTime oneWeekAgo = LocalDateTime.now().minusDays(7);
+
+        // 1. 점수 로직 정의
+        NumberExpression<Integer> finalScore = new CaseBuilder()
+                .when(rsvnEntity.no.countDistinct().eq(0L))
+                .then(new CaseBuilder().when(placeEntity.createdAt.goe(oneWeekAgo)).then(0.5).otherwise(0.0))
+                .otherwise(
+                        (rsvnEntity.no.countDistinct().doubleValue().multiply(0.7)
+                                .add(reviewEntity.scoreTotal.avg().coalesce(0.0).multiply(0.3)))
+                                .multiply(new CaseBuilder().when(placeEntity.createdAt.goe(oneWeekAgo)).then(0.5).otherwise(1.0))
+                )
+                .multiply(100)
+                .round()
+                .intValue();
+
+        // 2. 재사용 가능한 식 정의 (SELECT와 GROUP BY에서 동일하게 사용)
+        NumberExpression<Long> targetNo = stationEntity.no.coalesce(officeEntity.no).coalesce(workStayEntity.no);
+        StringExpression combinedTitle = placeEntity.title.concat(" ").concat(
+                stationEntity.title.coalesce(officeEntity.title).coalesce(workStayEntity.title)
+        );
+
+        return queryFactory
+                .select(Projections.constructor(PlaceCardDto.class,
+                        targetNo,
+                        combinedTitle,
+                        placeEntity.type,
+                        imgPlaceEntity.currentUrl,
+                        placeEntity.address,
+                        Expressions.asNumber(0),
+                        finalScore,
+                        rsvnEntity.no.countDistinct().intValue(),
+                        reviewEntity.scoreTotal.avg().coalesce(0.0),
+                        placeEntity.createdAt.goe(oneWeekAgo),
+                        placeEntity.status.stringValue()
+                ))
+                .from(placeEntity)
+                .leftJoin(stationEntity).on(stationEntity.placeEntity.no.eq(placeEntity.no))
+                .leftJoin(officeEntity).on(officeEntity.placeEntity.no.eq(placeEntity.no))
+                .leftJoin(workStayEntity).on(workStayEntity.placeEntity.no.eq(placeEntity.no))
+                .leftJoin(rsvnEntity).on(rsvnEntity.stationNo.eq(stationEntity)
+                        .or(rsvnEntity.officeNo.eq(officeEntity))
+                        .or(rsvnEntity.workStayNo.eq(workStayEntity)))
+                .leftJoin(reviewEntity).on(reviewEntity.rsvnNo.eq(rsvnEntity))
+                .leftJoin(imgPlaceEntity).on(imgPlaceEntity.placeEntity.no.eq(placeEntity.no).and(imgPlaceEntity.sort.eq(1)))
+                .where(placeEntity.status.eq(PlaceStatus.I))
+                // 핵심: SELECT 절에 사용된 연산식을 그대로 GROUP BY에 삽입
+                .groupBy(
+                        stationEntity.no, officeEntity.no, workStayEntity.no,
+                        placeEntity.title, stationEntity.title, officeEntity.title, workStayEntity.title,
+                        placeEntity.type,
+                        placeEntity.address,
+                        placeEntity.status,
+                        imgPlaceEntity.currentUrl,
+                        placeEntity.no,
+                        placeEntity.createdAt
+                )
+                .orderBy(finalScore.desc())
+                .limit(4)
+                .fetch();
+    }
+
+    @Override
+    public List<PlaceCardDto> getRecommendPlace() {
+        LocalDateTime oneWeekAgo = LocalDateTime.now().minusDays(7);
+
+        // 1. Office 최소 가격 서브쿼리
+        JPQLQuery<Integer> subQuery = JPAExpressions
+                .select(officePeriodEntity.price.min())
+                .from(officePeriodEntity)
+                .where(officePeriodEntity.officeEntity.eq(officeEntity)
+                        .and(officePeriodEntity.exceptionStartDate.isNull()));
+        NumberExpression<Integer> minOfficePrice = Expressions.asNumber(subQuery);
+
+        // 2. 가격 병합 로직 복구
+        NumberExpression<Integer> combinedPrice = stationEntity.monPrice
+                .coalesce(minOfficePrice)
+                .coalesce(workStayEntity.monPrice)
+                .coalesce(0);
+
+        // 3. 점수 로직
+        String scoreLogic = "ROUND((CASE WHEN COUNT(DISTINCT {1}) = 0 " +
+                "THEN (CASE WHEN {2} >= {0} THEN 0.5 ELSE 0.0 END) " +
+                "ELSE ((COUNT(DISTINCT {1}) * 0.7) + (COALESCE(AVG({3}), 0) * 0.3)) * (CASE WHEN {2} >= {0} THEN 0.5 ELSE 1.0 END) " +
+                "END) * 100, 0)";
+        NumberExpression<Double> scoreDouble = Expressions.numberTemplate(Double.class, scoreLogic,
+                oneWeekAgo, rsvnEntity.no, placeEntity.createdAt, reviewEntity.scoreTotal);
+
+        return queryFactory
+                .select(Projections.constructor(PlaceCardDto.class,
+                        stationEntity.no.coalesce(officeEntity.no).coalesce(workStayEntity.no), // targetNo
+                        placeEntity.title.concat(" - ").concat(stationEntity.title.coalesce(officeEntity.title).coalesce(workStayEntity.title)), // combinedTitle
+                        placeEntity.type,
+                        imgPlaceEntity.currentUrl,
+                        placeEntity.address,
+                        combinedPrice, // 가격 정보 복구 완료
+                        scoreDouble.intValue(),
+                        rsvnEntity.no.countDistinct().intValue(),
+                        reviewEntity.scoreTotal.avg().coalesce(0.0),
+                        placeEntity.createdAt.goe(oneWeekAgo),
+                        placeEntity.status.stringValue()
+                ))
+                .from(placeEntity)
+                .leftJoin(stationEntity).on(stationEntity.placeEntity.no.eq(placeEntity.no))
+                .leftJoin(officeEntity).on(officeEntity.placeEntity.no.eq(placeEntity.no))
+                .leftJoin(workStayEntity).on(workStayEntity.placeEntity.no.eq(placeEntity.no))
+                .leftJoin(rsvnEntity).on(rsvnEntity.stationNo.eq(stationEntity)
+                        .or(rsvnEntity.officeNo.eq(officeEntity))
+                        .or(rsvnEntity.workStayNo.eq(workStayEntity)))
+                .leftJoin(reviewEntity).on(reviewEntity.rsvnNo.eq(rsvnEntity))
+                .leftJoin(imgPlaceEntity).on(imgPlaceEntity.placeEntity.no.eq(placeEntity.no).and(imgPlaceEntity.sort.eq(1)))
+                .where(placeEntity.status.eq(PlaceStatus.I))
+                // 에러 방지: SELECT 절의 모든 원본 컬럼과 가격 로직 포함
+                .groupBy(
+                        placeEntity.no,
+                        stationEntity.no, officeEntity.no, workStayEntity.no,
+                        placeEntity.title, stationEntity.title, officeEntity.title, workStayEntity.title,
+                        placeEntity.type,
+                        imgPlaceEntity.currentUrl,
+                        placeEntity.address,
+                        placeEntity.createdAt,
+                        placeEntity.status,
+                        stationEntity.monPrice,
+                        workStayEntity.monPrice // 그룹핑에 가격 관련 원본 컬럼 추가
+                )
+                .orderBy(scoreDouble.desc())
+                .limit(3)
+                .fetch();
+    }
+
+    @Override
+    public WorkStayCardDto getRandomWorkStay() {
+        LocalDateTime oneWeekAgo = LocalDateTime.now().minusDays(7);
+
+        // 1. 점수 로직 (WorkStay 기준 예약/리뷰)
+        String scoreLogic = "ROUND((CASE WHEN COUNT(DISTINCT {1}) = 0 " +
+                "THEN (CASE WHEN {2} >= {0} THEN 0.5 ELSE 0.0 END) " +
+                "ELSE ((COUNT(DISTINCT {1}) * 0.7) + (COALESCE(AVG({3}), 0) * 0.3)) * (CASE WHEN {2} >= {0} THEN 0.5 ELSE 1.0 END) " +
+                "END) * 100, 0)";
+
+        NumberExpression<Double> scoreDouble = Expressions.numberTemplate(Double.class, scoreLogic,
+                oneWeekAgo, rsvnEntity.no, placeEntity.createdAt, reviewEntity.scoreTotal);
+
+        // 2. 쿼리 구성 (WorkStay 중심)
+        List<Tuple> results = queryFactory
+                .select(
+                        workStayEntity.no,
+                        placeEntity.title.concat(" ").concat(workStayEntity.title),
+                        placeEntity.address,
+                        imgPlaceEntity.currentUrl,
+                        workStayEntity.monPrice.coalesce(0),
+                        Expressions.stringTemplate("string_agg({0}, ',')", amenityEntity.name)
+                )
+                .from(workStayEntity)
+                .join(placeEntity).on(workStayEntity.placeEntity.no.eq(placeEntity.no))
+                .leftJoin(imgPlaceEntity).on(imgPlaceEntity.placeEntity.no.eq(placeEntity.no).and(imgPlaceEntity.sort.eq(1)))
+                .leftJoin(rsvnEntity).on(rsvnEntity.workStayNo.eq(workStayEntity)) // station/office 관련 조인 제거
+                .leftJoin(reviewEntity).on(reviewEntity.rsvnNo.eq(rsvnEntity))
+                .leftJoin(workAmenityEntity).on(workAmenityEntity.workStayEntity.no.eq(workStayEntity.no))
+                .leftJoin(amenityEntity).on(amenityEntity.no.eq(workAmenityEntity.amenityEntity.no))
+                .where(placeEntity.status.eq(PlaceStatus.I))
+                .groupBy(
+                        workStayEntity.no,
+                        placeEntity.title,
+                        workStayEntity.title,
+                        placeEntity.address,
+                        placeEntity.createdAt,
+                        imgPlaceEntity.currentUrl,
+                        workStayEntity.monPrice
+                )
+                .orderBy(scoreDouble.desc())
+                .limit(5)
+                .fetch();
+
+        // 3. 변환 (DTO 매핑 및 랜덤 선택)
+        List<WorkStayCardDto> candidates = results.stream().map(tuple -> WorkStayCardDto.builder()
+                .workStayNo(tuple.get(0, Long.class))
+                .title(tuple.get(1, String.class))
+                .address(tuple.get(2, String.class))
+                .mainImageUrl(tuple.get(3, String.class))
+                .price(tuple.get(4, Integer.class))
+                .amenities(tuple.get(5, String.class) != null ? Arrays.asList(tuple.get(5, String.class).split(",")) : null)
+                .build()).toList();
+
+        return candidates.isEmpty() ? null : candidates.get(new Random().nextInt(candidates.size()));
     }
 
 }
