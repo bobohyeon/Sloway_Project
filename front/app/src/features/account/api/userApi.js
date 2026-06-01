@@ -17,3 +17,12 @@ export const changeMyEmail = async (newEmail) => {
   const response = await api.patch('/user/mypage/email', { newEmail });
   return response.data;
 };
+
+/** 비밀번호 변경. PATCH /api/user/mypage/password */
+export const changeMyPassword = async (currentPassword, newPassword) => {
+  const response = await api.patch('/user/mypage/password', {
+    currentPassword,
+    newPassword,
+  });
+  return response.data;
+};

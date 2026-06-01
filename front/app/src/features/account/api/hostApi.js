@@ -9,3 +9,15 @@ export const getHostMyPage = async () => {
   const response = await api.get('/host/mypage');
   return response.data;
 };
+
+/** 호스트 마이페이지 수정. PATCH /api/host/mypage */
+export const updateHostMyPage = async (data) => {
+  const response = await api.patch('/host/mypage', data);
+  return response.data;
+};
+
+/** 호스트 이메일 변경. PATCH /api/host/mypage/email */
+export const changeHostEmail = async (newEmail) => {
+  const response = await api.patch('/host/mypage/email', { newEmail });
+  return response.data;
+};

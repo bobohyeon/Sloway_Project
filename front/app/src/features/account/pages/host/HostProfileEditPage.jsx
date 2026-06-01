@@ -1,24 +1,13 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import styled from 'styled-components';
 import { useNavigate } from 'react-router-dom';
+import { useDispatch } from 'react-redux';
 import { FaLock } from 'react-icons/fa';
 import PageLayout from '../../../../app/layouts/page/PageLayout';
-
-// ─── 더미 초기 데이터 (백엔드 연동 후 GET API로 교체) ───────
-const DUMMY_INITIAL = {
-  imgUrl: null,
-  businessName: '청평 힐링 스테이',
-  representative: '김우영',
-  businessNumber: '123-45-67890',
-  introduction:
-    '청평에서 자연과 함께하는 휴식 공간을 운영하고 있습니다. 도시의 소음에서 벗어나 진짜 쉼을 찾는 분들을 위한 공간이에요.',
-  contactName: '김우영',
-  email: 'wykim@sloway.co.kr',
-  phone: '010-1234-5678',
-  bank: 'KB국민은행',
-  accountNumber: '123-456-789012',
-  accountHolder: '김우영',
-};
+import EmailVerifyField from '../../components/user/EmailVerifyField';
+import { useHostMyPage } from '../../hooks/useHostMyPage';
+import { updateHostMyPage, changeHostEmail } from '../../api/hostApi';
+import { logout } from '../../../auth/store/authSlice';
 
 const BANKS = [
   'KB국민은행',
@@ -293,44 +282,89 @@ const GhostBtn = styled.button`
 // ─── 컴포넌트 ──────────────────────────────────────────────
 function HostProfileEditPage() {
   const navigate = useNavigate();
-  const initial = DUMMY_INITIAL;
+  const dispatch = useDispatch();
+  const { data: initial, loading } = useHostMyPage();
+
+  // 수정 가능 필드 (백엔드가 받는 것만): 상호명·이름·휴대폰
+  const [form, setForm] = useState({ businessName: '', name: '', phone: '' });
+  const [saving, setSaving] = useState(false);
+
+  // 이메일 변경 (별도)
+  const [newEmail, setNewEmail] = useState('');
+  const [emailVerified, setEmailVerified] = useState(false);
+  const [changingEmail, setChangingEmail] = useState(false);
+
+  useEffect(() => {
+    if (initial) {
+      setForm({
+        businessName: initial.businessName ?? '',
+        name: initial.name ?? '',
+        phone: initial.phone ?? '',
+      });
+      setNewEmail(initial.email ?? '');
+    }
+  }, [initial]);
+
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setForm((prev) => ({ ...prev, [name]: value }));
+  };
+
+  // ── 기본 정보 저장 (상호명·이름·휴대폰) ──
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    if (saving) return;
+    setSaving(true);
+    try {
+      await updateHostMyPage({
+        businessName: form.businessName.trim(),
+        name: form.name.trim(),
+        phone: form.phone,
+      });
+      alert('저장되었습니다.');
+      navigate('/host/profile');
+    } catch (err) {
+      alert(err.response?.data?.message ?? '저장에 실패했습니다.');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  // ── 이메일 변경 → 성공 시 로그아웃 ──
+  const handleEmailChange = async () => {
+    if (!emailVerified || changingEmail) return;
+    setChangingEmail(true);
+    try {
+      await changeHostEmail(newEmail);
+      alert('이메일이 변경되었습니다. 보안을 위해 다시 로그인해주세요.');
+      dispatch(logout());
+      navigate('/host/login');
+    } catch (err) {
+      alert(err.response?.data?.message ?? '이메일 변경에 실패했습니다.');
+    } finally {
+      setChangingEmail(false);
+    }
+  };
+
+  if (loading || !initial) {
+    return (
+      <PageLayout title="호스트 정보 수정">
+        <div style={{ padding: 40, color: '#888' }}>불러오는 중...</div>
+      </PageLayout>
+    );
+  }
 
   return (
     <PageLayout title="호스트 정보 수정">
-      <Form noValidate>
-        {/* 프로필 이미지 */}
-        <Card>
-          <SectionTitle>프로필 이미지</SectionTitle>
-          <ImageRow>
-            <ImagePreview>
-              {initial.imgUrl ? (
-                <img src={initial.imgUrl} alt="프로필" />
-              ) : (
-                initial.businessName[0]
-              )}
-            </ImagePreview>
-            <ImageActions>
-              <ImageBtn>
-                이미지 변경
-                <input
-                  type="file"
-                  accept="image/*"
-                  style={{ display: 'none' }}
-                />
-              </ImageBtn>
-              <RemoveBtn type="button">삭제</RemoveBtn>
-            </ImageActions>
-          </ImageRow>
-        </Card>
-
+      <Form onSubmit={handleSubmit} noValidate>
         {/* 사업자 정보 */}
         <Card>
           <SectionTitle>사업자 정보</SectionTitle>
           <LockNotice>
             <FaLock size={11} />
             <span>
-              대표자명, 사업자등록번호, 사업자등록증은 사업자 신원과 직결된
-              정보예요. 변경하려면 호스트 재인증이 필요해요.
+              대표자명·사업자등록번호는 사업자 신원과 직결된 정보예요.
+              변경하려면 호스트 재인증이 필요해요.
             </span>
           </LockNotice>
 
@@ -338,48 +372,18 @@ function HostProfileEditPage() {
             <Label htmlFor="businessName">상호명</Label>
             <Input
               id="businessName"
-              defaultValue={initial.businessName}
+              name="businessName"
+              value={form.businessName}
+              onChange={handleChange}
               placeholder="상호명을 입력해주세요"
             />
             <HelpText>고객에게 노출되는 공간 운영 이름입니다.</HelpText>
           </FormGroup>
 
           <FormGroup>
-            <Label htmlFor="representative">대표자명</Label>
-            <Input
-              id="representative"
-              defaultValue={initial.representative}
-              disabled
-            />
+            <Label htmlFor="businessNo">사업자등록번호</Label>
+            <Input id="businessNo" value={initial.businessNo ?? ''} disabled />
             <HelpText>변경할 수 없습니다.</HelpText>
-          </FormGroup>
-
-          <FormGroup>
-            <Label htmlFor="businessNumber">사업자등록번호</Label>
-            <Input
-              id="businessNumber"
-              defaultValue={initial.businessNumber}
-              disabled
-            />
-            <HelpText>변경할 수 없습니다.</HelpText>
-          </FormGroup>
-        </Card>
-
-        {/* 호스트 소개 */}
-        <Card>
-          <SectionTitle>호스트 소개</SectionTitle>
-          <FormGroup>
-            <Label htmlFor="introduction">소개글</Label>
-            <Textarea
-              id="introduction"
-              defaultValue={initial.introduction}
-              maxLength={INTRO_MAX}
-              placeholder="공간과 호스트를 게스트에게 소개해주세요"
-            />
-            <TextareaFooter>
-              <HelpText>게스트에게 노출되는 정보입니다.</HelpText>
-              <CharCount>0 / {INTRO_MAX}</CharCount>
-            </TextareaFooter>
           </FormGroup>
         </Card>
 
@@ -388,71 +392,27 @@ function HostProfileEditPage() {
           <SectionTitle>담당자 연락처</SectionTitle>
 
           <FormGroup>
-            <Label htmlFor="contactName">담당자명</Label>
+            <Label htmlFor="name">담당자명</Label>
             <Input
-              id="contactName"
-              defaultValue={initial.contactName}
+              id="name"
+              name="name"
+              value={form.name}
+              onChange={handleChange}
               placeholder="실제 응대하는 담당자 이름"
             />
-          </FormGroup>
-
-          <FormGroup>
-            <Label htmlFor="email">이메일</Label>
-            <InputRow>
-              <Input
-                id="email"
-                type="email"
-                defaultValue={initial.email}
-                style={{ flex: 1 }}
-              />
-              <BtnAction type="button">인증 발송</BtnAction>
-            </InputRow>
-            <HelpText>
-              이메일 변경 시 재인증이 필요해요. 인증 링크 유효시간은 30분이에요.
-            </HelpText>
           </FormGroup>
 
           <FormGroup>
             <Label htmlFor="phone">휴대폰</Label>
             <Input
               id="phone"
-              defaultValue={initial.phone}
+              name="phone"
+              value={form.phone}
+              onChange={handleChange}
               placeholder="010-0000-0000"
               inputMode="numeric"
             />
             <HelpText>예약 알림이 전달되는 번호예요.</HelpText>
-          </FormGroup>
-        </Card>
-
-        {/* 정산 계좌 */}
-        <Card>
-          <SectionTitle>정산 계좌</SectionTitle>
-
-          <FormGroup>
-            <Label htmlFor="bank">은행</Label>
-            <Select id="bank" defaultValue={initial.bank}>
-              {BANKS.map((b) => (
-                <option key={b}>{b}</option>
-              ))}
-            </Select>
-          </FormGroup>
-
-          <FormGroup>
-            <Label htmlFor="accountNumber">계좌번호</Label>
-            <Input
-              id="accountNumber"
-              defaultValue={initial.accountNumber}
-              placeholder="'-' 없이 숫자만 입력"
-              inputMode="numeric"
-            />
-          </FormGroup>
-
-          <FormGroup>
-            <Label htmlFor="accountHolder">예금주</Label>
-            <Input id="accountHolder" defaultValue={initial.accountHolder} />
-            <HelpText>
-              대표자명({initial.representative})과 일치해야 해요.
-            </HelpText>
           </FormGroup>
         </Card>
 
@@ -461,11 +421,34 @@ function HostProfileEditPage() {
           <GhostBtn type="button" onClick={() => navigate('/host/profile')}>
             취소
           </GhostBtn>
-          <PrimaryBtn type="button" onClick={() => navigate('/host/profile')}>
-            저장
+          <PrimaryBtn type="submit" disabled={saving}>
+            {saving ? '저장 중...' : '저장'}
           </PrimaryBtn>
         </ButtonRow>
       </Form>
+
+      {/* 이메일 변경 — 별도 섹션 (저장과 분리, 성공 시 로그아웃) */}
+      <Card style={{ marginTop: 20 }}>
+        <SectionTitle>이메일 변경</SectionTitle>
+        <FormGroup>
+          <EmailVerifyField
+            value={newEmail}
+            onChange={setNewEmail}
+            initialEmail={initial.email}
+            onVerifiedChange={setEmailVerified}
+          />
+        </FormGroup>
+        <ButtonRow>
+          <PrimaryBtn
+            type="button"
+            onClick={handleEmailChange}
+            disabled={!emailVerified || changingEmail}
+          >
+            {changingEmail ? '변경 중...' : '이메일 변경'}
+          </PrimaryBtn>
+        </ButtonRow>
+        <HelpText>이메일 변경 시 보안을 위해 다시 로그인해야 합니다.</HelpText>
+      </Card>
     </PageLayout>
   );
 }
