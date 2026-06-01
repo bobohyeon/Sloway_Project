@@ -128,6 +128,7 @@ public class RefundService {
 
         refundEntity.applyRefund(RefundRate.FULL, refundAmt);
         RefundEntity entity = refundRepository.save(refundEntity);
+        doRefundProcess(entity);
         return RefundResDto.from(entity);
     }
 
