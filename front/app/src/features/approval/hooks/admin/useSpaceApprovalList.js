@@ -17,15 +17,15 @@ export const useSpaceApprovalList = () => {
 
       // 실제 API 엔드포인트로 교체하세요
       const response = await fetchApprovalList();
-      console.log(response.data);
-      
       if (response.status !== 200) {
-        throw new Error(`데이터를 불러오는데 실패했습니다. (상태 코드: ${response.status})`);
+        throw new Error(
+          `데이터를 불러오는데 실패했습니다. (상태 코드: ${response.status})`
+        );
       }
-      
+
       setRawData(response.data);
     } catch (err) {
-      console.error("API 요청 중 오류 발생:", err);
+      console.error('API 요청 중 오류 발생:', err);
       setError(err.message);
     } finally {
       setLoading(false);
@@ -38,12 +38,15 @@ export const useSpaceApprovalList = () => {
   }, []);
 
   // 4. 통계 데이터 계산 (데이터 변경 시에만 재계산)
-  const counts = useMemo(() => ({
-    ALL: rawData.length,
-    P: rawData.filter((d) => d.status === 'P').length,
-    A: rawData.filter((d) => d.status === 'A').length,
-    R: rawData.filter((d) => d.status === 'R').length,
-  }), [rawData]);
+  const counts = useMemo(
+    () => ({
+      ALL: rawData.length,
+      P: rawData.filter((d) => d.status === 'P').length,
+      A: rawData.filter((d) => d.status === 'A').length,
+      R: rawData.filter((d) => d.status === 'R').length,
+    }),
+    [rawData]
+  );
 
   // 5. 필터링 로직 (상태 및 데이터 변경 시 재계산)
   const filteredData = useMemo(() => {
@@ -65,6 +68,6 @@ export const useSpaceApprovalList = () => {
     rawData,
     loading,
     error,
-    refetch: fetchApprovalData // 데이터 새로고침이 필요할 경우를 대비해 제공
+    refetch: fetchApprovalData, // 데이터 새로고침이 필요할 경우를 대비해 제공
   };
 };
