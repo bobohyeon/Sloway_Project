@@ -48,10 +48,12 @@ public class SettleService {
                 .filter(hp -> hp.getOfficeEntity() != null)
                 .map(hp -> hp.getOfficeEntity().getNo())
                 .toList();
+
         List<Long> stationNos = hostPlaces.stream()
                 .filter(hp -> hp.getStationEntity() != null)
                 .map(hp -> hp.getStationEntity().getNo())
                 .toList();
+
         List<Long> workStayNos = hostPlaces.stream()
                 .filter(hp -> hp.getWorkStayEntity() != null)
                 .map(hp -> hp.getWorkStayEntity().getNo())
@@ -75,6 +77,10 @@ public class SettleService {
                 .intValue();
 
         int payoutAmt = totalAmt - feeAmt - refundAmt;
+
+        if (totalAmt == 0) {
+            return null;
+        }
 
         SettleEntity entity = reqDto.toEntity(host);
         entity.applyAmounts(totalAmt, feeAmt, refundAmt, payoutAmt);
