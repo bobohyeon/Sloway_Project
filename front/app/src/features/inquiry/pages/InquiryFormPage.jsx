@@ -1,48 +1,46 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import styled from 'styled-components';
 import { useNavigate, useParams } from 'react-router-dom';
 import { Button, Modal, Card } from '../../pay_shared/components';
 import PageLayout from '../../../app/layouts/page/PageLayout';
-// ─── 수정 모드 Mock (백엔드 연동 시 GET /api/inquiries/:id 로 대체) ──────────
-// 실무: 본인 문의만 수정 가능 → 서버에서 userId 검증 필수
-// 수정은 "답변 대기" 상태일 때만 가능 (처리 중/완료 시 수정 불가)
-const MOCK_INQUIRY = {
-  title: '예약 취소 후 환불이 아직 안 됐어요',
-  category: '취소·환불',
-  content:
-    '3일 전에 예약 취소를 했는데 아직 환불이 처리되지 않았습니다.\n결제한 카드로 환불이 언제 되는지 확인 부탁드립니다.\n\n주문번호: ORDER-2026-00123',
-  status: 'pending', // 수정 가능 여부 판단에 사용
-};
+import api from '../../../app/api/axiosApi';
 
 const CATEGORY_OPTIONS = [
-  '예약·결제',
-  '취소·환불',
-  '계정',
-  '서비스 이용',
-  '기타',
+  { label: '예약', value: 'RESERVATION' },
+  { label: '결제', value: 'PAYMENT' },
+  { label: '공간', value: 'PLACE' },
+  { label: '기타', value: 'OTHER' },
 ];
+
+const EMPTY_FORM = { title: '', category: 'RESERVATION', content: '' };
 
 export default function InquiryFormPage({ isEdit = false }) {
   const navigate = useNavigate();
   const { id } = useParams();
   const pageTitle = isEdit ? '문의사항 수정' : '1:1 문의하기';
 
-  // ─── 수정 모드일 때 답변 완료 상태면 수정 불가 처리 ──────────────────────
-  // 백엔드 연동 시 API 응답의 status로 판단
-  const isEditable = !isEdit || MOCK_INQUIRY.status === 'pending';
-
-  const initData = isEdit
-    ? {
-        title: MOCK_INQUIRY.title,
-        category: MOCK_INQUIRY.category,
-        content: MOCK_INQUIRY.content,
-      }
-    : { title: '', category: '예약·결제', content: '' };
-
-  const [form, setForm] = useState(initData);
+  const [form, setForm] = useState(EMPTY_FORM);
+  const [isEditable, setIsEditable] = useState(!isEdit);
   const [errors, setErrors] = useState({});
   const [cancelModal, setCancelModal] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
+
+  useEffect(() => {
+    if (isEdit && id) {
+      api.get(`/inquiry/my/${id}`).then(({ data }) => {
+        if (data.status !== 'PENDING') {
+          setIsEditable(false);
+          return;
+        }
+        setForm({
+          title: data.title,
+          category: data.category,
+          content: data.content,
+        });
+        setIsEditable(true);
+      }).catch(() => navigate('/user/inquiry', { replace: true }));
+    }
+  }, [isEdit, id]);
 
   const handleChange = useCallback(
     (field, value) => {
@@ -55,11 +53,9 @@ export default function InquiryFormPage({ isEdit = false }) {
   const validate = () => {
     const errs = {};
     if (!form.title.trim()) errs.title = '제목을 입력해 주세요.';
-    if (form.title.trim().length > 100)
-      errs.title = '제목은 100자 이내로 입력해 주세요.';
+    if (form.title.trim().length > 100) errs.title = '제목은 100자 이내로 입력해 주세요.';
     if (!form.content.trim()) errs.content = '문의 내용을 입력해 주세요.';
-    if (form.content.trim().length < 10)
-      errs.content = '문의 내용을 10자 이상 입력해 주세요.';
+    if (form.content.trim().length < 10) errs.content = '문의 내용을 10자 이상 입력해 주세요.';
     return errs;
   };
 
@@ -71,18 +67,18 @@ export default function InquiryFormPage({ isEdit = false }) {
     }
     setIsSaving(true);
     try {
-      // 백엔드 연동 시:
-      // isEdit
-      //   ? PUT /api/inquiries/:id  { title, category, content }
-      //   : POST /api/inquiries     { title, category, content }
-      await new Promise((r) => setTimeout(r, 700));
+      const payload = { title: form.title, category: form.category, content: form.content };
+      if (isEdit) {
+        await api.put(`/inquiry/${id}`, payload);
+      } else {
+        await api.post('/inquiry', payload);
+      }
       navigate('/user/inquiry');
     } finally {
       setIsSaving(false);
     }
   };
 
-  // ─── 수정 불가 상태 안내 ──────────────────────────────────────────────────
   if (isEdit && !isEditable) {
     return (
       <PageLayout title="문의사항 수정">
@@ -111,7 +107,6 @@ export default function InquiryFormPage({ isEdit = false }) {
           : '궁금하신 점을 남겨주시면 빠르게 답변 드리겠습니다.'
       }
     >
-      {/* 안내 배너 */}
       {!isEdit && (
         <NoticeBanner>
           <span>⏱</span>
@@ -129,12 +124,12 @@ export default function InquiryFormPage({ isEdit = false }) {
           <CategoryBtnGroup>
             {CATEGORY_OPTIONS.map((c) => (
               <CategoryBtn
-                key={c}
-                $active={form.category === c}
-                onClick={() => handleChange('category', c)}
+                key={c.value}
+                $active={form.category === c.value}
+                onClick={() => handleChange('category', c.value)}
                 type="button"
               >
-                {c}
+                {c.label}
               </CategoryBtn>
             ))}
           </CategoryBtnGroup>
@@ -218,33 +213,6 @@ export default function InquiryFormPage({ isEdit = false }) {
 }
 
 // ─── Styled Components ───────────────────────────────────────────────────────
-
-const Wrap = styled.div`
-  padding: var(--space-6);
-  max-width: 100%;
-
-  @media (max-width: 768px) {
-    padding: var(--space-4);
-  }
-`;
-
-const PageHeader = styled.div`
-  margin-bottom: var(--space-5);
-`;
-
-const PageTitle = styled.h1`
-  font-family: var(--font-display);
-  font-size: 1.5rem;
-  font-weight: 600;
-  color: var(--gray-800);
-  letter-spacing: -0.02em;
-  margin-bottom: 4px;
-`;
-
-const PageDesc = styled.p`
-  font-size: 0.88rem;
-  color: var(--gray-400);
-`;
 
 const NoticeBanner = styled.div`
   display: flex;

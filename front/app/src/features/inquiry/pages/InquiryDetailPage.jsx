@@ -1,60 +1,57 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import styled from 'styled-components';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import { Badge, Button, Modal, Card } from '../../pay_shared/components';
+import PageLayout from '../../../app/layouts/page/PageLayout';
+import api from '../../../app/api/axiosApi';
 
-// ─── Mock 데이터 (백엔드 연동 시 GET /api/inquiries/:id 로 대체) ─────────────
-// 관리자: GET /api/admin/inquiries/:id
-// 유저:   GET /api/inquiries/:id (본인 것만 조회 가능, 서버에서 userId 검증)
-const MOCK_INQUIRY = {
-  id: 1,
-  title: '예약 취소 후 환불이 아직 안 됐어요',
-  category: '취소·환불',
-  status: 'answered', // pending | processing | answered
-  content:
-    '3일 전에 예약 취소를 했는데 아직 환불이 처리되지 않았습니다.\n결제한 카드로 환불이 언제 되는지 확인 부탁드립니다.\n\n주문번호: ORDER-2026-00123',
-  createdAt: '2026.05.01',
-  updatedAt: '2026.05.01',
-  answer: {
-    content:
-      '안녕하세요, Sloway 고객센터입니다.\n\n확인 결과 해당 환불은 2026년 5월 2일에 처리 완료되었습니다.\n카드사에 따라 최대 3~5 영업일이 소요될 수 있으며,\n현재는 카드사 측 처리 대기 중인 상태입니다.\n\n추가 문의사항이 있으시면 언제든지 연락해 주세요.\n감사합니다.',
-    answeredAt: '2026.05.02',
-    adminName: '고객센터',
-  },
+const CATEGORY_LABEL = {
+  RESERVATION: '예약',
+  PAYMENT: '결제',
+  PLACE: '공간',
+  OTHER: '기타',
 };
 
-const STATUS_MAP = {
-  answered: { label: '답변 완료', variant: 'success' },
-  pending: { label: '답변 대기', variant: 'muted' },
-  processing: { label: '처리 중', variant: 'warning' },
+const STATUS_CONFIG = {
+  ANSWERED: { label: '답변 완료', variant: 'success' },
+  PENDING:  { label: '답변 대기', variant: 'muted' },
 };
 
-// ─── Props ────────────────────────────────────────────────────────────────────
+const fmtDate = (iso) => (iso ? iso.slice(0, 10).replace(/-/g, '.') : '');
+
 export default function InquiryDetailPage() {
   const navigate = useNavigate();
+  const location = useLocation();
   const { id } = useParams();
+  const isAdmin = location.pathname.startsWith('/admin');
 
-  // 백엔드 연동 시 useQuery로 대체
-  const inquiry = MOCK_INQUIRY;
-
-  // ─── 유저 삭제 모달 ──────────────────────────────────────────────────────
+  const [inquiry, setInquiry] = useState(null);
   const [deleteModal, setDeleteModal] = useState(false);
 
+  useEffect(() => {
+    const endpoint = isAdmin ? `/inquiry/${id}` : `/inquiry/my/${id}`;
+    api.get(endpoint)
+      .then(({ data }) => setInquiry(data))
+      .catch(() => navigate(isAdmin ? '/admin/inquiry' : '/user/inquiry', { replace: true }));
+  }, [id, isAdmin]);
+
+  if (!inquiry) return null;
+
+  const canEdit = !isAdmin && inquiry.status === 'PENDING';
+  const canDelete = !isAdmin && inquiry.status === 'PENDING';
+  const st = STATUS_CONFIG[inquiry.status] ?? { label: inquiry.status, variant: 'muted' };
+
   const handleDelete = async () => {
-    // 백엔드 연동 시: DELETE /api/inquiries/:id
-    // 실무: 답변 완료 상태면 삭제 불가 처리 권장
+    await api.delete(`/inquiry/${id}`);
     navigate('/user/inquiry');
   };
 
-  const canEdit = inquiry.status === 'pending';
-  const canDelete = inquiry.status === 'pending';
-
   return (
-    <Wrap>
+    <PageLayout maxWidth={800}>
       {/* 브레드크럼 */}
       <Breadcrumb>
-        <BreadcrumbBtn onClick={() => navigate('/user/inquiry')}>
-          내 문의사항
+        <BreadcrumbBtn onClick={() => navigate(isAdmin ? '/admin/inquiry' : '/user/inquiry')}>
+          {isAdmin ? '문의사항 관리' : '내 문의사항'}
         </BreadcrumbBtn>
         <BreadcrumbSep>›</BreadcrumbSep>
         <BreadcrumbCurrent>상세보기</BreadcrumbCurrent>
@@ -65,17 +62,17 @@ export default function InquiryDetailPage() {
         <TitleArea>
           <BadgeRow>
             <Badge size="sm" variant="muted">
-              {inquiry.category}
+              {CATEGORY_LABEL[inquiry.category] ?? inquiry.category}
             </Badge>
-            <Badge size="sm" variant={STATUS_MAP[inquiry.status].variant}>
-              {STATUS_MAP[inquiry.status].label}
+            <Badge size="sm" variant={st.variant}>
+              {st.label}
             </Badge>
           </BadgeRow>
           <InquiryTitle>{inquiry.title}</InquiryTitle>
           <MetaRow>
-            <MetaItem>등록일 {inquiry.createdAt}</MetaItem>
-            {inquiry.updatedAt !== inquiry.createdAt && (
-              <MetaItem>수정일 {inquiry.updatedAt}</MetaItem>
+            <MetaItem>등록일 {fmtDate(inquiry.createdAt)}</MetaItem>
+            {inquiry.updatedAt && inquiry.updatedAt !== inquiry.createdAt && (
+              <MetaItem>수정일 {fmtDate(inquiry.updatedAt)}</MetaItem>
             )}
           </MetaRow>
         </TitleArea>
@@ -86,51 +83,48 @@ export default function InquiryDetailPage() {
           <ContentText>{inquiry.content}</ContentText>
         </ContentSection>
 
-        {/* 유저: 수정/삭제 버튼 */}
-        <UserActionRow>
-          {canEdit && (
-            <Button
-              size="sm"
-              variant="secondary"
-              onClick={() => navigate(`/user/inquiry/form/${id}`)}
-            >
-              수정
-            </Button>
-          )}
-          {canDelete && (
-            <Button
-              size="sm"
-              variant="danger"
-              onClick={() => setDeleteModal(true)}
-            >
-              삭제
-            </Button>
-          )}
-          {!canEdit && !canDelete && (
-            <StatusNote>
-              {inquiry.status === 'processing'
-                ? '처리 중인 문의는 수정/삭제할 수 없습니다.'
-                : '답변이 완료된 문의는 수정/삭제할 수 없습니다.'}
-            </StatusNote>
-          )}
-        </UserActionRow>
+        {/* 수정/삭제 버튼 (사용자, PENDING 상태만) */}
+        {(canEdit || canDelete || inquiry.status === 'ANSWERED') && (
+          <UserActionRow>
+            {canEdit && (
+              <Button
+                size="sm"
+                variant="secondary"
+                onClick={() => navigate(`/user/inquiry/form/${id}`)}
+              >
+                수정
+              </Button>
+            )}
+            {canDelete && (
+              <Button
+                size="sm"
+                variant="danger"
+                onClick={() => setDeleteModal(true)}
+              >
+                삭제
+              </Button>
+            )}
+            {inquiry.status === 'ANSWERED' && !isAdmin && (
+              <StatusNote>답변이 완료된 문의는 수정/삭제할 수 없습니다.</StatusNote>
+            )}
+          </UserActionRow>
+        )}
       </DetailCard>
 
-      {inquiry.answer ? (
-        /* 유저: 답변 읽기 전용 */
+      {/* 답변 영역 */}
+      {inquiry.replyContent ? (
         <AnswerCard padded>
           <AnswerHeader>
             <AnswerLabel>답변</AnswerLabel>
-            <AnswerMeta>
-              <span>{inquiry.answer.adminName}</span>
-              <span>·</span>
-              <span>{inquiry.answer.answeredAt}</span>
-            </AnswerMeta>
+            {inquiry.answeredAt && (
+              <AnswerMeta>
+                <span>{fmtDate(inquiry.answeredAt)}</span>
+              </AnswerMeta>
+            )}
           </AnswerHeader>
-          <AnswerText>{inquiry.answer.content}</AnswerText>
+          <AnswerText>{inquiry.replyContent}</AnswerText>
         </AnswerCard>
       ) : (
-        /* 유저: 아직 답변 없음 */
         <PendingCard padded>
           <PendingIcon aria-hidden="true">⏳</PendingIcon>
           <PendingText>
@@ -141,7 +135,10 @@ export default function InquiryDetailPage() {
 
       {/* 하단 버튼 */}
       <BackBtn>
-        <Button variant="secondary" onClick={() => navigate('/user/inquiry')}>
+        <Button
+          variant="secondary"
+          onClick={() => navigate(isAdmin ? '/admin/inquiry' : '/user/inquiry')}
+        >
           ← 목록으로
         </Button>
       </BackBtn>
@@ -168,20 +165,11 @@ export default function InquiryDetailPage() {
           삭제된 문의는 복구할 수 없습니다.
         </ModalText>
       </Modal>
-    </Wrap>
+    </PageLayout>
   );
 }
 
 // ─── Styled Components ───────────────────────────────────────────────────────
-
-const Wrap = styled.div`
-  padding: var(--space-6);
-  max-width: 100%;
-
-  @media (max-width: 768px) {
-    padding: var(--space-4);
-  }
-`;
 
 const Breadcrumb = styled.nav`
   display: flex;
@@ -289,7 +277,6 @@ const StatusNote = styled.span`
   color: var(--gray-400);
 `;
 
-/* ─── 유저 답변 읽기 카드 ────────────────────────────────────────────────── */
 const AnswerCard = styled(Card)`
   margin-bottom: var(--space-3);
   background: var(--cream, #f4efe6);
@@ -330,7 +317,6 @@ const AnswerText = styled.pre`
   word-break: break-word;
 `;
 
-/* ─── 답변 대기 카드 ─────────────────────────────────────────────────────── */
 const PendingCard = styled(Card)`
   margin-bottom: var(--space-3);
   display: flex;
