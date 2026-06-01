@@ -111,6 +111,10 @@ public class SettleService {
     // TODO: findSettleByHostNo(Long hostNo) — findSettleAll 과 같은 패턴
     //   settleRepository.findByHostNo(hostNo) 결과를 SettleResDto 리스트로 변환
     //   (위 findSettleAll 에서 findAll → findByHostNo 로 바꾼 형태. 반환 List<SettleResDto>)
+    public List<SettleResDto> findSettleByHostNo(Long hostNo) {
+        List<SettleEntity> entityList = settleRepository.findByHostNo(hostNo);
+        return entityList.stream().map(SettleResDto::from).toList();
+    }
 
     public SettleResDto findSettleByNo(Long no) {
         SettleEntity entity = settleRepository.findById(no)
@@ -134,5 +138,6 @@ public class SettleService {
         entity.issueTaxInvoice();   // 이미 SettleEntity에 있는 Rich
         return SettleResDto.from(entity);
     }
+
 
 }
