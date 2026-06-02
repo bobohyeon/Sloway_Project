@@ -2,6 +2,7 @@ package com.sloway.app.payment.settlement.settle.repository;
 
 
 import com.querydsl.jpa.impl.JPAQueryFactory;
+import com.sloway.app.payment.settlement.settle.common.SettleStatus;
 import com.sloway.app.payment.settlement.settle.entity.QSettleEntity;
 import com.sloway.app.payment.settlement.settle.entity.SettleEntity;
 import lombok.RequiredArgsConstructor;
@@ -39,6 +40,14 @@ public class SettleRepositoryImpl implements SettleRepositoryCustom {
                         qSettleEntity.hostNo.no.eq(hostNo)
                 )
                 .orderBy(qSettleEntity.no.desc())
+                .fetch();
+    }
+
+    @Override
+    public List<SettleEntity> findByStatus(SettleStatus status) {
+        return jpaQueryFactory
+                .selectFrom(qSettleEntity)
+                .where(qSettleEntity.status.eq(status))
                 .fetch();
     }
 
