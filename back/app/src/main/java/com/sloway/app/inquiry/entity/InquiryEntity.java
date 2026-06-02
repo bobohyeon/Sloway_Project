@@ -44,7 +44,9 @@ public class InquiryEntity extends BaseEntity {
     public void update(String title, String content, InquiryCategory category) {
         this.title = title;
         this.content = content;
-        this.category = category;
+        if (category != null) {
+            this.category = category;
+        }
     }
 
     public void answer() {
