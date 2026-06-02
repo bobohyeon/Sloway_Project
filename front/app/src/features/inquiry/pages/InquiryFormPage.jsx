@@ -26,20 +26,21 @@ export default function InquiryFormPage({ isEdit = false }) {
   const [isSaving, setIsSaving] = useState(false);
 
   useEffect(() => {
-    if (isEdit && id) {
-      api.get(`/inquiry/my/${id}`).then(({ data }) => {
+    if (!isEdit || !id) return;
+    const fetch = async () => {
+      try {
+        const { data } = await api.get(`/inquiry/my/${id}`);
         if (data.status !== 'PENDING') {
           setIsEditable(false);
           return;
         }
-        setForm({
-          title: data.title,
-          category: data.category,
-          content: data.content,
-        });
+        setForm({ title: data.title, category: data.category, content: data.content });
         setIsEditable(true);
-      }).catch(() => navigate('/user/inquiry', { replace: true }));
-    }
+      } catch {
+        navigate('/user/inquiry', { replace: true });
+      }
+    };
+    fetch();
   }, [isEdit, id]);
 
   const handleChange = useCallback(

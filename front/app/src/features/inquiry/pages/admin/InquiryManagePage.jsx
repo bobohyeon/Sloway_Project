@@ -42,8 +42,8 @@ export default function InquiryManagePage() {
   const [isSaving, setIsSaving] = useState(false);
 
   // ── 목록 조회 ─────────────────────────────────────────────────────────────
-  const fetchList = useCallback(() => {
-    api.get('/inquiry', {
+  const fetchList = useCallback(async () => {
+    const { data } = await api.get('/inquiry', {
       params: {
         page: page - 1,
         size: 10,
@@ -52,24 +52,22 @@ export default function InquiryManagePage() {
         category: filterCategory || undefined,
         keyword: keyword || undefined,
       },
-    }).then(({ data }) => {
-      setInquiries(data.content);
-      setTotalPages(data.totalPages);
     });
+    setInquiries(data.content);
+    setTotalPages(data.totalPages);
   }, [page, filterStatus, filterCategory, keyword]);
 
   // ── 요약 카운트 (최초 마운트 + 목록 갱신 후) ───────────────────────────────
-  const fetchCounts = useCallback(() => {
-    Promise.all([
+  const fetchCounts = useCallback(async () => {
+    const [all, pending, answered] = await Promise.all([
       api.get('/inquiry', { params: { size: 1 } }),
       api.get('/inquiry', { params: { size: 1, status: 'PENDING' } }),
       api.get('/inquiry', { params: { size: 1, status: 'ANSWERED' } }),
-    ]).then(([all, pending, answered]) => {
-      setCounts({
-        total: all.data.totalElements,
-        pending: pending.data.totalElements,
-        answered: answered.data.totalElements,
-      });
+    ]);
+    setCounts({
+      total: all.data.totalElements,
+      pending: pending.data.totalElements,
+      answered: answered.data.totalElements,
     });
   }, []);
 
@@ -87,12 +85,11 @@ export default function InquiryManagePage() {
     setPage(1);
   };
 
-  const handleSelectRow = (inq) => {
-    api.get(`/inquiry/${inq.id}`).then(({ data }) => {
-      setSelected(data);
-      setAnswerText(data.replyContent ?? '');
-      setIsEditing(false);
-    });
+  const handleSelectRow = async (inq) => {
+    const { data } = await api.get(`/inquiry/${inq.id}`);
+    setSelected(data);
+    setAnswerText(data.replyContent ?? '');
+    setIsEditing(false);
   };
 
   const handleClosePanel = () => {

@@ -37,19 +37,21 @@ export default function NoticeListPage() {
   const [totalPages, setTotalPages] = useState(0);
 
   useEffect(() => {
-    api.get('/notice', {
-      params: {
-        page: page - 1,
-        size: 10,
-        sort: SORT_MAP[sortKey],
-        category: category || undefined,
-        keyword: keyword || undefined,
-        status: 'ACTIVE',
-      },
-    }).then(({ data }) => {
+    const fetch = async () => {
+      const { data } = await api.get('/notice', {
+        params: {
+          page: page - 1,
+          size: 10,
+          sort: SORT_MAP[sortKey],
+          category: category || undefined,
+          keyword: keyword || undefined,
+          status: 'ACTIVE',
+        },
+      });
       setNotices(data.content);
       setTotalPages(data.totalPages);
-    });
+    };
+    fetch();
   }, [page, sortKey, category, keyword]);
 
   const handleSearch = () => {

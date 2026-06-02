@@ -25,16 +25,12 @@ export default function NoticeFormPage({ isEdit = false }) {
   const [isSaving, setIsSaving] = useState(false);
 
   useEffect(() => {
-    if (isEdit && id) {
-      api.get(`/notice/${id}`).then(({ data }) => {
-        setForm({
-          title: data.title,
-          category: data.category,
-          content: data.content,
-          status: data.status,
-        });
-      });
-    }
+    if (!isEdit || !id) return;
+    const fetch = async () => {
+      const { data } = await api.get(`/notice/${id}`);
+      setForm({ title: data.title, category: data.category, content: data.content, status: data.status });
+    };
+    fetch();
   }, [isEdit, id]);
 
   // ─── 필드 변경 핸들러 ─────────────────────────────────────────────────────
