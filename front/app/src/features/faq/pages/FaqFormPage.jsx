@@ -1,47 +1,44 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import styled from 'styled-components';
 import { useNavigate, useParams } from 'react-router-dom';
 import PageLayout from '../../../app/layouts/page/PageLayout';
 import { Button, Modal, Card } from '../../pay_shared/components';
-
-// ─── 수정 모드 Mock 데이터 (백엔드 연동 시 GET /api/admin/faqs/:id 로 대체) ──
-const MOCK_FAQ = {
-  question: '예약 취소는 어떻게 하나요?',
-  answer:
-    "예약 취소는 마이페이지 > 예약 목록에서 해당 예약을 선택한 후 '취소 신청' 버튼을 클릭하시면 됩니다.\n\n취소 수수료는 예약일 기준으로 다음과 같이 적용됩니다.\n- 이용일 7일 전: 100% 환불\n- 이용일 3~6일 전: 50% 환불\n- 이용일 2일 이내: 환불 불가",
-  category: '취소·환불',
-  order: 3,
-  status: 'active',
-};
+import api from '../../../app/api/axiosApi';
 
 const CATEGORY_OPTIONS = [
-  '예약·결제',
-  '취소·환불',
-  '계정',
-  '서비스 이용',
-  '기타',
+  { label: '예약',       value: 'RESERVATION' },
+  { label: '결제',       value: 'PAYMENT' },
+  { label: '취소',       value: 'CANCEL' },
+  { label: '환불',       value: 'REFUND' },
+  { label: '계정',       value: 'ACCOUNT' },
+  { label: '서비스 이용', value: 'SERVICE' },
+  { label: '기타',       value: 'OTHER' },
 ];
+
+const EMPTY_FORM = { title: '', content: '', category: 'RESERVATION' };
 
 export default function FaqFormPage({ isEdit = false }) {
   const navigate = useNavigate();
   const { id } = useParams();
   const pageTitle = isEdit ? 'FAQ 수정' : 'FAQ 등록';
 
-  // ─── 폼 상태 ─────────────────────────────────────────────────────────────
-  const initData = isEdit
-    ? MOCK_FAQ
-    : {
-        question: '',
-        answer: '',
-        category: '예약·결제',
-        order: '',
-        status: 'active',
-      };
-
-  const [form, setForm] = useState(initData);
+  const [form, setForm] = useState(EMPTY_FORM);
   const [errors, setErrors] = useState({});
   const [cancelModal, setCancelModal] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
+
+  useEffect(() => {
+    if (!isEdit || !id) return;
+    const fetch = async () => {
+      try {
+        const { data } = await api.get(`/faq/${id}`);
+        setForm({ title: data.title, content: data.content, category: data.category });
+      } catch {
+        navigate('/admin/faq', { replace: true });
+      }
+    };
+    fetch();
+  }, [isEdit, id]);
 
   const handleChange = useCallback(
     (field, value) => {
@@ -51,19 +48,11 @@ export default function FaqFormPage({ isEdit = false }) {
     [errors]
   );
 
-  // ─── 유효성 검사 ─────────────────────────────────────────────────────────
   const validate = () => {
     const errs = {};
-    if (!form.question.trim()) errs.question = '질문을 입력해 주세요.';
-    if (form.question.trim().length > 200)
-      errs.question = '질문은 200자 이내로 입력해 주세요.';
-    if (!form.answer.trim()) errs.answer = '답변을 입력해 주세요.';
-    if (
-      form.order !== '' &&
-      (isNaN(Number(form.order)) || Number(form.order) < 1)
-    ) {
-      errs.order = '올바른 순서를 입력해 주세요.';
-    }
+    if (!form.title.trim()) errs.title = '질문을 입력해 주세요.';
+    if (form.title.trim().length > 100) errs.title = '질문은 100자 이내로 입력해 주세요.';
+    if (!form.content.trim()) errs.content = '답변을 입력해 주세요.';
     return errs;
   };
 
@@ -75,10 +64,12 @@ export default function FaqFormPage({ isEdit = false }) {
     }
     setIsSaving(true);
     try {
-      // 백엔드 연동 시:
-      // isEdit ? PUT /api/admin/faqs/:id : POST /api/admin/faqs
-      // body: { question, answer, category, order, status }
-      await new Promise((r) => setTimeout(r, 600));
+      const payload = { title: form.title, content: form.content, category: form.category };
+      if (isEdit) {
+        await api.put(`/faq/${id}`, payload);
+      } else {
+        await api.post('/faq', payload);
+      }
       navigate('/admin/faq');
     } finally {
       setIsSaving(false);
@@ -93,7 +84,6 @@ export default function FaqFormPage({ isEdit = false }) {
       backLabel="FAQ 관리"
       maxWidth={1200}
     >
-
       <FormLayout>
         {/* 좌측 본문 */}
         <MainColumn>
@@ -102,19 +92,19 @@ export default function FaqFormPage({ isEdit = false }) {
             <Field>
               <Label required>질문</Label>
               <Input
-                placeholder="사용자가 자주 묻는 질문을 입력하세요 (최대 200자)"
-                value={form.question}
-                onChange={(e) => handleChange('question', e.target.value)}
-                maxLength={200}
-                $error={!!errors.question}
+                placeholder="사용자가 자주 묻는 질문을 입력하세요 (최대 100자)"
+                value={form.title}
+                onChange={(e) => handleChange('title', e.target.value)}
+                maxLength={100}
+                $error={!!errors.title}
                 aria-required="true"
               />
               <FieldBottom>
-                {errors.question ? (
-                  <ErrorMsg>{errors.question}</ErrorMsg>
+                {errors.title ? (
+                  <ErrorMsg>{errors.title}</ErrorMsg>
                 ) : (
-                  <CharCount $warn={form.question.length > 180}>
-                    {form.question.length}/200
+                  <CharCount $warn={form.title.length > 90}>
+                    {form.title.length}/100
                   </CharCount>
                 )}
               </FieldBottom>
@@ -123,22 +113,15 @@ export default function FaqFormPage({ isEdit = false }) {
             {/* 답변 */}
             <Field>
               <Label required>답변</Label>
-              {/*
-                실무: 리치 에디터(tiptap, quill) 연동 시 이 Textarea를 교체
-                저장 전 DOMPurify.sanitize() 처리 필수
-              */}
               <Textarea
                 placeholder="질문에 대한 답변을 입력하세요."
-                value={form.answer}
-                onChange={(e) => handleChange('answer', e.target.value)}
+                value={form.content}
+                onChange={(e) => handleChange('content', e.target.value)}
                 rows={12}
-                $error={!!errors.answer}
+                $error={!!errors.content}
                 aria-required="true"
               />
-              {errors.answer && <ErrorMsg>{errors.answer}</ErrorMsg>}
-              <EditorHint>
-                💡 실제 서비스에서는 리치 텍스트 에디터가 들어갑니다.
-              </EditorHint>
+              {errors.content && <ErrorMsg>{errors.content}</ErrorMsg>}
             </Field>
           </FormCard>
         </MainColumn>
@@ -157,90 +140,27 @@ export default function FaqFormPage({ isEdit = false }) {
                 aria-label="카테고리 선택"
               >
                 {CATEGORY_OPTIONS.map((c) => (
-                  <option key={c} value={c}>
-                    {c}
-                  </option>
+                  <option key={c.value} value={c.value}>{c.label}</option>
                 ))}
               </Select>
             </Field>
-
-            {/* 노출 순서 */}
-            <Field>
-              <Label>
-                노출 순서
-                <OptionalTag>선택</OptionalTag>
-              </Label>
-              <Input
-                type="number"
-                placeholder="숫자로 입력 (비우면 자동)"
-                value={form.order}
-                onChange={(e) => handleChange('order', e.target.value)}
-                min={1}
-                $error={!!errors.order}
-              />
-              {errors.order ? (
-                <ErrorMsg>{errors.order}</ErrorMsg>
-              ) : (
-                <FieldHint>낮은 숫자일수록 상단에 노출됩니다.</FieldHint>
-              )}
-            </Field>
-
-            {/* 게시 상태 */}
-            <Field>
-              <Label required>게시 상태</Label>
-              <RadioGroup role="radiogroup" aria-label="게시 상태">
-                <RadioLabel>
-                  <Radio
-                    type="radio"
-                    name="status"
-                    value="active"
-                    checked={form.status === 'active'}
-                    onChange={() => handleChange('status', 'active')}
-                  />
-                  <span>게시</span>
-                </RadioLabel>
-                <RadioLabel>
-                  <Radio
-                    type="radio"
-                    name="status"
-                    value="inactive"
-                    checked={form.status === 'inactive'}
-                    onChange={() => handleChange('status', 'inactive')}
-                  />
-                  <span>미게시</span>
-                </RadioLabel>
-              </RadioGroup>
-            </Field>
           </FormCard>
 
-          {/* 미리보기 카드 */}
-          {(form.question || form.answer) && (
+          {/* 미리보기 */}
+          {(form.title || form.content) && (
             <PreviewCard padded>
               <SectionTitle>미리보기</SectionTitle>
-              <PreviewItem>
-                <PreviewQ>
-                  Q. {form.question || '질문이 여기 표시됩니다.'}
-                </PreviewQ>
-                <PreviewA>{form.answer || '답변이 여기 표시됩니다.'}</PreviewA>
-              </PreviewItem>
+              <PreviewQ>Q. {form.title || '질문이 여기 표시됩니다.'}</PreviewQ>
+              <PreviewA>{form.content || '답변이 여기 표시됩니다.'}</PreviewA>
             </PreviewCard>
           )}
 
           {/* 버튼 */}
           <ButtonGroup>
-            <Button
-              variant="secondary"
-              full
-              onClick={() => setCancelModal(true)}
-            >
+            <Button variant="secondary" full onClick={() => setCancelModal(true)}>
               취소
             </Button>
-            <Button
-              variant="primary"
-              full
-              onClick={handleSubmit}
-              disabled={isSaving}
-            >
+            <Button variant="primary" full onClick={handleSubmit} disabled={isSaving}>
               {isSaving ? '저장 중...' : isEdit ? '수정 완료' : '등록'}
             </Button>
           </ButtonGroup>
@@ -263,9 +183,7 @@ export default function FaqFormPage({ isEdit = false }) {
           </>
         }
       >
-        <ModalText>
-          작성 중인 내용이 저장되지 않습니다. 정말 나가시겠습니까?
-        </ModalText>
+        <ModalText>작성 중인 내용이 저장되지 않습니다. 정말 나가시겠습니까?</ModalText>
       </Modal>
     </PageLayout>
   );
@@ -279,9 +197,7 @@ const FormLayout = styled.div`
   gap: var(--space-5);
   align-items: flex-start;
 
-  @media (max-width: 900px) {
-    grid-template-columns: 1fr;
-  }
+  @media (max-width: 900px) { grid-template-columns: 1fr; }
 `;
 
 const MainColumn = styled.div``;
@@ -311,10 +227,7 @@ const SectionTitle = styled.h3`
 
 const Field = styled.div`
   margin-bottom: var(--space-4);
-
-  &:last-child {
-    margin-bottom: 0;
-  }
+  &:last-child { margin-bottom: 0; }
 `;
 
 const Label = styled.label`
@@ -333,15 +246,6 @@ const Label = styled.label`
       color: #b85a4e;
       font-size: 0.75rem;
     }`}
-`;
-
-const OptionalTag = styled.span`
-  font-size: 0.72rem;
-  padding: 1px 6px;
-  background: var(--gray-100);
-  color: var(--gray-500);
-  border-radius: var(--radius-full);
-  font-weight: 500;
 `;
 
 const baseInputStyle = `
@@ -386,36 +290,9 @@ const Select = styled.select`
   padding-right: 36px;
 `;
 
-const RadioGroup = styled.div`
-  display: flex;
-  gap: var(--space-4);
-`;
-
-const RadioLabel = styled.label`
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  cursor: pointer;
-  font-size: 0.88rem;
-  color: var(--gray-700);
-`;
-
-const Radio = styled.input`
-  width: 16px;
-  height: 16px;
-  accent-color: var(--sage);
-  cursor: pointer;
-`;
-
 const FieldBottom = styled.div`
   display: flex;
   justify-content: flex-end;
-  margin-top: 4px;
-`;
-
-const FieldHint = styled.p`
-  font-size: 0.75rem;
-  color: var(--gray-400);
   margin-top: 4px;
 `;
 
@@ -430,14 +307,6 @@ const CharCount = styled.span`
   font-size: 0.75rem;
   color: ${(p) => (p.$warn ? '#b8730f' : 'var(--gray-400)')};
 `;
-
-const EditorHint = styled.p`
-  font-size: 0.75rem;
-  color: var(--gray-400);
-  margin-top: 6px;
-`;
-
-const PreviewItem = styled.div``;
 
 const PreviewQ = styled.p`
   font-size: 0.88rem;
