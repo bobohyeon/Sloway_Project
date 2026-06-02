@@ -170,6 +170,11 @@ public class PayService {
         PayEntity payEntity = payRepository.findById(payNo)
                 .orElseThrow(() -> new CustomException(PayErrorCode.PAY_NOT_FOUND));
 
+        // 멱등 처리: 이미 완료된 결제면 재확정 스킵 (toss/success 새로고침 시 토스 재confirm 에러 방지)
+        if (payEntity.getStatus() == PayStatus.COMPLETED) {
+            return PayResDto.from(payEntity);
+        }
+
         if (!amount.equals(payEntity.getFinalAmt())) {
             log.warn("토스 결제 금액 불일치 payNo={}, 요청={}, 서버={}", payNo, amount, payEntity.getFinalAmt());
             throw new CustomException(PayErrorCode.PAY_AMOUNT_INVALID);
