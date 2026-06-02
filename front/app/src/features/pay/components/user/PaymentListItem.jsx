@@ -1,15 +1,15 @@
-import styled from 'styled-components'
-import { Card, Button } from '../../../pay_shared/components'
-import { PaymentStatusBadge } from './PaymentStatusBadge'
+import styled from 'styled-components';
+import { Card, Button } from '../../../pay_shared/components';
+import { PaymentStatusBadge } from './PaymentStatusBadge';
 
 export function PaymentListItem({ payment, onClick, onReceiptClick }) {
-  const isRefunded = payment.status === 'refunded'
-  const isFailed = payment.status === 'failed'
+  const isRefunded = payment.status === 'refunded';
+  const isFailed = payment.status === 'failed';
 
   const handleReceipt = (e) => {
-    e.stopPropagation()
-    onReceiptClick?.(payment)
-  }
+    e.stopPropagation();
+    onReceiptClick?.(payment);
+  };
 
   return (
     <Wrap onClick={() => onClick?.(payment)}>
@@ -44,7 +44,7 @@ export function PaymentListItem({ payment, onClick, onReceiptClick }) {
         </Button>
       </Right>
     </Wrap>
-  )
+  );
 }
 
 const Wrap = styled(Card)`
@@ -58,7 +58,7 @@ const Wrap = styled(Card)`
     border-color: var(--sage);
     transform: translateY(-1px);
   }
-`
+`;
 
 const Image = styled.div`
   width: 64px;
@@ -70,19 +70,19 @@ const Image = styled.div`
   justify-content: center;
   font-size: 2rem;
   flex-shrink: 0;
-`
+`;
 
 const Body = styled.div`
   flex: 1;
   min-width: 0;
-`
+`;
 
 const TopRow = styled.div`
   display: flex;
   align-items: center;
   gap: 8px;
   margin-bottom: 6px;
-`
+`;
 
 const MethodChip = styled.span`
   display: inline-flex;
@@ -90,14 +90,14 @@ const MethodChip = styled.span`
   gap: 4px;
   font-size: 0.75rem;
   color: var(--gray-600);
-`
+`;
 
 const SpaceName = styled.div`
   font-size: 0.95rem;
   font-weight: 500;
   color: var(--gray-800);
   margin-bottom: 4px;
-`
+`;
 
 const Meta = styled.div`
   display: flex;
@@ -105,15 +105,15 @@ const Meta = styled.div`
   gap: 6px;
   font-size: 0.78rem;
   color: var(--gray-400);
-`
+`;
 
 const PaymentId = styled.span`
   font-family: var(--font-mono);
-`
+`;
 
 const Sep = styled.span`
   opacity: 0.4;
-`
+`;
 
 const Right = styled.div`
   display: flex;
@@ -121,7 +121,7 @@ const Right = styled.div`
   align-items: flex-end;
   gap: var(--space-2);
   flex-shrink: 0;
-`
+`;
 
 const Price = styled.div`
   display: flex;
@@ -152,10 +152,10 @@ const Price = styled.div`
     font-size: 0.78rem;
     color: var(--gray-600);
   }
-`
+`;
 
 const RefundLabel = styled.span`
   font-size: 0.7rem !important;
   color: var(--gray-400) !important;
   margin-right: 4px;
-`
+`;
