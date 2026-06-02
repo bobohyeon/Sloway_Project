@@ -44,6 +44,13 @@ public class PointService {
         return PointResDto.from(pointEntity);
     }
 
+    // ── ③ 포인트 내역 기능 ─────────────────────────────
+    // TODO: 회원 번호로 포인트 전체 내역을 조회하는 메서드 추가 (이름: findPointsByMemberNo — 복수형, Coupon 과 통일)
+    //  - 흐름 1) 회원 존재 검증: 아래 findPointBalanceByMemberNo 의 memberRepository.findById ... orElseThrow 그대로
+    //  - 흐름 2) ②에서 만든 repository 메서드로 그 회원 포인트 목록 조회
+    //  - 흐름 3) 맨 위 findPointAll 처럼 .stream().map(PointResDto::from).toList() 로 변환해 반환
+    //  - @Transactional 따로 안 붙임 (클래스 기본 readOnly=true, 다른 find 들과 동일)
+
     @Transactional
     public PointResDto savePoint(PointSaveReqDto pointSaveReqDto) {
         PayEntity payEntity = payRepository.findById(pointSaveReqDto.getPayNo())

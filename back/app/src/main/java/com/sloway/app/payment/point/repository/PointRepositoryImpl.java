@@ -53,6 +53,10 @@ public class PointRepositoryImpl implements PointRepositoryCustom {
                 .fetch();
     }
 
-
+    // ── ② 포인트 내역 기능 ─────────────────────────────
+    // TODO: ①에서 선언한 시그니처를 @Override 로 구현 (QueryDSL)
+    //  - 참고: 바로 위 findByPayAndDealType — selectFrom(qPointEntity).where(...).fetch() 패턴 그대로
+    //  - where 조건은 회원 번호 일치 하나만 (위 findByPayAndDealType 의 payNo.no 처럼 memberNo.no 활용)
+    //  - 💡 결정: 내역은 최신순이 자연스러움 → .orderBy(...) 로 createdAt 내림차순 넣을지 정하기 (QueryDSL desc())
 
 }
