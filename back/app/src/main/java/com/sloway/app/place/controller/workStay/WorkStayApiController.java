@@ -5,6 +5,7 @@ import com.sloway.app.place.dto.request.sort.ImgUpdateSortReqDto;
 import com.sloway.app.place.dto.request.workStay.WorkStayReqDto;
 import com.sloway.app.place.dto.request.workStay.WorkUpdateDtoWrapper;
 import com.sloway.app.place.dto.request.workStay.workOffice.WorkOfficeReqDto;
+import com.sloway.app.place.dto.response.place.PlaceImgListRespDto;
 import com.sloway.app.place.dto.response.station.StationDetailRespDto;
 import com.sloway.app.place.dto.response.station.StationUpdateDetailRespDto;
 import com.sloway.app.place.dto.response.workStay.WorkStayImageListRespDto;
@@ -106,6 +107,13 @@ public class WorkStayApiController {
     @GetMapping("/update/{no}")
     public ResponseEntity<WorkStayUpdateDetailRespDto> selectDetailForUpdate(@PathVariable Long no, @AuthenticationPrincipal Long memeberNo){
         WorkStayUpdateDetailRespDto dto = workStayService.selectDetailForUpdate(no, Long.valueOf(2));
+
+        return ResponseEntity.ok(dto);
+    }
+
+    @GetMapping("/image/list/{no}")
+    public ResponseEntity<PlaceImgListRespDto> getImageList(@PathVariable Long no){
+        PlaceImgListRespDto dto = workStayService.getImageList(no);
 
         return ResponseEntity.ok(dto);
     }

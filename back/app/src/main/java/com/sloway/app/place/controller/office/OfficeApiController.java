@@ -101,4 +101,11 @@ public class OfficeApiController {
 
         return ResponseEntity.ok(dto);
     }
+
+    @GetMapping("/image/list/{no}")
+    public ResponseEntity<PlaceImgListRespDto> getImageList(@PathVariable Long no){
+        PlaceImgListRespDto dto = officeService.getImageList(no);
+
+        return ResponseEntity.ok(dto);
+    }
 }

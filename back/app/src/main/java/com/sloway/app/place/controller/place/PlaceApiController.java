@@ -141,4 +141,11 @@ public class PlaceApiController {
         WorkStayCardDto dto = placeService.getRandomWorkStay();
         return ResponseEntity.ok(dto);
     }
+
+    @GetMapping("/image/list/{no}")
+    public ResponseEntity<PlaceImgListRespDto> getImageList(@PathVariable Long no){
+        PlaceImgListRespDto dto = placeService.getImageList(no);
+
+        return ResponseEntity.ok(dto);
+    }
 }

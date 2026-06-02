@@ -21,7 +21,7 @@ export default function useImageUpdate() {
     if (pathname.includes('/space/')) return 'space';
     if (pathname.includes('/lodging/')) return 'lodging';
     if (pathname.includes('/coworking/')) return 'coworking';
-    if (pathname.includes('/workstay/')) return 'workstay';
+    if (pathname.includes('/workStay/')) return 'workstay';
     return 'space';
   };
 

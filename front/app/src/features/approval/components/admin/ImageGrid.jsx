@@ -7,12 +7,13 @@ const GridContainer = styled.div`
   padding: 20px;
   border-radius: 15px;
   border: 1px solid #eee;
+  min-width: 1400px;
 
   /* 기본 5열 유지 
      대표 이미지(2x2)가 포함된 경우: 5열, 3행(혹은 그 이상)
      이미지가 적을 때도 유연하게 대응
   */
-  grid-template-columns: repeat(5, 1fr);
+  grid-template-columns: repeat(6, 1fr);
   grid-auto-rows: 180px;
 
   ${(props) =>
@@ -39,8 +40,8 @@ const ImageItem = styled.div`
   ${(props) =>
     props.$isMain &&
     `
-    grid-column: span 2;
-    grid-row: span 2;
+    grid-column: span 3;
+    grid-row: span 3;
     &::after {
       content: '대표';
       position: absolute;

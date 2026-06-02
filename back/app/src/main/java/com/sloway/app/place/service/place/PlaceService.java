@@ -185,4 +185,12 @@ public class PlaceService {
     public WorkStayCardDto getRandomWorkStay() {
         return placeRepository.getRandomWorkStay();
     }
+
+    public PlaceImgListRespDto getImageList(Long no) {
+        List<PlaceImgListRespDto.ImageInfo> imageList = imgPlaceRepository.getImageList(no);
+
+        return PlaceImgListRespDto.builder()
+                .placeImages(imageList)
+                .build();
+    }
 }
