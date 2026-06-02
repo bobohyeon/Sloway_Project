@@ -114,8 +114,8 @@ export default function MemberStats() {
           icon={<FaUserCheck />}
         />
         <StatCard
-          label="휴면 회원"
-          value={Number(stats?.dormant ?? 0).toLocaleString()}
+          label="탈퇴 회원"
+          value={Number(stats?.withdrawn ?? 0).toLocaleString()}
           unit="명"
           icon={<FaUserClock />}
         />

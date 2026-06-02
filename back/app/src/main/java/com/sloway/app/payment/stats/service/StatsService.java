@@ -9,6 +9,7 @@ import com.sloway.app.payment.stats.entity.DailyPayStatsEntity;
 import com.sloway.app.payment.stats.entity.DailyRefundStatsEntity;
 import com.sloway.app.payment.stats.repository.DailyPayStatsRepository;
 import com.sloway.app.payment.stats.repository.DailyRefundStatsRepository;
+import com.sloway.app.payment.stats.repository.StatsRepositoryCustom;
 import com.sloway.app.place.entity.hostPlace.ApprovalStatus;
 import com.sloway.app.place.entity.hostPlace.HostPlaceEntity;
 import com.sloway.app.place.repository.hostPlace.HostPlaceRepository;
@@ -36,6 +37,7 @@ public class StatsService {
     private final DailyPayStatsRepository dailyPayStatsRepository;
     private final DailyRefundStatsRepository dailyRefundStatsRepository;
     private final HostPlaceRepository hostPlaceRepository;
+    private final StatsRepositoryCustom statsRepositoryCustom;
 
     @Transactional
     public void loadDailyStats(LocalDate targetDate) {
@@ -202,6 +204,25 @@ public class StatsService {
             trend.add(MonthlyTrendResDto.of(ymMinus.toString(), mTotal));
         }
         return HostSalesStatsResDto.of(totalAmt, payCount, refundAmt, trend);
+    }
+
+    // ── ⑧-2 SpaceStats ─────────────────────────────────
+    public SpaceStatsResDto findSpaceStats(int year, int month) {
+        // TODO 1) 월 범위 start/end — findHostSalesStats 처럼 YearMonth + atStartOfDay() / atTime(23,59,59)
+        //   (total/active/pending/byType 는 스냅샷이라 범위 무관, newReg 에만 start/end 사용)
+
+        // TODO 2) statsRepositoryCustom 호출로 수치 채우기
+        //   - total   = countHostPlace()
+        //   - active  = countHostPlaceByStatus(ApprovalStatus.A)
+        //   - pending = countHostPlaceByStatus(ApprovalStatus.P)
+        //   - newReg  = countHostPlaceByCreatedAtBetween(start, end)
+
+        // TODO 3) byType 조립 — List<SpaceTypeCountResDto>
+        //   - SpaceTypeCountResDto.of("office", countHostPlaceByOffice()) + station + workStay
+        //   - List.of(...) 로 묶기. type 문자열은 프론트 TYPE_META 키와 정확히 일치("office"/"station"/"workStay")
+
+        // TODO 4) return SpaceStatsResDto.of(total, newReg, active, pending, byType);
+        return null; // ← 채우면 삭제
     }
 
 }

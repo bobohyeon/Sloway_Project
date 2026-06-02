@@ -116,8 +116,8 @@ export default function SpaceStats() {
           icon={<FaCheckCircle />}
         />
         <StatCard
-          label="일시 중지"
-          value={Number(stats?.paused ?? 0).toLocaleString()}
+          label="승인 대기"
+          value={Number(stats?.pending ?? 0).toLocaleString()}
           unit="개"
           icon={<FaPause />}
         />

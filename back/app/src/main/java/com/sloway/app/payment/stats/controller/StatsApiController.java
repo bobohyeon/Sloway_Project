@@ -49,4 +49,16 @@ public class StatsApiController {
         return ResponseEntity.ok(resDto);
     }
 
+    @GetMapping("/space")
+    public void findSpaceStat(@RequestParam int year,@RequestParam int month) {
+    }
+
+    @GetMapping("/booking")
+    public void findBookingStats(@RequestParam int year,@RequestParam int month) {
+    }
+
+    @GetMapping("/member")
+    public void findMemberStats(@RequestParam int year,@RequestParam int month) {
+    }
+
 }
