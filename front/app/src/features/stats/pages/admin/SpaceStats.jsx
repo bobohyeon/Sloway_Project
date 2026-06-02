@@ -6,6 +6,8 @@ import PageLayout from '../../../../app/layouts/page/PageLayout';
 import { StatCard } from '../../../pay_shared/components/StatCard';
 import { Card, Section } from '../../../pay_shared/components';
 import { HorizontalBarChart } from '../../components/admin/HorizontalBarChart';
+import { StatsTabs } from '../../components/admin/StatsTabs';
+import { DataTable } from '../../components/admin/DataTable';
 import { findSpaceStats } from '../../api/statsApi';
 
 const TYPE_META = {
@@ -32,6 +34,7 @@ export default function SpaceStats() {
   const [stats, setStats] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+  const [view, setView] = useState('chart');
 
   useEffect(() => {
     let alive = true;
@@ -123,16 +126,36 @@ export default function SpaceStats() {
         />
       </KPIGrid>
 
-      {typeChartData.length > 0 ? (
-        <HorizontalBarChart
-          title="공간 타입별 분포"
-          data={typeChartData}
-          formatValue={(v) => `${Number(v).toLocaleString()}개`}
-        />
+      <StatsTabs
+        active={view}
+        onChange={setView}
+        tabs={[
+          { key: 'chart', label: '차트' },
+          { key: 'list', label: '리스트' },
+        ]}
+      />
+
+      {view === 'chart' ? (
+        typeChartData.length > 0 ? (
+          <HorizontalBarChart
+            title="공간 타입별 분포"
+            data={typeChartData}
+            formatValue={(v) => `${Number(v).toLocaleString()}개`}
+          />
+        ) : (
+          <Section title="공간 타입별 분포">
+            <EmptyCard padded>표시할 공간 분포 데이터가 없습니다.</EmptyCard>
+          </Section>
+        )
       ) : (
-        <Section title="공간 타입별 분포">
-          <EmptyCard padded>표시할 공간 분포 데이터가 없습니다.</EmptyCard>
-        </Section>
+        <DataTable
+          title="공간 타입별 분포"
+          columns={['공간 타입', '개수']}
+          rows={typeChartData.map((d) => [
+            d.label,
+            `${Number(d.value).toLocaleString()}개`,
+          ])}
+        />
       )}
     </PageLayout>
   );

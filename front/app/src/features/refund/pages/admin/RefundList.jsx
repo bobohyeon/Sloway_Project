@@ -86,7 +86,12 @@ export default function RefundList() {
 
   // 통계 카드는 전체 기간 누적 — 탭/필터 영향 X
   const stats = useMemo(() => {
-    const s = { total: refunds.length, processing: 0, completed: 0, hostRejected: 0 };
+    const s = {
+      total: refunds.length,
+      processing: 0,
+      completed: 0,
+      hostRejected: 0,
+    };
     refunds.forEach((r) => {
       const uiStatus = STATUS_TO_UI[r.status];
       if (uiStatus === 'processing') s.processing += 1;
@@ -98,7 +103,6 @@ export default function RefundList() {
 
   const tabs = [
     { value: 'all', label: '전체', count: stats.total },
-    { value: 'processing', label: '처리 중', count: stats.processing },
     { value: 'completed', label: '완료', count: stats.completed },
     { value: 'host_rejected', label: '호스트거절', count: stats.hostRejected },
   ];
@@ -199,7 +203,11 @@ export default function RefundList() {
         </List>
       )}
 
-      <Pagination currentPage={page} totalPages={totalPages} onChange={setPage} />
+      <Pagination
+        currentPage={page}
+        totalPages={totalPages}
+        onChange={setPage}
+      />
     </PageLayout>
   );
 }

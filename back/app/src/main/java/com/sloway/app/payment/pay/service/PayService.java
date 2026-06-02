@@ -98,8 +98,6 @@ public class PayService {
         PayEntity payEntity = payRepository.findById(payNo)
                 .orElseThrow(() -> new CustomException(PayErrorCode.PAY_NOT_FOUND));
 
-        // 멱등 처리: 이미 완료된 결제면 재승인을 건너뛴다.
-        // 결제완료 화면에서 뒤로가기로 GET /approve 가 다시 호출돼도 카카오 재요청·중복 적립 없이 그대로 complete 로 redirect.
         if (payEntity.getStatus() == PayStatus.COMPLETED) {
             return payEntity;
         }
@@ -131,11 +129,6 @@ public class PayService {
         }
         pointService.earnPointInternal(memberNo, payEntity);
     }
-
-
-    // ============================================================
-    // 토스페이 (Level 3 두 번째 PG) — 옵션 A: prepare 선행 방식
-    // ============================================================
 
     @Transactional
     public TossPrepareResDto prepareTossPay(PayCreateReqDto payCreateReqDto) {
@@ -170,7 +163,6 @@ public class PayService {
         PayEntity payEntity = payRepository.findById(payNo)
                 .orElseThrow(() -> new CustomException(PayErrorCode.PAY_NOT_FOUND));
 
-        // 멱등 처리: 이미 완료된 결제면 재확정 스킵 (toss/success 새로고침 시 토스 재confirm 에러 방지)
         if (payEntity.getStatus() == PayStatus.COMPLETED) {
             return PayResDto.from(payEntity);
         }

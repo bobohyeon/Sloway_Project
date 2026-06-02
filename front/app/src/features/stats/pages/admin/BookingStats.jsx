@@ -11,6 +11,8 @@ import PageLayout from '../../../../app/layouts/page/PageLayout';
 import { StatCard } from '../../../pay_shared/components/StatCard';
 import { Card, Section } from '../../../pay_shared/components';
 import { VerticalBarChart } from '../../components/admin/VerticalBarChart';
+import { StatsTabs } from '../../components/admin/StatsTabs';
+import { DataTable } from '../../components/admin/DataTable';
 import { findBookingStats } from '../../api/statsApi';
 
 const YEAR_OPTIONS = [2024, 2025, 2026];
@@ -31,6 +33,7 @@ export default function BookingStats() {
   const [stats, setStats] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+  const [view, setView] = useState('chart');
 
   useEffect(() => {
     let alive = true;
@@ -121,12 +124,32 @@ export default function BookingStats() {
         />
       </KPIGrid>
 
-      {trendChartData.length > 0 ? (
-        <VerticalBarChart title="최근 6개월 예약 추이" data={trendChartData} />
+      <StatsTabs
+        active={view}
+        onChange={setView}
+        tabs={[
+          { key: 'chart', label: '차트' },
+          { key: 'list', label: '리스트' },
+        ]}
+      />
+
+      {view === 'chart' ? (
+        trendChartData.length > 0 ? (
+          <VerticalBarChart title="최근 6개월 예약 추이" data={trendChartData} />
+        ) : (
+          <Section title="최근 6개월 예약 추이">
+            <EmptyCard padded>표시할 예약 추이 데이터가 없습니다.</EmptyCard>
+          </Section>
+        )
       ) : (
-        <Section title="최근 6개월 예약 추이">
-          <EmptyCard padded>표시할 예약 추이 데이터가 없습니다.</EmptyCard>
-        </Section>
+        <DataTable
+          title="최근 6개월 예약 추이"
+          columns={['월', '예약 수']}
+          rows={trendChartData.map((d) => [
+            `${d.label}월`,
+            `${Number(d.value).toLocaleString()}건`,
+          ])}
+        />
       )}
     </PageLayout>
   );
