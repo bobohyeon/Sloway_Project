@@ -61,7 +61,7 @@ export default function BookingStats() {
 
   const trendChartData = (stats?.trend ?? []).map((row) => ({
     label: row.yearMonth?.slice(5) ?? '',
-    value: Number(row.count ?? 0),
+    value: Number(row.totalAmt ?? 0),
     highlight: row.yearMonth === currentYm,
   }));
 
