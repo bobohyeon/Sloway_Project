@@ -6,41 +6,12 @@ import { useNavigate } from 'react-router-dom';
 // ─── 타입 정의 ────────────────────────────────────────────────────────────────
 // 백엔드 연동 시 PUT /api/host/notifications/settings 바디 스펙과 키 이름 맞출 것
 /**
- * @typedef {{ push: boolean, email: boolean, sms: boolean }} ChannelState
+ * @typedef {{ push: boolean }} ChannelState
  * @typedef {{ [itemKey: string]: ChannelState }} HostSettingMap
  */
 
 // ─── 설정 그룹 정의 ───────────────────────────────────────────────────────────
 const HOST_SETTING_GROUPS = [
-  {
-    groupKey: 'reservation',
-    groupLabel: '예약·운영',
-    groupDesc: '신규 예약 및 체크인 관련 알림',
-    groupIcon: '📋',
-    items: [
-      {
-        key: 'newReservation',
-        label: '새 예약 신청',
-        description: '게스트가 예약을 요청했을 때',
-        isMandatory: true,
-      },
-      {
-        key: 'reservationConfirmed',
-        label: '예약 확정',
-        description: '게스트가 결제를 완료했을 때',
-      },
-      {
-        key: 'reservationCancelled',
-        label: '예약 취소',
-        description: '게스트가 예약을 취소했을 때',
-      },
-      {
-        key: 'tomorrowCheckin',
-        label: '내일 체크인 알림',
-        description: '체크인 하루 전 안내',
-      },
-    ],
-  },
   {
     groupKey: 'settlement',
     groupLabel: '정산·매출',
@@ -61,12 +32,6 @@ const HOST_SETTING_GROUPS = [
         key: 'taxInvoice',
         label: '세금계산서 발행',
         description: '매월 세금계산서 자동 발행 안내',
-      },
-      {
-        key: 'feePolicy',
-        label: '수수료 정책 개편',
-        description: '플랫폼 수수료 정책 변경 안내 (중요)',
-        isMandatory: true,
       },
     ],
   },
@@ -102,7 +67,7 @@ const buildInitialSettings = () => {
   const map = {};
   HOST_SETTING_GROUPS.forEach(({ items }) => {
     items.forEach(({ key }) => {
-      map[key] = { push: true, email: true, sms: false };
+      map[key] = { push: true };
     });
   });
   return map;
@@ -110,16 +75,13 @@ const buildInitialSettings = () => {
 
 const CHANNEL_LABELS = {
   push: '앱 푸시',
-  email: '이메일',
-  sms: 'SMS',
 };
 
 export default function HostNotificationSettingsPage() {
   const navigate = useNavigate();
   const [settings, setSettings] = useState(buildInitialSettings);
 
-  const handleToggle = (itemKey, channel, isMandatory) => {
-    if (isMandatory && channel === 'push') return;
+  const handleToggle = (itemKey, channel) => {
     setSettings((prev) => ({
       ...prev,
       [itemKey]: {
@@ -154,7 +116,7 @@ export default function HostNotificationSettingsPage() {
       {/* 채널 헤더 범례 — 유저와 동일한 구조 */}
       <ChannelLegend aria-hidden="true">
         <LegendSpacer />
-        {['push', 'email', 'sms'].map((ch) => (
+        {['push'].map((ch) => (
           <LegendLabel key={ch}>{CHANNEL_LABELS[ch]}</LegendLabel>
         ))}
       </ChannelLegend>
@@ -181,11 +143,6 @@ export default function HostNotificationSettingsPage() {
                   <ItemInfo>
                     <ItemLabel>
                       {item.label}
-                      {item.isMandatory && (
-                        <MandatoryBadge aria-label="필수 알림">
-                          필수
-                        </MandatoryBadge>
-                      )}
                       {item.isWarning && (
                         <WarningBadge aria-label="주의 알림">주의</WarningBadge>
                       )}
@@ -194,14 +151,11 @@ export default function HostNotificationSettingsPage() {
                   </ItemInfo>
 
                   <ChannelToggles>
-                    {['push', 'email', 'sms'].map((ch) => (
+                    {['push'].map((ch) => (
                       <Toggle
                         key={ch}
                         checked={itemSetting[ch]}
-                        onChange={() =>
-                          handleToggle(item.key, ch, item.isMandatory)
-                        }
-                        disabled={item.isMandatory && ch === 'push'}
+                        onChange={() => handleToggle(item.key, ch)}
                         aria-label={`${item.label} ${CHANNEL_LABELS[ch]} 알림`}
                       />
                     ))}
@@ -234,18 +188,16 @@ export default function HostNotificationSettingsPage() {
 
 // ─── Toggle 컴포넌트 (재사용 가능하도록 분리) ────────────────────────────────
 // 실무에서는 components/common/Toggle.jsx 로 추출 권장
-function Toggle({ checked, onChange, disabled, 'aria-label': ariaLabel }) {
+function Toggle({ checked, onChange, 'aria-label': ariaLabel }) {
   return (
     <ToggleWrap
       role="switch"
       aria-checked={checked}
       aria-label={ariaLabel}
-      aria-disabled={disabled}
-      tabIndex={disabled ? -1 : 0}
-      onClick={disabled ? undefined : onChange}
-      onKeyDown={(e) => !disabled && e.key === 'Enter' && onChange()}
+      tabIndex={0}
+      onClick={onChange}
+      onKeyDown={(e) => e.key === 'Enter' && onChange()}
       $checked={checked}
-      $disabled={disabled}
     >
       <ToggleThumb $checked={checked} />
     </ToggleWrap>
@@ -349,15 +301,6 @@ const ItemLabel = styled.p`
   margin-bottom: 2px;
 `;
 
-const MandatoryBadge = styled.span`
-  font-size: 0.68rem;
-  font-weight: 600;
-  color: #c0392b;
-  background: rgba(192, 57, 43, 0.1);
-  padding: 1px 6px;
-  border-radius: var(--radius-full);
-`;
-
 // 호스트 특화: 낮은 평점 등 주의 알림
 const WarningBadge = styled.span`
   font-size: 0.68rem;
@@ -382,7 +325,6 @@ const ChannelToggles = styled.div`
 // ─── Toggle 스타일 ────────────────────────────────────────────────────────────
 // width: 56px은 LegendLabel과 동일하게 맞춰 열 정렬 유지
 const ToggleWrap = styled.div`
-  width: 56px;
   display: flex;
   justify-content: center;
   align-items: center;
@@ -391,8 +333,8 @@ const ToggleWrap = styled.div`
   height: 22px;
   border-radius: 999px;
   background: ${(p) => (p.$checked ? '#c07040' : 'var(--gray-200)')};
-  cursor: ${(p) => (p.$disabled ? 'not-allowed' : 'pointer')};
-  opacity: ${(p) => (p.$disabled ? 0.5 : 1)};
+  cursor: pointer;
+  opacity: 1;
   transition: background 180ms ease;
   flex-shrink: 0;
   margin: 0 8px;

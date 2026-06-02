@@ -6,41 +6,13 @@ import { useNavigate } from 'react-router-dom';
 // ─── 알림 채널 타입 ───────────────────────────────────────────────────────────
 // 백엔드 연동 시 PUT /api/notifications/settings 바디 스펙과 키 이름 맞출 것
 /**
- * @typedef {{ push: boolean, email: boolean, sms: boolean }} ChannelState
+ * @typedef {{ push: boolean }} ChannelState
  * @typedef {{ [itemKey: string]: ChannelState }} SettingMap
  */
 
 // ─── 설정 그룹 정의 ──────────────────────────────────────────────────────────
 // label: UI 표시명 | key: API 전송 키 | description: 부가 설명
 const SETTING_GROUPS = [
-  {
-    groupKey: 'reservation',
-    groupLabel: '예산·결제',
-    groupDesc: '예약 상태 변경 및 결제 관련 알림',
-    groupIcon: '📅',
-    items: [
-      {
-        key: 'reservationConfirm',
-        label: '예약 확정',
-        description: '결제 완료 후 예약 확정 안내',
-      },
-      {
-        key: 'checkinReminder',
-        label: '체크인 D-1',
-        description: '이용일 하루 전 사전 안내 알림',
-      },
-      {
-        key: 'paymentComplete',
-        label: '결제 완료',
-        description: '결제가 정상 처리됐을 때',
-      },
-      {
-        key: 'refundNotice',
-        label: '환불 처리 안내',
-        description: '환불 처리가 진행됐을 때',
-      },
-    ],
-  },
   {
     groupKey: 'communication',
     groupLabel: '리뷰·소통',
@@ -99,32 +71,6 @@ const SETTING_GROUPS = [
       },
     ],
   },
-  {
-    groupKey: 'notice',
-    groupLabel: '공지·사항',
-    groupDesc: '서비스 운영 관련 공지',
-    groupIcon: '📢',
-    items: [
-      {
-        key: 'serviceNotice',
-        label: '서비스 공지',
-        description: '서비스 약관 변경 또는 중요 알림',
-        // 필수 알림 — 채널 일부 비활성화 불가 처리 예시
-        isMandatory: true,
-      },
-      {
-        key: 'checkInGuide',
-        label: '점검 안내',
-        description: '서비스 점검 일정 안내',
-      },
-      {
-        key: 'newsletter',
-        label: '뉴스레터',
-        description: '월간 Sloway 소식 (마케팅)',
-        isMarketing: true,
-      },
-    ],
-  },
 ];
 
 // ─── 초기 설정값 생성 ─────────────────────────────────────────────────────────
@@ -132,12 +78,8 @@ const SETTING_GROUPS = [
 const buildInitialSettings = () => {
   const map = {};
   SETTING_GROUPS.forEach(({ items }) => {
-    items.forEach(({ key, isMandatory }) => {
-      map[key] = {
-        push: true,
-        email: isMandatory ? true : true, // 필수 항목은 강제 true
-        sms: false,
-      };
+    items.forEach(({ key }) => {
+      map[key] = { push: true };
     });
   });
   return map;
@@ -145,8 +87,6 @@ const buildInitialSettings = () => {
 
 const CHANNEL_LABELS = {
   push: '앱 푸시',
-  email: '이메일',
-  sms: 'SMS',
 };
 
 export default function NotificationSettingsPage() {
@@ -191,7 +131,7 @@ export default function NotificationSettingsPage() {
       {/* 채널 헤더 범례 */}
       <ChannelLegend aria-hidden="true">
         <LegendSpacer />
-        {['push', 'email', 'sms'].map((ch) => (
+        {['push'].map((ch) => (
           <LegendLabel key={ch}>{CHANNEL_LABELS[ch]}</LegendLabel>
         ))}
       </ChannelLegend>
@@ -233,7 +173,7 @@ export default function NotificationSettingsPage() {
                   </ItemInfo>
 
                   <ChannelToggles>
-                    {['push', 'email', 'sms'].map((ch) => (
+                    {['push'].map((ch) => (
                       <Toggle
                         key={ch}
                         checked={itemSetting[ch]}
