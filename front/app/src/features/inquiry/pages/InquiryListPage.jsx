@@ -39,18 +39,17 @@ export default function InquiryListPage() {
   const [inquiries, setInquiries] = useState([]);
   const [totalPages, setTotalPages] = useState(0);
 
-  const fetchInquiries = useCallback(() => {
-    api.get('/inquiry/my', {
+  const fetchInquiries = useCallback(async () => {
+    const { data } = await api.get('/inquiry/my', {
       params: {
         page: page - 1,
         size: 10,
         sort: 'createdAt,DESC',
         status: tab || undefined,
       },
-    }).then(({ data }) => {
-      setInquiries(data.content);
-      setTotalPages(data.totalPages);
     });
+    setInquiries(data.content);
+    setTotalPages(data.totalPages);
   }, [tab, page]);
 
   useEffect(() => {

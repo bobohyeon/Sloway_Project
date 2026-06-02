@@ -16,12 +16,23 @@ export default function NoticeDetailPage() {
   const [notice, setNotice] = useState(null);
 
   useEffect(() => {
-    api.get(`/notice/${id}`)
-      .then(({ data }) => setNotice(data))
-      .catch(() => navigate('/notices', { replace: true }));
+    const fetch = async () => {
+      try {
+        const { data } = await api.get(`/notice/${id}`);
+        setNotice(data);
+      } catch {
+        navigate('/notices', { replace: true });
+      }
+    };
+    fetch();
   }, [id]);
 
   if (!notice) return null;
+
+  const handleDelete = async () => {
+    await api.delete(`/notice/${notice.id}`);
+    navigate('/admin/notice');
+  };
 
   return (
     <PageLayout maxWidth={800}>
@@ -68,9 +79,7 @@ export default function NoticeDetailPage() {
             </Button>
             <Button
               variant="danger"
-              onClick={() =>
-                api.delete(`/notice/${notice.id}`).then(() => navigate('/admin/notice'))
-              }
+              onClick={handleDelete}
             >
               삭제
             </Button>

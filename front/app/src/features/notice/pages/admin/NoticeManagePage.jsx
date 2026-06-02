@@ -43,23 +43,20 @@ export default function NoticeManagePage() {
   const [totalPages, setTotalPages] = useState(0);
   const [totalElements, setTotalElements] = useState(0);
 
-  const fetchNotices = useCallback(() => {
-    api
-      .get('/notice', {
-        params: {
-          page: page - 1,
-          size: 10,
-          sort: 'createdAt,DESC',
-          status: tab,
-          category: category || undefined,
-          keyword: keyword || undefined,
-        },
-      })
-      .then(({ data }) => {
-        setNotices(data.content);
-        setTotalPages(data.totalPages);
-        setTotalElements(data.totalElements);
-      });
+  const fetchNotices = useCallback(async () => {
+    const { data } = await api.get('/notice', {
+      params: {
+        page: page - 1,
+        size: 10,
+        sort: 'createdAt,DESC',
+        status: tab,
+        category: category || undefined,
+        keyword: keyword || undefined,
+      },
+    });
+    setNotices(data.content);
+    setTotalPages(data.totalPages);
+    setTotalElements(data.totalElements);
   }, [tab, category, keyword, page]);
 
   useEffect(() => {

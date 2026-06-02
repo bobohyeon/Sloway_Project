@@ -29,10 +29,16 @@ export default function InquiryDetailPage() {
   const [deleteModal, setDeleteModal] = useState(false);
 
   useEffect(() => {
-    const endpoint = isAdmin ? `/inquiry/${id}` : `/inquiry/my/${id}`;
-    api.get(endpoint)
-      .then(({ data }) => setInquiry(data))
-      .catch(() => navigate(isAdmin ? '/admin/inquiry' : '/user/inquiry', { replace: true }));
+    const fetch = async () => {
+      try {
+        const endpoint = isAdmin ? `/inquiry/${id}` : `/inquiry/my/${id}`;
+        const { data } = await api.get(endpoint);
+        setInquiry(data);
+      } catch {
+        navigate(isAdmin ? '/admin/inquiry' : '/user/inquiry', { replace: true });
+      }
+    };
+    fetch();
   }, [id, isAdmin]);
 
   if (!inquiry) return null;
