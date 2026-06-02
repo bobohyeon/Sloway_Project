@@ -1,9 +1,6 @@
 package com.sloway.app.payment.stats.controller;
 
-import com.sloway.app.payment.stats.dto.response.MonthlySalesResDto;
-import com.sloway.app.payment.stats.dto.response.MonthlyTrendResDto;
-import com.sloway.app.payment.stats.dto.response.PayMethodStatResDto;
-import com.sloway.app.payment.stats.dto.response.RefundStatResDto;
+import com.sloway.app.payment.stats.dto.response.*;
 import com.sloway.app.payment.stats.service.StatsService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -46,5 +43,10 @@ public class StatsApiController {
         return ResponseEntity.ok(resDto);
     }
 
+    @GetMapping("/host/{hostNo}")
+    public ResponseEntity<HostSalesStatsResDto> findHostSalesStats(@PathVariable Long hostNo, @RequestParam int year, @RequestParam int month) {
+        HostSalesStatsResDto resDto = statsService.findHostSalesStats(hostNo, year, month);
+        return ResponseEntity.ok(resDto);
+    }
 
 }
