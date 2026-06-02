@@ -114,8 +114,8 @@ export default function BookingStats() {
           icon={<FaTimesCircle />}
         />
         <StatCard
-          label="환불 연결"
-          value={Number(stats?.refunded ?? 0).toLocaleString()}
+          label="이용 완료"
+          value={Number(stats?.completed ?? 0).toLocaleString()}
           unit="건"
           icon={<FaUndo />}
         />
