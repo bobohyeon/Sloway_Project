@@ -129,7 +129,7 @@ const hostMenuGroups = [
     items: [
       { url: '/host/review', str: '리뷰 답글', icon: <FaStar /> },
       { url: '/host/chat', str: '1:1 채팅', icon: <FaCommentDots /> },
-      { url: '/host/notice', str: '공지사항', icon: <FaBullhorn /> },
+      { url: '/notice', str: '공지사항', icon: <FaBullhorn /> },
       { url: '/host/notification', str: '알림 내역', icon: <FaBell /> },
       { url: '/host/notification/setting', str: '알림 설정', icon: <FaCog /> },
     ],
