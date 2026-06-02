@@ -64,10 +64,9 @@ public class PointApiController {
         return ResponseEntity.ok(balance);
     }
 
-    // ── ④ 포인트 내역 기능 ─────────────────────────────
-    // TODO: 회원 번호로 포인트 전체 내역을 돌려주는 GET 핸들러 추가
-    //  - 참고: CouponApiController.findCouponsByMemberNo 그대로 (List 반환 + ResponseEntity.ok)
-    //  - ⚠️ 경로 주의: 위에 "/member/{no}/balance" 가 이미 있음 → 새 핸들러는 "/member/{no}" (balance 없이)
-    //  - 최종 URL = GET /api/payment/point/member/{no}
-    //  - 본문은 pointService 의 ③ 메서드 호출
+    @GetMapping("/member/{no}")
+    public ResponseEntity<List<PointResDto>> findPointsByMemberNo(@PathVariable Long no) {
+        List<PointResDto> resDtoList = pointService.findPointsByMemberNo(no);
+        return ResponseEntity.ok(resDtoList);
+    }
 }
