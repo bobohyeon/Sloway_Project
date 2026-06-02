@@ -1,6 +1,7 @@
 package com.sloway.app.payment.stats.service;
 
 import com.querydsl.core.Tuple;
+import com.sloway.app.member.common.MemberStatus;
 import com.sloway.app.payment.pay.common.PayMethod;
 import com.sloway.app.payment.pay.repository.PayRepository;
 import com.sloway.app.payment.refund.repository.RefundRepository;
@@ -13,6 +14,7 @@ import com.sloway.app.payment.stats.repository.StatsRepositoryCustom;
 import com.sloway.app.place.entity.hostPlace.ApprovalStatus;
 import com.sloway.app.place.entity.hostPlace.HostPlaceEntity;
 import com.sloway.app.place.repository.hostPlace.HostPlaceRepository;
+import com.sloway.app.reservation.rsvn.entity.RsvnStatus;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -206,23 +208,66 @@ public class StatsService {
         return HostSalesStatsResDto.of(totalAmt, payCount, refundAmt, trend);
     }
 
-    // ── ⑧-2 SpaceStats ─────────────────────────────────
     public SpaceStatsResDto findSpaceStats(int year, int month) {
-        // TODO 1) 월 범위 start/end — findHostSalesStats 처럼 YearMonth + atStartOfDay() / atTime(23,59,59)
-        //   (total/active/pending/byType 는 스냅샷이라 범위 무관, newReg 에만 start/end 사용)
 
-        // TODO 2) statsRepositoryCustom 호출로 수치 채우기
-        //   - total   = countHostPlace()
-        //   - active  = countHostPlaceByStatus(ApprovalStatus.A)
-        //   - pending = countHostPlaceByStatus(ApprovalStatus.P)
-        //   - newReg  = countHostPlaceByCreatedAtBetween(start, end)
+        YearMonth ym = YearMonth.of(year, month);
+        LocalDateTime start = ym.atDay(1).atStartOfDay();
+        LocalDateTime end = ym.atEndOfMonth().atTime(23, 59, 59);
 
-        // TODO 3) byType 조립 — List<SpaceTypeCountResDto>
-        //   - SpaceTypeCountResDto.of("office", countHostPlaceByOffice()) + station + workStay
-        //   - List.of(...) 로 묶기. type 문자열은 프론트 TYPE_META 키와 정확히 일치("office"/"station"/"workStay")
+        Long total = statsRepositoryCustom.countHostPlace();
+        Long active = statsRepositoryCustom.countHostPlaceByStatus(ApprovalStatus.A);
+        Long pending = statsRepositoryCustom.countHostPlaceByStatus(ApprovalStatus.P);
+        Long newReg = statsRepositoryCustom.countHostPlaceByCreatedAtBetween(start, end);
 
-        // TODO 4) return SpaceStatsResDto.of(total, newReg, active, pending, byType);
-        return null; // ← 채우면 삭제
+        SpaceTypeCountResDto officeResDto = SpaceTypeCountResDto.of("office", statsRepositoryCustom.countHostPlaceByOffice());
+        SpaceTypeCountResDto stationResDto = SpaceTypeCountResDto.of("station", statsRepositoryCustom.countHostPlaceByStation());
+        SpaceTypeCountResDto workStayResDto = SpaceTypeCountResDto.of("workStay", statsRepositoryCustom.countHostPlaceByWorkStay());
+
+        List<SpaceTypeCountResDto> byType = List.of(officeResDto, stationResDto, workStayResDto);
+        return SpaceStatsResDto.of(total, newReg, active, pending, byType);
+    }
+
+    public BookingStatsResDto findBookingStats(int year, int month) {
+        YearMonth ym = YearMonth.of(year, month);
+        LocalDateTime start = ym.atDay(1).atStartOfDay();
+        LocalDateTime end = ym.atEndOfMonth().atTime(23, 59, 59);
+
+        Long total = statsRepositoryCustom.countRsvnByCreatedAtBetween(start, end);
+        Long confirmed = statsRepositoryCustom.countRsvnByStatusAndCreatedAtBetween(RsvnStatus.S, start, end);
+        Long complete = statsRepositoryCustom.countRsvnByStatusAndCreatedAtBetween(RsvnStatus.E, start, end);
+        Long cancel = statsRepositoryCustom.countRsvnByStatusAndCreatedAtBetween(RsvnStatus.C, start, end);
+
+        List<MonthlyTrendResDto> trend = new ArrayList<>();
+        for (int i = 5; i >= 0; i--) {
+            YearMonth ymMinus = ym.minusMonths(i);
+            LocalDateTime mStart = ymMinus.atDay(1).atStartOfDay();
+            LocalDateTime mEnd = ymMinus.atEndOfMonth().atTime(23, 59, 59);
+            long mTotal = statsRepositoryCustom.countRsvnByCreatedAtBetween(mStart, mEnd);
+            trend.add(MonthlyTrendResDto.of(ymMinus.toString(), (int) mTotal));
+        }
+        return BookingStatsResDto.of(total, confirmed, cancel, complete, trend);
+    }
+
+    public MemberStatsResDto findMemberStats(int year, int month) {
+        YearMonth ym = YearMonth.of(year, month);
+        LocalDateTime start = ym.atDay(1).atStartOfDay();
+        LocalDateTime end = ym.atEndOfMonth().atTime(23, 59, 59);
+
+        Long total = statsRepositoryCustom.countMember();
+        Long active = statsRepositoryCustom.countMemberByStatus(MemberStatus.A);
+        Long withdrawn = statsRepositoryCustom.countMemberByStatus(MemberStatus.W);
+        Long newSignup = statsRepositoryCustom.countMemberByCreatedAtBetween(start, end);
+
+        List<MonthlyTrendResDto> trend = new ArrayList<>();
+        for (int i = 5; i >= 0; i--) {
+            YearMonth ymMinus = ym.minusMonths(i);
+            LocalDateTime mStart = ymMinus.atDay(1).atStartOfDay();
+            LocalDateTime mEnd = ymMinus.atEndOfMonth().atTime(23, 59, 59);
+            long mTotal = statsRepositoryCustom.countMemberByCreatedAtBetween(mStart, mEnd);
+            trend.add(MonthlyTrendResDto.of(ymMinus.toString(), (int) mTotal));
+        }
+        return MemberStatsResDto.of(total, newSignup, active, withdrawn, trend);
+
     }
 
 }

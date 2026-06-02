@@ -1,13 +1,28 @@
 package com.sloway.app.payment.stats.dto.response;
 
+import lombok.Builder;
+import lombok.Getter;
+
 import java.util.List;
 
-// ── ⑩-1 MemberStats 응답 DTO ─────────────────────────────
-// TODO: 프론트 MemberStats 계약에 맞춘 회원 통계 DTO
-//  - 어노테이션: @Getter + @Builder
-//  - 필드: total / newSignup / active / withdrawn  (프론트가 읽는 키 그대로)
-//    + trend → List<MonthlyTrendResDto> 재활용 (그 달 가입 건수가 totalAmt 자리에 들어감)
-//  - 정적 팩토리 of(...) 로 조립
+@Getter
+@Builder
 public class MemberStatsResDto {
 
+    private Long total;
+    private Long newSignup;
+    private Long active;
+    private Long withdrawn;
+    private List<MonthlyTrendResDto> trend;
+
+    public static MemberStatsResDto of(Long total, Long newSignup, Long active, Long withdrawn,
+                                       List<MonthlyTrendResDto> trend) {
+        return MemberStatsResDto.builder()
+                .total(total)
+                .newSignup(newSignup)
+                .active(active)
+                .withdrawn(withdrawn)
+                .trend(trend)
+                .build();
+    }
 }

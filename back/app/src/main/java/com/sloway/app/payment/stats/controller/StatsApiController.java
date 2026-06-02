@@ -50,15 +50,22 @@ public class StatsApiController {
     }
 
     @GetMapping("/space")
-    public void findSpaceStat(@RequestParam int year,@RequestParam int month) {
+    public ResponseEntity<SpaceStatsResDto> findSpaceStat(@RequestParam int year, @RequestParam int month) {
+        SpaceStatsResDto resDto = statsService.findSpaceStats(year, month);
+        return ResponseEntity.ok(resDto);
     }
 
     @GetMapping("/booking")
-    public void findBookingStats(@RequestParam int year,@RequestParam int month) {
+    public ResponseEntity<BookingStatsResDto> findBookingStats(@RequestParam int year, @RequestParam int month) {
+        BookingStatsResDto resDto = statsService.findBookingStats(year, month);
+        return ResponseEntity.ok(resDto);
     }
 
     @GetMapping("/member")
-    public void findMemberStats(@RequestParam int year,@RequestParam int month) {
+    public ResponseEntity<MemberStatsResDto> findMemberStats(@RequestParam int year, @RequestParam int month) {
+        MemberStatsResDto resDto = statsService.findMemberStats(year, month);
+        return ResponseEntity.ok(resDto);
     }
+
 
 }
