@@ -16,7 +16,7 @@ export function RefundSummaryCard({ paidAmount }) {
       <Center>
         <Label>결제 금액</Label>
         <Amount>
-          <Number>{Number(paidAmount ?? 0).toLocaleString()}</Number>
+          <AmountText>{Number(paidAmount ?? 0).toLocaleString()}</AmountText>
           <Unit>원</Unit>
         </Amount>
       </Center>
@@ -69,7 +69,7 @@ const Amount = styled.div`
   gap: 4px;
 `;
 
-const Number = styled.span`
+const AmountText = styled.span`
   font-family: var(--font-display);
   font-size: 2.4rem;
   font-weight: 500;
