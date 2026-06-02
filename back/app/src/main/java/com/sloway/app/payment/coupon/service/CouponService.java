@@ -9,9 +9,6 @@ import com.sloway.app.payment.coupon.dto.request.CouponCreateReqDto;
 import com.sloway.app.payment.coupon.dto.response.CouponResDto;
 import com.sloway.app.payment.coupon.entity.CouponEntity;
 import com.sloway.app.payment.coupon.repository.CouponRepository;
-import com.sloway.app.payment.pay.common.PayErrorCode;
-import com.sloway.app.payment.pay.entity.PayEntity;
-import com.sloway.app.payment.pay.repository.PayRepository;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -28,7 +25,6 @@ import java.util.List;
 public class CouponService {
 
     private final CouponRepository couponRepository;
-    private final PayRepository payRepository;
     private final MemberRepository memberRepository;
 
     @Transactional
@@ -50,15 +46,6 @@ public class CouponService {
         return CouponResDto.from(couponEntity);
     }
 
-
-    @Transactional
-    public void useCoupon(Long couponNo, Long payNo) {
-        CouponEntity couponEntity = couponRepository.findById(couponNo)
-                .orElseThrow(() -> new CustomException(CouponErrorCode.COUPON_NOT_FOUND));
-        PayEntity payEntity = payRepository.findById(payNo)
-                .orElseThrow(() -> new CustomException(PayErrorCode.PAY_NOT_FOUND));
-        couponEntity.useCoupon(payEntity);
-    }
 
     public List<CouponResDto> findCouponsByMemberNo(Long no) {
         MemberEntity memberEntity = memberRepository.findById(no)
