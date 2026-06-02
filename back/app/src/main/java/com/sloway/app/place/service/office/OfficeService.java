@@ -220,4 +220,11 @@ public class OfficeService {
     public OfficeUpdateDetailReqDto selectOfficeForUpdate(Long no, Long memberNo) {
         return officeRepository.selectOfficeForUpdate(no, memberNo);
     }
+
+    public PlaceImgListRespDto getImageList(Long no) {
+        List<PlaceImgListRespDto.ImageInfo> imageList = imgOfficeRepository.getImageList(no);
+        return PlaceImgListRespDto.builder()
+                .placeImages(imageList)
+                .build();
+    }
 }

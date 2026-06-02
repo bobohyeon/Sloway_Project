@@ -1,6 +1,8 @@
 package com.sloway.app.place.repository.workStay;
 
+import com.querydsl.core.types.Projections;
 import com.querydsl.jpa.impl.JPAQueryFactory;
+import com.sloway.app.place.dto.response.place.PlaceImgListRespDto;
 import com.sloway.app.place.entity.workStay.ImgWorkStayEntity;
 import lombok.RequiredArgsConstructor;
 
@@ -35,6 +37,21 @@ public class ImgWorkStayRepositoryImpl implements ImgWorkStayRepositoryCustom {
                         aliveStayImageNos.isEmpty() ? null : imgWorkStayEntity.no.notIn(aliveStayImageNos)
                 )
                 .fetch();
+    }
+
+    @Override
+    public List<PlaceImgListRespDto.ImageInfo> getImageList(Long no) {
+        return queryFactory
+                .select(Projections.constructor(PlaceImgListRespDto.ImageInfo.class,
+                        imgWorkStayEntity.no,
+                        imgWorkStayEntity.currentUrl.as("preview"),
+                        imgWorkStayEntity.sort
+                ))
+                .from(imgWorkStayEntity)
+                .where(imgWorkStayEntity.workStayEntity.no.eq(no))
+                .orderBy(imgWorkStayEntity.sort.asc())
+                .fetch();
+
     }
 }
 

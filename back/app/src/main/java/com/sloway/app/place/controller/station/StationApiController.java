@@ -102,4 +102,11 @@ public class StationApiController {
 
         return ResponseEntity.ok(dto);
     }
+
+    @GetMapping("/image/list/{no}")
+    public ResponseEntity<PlaceImgListRespDto> getImageList(@PathVariable Long no){
+        PlaceImgListRespDto dto = stationService.getImageList(no);
+
+        return ResponseEntity.ok(dto);
+    }
 }

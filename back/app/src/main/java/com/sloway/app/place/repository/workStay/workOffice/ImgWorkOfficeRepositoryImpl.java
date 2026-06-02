@@ -1,6 +1,8 @@
 package com.sloway.app.place.repository.workStay.workOffice;
 
+import com.querydsl.core.types.Projections;
 import com.querydsl.jpa.impl.JPAQueryFactory;
+import com.sloway.app.place.dto.response.place.PlaceImgListRespDto;
 import com.sloway.app.place.entity.workStay.workOffice.ImgWorkStayOfficeEntity;
 import lombok.RequiredArgsConstructor;
 
@@ -34,5 +36,20 @@ public class ImgWorkOfficeRepositoryImpl implements ImgWorkOfficeRepositoryCusto
                         aliveOfficeImageNos.isEmpty() ? null : imgWorkStayOfficeEntity.no.notIn(aliveOfficeImageNos)
                 )
                 .fetch();
+    }
+
+    @Override
+    public List<PlaceImgListRespDto.ImageInfo> getImageList(Long no) {
+        return queryFactory
+                .select(Projections.constructor(PlaceImgListRespDto.ImageInfo.class,
+                        imgWorkStayOfficeEntity.no,
+                        imgWorkStayOfficeEntity.currentUrl.as("preview"),
+                        imgWorkStayOfficeEntity.sort
+                ))
+                .from(imgWorkStayOfficeEntity)
+                .where(imgWorkStayOfficeEntity.workOfficeEntity.no.eq(no))
+                .orderBy(imgWorkStayOfficeEntity.sort.asc())
+                .fetch();
+
     }
 }
