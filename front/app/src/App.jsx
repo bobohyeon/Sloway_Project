@@ -199,6 +199,8 @@ import ReviewEditPage from './features/review/pages/user/ReviewEditPage';
 
 // ── 편의시설(관리자) ──────────────────────────────────────
 import AmenityPage from './features/approval/pages/admin/AmenityPage';
+import HostNotificationSettingsPage from './features/notification/pages/host/HostNotificationSettingsPage';
+import HostNotificationListPage from './features/notification/pages/host/HostNotificationListPage';
 
 // ── 임시 플레이스홀더 ─────────────────────────────────────
 const Todo = ({ label }) => (
@@ -304,9 +306,9 @@ function App() {
         <Route path="/user/review/edit/:id" element={<ReviewEditPage />} />
         <Route path="/user/review/report" element={<ReviewReportPage />} />
         <Route path="/review/:id" element={<ReviewDetailPage />} />
-        <Route path="/user/inquiry" element={<InquiryListPage />} />
-        <Route path="/user/inquiry/form" element={<InquiryFormPage />} />
-        <Route path="/user/inquiry/:id" element={<InquiryDetailPage />} />
+        <Route path="/inquiry" element={<InquiryListPage />} />
+        <Route path="/inquiry/form/:id" element={<InquiryFormPage isEdit />} />
+        <Route path="/inquiry/:id" element={<InquiryDetailPage />} />
         {/* 소통 */}
         <Route path="/user/chat" element={<UserChatListPage />} />
         <Route path="/user/chat/:id" element={<UserChatDetailPage />} />
@@ -316,9 +318,9 @@ function App() {
           element={<NotificationSettingsPage />}
         />
         {/* 공지·FAQ */}
-        <Route path="/notices" element={<NoticeListPage />} />
-        <Route path="/notices/:id" element={<NoticeDetailPage />} />
-        <Route path="/faqs" element={<FaqListPage />} />
+        <Route path="/notice" element={<NoticeListPage />} />
+        <Route path="/notice/:id" element={<NoticeDetailPage />} />
+        <Route path="/faq" element={<FaqListPage />} />
         {/* 챗봇 */}
         <Route path="/chatbot" element={<Todo label="AI 챗봇" />} />
         {/* ══ HOST ══ */}
@@ -406,11 +408,13 @@ function App() {
         <Route path="/host/review" element={<HostReviewPage />} />
         <Route path="/host/chat" element={<HostChatListPage />} />
         <Route path="/host/chat/:id" element={<HostChatDetailPage />} />
-        <Route path="/host/notice" element={<NoticeListPage />} />
-        <Route path="/host/notification" element={<NotificationListPage />} />
+        <Route
+          path="/host/notification"
+          element={<HostNotificationListPage />}
+        />
         <Route
           path="/host/notification/setting"
-          element={<NotificationSettingsPage />}
+          element={<HostNotificationSettingsPage />}
         />
         {/* ══ ADMIN ══ */}
         {/* 대시보드 */}
