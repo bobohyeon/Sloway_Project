@@ -40,7 +40,7 @@ public class WorkStayApiController {
             @RequestPart("officeSortList") List<ImgSortReqDto> officeSortList,
             @AuthenticationPrincipal Long memberNo) {
 
-        workStayService.saveWorkStay(dto, officeDto, files, officeFiles,sortList, officeSortList, Long.valueOf(2));
+        workStayService.saveWorkStay(dto, officeDto, files, officeFiles,sortList, officeSortList, memberNo);
 
         return ResponseEntity
                 .status(HttpStatus.CREATED)
@@ -55,7 +55,7 @@ public class WorkStayApiController {
             @AuthenticationPrincipal Long memberNo
     ) {
 
-        workStayService.updateWorkStay(no, wrapper.getStay(), wrapper.getOffice(), Long.valueOf(2));
+        workStayService.updateWorkStay(no, wrapper.getStay(), wrapper.getOffice(), memberNo);
 
         return ResponseEntity
                 .status(HttpStatus.OK)
@@ -73,7 +73,7 @@ public class WorkStayApiController {
             @RequestPart("officeSortList") List<ImgUpdateSortReqDto> officeSortList,
             @AuthenticationPrincipal Long memberNo) {
 
-        workStayService.updateImageWorkStay(no, files, sortList, officeFiles, officeSortList, Long.valueOf(2));
+        workStayService.updateImageWorkStay(no, files, sortList, officeFiles, officeSortList, memberNo);
 
         return ResponseEntity
                 .status(HttpStatus.OK)
@@ -93,20 +93,20 @@ public class WorkStayApiController {
 
     @GetMapping("/update/image/{no}")
     public ResponseEntity<WorkStayImageListRespDto> selectImageList(@PathVariable Long no, @AuthenticationPrincipal Long memberNo){
-        WorkStayImageListRespDto dto = workStayService.selectImageList(no, Long.valueOf(2));
+        WorkStayImageListRespDto dto = workStayService.selectImageList(no, memberNo);
 
         return ResponseEntity.ok(dto);
     }
 
     @GetMapping("/detail/dash/{no}")
     public ResponseEntity<StationDetailRespDto> selectWorkStayDetailDashBoard(@PathVariable Long no, @AuthenticationPrincipal Long memberNo){
-        StationDetailRespDto dto = workStayService.selectWorkStayDetailDashBoard(no, Long.valueOf(2));
+        StationDetailRespDto dto = workStayService.selectWorkStayDetailDashBoard(no, memberNo);
         return ResponseEntity.ok(dto);
     }
 
     @GetMapping("/update/{no}")
-    public ResponseEntity<WorkStayUpdateDetailRespDto> selectDetailForUpdate(@PathVariable Long no, @AuthenticationPrincipal Long memeberNo){
-        WorkStayUpdateDetailRespDto dto = workStayService.selectDetailForUpdate(no, Long.valueOf(2));
+    public ResponseEntity<WorkStayUpdateDetailRespDto> selectDetailForUpdate(@PathVariable Long no, @AuthenticationPrincipal Long memberNo){
+        WorkStayUpdateDetailRespDto dto = workStayService.selectDetailForUpdate(no, memberNo);
 
         return ResponseEntity.ok(dto);
     }

@@ -54,7 +54,7 @@ public class HostPlaceApiController {
             @PathVariable String type,
             @PathVariable Long no,
             @AuthenticationPrincipal Long memberNo){
-        ApprovalCheckRespDto dto = hostPlaceService.checkRejectReason(type,no,Long.valueOf(2));
+        ApprovalCheckRespDto dto = hostPlaceService.checkRejectReason(type,no,memberNo);
         return ResponseEntity.ok(dto);
     }
 
