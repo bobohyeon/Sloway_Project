@@ -35,7 +35,7 @@ public class StationApiController {
             @RequestPart("sortList") List<ImgSortReqDto> sortList,
             @AuthenticationPrincipal Long memberNo) {
 
-        stationService.saveStation(dto, files, sortList,Long.valueOf(2));
+        stationService.saveStation(dto, files, sortList,memberNo);
 
         return ResponseEntity
                 .status(HttpStatus.CREATED)
@@ -49,7 +49,7 @@ public class StationApiController {
             @RequestBody StationUpdateReqDto dto,
             @AuthenticationPrincipal Long memberNo) {
 
-        stationService.updateStation(no, dto, Long.valueOf(2));
+        stationService.updateStation(no, dto, memberNo);
 
         return ResponseEntity
                 .status(HttpStatus.OK)
@@ -65,7 +65,7 @@ public class StationApiController {
             @RequestPart("sortList") List<ImgUpdateSortReqDto> sortList,
             @AuthenticationPrincipal Long memberNo) {
 
-        stationService.updateStationImg(no, files, sortList, Long.valueOf(2));
+        stationService.updateStationImg(no, files, sortList, memberNo);
 
         return ResponseEntity
                 .status(HttpStatus.OK)
@@ -85,20 +85,20 @@ public class StationApiController {
 
     @GetMapping("/update/image/{no}")
     public ResponseEntity<PlaceImgListRespDto> selectImageList(@PathVariable Long no, @AuthenticationPrincipal Long memberNo){
-        PlaceImgListRespDto dto = stationService.selectImageList(no, Long.valueOf(2));
+        PlaceImgListRespDto dto = stationService.selectImageList(no, memberNo);
 
         return ResponseEntity.ok(dto);
     }
 
     @GetMapping("/detail/dash/{no}")
     public ResponseEntity<StationDetailRespDto> selectStationDetailDashBoard(@PathVariable Long no, @AuthenticationPrincipal Long memberNo){
-        StationDetailRespDto dto = stationService.selectStationDetailDashBoard(no, Long.valueOf(2));
+        StationDetailRespDto dto = stationService.selectStationDetailDashBoard(no, memberNo);
         return ResponseEntity.ok(dto);
     }
 
     @GetMapping("/update/{no}")
-    public ResponseEntity<StationUpdateDetailRespDto> selectDetailForUpdate(@PathVariable Long no, @AuthenticationPrincipal Long memeberNo){
-        StationUpdateDetailRespDto dto = stationService.selectDetailForUpdate(no, Long.valueOf(2));
+    public ResponseEntity<StationUpdateDetailRespDto> selectDetailForUpdate(@PathVariable Long no, @AuthenticationPrincipal Long memberNo){
+        StationUpdateDetailRespDto dto = stationService.selectDetailForUpdate(no, memberNo);
 
         return ResponseEntity.ok(dto);
     }

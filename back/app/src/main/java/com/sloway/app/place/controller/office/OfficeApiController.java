@@ -36,7 +36,7 @@ public class OfficeApiController {
             @AuthenticationPrincipal Long memberNo) {
 
         // userNo값 필요 파라미터 추가예정
-        officeService.saveOffice(dto, files, sortList, Long.valueOf(2));
+        officeService.saveOffice(dto, files, sortList, memberNo);
 
         return ResponseEntity
                 .status(HttpStatus.CREATED)
@@ -50,7 +50,7 @@ public class OfficeApiController {
             @RequestBody OfficeUpdateReqDto dto,
             @AuthenticationPrincipal Long memberNo) {
 
-        officeService.updateOffice(no, dto, Long.valueOf(2));
+        officeService.updateOffice(no, dto, memberNo);
 
         return ResponseEntity
                 .status(HttpStatus.OK)
@@ -65,7 +65,7 @@ public class OfficeApiController {
             @RequestPart("sortList") List<ImgUpdateSortReqDto> sortList,
             @AuthenticationPrincipal Long memberNo) {
 
-        officeService.updateOfficeImg(no, files, sortList, Long.valueOf(2));
+        officeService.updateOfficeImg(no, files, sortList, memberNo);
 
         return ResponseEntity
                 .status(HttpStatus.OK)
@@ -85,19 +85,19 @@ public class OfficeApiController {
 
     @GetMapping("/update/image/{no}")
     public ResponseEntity<PlaceImgListRespDto> selectImageList(@PathVariable Long no, @AuthenticationPrincipal Long memberNo){
-        PlaceImgListRespDto dto = officeService.selectImageList(no, Long.valueOf(2));
+        PlaceImgListRespDto dto = officeService.selectImageList(no, memberNo);
         return ResponseEntity.ok(dto);
     }
 
     @GetMapping("/detail/dash/{no}")
     public ResponseEntity<StationDetailRespDto> selectStationDetailDashBoard(@PathVariable Long no, @AuthenticationPrincipal Long memberNo){
-        StationDetailRespDto dto = officeService.selectOfficeDetailDashBoard(no, Long.valueOf(2));
+        StationDetailRespDto dto = officeService.selectOfficeDetailDashBoard(no, memberNo);
         return ResponseEntity.ok(dto);
     }
 
     @GetMapping("/update/{no}")
     public ResponseEntity<OfficeUpdateDetailReqDto> selectOfficeForUpdate(@PathVariable Long no, @AuthenticationPrincipal Long memberNo){
-        OfficeUpdateDetailReqDto dto = officeService.selectOfficeForUpdate(no, Long.valueOf(2));
+        OfficeUpdateDetailReqDto dto = officeService.selectOfficeForUpdate(no, memberNo);
 
         return ResponseEntity.ok(dto);
     }
