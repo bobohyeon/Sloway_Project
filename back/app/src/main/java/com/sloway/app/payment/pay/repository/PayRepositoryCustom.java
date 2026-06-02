@@ -18,4 +18,10 @@ public interface PayRepositoryCustom {
     Integer sumByStationIn(List<Long> stationNos, LocalDateTime start, LocalDateTime end);
 
     Integer sumByWorkStayIn(List<Long> workStayNos, LocalDateTime start, LocalDateTime end);
+
+    Long sumSalesStatsByOfficeIn(List<Long> officeNos, LocalDateTime start, LocalDateTime end);
+
+    Long sumSalesStatsByStationIn(List<Long> stationNos, LocalDateTime start, LocalDateTime end);
+
+    Long sumSalesStatsByWorkStayIn(List<Long> workStayNos, LocalDateTime start, LocalDateTime end);
 }

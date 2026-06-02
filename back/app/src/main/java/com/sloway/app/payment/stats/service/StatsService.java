@@ -4,14 +4,14 @@ import com.querydsl.core.Tuple;
 import com.sloway.app.payment.pay.common.PayMethod;
 import com.sloway.app.payment.pay.repository.PayRepository;
 import com.sloway.app.payment.refund.repository.RefundRepository;
-import com.sloway.app.payment.stats.dto.response.MonthlySalesResDto;
-import com.sloway.app.payment.stats.dto.response.MonthlyTrendResDto;
-import com.sloway.app.payment.stats.dto.response.PayMethodStatResDto;
-import com.sloway.app.payment.stats.dto.response.RefundStatResDto;
+import com.sloway.app.payment.stats.dto.response.*;
 import com.sloway.app.payment.stats.entity.DailyPayStatsEntity;
 import com.sloway.app.payment.stats.entity.DailyRefundStatsEntity;
 import com.sloway.app.payment.stats.repository.DailyPayStatsRepository;
 import com.sloway.app.payment.stats.repository.DailyRefundStatsRepository;
+import com.sloway.app.place.entity.hostPlace.ApprovalStatus;
+import com.sloway.app.place.entity.hostPlace.HostPlaceEntity;
+import com.sloway.app.place.repository.hostPlace.HostPlaceRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -35,6 +35,7 @@ public class StatsService {
     private final RefundRepository refundRepository;
     private final DailyPayStatsRepository dailyPayStatsRepository;
     private final DailyRefundStatsRepository dailyRefundStatsRepository;
+    private final HostPlaceRepository hostPlaceRepository;
 
     @Transactional
     public void loadDailyStats(LocalDate targetDate) {
@@ -150,6 +151,57 @@ public class StatsService {
                 .mapToInt(DailyPayStatsEntity::getTotalAmt)
                 .sum();
         return RefundStatResDto.of(refundCount, refundAmt, finalAmt);
+    }
+
+    public HostSalesStatsResDto findHostSalesStats(Long hostNo, int year, int month) {
+
+        List<HostPlaceEntity> hostPlaces =
+                hostPlaceRepository.findByHostEntityNoAndStatus(hostNo, ApprovalStatus.A);
+
+        List<Long> officeNos = hostPlaces.stream()
+                .filter(hp -> hp.getOfficeEntity() != null)
+                .map(hp -> hp.getOfficeEntity().getNo())
+                .toList();
+
+        List<Long> stationNos = hostPlaces.stream()
+                .filter(hp -> hp.getStationEntity() != null)
+                .map(hp -> hp.getStationEntity().getNo())
+                .toList();
+
+        List<Long> workStayNos = hostPlaces.stream()
+                .filter(hp -> hp.getWorkStayEntity() != null)
+                .map(hp -> hp.getWorkStayEntity().getNo())
+                .toList();
+
+        YearMonth ym = YearMonth.of(year, month);
+        LocalDateTime start = ym.atDay(1).atStartOfDay();
+        LocalDateTime end = ym.atEndOfMonth().atTime(23, 59, 59);
+
+        int officeAmt = payRepository.sumByOfficeIn(officeNos, start, end);
+        int stationAmt = payRepository.sumByStationIn(stationNos, start, end);
+        int workStayAmt = payRepository.sumByWorkStayIn(workStayNos, start, end);
+        int totalAmt = officeAmt + stationAmt + workStayAmt;
+
+        int refundAmt = refundRepository.sumByOfficeIn(officeNos, start, end)
+                .add(refundRepository.sumByStationIn(stationNos, start, end))
+                .add(refundRepository.sumByWorkStayIn(workStayNos, start, end))
+                .intValue();
+
+        Long payCount = payRepository.sumSalesStatsByOfficeIn(officeNos, start, end)
+                + payRepository.sumSalesStatsByStationIn(stationNos, start, end)
+                + payRepository.sumSalesStatsByWorkStayIn(workStayNos, start, end);
+
+        List<MonthlyTrendResDto> trend = new ArrayList<>();
+        for (int i = 5; i >= 0; i--) {
+            YearMonth ymMinus = ym.minusMonths(i);
+            LocalDateTime mStart = ymMinus.atDay(1).atStartOfDay();
+            LocalDateTime mEnd = ymMinus.atEndOfMonth().atTime(23, 59, 59);
+            int mTotal = payRepository.sumByOfficeIn(officeNos, mStart, mEnd)
+                    + payRepository.sumByStationIn(stationNos, mStart, mEnd)
+                    + payRepository.sumByWorkStayIn(workStayNos, mStart, mEnd);
+            trend.add(MonthlyTrendResDto.of(ymMinus.toString(), mTotal));
+        }
+        return HostSalesStatsResDto.of(totalAmt, payCount, refundAmt, trend);
     }
 
 }
