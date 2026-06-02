@@ -19,3 +19,29 @@ export async function findStatsRefund(year, month) {
   const resp = await api.get(`/payment/stats/refund`, { params: { year, month } });
   return resp.data;
 }
+
+export async function findHostSalesStats(hostNo, year, month) {
+  const resp = await api.get(`/payment/stats/host/${hostNo}`, {
+    params: { year, month },
+  });
+  return resp.data;
+}
+
+export async function findSpaceStats(year, month) {
+  const resp = await api.get(`/payment/stats/space`, { params: { year, month } });
+  return resp.data;
+}
+
+export async function findBookingStats(year, month) {
+  const resp = await api.get(`/payment/stats/booking`, {
+    params: { year, month },
+  });
+  return resp.data;
+}
+
+export async function findMemberStats(year, month) {
+  const resp = await api.get(`/payment/stats/member`, {
+    params: { year, month },
+  });
+  return resp.data;
+}
