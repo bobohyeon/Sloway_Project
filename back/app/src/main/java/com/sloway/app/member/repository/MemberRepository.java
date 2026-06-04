@@ -22,6 +22,12 @@ public interface MemberRepository extends JpaRepository<MemberEntity  , Long> , 
      */
     Optional<MemberEntity> findByEmail(String email);
 
+    /**
+     * 이름 + 전화번호로 회원 조회 (아이디=이메일 찾기용).
+     * phone은 하이픈 없이 저장되므로, 호출 전에 하이픈 제거한 값을 넘긴다.
+     */
+    Optional<MemberEntity> findByNameAndPhone(String name, String phone);
+
     /** 이메일 존재 여부 (회원가입 중복 체크용) */
     boolean existsByEmail(String email);
 

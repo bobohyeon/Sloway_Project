@@ -94,3 +94,8 @@ export const startKakaoLogin = () => {
     `&response_type=code`;
   window.location.href = url;
 };
+
+export const findEmail = async (name, phone) => {
+  const response = await api.post('/auth/find-email', { name, phone });
+  return response.data; // { maskedEmail }
+};
