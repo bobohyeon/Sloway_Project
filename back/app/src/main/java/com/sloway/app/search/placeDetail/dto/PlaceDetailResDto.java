@@ -16,6 +16,7 @@ import java.util.List;
 @Getter
 public class PlaceDetailResDto {
 
+    private Long entityNo;
     private String type;
     private String title;
     private String content;
@@ -29,6 +30,7 @@ public class PlaceDetailResDto {
 
     public static PlaceDetailResDto from(OfficeEntity office){
         return PlaceDetailResDto.builder()
+                .entityNo(office.getNo())
                 .type(office.getPlaceEntity().getType())
                 .title(office.getTitle())
                 .content(office.getContent())
@@ -48,6 +50,7 @@ public class PlaceDetailResDto {
 
     public static PlaceDetailResDto from(StationEntity station){
         return PlaceDetailResDto.builder()
+                .entityNo(station.getNo())
                 .type(station.getPlaceEntity().getType())
                 .title(station.getTitle())
                 .content(station.getContent())
@@ -67,6 +70,7 @@ public class PlaceDetailResDto {
 
     public static PlaceDetailResDto from(WorkStayEntity workStay){
         return PlaceDetailResDto.builder()
+                .entityNo(workStay.getNo())
                 .type(workStay.getPlaceEntity().getType())
                 .title(workStay.getTitle())
                 .content(workStay.getContent())
