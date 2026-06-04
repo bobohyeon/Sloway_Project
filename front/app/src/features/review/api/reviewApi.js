@@ -6,6 +6,11 @@ export async function saveReview(formData) {
   await api.post('/review', formData);
 }
 
+export async function findReviewsByPlace(placeNo) {
+  const res = await api.get('/review', { params: { placeNo } });
+  return res.data;
+}
+
 export async function findMyReviews() {
   const res = await api.get('/review/my');
   return res.data;

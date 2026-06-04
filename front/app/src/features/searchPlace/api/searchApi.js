@@ -20,6 +20,21 @@ const SORT_MAP = {
   평점순: 'SCORE',
 };
 
+export async function getOfficeDetail(no) {
+  const res = await api.get(`/spaces/office/${no}`);
+  return res.data;
+}
+
+export async function getStationDetail(no) {
+  const res = await api.get(`/spaces/station/${no}`);
+  return res.data;
+}
+
+export async function getWorkStayDetail(no) {
+  const res = await api.get(`/spaces/workStay/${no}`);
+  return res.data;
+}
+
 export async function searchSpaces({ region, placeType, sort, checkIn, checkOut, guestCount } = {}) {
   const params = {};
   if (region && region !== '전체') params.region = REGION_MAP[region];
