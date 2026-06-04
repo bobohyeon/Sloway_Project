@@ -12,7 +12,6 @@ import com.sloway.app.reservation.rsvn.service.RsvnService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
@@ -27,13 +26,20 @@ public class RsvnController {
 
     //예약하기
     @PostMapping
-    public ResponseEntity<Void> save(@RequestBody RsvnReqDto dto,
+    public ResponseEntity<Long> save(@RequestBody RsvnReqDto dto,
                                      @AuthenticationPrincipal CustomUserDetails userDetails
     ){
-        rsvnService.save(userDetails.getMemberNo(), dto);
+        long rsvnNo = rsvnService.save(userDetails.getMemberNo(), dto);
         return ResponseEntity
                 .status(HttpStatus.CREATED)
-                .build();
+                .body(rsvnNo);
+    }
+
+    //리뷰가능목록 조회
+    @GetMapping("/reviewable")
+    public ResponseEntity<List<RsvnResDto>> findReviewable(@AuthenticationPrincipal CustomUserDetails userDetail){
+        List<RsvnResDto> dtoList = rsvnService.findReviewable(userDetail.getMemberNo());
+        return ResponseEntity.ok(dtoList);
     }
 
     //내 예약 목록 조회 (일반 회원)
