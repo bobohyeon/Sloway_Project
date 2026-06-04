@@ -20,8 +20,8 @@ export async function findStatsRefund(year, month) {
   return resp.data;
 }
 
-export async function findHostSalesStats(hostNo, year, month) {
-  const resp = await api.get(`/payment/stats/host/${hostNo}`, {
+export async function findHostSalesStats(year, month) {
+  const resp = await api.get(`/payment/stats/host`, {
     params: { year, month },
   });
   return resp.data;

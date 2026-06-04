@@ -8,8 +8,6 @@ import { Card, Section, EmptyState } from '../../../pay_shared/components';
 import TaxInvoiceDoc from '../../components/host/TaxInvoiceDoc';
 import { findSettleByHostNo } from '../../api/settlementApi';
 
-const HOST_NO = 1;
-
 const POLICY_ITEMS = [
   { title: '발행 주기', description: '정산 회차마다 4일 단위로 자동 발행됩니다.' },
   { title: '발행 시점', description: '정산 완료 후 세금계산서가 발행됩니다.' },
@@ -33,7 +31,7 @@ export default function TaxInvoice() {
 
   useEffect(() => {
     // 정산 중 세금계산서 발행(INVOICE) 상태만 추림
-    findSettleByHostNo(HOST_NO)
+    findSettleByHostNo()
       .then((list) => setInvoices(list.filter((s) => s.status === 'INVOICE')))
       .catch((err) => console.error('세금계산서 내역 조회 실패', err));
   }, []);

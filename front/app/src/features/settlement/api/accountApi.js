@@ -6,8 +6,8 @@ export async function registerAccount(reqDto) {
   return resp.data;
 }
 
-// 호스트 정산 계좌 조회 (미등록이면 null)
-export async function findAccountByHostNo(hostNo) {
-  const resp = await api.get(`/payment/account/host/${hostNo}`);
+// 호스트 본인 정산 계좌 조회 (미등록이면 null) — 토큰의 memberNo로 호스트 식별
+export async function findAccountByHostNo() {
+  const resp = await api.get(`/payment/account/host`);
   return resp.data;
 }

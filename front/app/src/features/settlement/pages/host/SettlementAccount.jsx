@@ -6,8 +6,6 @@ import PageLayout from '../../../../app/layouts/page/PageLayout';
 import { Card, Section } from '../../../pay_shared/components';
 import { registerAccount, findAccountByHostNo } from '../../api/accountApi';
 
-const HOST_NO = 1;
-
 export default function SettlementAccount() {
   const [account, setAccount] = useState(null);
   const [form, setForm] = useState({ bankName: '', accountNo: '', holder: '' });
@@ -15,7 +13,7 @@ export default function SettlementAccount() {
 
   const load = async () => {
     try {
-      const data = await findAccountByHostNo(HOST_NO); // 미등록이면 null
+      const data = await findAccountByHostNo(); // 미등록이면 null
       setAccount(data || null);
       if (data) {
         setForm({
@@ -42,7 +40,7 @@ export default function SettlementAccount() {
     }
     setSaving(true);
     try {
-      await registerAccount({ hostNo: HOST_NO, ...form });
+      await registerAccount({ ...form });
       await load(); // 저장 후 갱신
       alert('정산 계좌가 저장되었습니다.');
     } catch (err) {
