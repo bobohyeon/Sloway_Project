@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { useDispatch } from 'react-redux';
 import PageLayout from '../../../../app/layouts/page/PageLayout';
 import EmailVerifyField from '../../components/user/EmailVerifyField';
+import ProfileImageField from '../../components/user/ProfileImageField';
 import { useMyPage } from '../../hooks/useMyPage';
 import { updateMyPage, changeMyEmail } from '../../api/userApi';
 import { logout } from '../../../auth/store/authSlice';
@@ -132,6 +133,9 @@ function ProfileEditPage() {
   const [errors, setErrors] = useState({});
   const [saving, setSaving] = useState(false);
 
+  // 프로필 이미지: 선택 시 file (없으면 null → 이미지 유지)
+  const [imageFile, setImageFile] = useState(null);
+
   // 이메일 변경 폼 (별도)
   const [newEmail, setNewEmail] = useState('');
   const [emailVerified, setEmailVerified] = useState(false);
@@ -144,8 +148,15 @@ function ProfileEditPage() {
     }
   }, [initial]);
 
+  const handleImageChange = (file) => {
+    setImageFile(file);
+  };
+
   const isDirty =
-    initial && (form.name !== initial.name || form.phone !== initial.phone);
+    initial &&
+    (form.name !== initial.name ||
+      form.phone !== initial.phone ||
+      imageFile !== null);
   const canSave = isDirty && !saving;
 
   const handleChange = (e) => {
@@ -168,17 +179,22 @@ function ProfileEditPage() {
     return Object.keys(next).length === 0;
   };
 
-  // ── 기본 정보 저장 (이름·휴대폰) ──
+  // ── 기본 정보 저장 (이름·휴대폰·프로필 이미지) ──
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (saving || !validate()) return;
 
     setSaving(true);
     try {
-      await updateMyPage({ name: form.name.trim(), phone: form.phone });
+      await updateMyPage(
+        { name: form.name.trim(), phone: form.phone.replace(/-/g, '') },
+        imageFile
+      );
       alert('저장되었습니다.');
       navigate('/user/profile');
     } catch (err) {
+      console.log('프로필 저장 에러: ', err);
+
       alert(err.response?.data?.message ?? '저장에 실패했습니다.');
     } finally {
       setSaving(false);
@@ -225,6 +241,15 @@ function ProfileEditPage() {
       <Form onSubmit={handleSubmit} noValidate>
         {/* 기본 정보 */}
         <Card>
+          {/* 프로필 사진 */}
+          <FormGroup>
+            <Label>프로필 사진</Label>
+            <ProfileImageField
+              initialUrl={initial.imgUrl ?? null}
+              onChange={handleImageChange}
+            />
+          </FormGroup>
+
           <FormGroup>
             <Label htmlFor="name">이름</Label>
             <Input
