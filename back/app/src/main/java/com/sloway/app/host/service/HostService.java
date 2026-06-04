@@ -2,6 +2,7 @@ package com.sloway.app.host.service;
 
 import com.sloway.app.auth.dto.request.ChangePasswordRequestDto;
 import com.sloway.app.auth.service.EmailService;
+import com.sloway.app.aws.service.S3Service;
 import com.sloway.app.common.exception.CustomException;
 import com.sloway.app.host.common.HostErrorCode;
 import com.sloway.app.host.dto.request.UpdateHostRequestDto;
@@ -18,6 +19,9 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
+
+import java.io.IOException;
 
 /**
  * 호스트 — 본인 영역 서비스.
@@ -35,6 +39,7 @@ public class HostService {
     private final HostRepository hostRepository;
     private final PasswordEncoder passwordEncoder;
     private final EmailService emailService;
+    private final S3Service s3Service;
 
     public HostMyPageResponseDto hostMyInfo(Long memberNo) {
         // 1) 회원 조회 (없으면 404)
@@ -51,7 +56,9 @@ public class HostService {
 
     //호스트 마이페이지 수정 null 필드는 기존 값 유지.
     @Transactional
-    public HostMyPageResponseDto update(Long memberNo, UpdateHostRequestDto request) {
+    public HostMyPageResponseDto update(Long memberNo,
+                                        UpdateHostRequestDto request,
+                                        MultipartFile profileImage ) {
         MemberEntity member = memberRepository.findById(memberNo)
                 .orElseThrow(() -> new CustomException(MemberErrorCode.MEMBER_NOT_FOUND));
 
@@ -64,11 +71,15 @@ public class HostService {
         if (request.getPhone() != null && !request.getPhone().isBlank()) {
             member.changePhone(request.getPhone());
         }
-        if (request.getImgUrl() != null) {
-            // 빈 문자열 허용 (프로필 이미지 제거)
-            member.changeImgUrl(request.getImgUrl());
+        //프로필 이미지가 들어왔을 때만 S3 업로드 +URL 교체
+        if (profileImage != null && !profileImage.isEmpty()) {
+            try {
+                String imgUrl = s3Service.upload(profileImage, "member-profile");
+                member.updateImgUrl(imgUrl);
+            } catch (IOException e) {
+                throw new CustomException(HostErrorCode.HOST_NOT_FOUND);
+            }
         }
-
         // 4) 사업자 정보 변경 (호스트 전용)
         if (request.getBusinessName() != null && !request.getBusinessName().isBlank()) {
             host.changeBusinessName(request.getBusinessName());
