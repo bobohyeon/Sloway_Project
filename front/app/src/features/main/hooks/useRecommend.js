@@ -48,16 +48,12 @@ export const useRecommend = () => {
 
   const goDetail = (type, id) => {
     const path =
-      type === '오피스'
+      type === 'OFFICE'
         ? `/coworking-offices/${id}`
-        : type === '워크앤스테이'
+        : type === 'WORK_STAY'
           ? `/workstays/${id}`
           : `/accommodations/${id}`;
     navigate(path);
-  };
-
-  const goBannerBook = () => {
-    navigate('/accommodations/3');
   };
 
   return {
