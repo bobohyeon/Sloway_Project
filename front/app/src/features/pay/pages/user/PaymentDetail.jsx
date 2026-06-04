@@ -9,6 +9,7 @@ import { PaymentStatusBadge } from '../../components/user/PaymentStatusBadge';
 import { PriceBreakdown } from '../../components/user/PriceBreakdown';
 
 import { findPayByNo } from '../../api/payApi';
+import { useAuth } from '../../../auth/hooks/useAuth';
 
 const STATUS_TO_UI = {
   READY: 'pending',
@@ -69,10 +70,16 @@ const calcEarnPoints = (finalAmt) =>
 export default function PaymentDetail() {
   const { no } = useParams();
   const navigate = useNavigate();
+  const { user } = useAuth();
+  const memberNo = user?.memberNo;
 
   const [pay, setPay] = useState(null);
 
   useEffect(() => {
+    if (!memberNo) {
+      navigate('/login', { replace: true });
+      return;
+    }
     const load = async () => {
       try {
         const resDto = await findPayByNo(no);
@@ -82,7 +89,7 @@ export default function PaymentDetail() {
       }
     };
     load();
-  }, [no]);
+  }, [no, memberNo, navigate]);
 
   if (!pay) return null;
 
