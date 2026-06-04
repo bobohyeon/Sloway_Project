@@ -43,6 +43,16 @@ const Sidebar = styled.aside`
   }
 `;
 
+const LoadErrorBanner = styled.div`
+  margin-bottom: var(--space-4);
+  padding: var(--space-3) var(--space-4);
+  background: #fff4ec;
+  border: 1px solid #f0c9a8;
+  border-radius: var(--radius-md);
+  color: #b5651d;
+  font-size: 0.88rem;
+`;
+
 // TODO(예약 연동): 예약 상세에서 rsvnNo를 넘겨받도록 교체 — 현재는 시연용 고정값 (김보현 협의 안건)
 const RSVN_NO = 2;
 const PRICE_PER_NIGHT = 185000;
@@ -97,6 +107,7 @@ export default function BookingPaymentPage() {
   const [coupons, setCoupons] = useState([]);
   const [heldPoints, setHeldPoints] = useState(0);
   const [paying, setPaying] = useState(false);
+  const [loadError, setLoadError] = useState(null);
 
   useEffect(() => {
     // 결제는 로그인 필수 — 비로그인 진입 시 로그인 페이지로 돌려보냄
@@ -114,6 +125,9 @@ export default function BookingPaymentPage() {
         setHeldPoints(balanceResDto.balance);
       } catch (err) {
         console.error('결제 페이지 데이터 로드 실패', err);
+        setLoadError(
+          '쿠폰·포인트 정보를 불러오지 못했어요. 할인 없이 결제는 진행할 수 있어요.'
+        );
       }
     };
     loadData();
@@ -170,6 +184,7 @@ export default function BookingPaymentPage() {
   return (
     <PageLayout maxWidth={1200}>
       <PaymentSteps current={2} />
+      {loadError && <LoadErrorBanner>{loadError}</LoadErrorBanner>}
 
       <Layout>
         <Main>
