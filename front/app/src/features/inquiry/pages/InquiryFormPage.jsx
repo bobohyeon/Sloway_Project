@@ -4,6 +4,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { Button, Modal, Card } from '../../pay_shared/components';
 import PageLayout from '../../../app/layouts/page/PageLayout';
 import api from '../../../app/api/axiosApi';
+import { useAuth } from '../../auth/hooks/useAuth';
 
 const CATEGORY_OPTIONS = [
   { label: '예약', value: 'RESERVATION' },
@@ -24,6 +25,7 @@ export default function InquiryFormPage({ isEdit = false }) {
   const [errors, setErrors] = useState({});
   const [cancelModal, setCancelModal] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
+  const { user, role } = useAuth();
 
   useEffect(() => {
     if (!isEdit || !id) return;
@@ -209,7 +211,14 @@ export default function InquiryFormPage({ isEdit = false }) {
             <Button variant="secondary" onClick={() => setCancelModal(false)}>
               계속 작성
             </Button>
-            <Button variant="danger" onClick={() => navigate('/user/inquiry')}>
+            <Button
+              variant="danger"
+              onClick={() => {
+                const path =
+                  user?.role === 'U' ? '/user/inquiry' : '/host/inquiry';
+                navigate(path);
+              }}
+            >
               나가기
             </Button>
           </>

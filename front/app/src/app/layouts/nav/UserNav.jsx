@@ -84,7 +84,7 @@ const userMenuGroups = [
       { url: '/user/wishlist', str: '찜 목록', icon: <FaHeart /> },
       { url: '/user/recent', str: '최근 본 공간', icon: <FaHistory /> },
       { url: '/user/review', str: '내 리뷰', icon: <FaStar /> },
-      { url: '/inquiry', str: '내 문의', icon: <FaQuestionCircle /> },
+      { url: '/user/inquiry', str: '내 문의', icon: <FaQuestionCircle /> },
     ],
   },
   {

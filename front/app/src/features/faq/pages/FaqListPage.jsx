@@ -5,9 +5,12 @@ import {
   EmptyState,
   Card,
   Pagination,
+  Button,
 } from '../../pay_shared/components';
 import PageLayout from '../../../app/layouts/page/PageLayout';
 import api from '../../../app/api/axiosApi';
+import { useAuth } from '../../auth/hooks/useAuth';
+import { useNavigate } from 'react-router-dom';
 
 const CATEGORY_OPTIONS = [
   { label: '전체', value: '' },
@@ -31,6 +34,8 @@ const CATEGORY_LABEL = {
 };
 
 export default function FaqListPage() {
+  const { user, role } = useAuth();
+  const navigate = useNavigate();
   const [category, setCategory] = useState('');
   const [inputKeyword, setInputKeyword] = useState('');
   const [keyword, setKeyword] = useState('');
@@ -186,7 +191,16 @@ export default function FaqListPage() {
           <BannerTitle>원하는 답변을 찾지 못하셨나요?</BannerTitle>
           <BannerDesc>1:1 문의를 통해 직접 문의해 주세요.</BannerDesc>
         </BannerText>
-        <ContactLink href="/user/inquiry/form">문의하기 →</ContactLink>
+        <Button
+          onClick={() => {
+            const path =
+              user?.role === 'U' ? '/user/inquiry/form' : '/host/inquiry/form';
+            navigate(path);
+          }}
+        >
+          + 문의하기
+        </Button>
+        {/* <ContactLink href="/user/inquiry/form">문의하기 →</ContactLink> */}
       </ContactBanner>
     </PageLayout>
   );
