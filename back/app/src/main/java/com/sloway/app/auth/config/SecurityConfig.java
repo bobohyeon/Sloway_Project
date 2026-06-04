@@ -81,38 +81,49 @@ public class SecurityConfig {
                 .sessionManagement(s -> s.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(
                         auth -> auth
-                                // 로그인·가입
+                                // ── 로그인·가입 (공개) ──
                                 .requestMatchers("/api/auth/**").permitAll()
                                 .requestMatchers("/api/host/auth/**").permitAll()
                                 .requestMatchers("/api/host/join/**").permitAll()
                                 .requestMatchers("/api/admin/auth/**").permitAll()
-                                // 권한별 보호 (URL 패턴으로 표현)
+
+                                // ── 역할 prefix 보호 ──
                                 .requestMatchers("/api/user/**").hasRole("USER")
                                 .requestMatchers("/api/host/**").hasRole("HOST")
                                 .requestMatchers("/api/admin/**").hasRole("ADMIN")
 
-                                // ── 결제 도메인 (/api/payment) — 기능 prefix라 역할별 개별 지정 ──
-                                // ⚠️ 순서 중요: 구체 경로(공개/HOST/USER) 먼저, 포괄 /** (ADMIN) 맨 뒤
-                                // PG 콜백 — 토큰 못 실음, 필수 공개
-                                .requestMatchers(HttpMethod.GET, "/api/payment/pay/approve").permitAll()
+                                // ══ 결제 도메인 (/api/payment) ══════════════════════════
+                                // 기능 prefix 아래 user·host·admin이 섞여 있어 역할별로 개별 지정.
+                                // ⚠️ 순서 규칙: 구체 경로(공개→HOST→USER) 먼저, 포괄 /**(ADMIN) 맨 뒤.
+                                //    Spring Security는 위에서부터 첫 매칭을 적용하므로 순서가 곧 정책.
 
-                                // HOST — 정산·통계·계좌
+                                // ── 공개 ──
+                                // PG 콜백 — 결제대행사가 토큰 없이 호출 → 반드시 공개
+                                .requestMatchers(HttpMethod.GET, "/api/payment/pay/approve").permitAll()
+                                // 쿠폰 이벤트 게시 목록 — 비로그인·user 모두 조회 (download(POST·USER)보다 위)
+                                .requestMatchers(HttpMethod.GET, "/api/payment/coupon/event").permitAll()
+
+                                // ── HOST (정산·통계·계좌) ──
                                 .requestMatchers(HttpMethod.GET, "/api/payment/settlement/settle/host").hasRole("HOST")
+                                // 정산 상세 — host(본인) + admin 둘 다 조회
+                                .requestMatchers(HttpMethod.GET, "/api/payment/settlement/settle/{no}").hasAnyRole("HOST", "ADMIN")
                                 .requestMatchers(HttpMethod.GET, "/api/payment/stats/host").hasRole("HOST")
                                 .requestMatchers(HttpMethod.POST, "/api/payment/account").hasRole("HOST")
                                 .requestMatchers(HttpMethod.GET, "/api/payment/account/host").hasRole("HOST")
 
-                                // USER — 결제·쿠폰·포인트·환불
+                                // ── USER (결제·쿠폰·포인트·환불) ──
+                                // 결제 상세 — user(본인) + admin 둘 다 (approve(permitAll)보다 아래)
+                                .requestMatchers(HttpMethod.GET, "/api/payment/pay/{no}").hasAnyRole("USER", "ADMIN")
                                 .requestMatchers(HttpMethod.POST, "/api/payment/pay/ready", "/api/payment/pay/toss/**").hasRole("USER")
                                 .requestMatchers(HttpMethod.GET, "/api/payment/pay/member/**", "/api/payment/coupon/member/**",
                                         "/api/payment/point/member/**", "/api/payment/refund/member/**").hasRole("USER")
                                 .requestMatchers(HttpMethod.POST, "/api/payment/coupon/event/*/download",
                                         "/api/payment/point/use", "/api/payment/refund").hasRole("USER")
 
-                                // ADMIN — 나머지 결제 도메인 전부 (반드시 위 구체 경로들 다음)
+                                // ── ADMIN (나머지 결제 도메인 전부 — 반드시 위 구체 경로들 다음) ──
                                 .requestMatchers("/api/payment/**").hasRole("ADMIN")
 
-                                // 나머지 — 점진 도입 단계, 다른 담당자 API 진행 위해 일단 공개
+                                // ── 그 외 — 점진 도입 단계, 다른 담당자 API 진행 위해 일단 공개 ──
                                 .anyRequest().permitAll()
                 )
                 .addFilterAt(userLoginFilter, UsernamePasswordAuthenticationFilter.class)
