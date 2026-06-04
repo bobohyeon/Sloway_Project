@@ -129,9 +129,7 @@ const WorkationBanner = ({ onBookClick, RANDOM_PLACE }) => {
                 / 1박
               </span>
             </div>
-            <BookBtn onClick={() => onBookClick(data.workStayNo)}>
-              예약하기
-            </BookBtn>
+            <BookBtn onClick={() => onBookClick}>예약하기</BookBtn>
           </BannerCardBody>
         </BannerCard>
       </BannerInner>
