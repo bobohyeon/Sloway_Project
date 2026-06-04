@@ -12,6 +12,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 /**
  * 호스트 — 본인 영역 API.
@@ -54,16 +55,14 @@ public class HostController {
     //호스트 마이페이지 수정
     @PatchMapping
     public ResponseEntity<HostMyPageResponseDto> update(
-            @RequestBody UpdateHostRequestDto request,
+            @RequestPart("dto") UpdateHostRequestDto request,
+            @RequestPart(value = "profileImage", required = false) MultipartFile profileImage,
             @AuthenticationPrincipal CustomUserDetails host) {
 
         log.info("호스트 마이페이지 수정: memberNo={}", host.getMemberNo());
-        HostMyPageResponseDto result = hostService.update(host.getMemberNo(), request);
+        HostMyPageResponseDto result = hostService.update(host.getMemberNo(), request, profileImage);
         return ResponseEntity.ok(result);
-
-
     }
-
     /**
      * 호스트 비밀번호 변경.
      *
