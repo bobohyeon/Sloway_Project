@@ -23,6 +23,14 @@ const Card = styled.div`
   }
 `;
 
+const Meta = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  color: #4a4a4a;
+  margin-bottom: 20px;
+`;
 const ImageBox = styled.div`
   position: relative;
   height: 180px;
@@ -70,6 +78,197 @@ const Content = styled.div`
 const WishCardComponent = ({ data, onToggleWish }) => {
   const navigate = useNavigate();
 
+const InfoLabel = styled.span`
+  font-size: 11px;
+  color: #8a8a8a;
+  letter-spacing: 0.04em;
+`;
+
+const InfoValue = styled.span`
+  font-size: 14px;
+  color: #1a1a1a;
+  font-weight: 500;
+`;
+
+const NoticeItem = styled.div`
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+  padding: 14px 16px;
+  background: #fff8f0;
+  border-radius: 10px;
+  border-left: 3px solid #c97d4c;
+  margin-bottom: 10px;
+`;
+
+const NoticeBadge = styled.span`
+  font-size: 10px;
+  font-weight: 700;
+  color: #fff;
+  background: #c97d4c;
+  padding: 2px 7px;
+  border-radius: 4px;
+  white-space: nowrap;
+  margin-top: 2px;
+`;
+
+const FacilityGrid = styled.div`
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+`;
+
+const FacilityItem = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  color: #4a4a4a;
+`;
+
+const ReviewList = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  margin-top: 8px;
+`;
+
+const EmptyReview = styled.div`
+  padding: 60px 20px;
+  text-align: center;
+  font-size: 14px;
+  color: #888;
+  background: #faf7f2;
+  border-radius: 10px;
+`;
+
+// ── 컴포넌트 ──────────────────────────────────────────────
+// space props 키 통일:
+//   type, title, score, reviewCount, location
+//   description, infoItems[{label,value}], notices[{title,desc}]
+//   facilities[{icon,name}]
+// reviews: 리뷰 배열
+
+function DetailMainBox({ space = {}, reviews = [] }) {
+  const [activeTab, setActiveTab] = useState(0);
+
+  const {
+    type = '숙소',
+    title = '공간명',
+    score = 0,
+    reviewCount = 0,
+    address = '지역',
+    content = '',
+    infoItems = [],
+    notices = [],
+    amenities = [],
+  } = space;
+
+  return (
+    <Wrap>
+      <TypeBadge>{type}</TypeBadge>
+
+      <TitleRow>
+        <Title>{title}</Title>
+      </TitleRow>
+
+      <Meta>
+        <Score>★ {score}</Score>
+        <span>({reviewCount} 리뷰)</span>
+        <span>·</span>
+        <span>📍 {address}</span>
+      </Meta>
+
+      <Tabs>
+        {TABS.map((tab, idx) => (
+          <TabBtn
+            key={idx}
+            $active={activeTab === idx}
+            onClick={() => setActiveTab(idx)}
+          >
+            {tab}
+            {tab === '리뷰' && reviewCount > 0 && (
+              <TabCount>{reviewCount}</TabCount>
+            )}
+          </TabBtn>
+        ))}
+      </Tabs>
+
+      {/* ── 공간 정보 탭 ── */}
+      {activeTab === 0 && (
+        <TabContent>
+          <SectionTitle>공간 소개</SectionTitle>
+          <Desc>{content || '공간 소개를 불러오는 중입니다.'}</Desc>
+
+          {infoItems.length > 0 && (
+            <>
+              <SectionTitle>기본 정보</SectionTitle>
+              <InfoGrid>
+                {infoItems.map((item, i) => (
+                  <InfoItem key={i}>
+                    <InfoLabel>{item.label}</InfoLabel>
+                    <InfoValue>{item.value}</InfoValue>
+                  </InfoItem>
+                ))}
+              </InfoGrid>
+            </>
+          )}
+
+          {notices.length > 0 && (
+            <>
+              <SectionTitle>공지사항</SectionTitle>
+              {notices.map((n, i) => (
+                <NoticeItem key={i}>
+                  <NoticeBadge>공지</NoticeBadge>
+                  <div>
+                    <div
+                      style={{ fontSize: 13, fontWeight: 600, marginBottom: 2 }}
+                    >
+                      {n.title}
+                    </div>
+                    <div style={{ fontSize: 12, color: '#666' }}>{n.desc}</div>
+                  </div>
+                </NoticeItem>
+              ))}
+            </>
+          )}
+        </TabContent>
+      )}
+
+      {/* ── 편의시설 탭 ── */}
+      {activeTab === 1 && (
+        <TabContent>
+          <SectionTitle>편의시설</SectionTitle>
+          {amenities.length > 0 ? (
+            <FacilityGrid>
+              {amenities.map((amenity, i) => (
+                <FacilityItem key={i}>
+                  <span>✓</span>
+                  <span>{amenity}</span>
+                </FacilityItem>
+              ))}
+            </FacilityGrid>
+          ) : (
+            <EmptyReview>편의시설 정보가 없어요</EmptyReview>
+          )}
+        </TabContent>
+      )}
+
+      {/* ── 리뷰 탭 ── */}
+      {activeTab === 2 && (
+        <TabContent>
+          <SectionTitle>리뷰 ({reviewCount})</SectionTitle>
+          {reviews.length === 0 ? (
+            <EmptyReview>아직 작성된 리뷰가 없어요</EmptyReview>
+          ) : (
+            <ReviewList>
+              {reviews.map((review) => (
+                <ReviewItem key={review.id} review={review} />
+              ))}
+            </ReviewList>
+          )}
+        </TabContent>
+      )}
   const pathMap = {
     WORK_STAY: 'workstays',
     OFFICE: 'coworking-offices',

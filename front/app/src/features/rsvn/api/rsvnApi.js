@@ -23,3 +23,8 @@ export async function findHostSpaces() {
   const res = await api.get('/reservation/host/spaces');
   return res.data;
 }
+
+export async function saveRsvn(dto) {
+  const res = await api.post('/reservation', dto);
+  return res.data;
+}
