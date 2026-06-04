@@ -11,6 +11,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.ProviderManager;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
@@ -89,6 +90,28 @@ public class SecurityConfig {
                                 .requestMatchers("/api/user/**").hasRole("USER")
                                 .requestMatchers("/api/host/**").hasRole("HOST")
                                 .requestMatchers("/api/admin/**").hasRole("ADMIN")
+
+                                // ── 결제 도메인 (/api/payment) — 기능 prefix라 역할별 개별 지정 ──
+                                // ⚠️ 순서 중요: 구체 경로(공개/HOST/USER) 먼저, 포괄 /** (ADMIN) 맨 뒤
+                                // PG 콜백 — 토큰 못 실음, 필수 공개
+                                .requestMatchers(HttpMethod.GET, "/api/payment/pay/approve").permitAll()
+
+                                // HOST — 정산·통계·계좌
+                                .requestMatchers(HttpMethod.GET, "/api/payment/settlement/settle/host").hasRole("HOST")
+                                .requestMatchers(HttpMethod.GET, "/api/payment/stats/host").hasRole("HOST")
+                                .requestMatchers(HttpMethod.POST, "/api/payment/account").hasRole("HOST")
+                                .requestMatchers(HttpMethod.GET, "/api/payment/account/host").hasRole("HOST")
+
+                                // USER — 결제·쿠폰·포인트·환불
+                                .requestMatchers(HttpMethod.POST, "/api/payment/pay/ready", "/api/payment/pay/toss/**").hasRole("USER")
+                                .requestMatchers(HttpMethod.GET, "/api/payment/pay/member/**", "/api/payment/coupon/member/**",
+                                        "/api/payment/point/member/**", "/api/payment/refund/member/**").hasRole("USER")
+                                .requestMatchers(HttpMethod.POST, "/api/payment/coupon/event/*/download",
+                                        "/api/payment/point/use", "/api/payment/refund").hasRole("USER")
+
+                                // ADMIN — 나머지 결제 도메인 전부 (반드시 위 구체 경로들 다음)
+                                .requestMatchers("/api/payment/**").hasRole("ADMIN")
+
                                 // 나머지 — 점진 도입 단계, 다른 담당자 API 진행 위해 일단 공개
                                 .anyRequest().permitAll()
                 )
