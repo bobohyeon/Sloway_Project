@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useParams } from 'react-router-dom';
 import DetailLayout from '../../layouts/DetailLayout';
 import DetailImageBox from '../../components/common/DetailImageBox';
 import DetailMainBox from '../../components/common/DetailMainBox';
@@ -14,6 +15,7 @@ const RSVN_INFO = {
 };
 
 function OfficeDetailPage() {
+  const { id } = useParams();
   const [space, setSpace] = useState(null);
   const [reviews, setReviews] = useState([]);
 
@@ -21,8 +23,8 @@ function OfficeDetailPage() {
     const load = async () => {
       try {
         const [spaceData, reviewData] = await Promise.all([
-          getOfficeDetail(9001),
-          findReviewsByPlace(9001),
+          getOfficeDetail(Number(id)),
+          findReviewsByPlace(Number(id)),
         ]);
         setSpace(spaceData);
         setReviews(reviewData);
@@ -31,7 +33,7 @@ function OfficeDetailPage() {
       }
     };
     load();
-  }, []);
+  }, [id]);
 
   if (!space) return null;
 
@@ -51,9 +53,9 @@ function OfficeDetailPage() {
           priceUnit="원/4시간"
           serviceFee={12000}
           rsvnDto={{
-            officeNo: 9001,
+            officeNo: space?.entityNo,
             count: 2,
-            amt: 28000,
+            amt: space?.basePrice ?? 28000,
             checkIn: '2026-06-10T09:00:00',
             checkOut: '2026-06-10T18:00:00',
             special: null,

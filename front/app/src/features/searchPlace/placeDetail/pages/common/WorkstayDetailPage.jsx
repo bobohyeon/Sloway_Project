@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useParams } from 'react-router-dom';
 import DetailLayout from '../../layouts/DetailLayout';
 import DetailImageBox from '../../components/common/DetailImageBox';
 import DetailMainBox from '../../components/common/DetailMainBox';
@@ -14,6 +15,7 @@ const RSVN_INFO = {
 };
 
 function WorkstayDetailPage() {
+  const { id } = useParams();
   const [space, setSpace] = useState(null);
   const [reviews, setReviews] = useState([]);
 
@@ -21,8 +23,8 @@ function WorkstayDetailPage() {
     const load = async () => {
       try {
         const [spaceData, reviewData] = await Promise.all([
-          getWorkStayDetail(9001),
-          findReviewsByPlace(9005),
+          getWorkStayDetail(Number(id)),
+          findReviewsByPlace(Number(id)),
         ]);
         setSpace(spaceData);
         setReviews(reviewData);
@@ -31,7 +33,7 @@ function WorkstayDetailPage() {
       }
     };
     load();
-  }, []);
+  }, [id]);
 
   if (!space) return null;
 
@@ -50,9 +52,9 @@ function WorkstayDetailPage() {
           price={185000}
           priceUnit="원/박"
           rsvnDto={{
-            workStayNo: 9001,
+            workStayNo: space?.entityNo,
             count: 2,
-            amt: 185000,
+            amt: space?.basePrice ?? 185000,
             checkIn: '2026-06-10T15:00:00',
             checkOut: '2026-06-12T11:00:00',
             special: null,
