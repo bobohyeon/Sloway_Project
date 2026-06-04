@@ -1,7 +1,9 @@
 package com.sloway.app.payment.settlement.settle.entity;
 
 import com.sloway.app.common.entity.BaseEntity;
+import com.sloway.app.common.exception.CustomException;
 import com.sloway.app.host.entity.HostEntity;
+import com.sloway.app.payment.settlement.settle.common.SettleErrorCode;
 import com.sloway.app.payment.settlement.settle.common.SettleStatus;
 import jakarta.persistence.*;
 import lombok.*;
@@ -58,7 +60,7 @@ public class SettleEntity extends BaseEntity {
 
     public void completeSettle() {
         if (this.status != SettleStatus.WAITING) {
-            throw new IllegalStateException("정산 대기 상태만 확정 가능");
+            throw new CustomException(SettleErrorCode.SETTLE_NOT_WAITING);
         }
         this.status = SettleStatus.COMPLETE;
         this.settledAt = LocalDateTime.now();
@@ -66,7 +68,7 @@ public class SettleEntity extends BaseEntity {
 
     public void issueTaxInvoice() {
         if (this.status != SettleStatus.COMPLETE) {
-            throw new IllegalStateException("정산이 완료되지 않았습니다.");
+            throw new CustomException(SettleErrorCode.SETTLE_NOT_COMPLETED);
         }
         this.status = SettleStatus.INVOICE;
         this.invoicedAt = LocalDateTime.now();
@@ -74,7 +76,7 @@ public class SettleEntity extends BaseEntity {
 
     public void applyAmounts(Integer totalAmt, Integer feeAmt, Integer refundAmt, Integer payoutAmt) {
         if (this.status != SettleStatus.WAITING) {
-            throw new IllegalStateException("정산 대기 상태만 금액 설정 가능");
+            throw new CustomException(SettleErrorCode.SETTLE_NOT_WAITING);
         }
         this.totalAmt = totalAmt;
         this.feeAmt = feeAmt;
