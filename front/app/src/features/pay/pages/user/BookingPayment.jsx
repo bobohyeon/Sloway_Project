@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import styled from 'styled-components';
 import PageLayout from '../../../../app/layouts/page/PageLayout';
 import { PaymentSteps } from '../../components/user/PaymentSteps';
@@ -53,8 +53,7 @@ const LoadErrorBanner = styled.div`
   font-size: 0.88rem;
 `;
 
-// TODO(예약 연동): 예약 상세에서 rsvnNo를 넘겨받도록 교체 — 현재는 시연용 고정값 (김보현 협의 안건)
-const RSVN_NO = 2;
+// TODO(예약 정보): 공간명·금액은 아직 하드코딩 — rsvnNo로 예약 상세를 조회해 교체 필요 (김보현 예약 API)
 const PRICE_PER_NIGHT = 185000;
 const NIGHTS = 2;
 const SERVICE_FEE = 12000;
@@ -88,8 +87,10 @@ const toCouponForUI = (resDto) => ({
 
 export default function BookingPaymentPage() {
   const nav = useNavigate();
+  const location = useLocation();
   const { user } = useAuth();
   const memberNo = user?.memberNo;
+  const rsvnNo = location.state?.rsvnNo;
 
   const {
     selectedCoupon,
@@ -115,6 +116,11 @@ export default function BookingPaymentPage() {
       nav('/login', { replace: true });
       return;
     }
+    // 예약 없이 직접 진입 차단 — 예약(rsvnNo)을 들고 와야 결제 가능
+    if (!rsvnNo) {
+      nav('/user/reservation', { replace: true });
+      return;
+    }
     const loadData = async () => {
       try {
         const [couponList, balanceResDto] = await Promise.all([
@@ -131,7 +137,7 @@ export default function BookingPaymentPage() {
       }
     };
     loadData();
-  }, [memberNo, nav]);
+  }, [memberNo, rsvnNo, nav]);
 
   const { subtotal, couponDiscount, total, earnPoints, canPay } =
     useCheckoutCalc({
@@ -151,7 +157,7 @@ export default function BookingPaymentPage() {
     setPaying(true);
 
     const reqDto = {
-      rsvnNo: RSVN_NO,
+      rsvnNo,
       ucNo: selectedCoupon?.no ?? null,
       usedPoint: points,
       method,

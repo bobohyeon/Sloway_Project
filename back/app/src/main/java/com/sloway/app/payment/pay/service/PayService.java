@@ -96,6 +96,7 @@ public class PayService {
     }
 
     private void completePayAfterApprove(PayEntity payEntity, Long memberNo) {
+        payEntity.getRsvnNo().confirm();
         payEntity.approvePay();
 
         if (payEntity.getUcNo() != null) {
