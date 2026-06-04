@@ -7,6 +7,7 @@ import com.sloway.app.place.dto.request.workStay.WorkStayReqDto;
 import com.sloway.app.place.dto.request.workStay.WorkStayUpdateReqDto;
 import com.sloway.app.place.dto.request.workStay.workOffice.WorkOfficeReqDto;
 import com.sloway.app.place.dto.request.workStay.workOffice.WorkOfficeUpdateReqDto;
+import com.sloway.app.place.dto.response.place.PlaceImgListRespDto;
 import com.sloway.app.place.dto.response.station.StationDetailRespDto;
 import com.sloway.app.place.dto.response.workStay.WorkStayImageListRespDto;
 import com.sloway.app.place.dto.response.workStay.WorkStayUpdateDetailRespDto;
@@ -36,10 +37,12 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
+import java.util.stream.Stream;
 
 @Service
 @RequiredArgsConstructor
@@ -233,6 +236,10 @@ public class WorkStayService {
             } else if (files != null && fileIndex < files.size()) {
                 try {
                     String s3Url = s3Service.upload(files.get(fileIndex++), "workStay");
+                    ImgWorkStayEntity entity = ImgWorkStayEntity.from(workStay, s3Url, dto.getSort());
+
+// 여기서 로그를 출력해서 확인하세요
+                    System.out.println("DEBUG: 엔티티 저장 직전 URL 값 -> " + entity.getCurrentUrl());
                     imgWorkStayRepository.save(ImgWorkStayEntity.from(workStay, s3Url, dto.getSort()));
                 } catch (IOException e) { throw new RuntimeException("WorkStay 이미지 업로드 실패", e); }
             }
@@ -281,5 +288,22 @@ public class WorkStayService {
 
     public WorkStayUpdateDetailRespDto selectDetailForUpdate(Long no, Long memberNo) {
         return workStayRepository.selectDetailForUpdate(no,memberNo);
+    }
+
+    public PlaceImgListRespDto getImageList(Long no) {
+        // 1. WorkStay 이미지 조회
+        List<PlaceImgListRespDto.ImageInfo> stayImages = imgWorkStayRepository.getImageList(no);
+
+        // 2. WorkOffice 이미지 조회
+        List<PlaceImgListRespDto.ImageInfo> officeImages = imgWorkOfficeRepository.getImageList(no);
+
+        // 3. 병합 및 정렬
+        List<PlaceImgListRespDto.ImageInfo> allImages = Stream.concat(stayImages.stream(), officeImages.stream())
+                .sorted(Comparator.comparingInt(PlaceImgListRespDto.ImageInfo::getSort))
+                .toList();
+
+        return PlaceImgListRespDto.builder()
+                .placeImages(allImages)
+                .build();
     }
 }

@@ -41,30 +41,6 @@ const Title = styled.h1`
   line-height: 1.3;
 `;
 
-const Actions = styled.div`
-  display: flex;
-  gap: 8px;
-  flex-shrink: 0;
-`;
-
-const ActionBtn = styled.button`
-  width: 36px;
-  height: 36px;
-  border-radius: 50%;
-  border: 1px solid #e8dfd0;
-  background: #fff;
-  font-size: 16px;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: all 0.2s;
-  &:hover {
-    background: #eef5ee;
-    border-color: #84a98c;
-  }
-`;
-
 const Meta = styled.div`
   display: flex;
   align-items: center;
@@ -211,39 +187,21 @@ const EmptyReview = styled.div`
   border-radius: 10px;
 `;
 
-// ── 컴포넌트 ──────────────────────────────────────────────
-// space props 키 통일:
-//   type, title, score, reviewCount, location
-//   description, infoItems[{label,value}], notices[{title,desc}]
-//   facilities[{icon,name}]
-// wished, onWishToggle: 찜 토글
 // reviews: 리뷰 배열
 
-function DetailMainBox({
-  space = {},
-  reviews = [],
-  wished = false,
-  onWishToggle,
-}) {
+function DetailMainBox({ space = {}, reviews = [] }) {
   const [activeTab, setActiveTab] = useState(0);
-  const [isWished, setIsWished] = useState(wished);
-
-  const handleWish = () => {
-    const next = !isWished;
-    setIsWished(next);
-    onWishToggle && onWishToggle(next);
-  };
 
   const {
     type = '숙소',
     title = '공간명',
     score = 0,
     reviewCount = 0,
-    location = '지역',
-    description = '',
+    address = '지역',
+    content = '',
     infoItems = [],
     notices = [],
-    facilities = [],
+    amenities = [],
   } = space;
 
   return (
@@ -252,26 +210,13 @@ function DetailMainBox({
 
       <TitleRow>
         <Title>{title}</Title>
-        <Actions>
-          <ActionBtn
-            title="찜하기"
-            onClick={handleWish}
-            style={{
-              color: isWished ? '#E65100' : '#aaa',
-              borderColor: isWished ? '#E65100' : '#E8DFD0',
-              background: isWished ? '#FFF3E0' : '#fff',
-            }}
-          >
-            {isWished ? '♥' : '♡'}
-          </ActionBtn>
-        </Actions>
       </TitleRow>
 
       <Meta>
         <Score>★ {score}</Score>
         <span>({reviewCount} 리뷰)</span>
         <span>·</span>
-        <span>📍 {location}</span>
+        <span>📍 {address}</span>
       </Meta>
 
       <Tabs>
@@ -293,7 +238,7 @@ function DetailMainBox({
       {activeTab === 0 && (
         <TabContent>
           <SectionTitle>공간 소개</SectionTitle>
-          <Desc>{description || '공간 소개를 불러오는 중입니다.'}</Desc>
+          <Desc>{content || '공간 소개를 불러오는 중입니다.'}</Desc>
 
           {infoItems.length > 0 && (
             <>
@@ -316,9 +261,7 @@ function DetailMainBox({
                 <NoticeItem key={i}>
                   <NoticeBadge>공지</NoticeBadge>
                   <div>
-                    <div
-                      style={{ fontSize: 13, fontWeight: 600, marginBottom: 2 }}
-                    >
+                    <div style={{ fontSize: 13, fontWeight: 600, marginBottom: 2 }}>
                       {n.title}
                     </div>
                     <div style={{ fontSize: 12, color: '#666' }}>{n.desc}</div>
@@ -334,12 +277,12 @@ function DetailMainBox({
       {activeTab === 1 && (
         <TabContent>
           <SectionTitle>편의시설</SectionTitle>
-          {facilities.length > 0 ? (
+          {amenities.length > 0 ? (
             <FacilityGrid>
-              {facilities.map((f, i) => (
+              {amenities.map((amenity, i) => (
                 <FacilityItem key={i}>
-                  <span>{f.icon || '✓'}</span>
-                  <span>{f.name}</span>
+                  <span>✓</span>
+                  <span>{amenity}</span>
                 </FacilityItem>
               ))}
             </FacilityGrid>

@@ -1,13 +1,14 @@
 package com.sloway.app.payment.settlement.account.service;
 
 
+import com.sloway.app.common.exception.CustomException;
+import com.sloway.app.host.common.HostErrorCode;
 import com.sloway.app.host.entity.HostEntity;
 import com.sloway.app.host.repository.HostRepository;
 import com.sloway.app.payment.settlement.account.dto.request.AccountCreateReqDto;
 import com.sloway.app.payment.settlement.account.dto.response.AccountResDto;
 import com.sloway.app.payment.settlement.account.entity.AccountEntity;
 import com.sloway.app.payment.settlement.account.repository.AccountRepository;
-import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -23,9 +24,9 @@ public class AccountService {
     private final HostRepository hostRepository;
 
     @Transactional
-    public AccountResDto registerAccount(AccountCreateReqDto reqDto) {
-        HostEntity hostEntity = hostRepository.findById(reqDto.getHostNo())
-                .orElseThrow(() -> new EntityNotFoundException("호스트 정보를 조회할 수 없습니다."));
+    public AccountResDto registerAccount(Long memberNo,AccountCreateReqDto reqDto) {
+        HostEntity hostEntity = hostRepository.findByMemberNo(memberNo)
+                .orElseThrow(() -> new CustomException(HostErrorCode.HOST_NOT_FOUND));
         AccountEntity accountEntity = accountRepository.findByHostNo(hostEntity.getNo());
 
         if (accountEntity != null) {
@@ -36,8 +37,10 @@ public class AccountService {
         }
     }
 
-    public AccountResDto findAccountByHostNo(Long hostNo) {
-        AccountEntity accountEntity = accountRepository.findByHostNo(hostNo);
+    public AccountResDto findAccountByHostNo(Long memberNo) {
+        HostEntity hostEntity = hostRepository.findByMemberNo(memberNo)
+                .orElseThrow(() -> new CustomException(HostErrorCode.HOST_NOT_FOUND));
+        AccountEntity accountEntity = accountRepository.findByHostNo(hostEntity.getNo());
         if (accountEntity == null) return null;
         return AccountResDto.from(accountEntity);
     }

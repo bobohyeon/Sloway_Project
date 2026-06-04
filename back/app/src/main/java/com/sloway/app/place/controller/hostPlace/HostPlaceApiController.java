@@ -1,5 +1,6 @@
 package com.sloway.app.place.controller.hostPlace;
 
+import com.sloway.app.auth.user.CustomUserDetails;
 import com.sloway.app.place.dto.request.hostPlace.HostPlaceRejectReqDto;
 import com.sloway.app.place.dto.response.hostPlace.ApprovalCheckRespDto;
 import com.sloway.app.place.dto.response.hostPlace.ApprovalDetailRespDto;
@@ -53,8 +54,13 @@ public class HostPlaceApiController {
     public ResponseEntity<ApprovalCheckRespDto> checkRejectReason(
             @PathVariable String type,
             @PathVariable Long no,
-            @AuthenticationPrincipal Long memberNo){
-        ApprovalCheckRespDto dto = hostPlaceService.checkRejectReason(type,no,Long.valueOf(2));
+            @AuthenticationPrincipal CustomUserDetails userDetails){
+        if (userDetails == null) {
+            throw new RuntimeException("로그인이 필요합니다.");
+        }
+        Long memberNo = userDetails.getMemberNo();
+
+        ApprovalCheckRespDto dto = hostPlaceService.checkRejectReason(type,no,memberNo);
         return ResponseEntity.ok(dto);
     }
 

@@ -6,6 +6,7 @@ import { EmptyState } from '../../../pay_shared/components';
 import { PaymentFilterBar } from '../../components/user/PaymentFilterBar';
 import { PaymentListItem } from '../../components/user/PaymentListItem';
 import { findPaysByMemberNo } from '../../api/payApi';
+import { useAuth } from '../../../auth/hooks/useAuth';
 
 const emptyTitleByTab = (tab) => {
   if (tab === 'completed') return '결제 완료된 내역이 없어요';
@@ -21,7 +22,6 @@ const List = styled.div`
   margin-bottom: var(--space-6);
 `;
 
-const MEMBER_NO = 1;
 const STATUS_TO_UI = {
   READY: 'pending',
   COMPLETED: 'completed',
@@ -81,22 +81,35 @@ const toPaymentForUI = (resDto) => {
 
 export default function PaymentHistory() {
   const navigate = useNavigate();
+  const { user } = useAuth();
+  const memberNo = user?.memberNo;
 
   const [pays, setPays] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
   const [selectedTab, setSelectedTab] = useState('all');
   const [selectedPeriod, setSelectedPeriod] = useState('3months');
 
   useEffect(() => {
+    if (!memberNo) {
+      navigate('/login', { replace: true });
+      return;
+    }
     const load = async () => {
+      setLoading(true);
       try {
-        const list = await findPaysByMemberNo(MEMBER_NO);
+        const list = await findPaysByMemberNo(memberNo);
         setPays(list);
+        setError(null);
       } catch (err) {
         console.error('결제 내역 조회 실패', err);
+        setError(err?.response?.data?.msg ?? '결제 내역을 불러오지 못했습니다.');
+      } finally {
+        setLoading(false);
       }
     };
     load();
-  }, []);
+  }, [memberNo, navigate]);
 
   const tabsWithCount = useMemo(() => {
     const counts = { all: pays.length, completed: 0, refunded: 0, failed: 0 };
@@ -147,7 +160,15 @@ export default function PaymentHistory() {
         onPeriodChange={setSelectedPeriod}
       />
 
-      {filteredPayments.length === 0 ? (
+      {loading ? (
+        <EmptyState
+          icon="⏳"
+          title="불러오는 중…"
+          description="결제 내역을 확인하고 있어요"
+        />
+      ) : error ? (
+        <EmptyState icon="⚠️" title="조회 실패" description={error} />
+      ) : filteredPayments.length === 0 ? (
         <EmptyState
           icon="🧾"
           title={emptyTitleByTab(selectedTab)}

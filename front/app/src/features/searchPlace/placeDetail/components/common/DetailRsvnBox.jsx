@@ -1,7 +1,7 @@
-import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import styled from 'styled-components';
 import { COLOR } from '../../../../rsvn/components/user/RsvnStyled';
+import { saveRsvn } from '../../../../rsvn/api/rsvnApi';
 
 const Box = styled.div`
   background: #fff;
@@ -65,23 +65,6 @@ const RsvnBtn = styled.button`
   }
 `;
 
-const WishBtn = styled.button`
-  width: 100%;
-  padding: 12px;
-  background: none;
-  color: #4a4a4a;
-  border: 1px solid #e8dfd0;
-  border-radius: 10px;
-  font-size: 13px;
-  font-family: 'Noto Sans KR', sans-serif;
-  cursor: pointer;
-  margin-bottom: 16px;
-  transition: all 0.2s;
-  &:hover {
-    border-color: ${COLOR.sage};
-    color: ${COLOR.green};
-  }
-`;
 
 const CalcBox = styled.div`
   border-top: 1px solid #f2ede4;
@@ -122,10 +105,9 @@ function DetailRsvnBox({
   priceUnit = '원/박',
   serviceFee = 12000,
   cancelPolicy = '무료 취소 · 이용 7일 전까지',
-  onWishToggle,
+  rsvnDto,
 }) {
   const navigate = useNavigate();
-  const [isWished, setIsWished] = useState(false);
 
   const {
     checkIn = '5월 8일',
@@ -137,10 +119,10 @@ function DetailRsvnBox({
   const totalBase = price * nights;
   const grandTotal = totalBase + serviceFee;
 
-  const handleWish = () => {
-    setIsWished((v) => !v);
-    onWishToggle && onWishToggle();
-  };
+  async function handleRsvn() {
+    const rsvnNo = await saveRsvn(rsvnDto);
+    navigate(`/user/payment/checkout`, { state: { rsvnNo } });
+  }
 
   return (
     <Box>
@@ -160,20 +142,7 @@ function DetailRsvnBox({
         <InfoValue>{guests}</InfoValue>
       </InfoRow>
 
-      <RsvnBtn onClick={() => navigate('/user/payment/checkout')}>
-        예약하기
-      </RsvnBtn>
-
-      <WishBtn
-        onClick={handleWish}
-        style={{
-          borderColor: isWished ? '#E65100' : '#E8DFD0',
-          color: isWished ? '#E65100' : '#4A4A4A',
-          background: isWished ? '#FFF3E0' : 'none',
-        }}
-      >
-        {isWished ? '♥ 찜됨' : '♡ 찜하기'}
-      </WishBtn>
+      <RsvnBtn onClick={handleRsvn}>예약하기</RsvnBtn>
 
       {price > 0 && nights > 0 && (
         <CalcBox>

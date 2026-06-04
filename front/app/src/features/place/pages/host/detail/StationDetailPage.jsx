@@ -13,7 +13,17 @@ function StationDetailPage() {
   const typePath = getSpaceTypePath(location.pathname);
 
   // 1. 커스텀 훅 호출
-  const { data: spaceData, loading, error } = useStationDetail(typePath, id);
+  const { 
+    data: spaceData,
+    loading,
+    error, 
+    sortedImages, 
+    isModalOpen,
+    currentIdx,
+    openModal,
+    closeModal,
+    setCurrentIdx
+    } = useStationDetail(typePath, id);
 
   // 2. 버튼 클릭 시 이동 핸들러 (유틸로 구해온 typePath 그대로 재사용)
   const handleUpdateDetail = () => {
@@ -32,9 +42,15 @@ function StationDetailPage() {
   return (
     <StationDetailLayout
       data={spaceData}
+      currentIdx={currentIdx}
+      sortedImages={sortedImages}
+      isModalOpen={isModalOpen}
       onBack={'/host/space/list'}
       handleUpdateDetail={handleUpdateDetail}
       handleImageUpdate={handleImageUpdate}
+      openModal={openModal}
+      closeModal={closeModal}
+      setCurrentIdx={setCurrentIdx}
     />
   );
 }

@@ -209,4 +209,11 @@ public class StationService {
     public StationUpdateDetailRespDto selectDetailForUpdate(Long no, Long memberNo) {
         return stationRepository.selectDetailForUpdate(no, memberNo);
     }
+
+    public PlaceImgListRespDto getImageList(Long no) {
+        List<PlaceImgListRespDto.ImageInfo> imageList = imgStationRepository.getImageList(no);
+        return PlaceImgListRespDto.builder()
+                .placeImages(imageList)
+                .build();
+    }
 }

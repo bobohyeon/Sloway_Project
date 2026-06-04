@@ -4,6 +4,7 @@ import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import { Badge, Button, Modal, Card } from '../../pay_shared/components';
 import PageLayout from '../../../app/layouts/page/PageLayout';
 import api from '../../../app/api/axiosApi';
+import { useAuth } from '../../auth/hooks/useAuth';
 
 const CATEGORY_LABEL = {
   RESERVATION: '예약',
@@ -14,7 +15,7 @@ const CATEGORY_LABEL = {
 
 const STATUS_CONFIG = {
   ANSWERED: { label: '답변 완료', variant: 'success' },
-  PENDING:  { label: '답변 대기', variant: 'muted' },
+  PENDING: { label: '답변 대기', variant: 'muted' },
 };
 
 const fmtDate = (iso) => (iso ? iso.slice(0, 10).replace(/-/g, '.') : '');
@@ -23,23 +24,35 @@ export default function InquiryDetailPage() {
   const navigate = useNavigate();
   const location = useLocation();
   const { id } = useParams();
+  const { user, role } = useAuth();
   const isAdmin = location.pathname.startsWith('/admin');
 
   const [inquiry, setInquiry] = useState(null);
   const [deleteModal, setDeleteModal] = useState(false);
 
   useEffect(() => {
-    const endpoint = isAdmin ? `/inquiry/${id}` : `/inquiry/my/${id}`;
-    api.get(endpoint)
-      .then(({ data }) => setInquiry(data))
-      .catch(() => navigate(isAdmin ? '/admin/inquiry' : '/user/inquiry', { replace: true }));
+    const fetch = async () => {
+      try {
+        const endpoint = isAdmin ? `/inquiry/${id}` : `/inquiry/my/${id}`;
+        const { data } = await api.get(endpoint);
+        setInquiry(data);
+      } catch {
+        navigate(isAdmin ? '/admin/inquiry' : '/inquiry', {
+          replace: true,
+        });
+      }
+    };
+    fetch();
   }, [id, isAdmin]);
 
   if (!inquiry) return null;
 
   const canEdit = !isAdmin && inquiry.status === 'PENDING';
   const canDelete = !isAdmin && inquiry.status === 'PENDING';
-  const st = STATUS_CONFIG[inquiry.status] ?? { label: inquiry.status, variant: 'muted' };
+  const st = STATUS_CONFIG[inquiry.status] ?? {
+    label: inquiry.status,
+    variant: 'muted',
+  };
 
   const handleDelete = async () => {
     await api.delete(`/inquiry/${id}`);
@@ -50,7 +63,16 @@ export default function InquiryDetailPage() {
     <PageLayout maxWidth={800}>
       {/* 브레드크럼 */}
       <Breadcrumb>
-        <BreadcrumbBtn onClick={() => navigate(isAdmin ? '/admin/inquiry' : '/user/inquiry')}>
+        <BreadcrumbBtn
+          onClick={() => {
+            const path = isAdmin
+              ? '/admin/inquiry'
+              : user?.role === 'U'
+                ? '/user/inquiry'
+                : '/host/inquiry';
+            navigate(path);
+          }}
+        >
           {isAdmin ? '문의사항 관리' : '내 문의사항'}
         </BreadcrumbBtn>
         <BreadcrumbSep>›</BreadcrumbSep>
@@ -90,7 +112,13 @@ export default function InquiryDetailPage() {
               <Button
                 size="sm"
                 variant="secondary"
-                onClick={() => navigate(`/user/inquiry/form/${id}`)}
+                onClick={() => {
+                  const path =
+                    user?.role === 'U'
+                      ? `/user/inquiry/form/${id}`
+                      : `/host/inquiry/form/${id}`;
+                  navigate(path);
+                }}
               >
                 수정
               </Button>
@@ -105,7 +133,9 @@ export default function InquiryDetailPage() {
               </Button>
             )}
             {inquiry.status === 'ANSWERED' && !isAdmin && (
-              <StatusNote>답변이 완료된 문의는 수정/삭제할 수 없습니다.</StatusNote>
+              <StatusNote>
+                답변이 완료된 문의는 수정/삭제할 수 없습니다.
+              </StatusNote>
             )}
           </UserActionRow>
         )}
@@ -137,7 +167,16 @@ export default function InquiryDetailPage() {
       <BackBtn>
         <Button
           variant="secondary"
-          onClick={() => navigate(isAdmin ? '/admin/inquiry' : '/user/inquiry')}
+          onClick={() => {
+            const path = isAdmin
+              ? '/admin/inquiry'
+              : user?.role === 'U'
+                ? '/user/inquiry'
+                : '/host/inquiry';
+            navigate(path);
+          }}
+
+          // onClick={() => navigate(isAdmin ? '/admin/inquiry' : '/user/inquiry')}
         >
           ← 목록으로
         </Button>

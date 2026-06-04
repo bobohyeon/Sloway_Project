@@ -17,9 +17,9 @@ import com.sloway.app.payment.refund.dto.request.RefundCreateReqDto;
 import com.sloway.app.payment.refund.dto.response.RefundResDto;
 import com.sloway.app.payment.refund.entity.RefundEntity;
 import com.sloway.app.payment.refund.repository.RefundRepository;
+import com.sloway.app.reservation.RsvnErrorCode;
 import com.sloway.app.reservation.rsvn.entity.RsvnEntity;
 import com.sloway.app.reservation.rsvn.repository.RsvnRepository;
-import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -46,33 +46,15 @@ public class RefundService {
 
     @Transactional
     public RefundResDto createRefund(RefundCreateReqDto refundCreateReqDto) {
+        PayEntity payEntity = validRefundablePay(refundCreateReqDto.getPayNo());
 
-        PayEntity payEntity = payRepository.findById(refundCreateReqDto.getPayNo())
-                .orElseThrow(() -> new CustomException(PayErrorCode.PAY_NOT_FOUND));
-        if (payEntity.getStatus() != PayStatus.COMPLETED) {
-            throw new CustomException(PayErrorCode.PAY_NOT_COMPLETED);
-        }
-
-        if (payEntity.getFinalAmt() == null || payEntity.getFinalAmt() <= 0) {
-            throw new CustomException(RefundErrorCode.REFUND_AMOUNT_INVALID);
-        }
         RsvnEntity rsvn = rsvnRepository.findById(refundCreateReqDto.getRsvnNo())
-                .orElseThrow(() -> new EntityNotFoundException("예약 정보를 조회할 수 없습니다."));
+                .orElseThrow(() -> new CustomException(RsvnErrorCode.RESERVATION_NOT_FOUND));
 
         RefundEntity refundEntity = refundCreateReqDto.toEntity(payEntity, rsvn);
         RefundRate rate = refundRate(refundEntity);
 
-        boolean exists = refundRepository.existsByPayAndStatus(
-                payEntity.getNo(),
-                List.of(RefundStatus.REQUESTED,
-                        RefundStatus.APPROVED,
-                        RefundStatus.COMPLETED)
-        );
-
-        if (exists) {
-            log.warn("중복 환불 시도 : payNo={}", payEntity.getNo());
-            throw new CustomException(RefundErrorCode.REFUND_DUPLICATE);
-        }
+        validDuplicate(payEntity);
 
         if (RefundRate.DDAY == rate) {
             log.warn("환불 기간 만료 : payNo:{},rsvnNo:{}", refundCreateReqDto.getPayNo(), refundCreateReqDto.getRsvnNo());
@@ -92,28 +74,8 @@ public class RefundService {
 
     @Transactional
     public RefundResDto createRefundByHost(Long payNo) {
-        PayEntity payEntity = payRepository.findById(payNo)
-                .orElseThrow(() -> new CustomException(PayErrorCode.PAY_NOT_FOUND));
-
-        if (payEntity.getStatus() != PayStatus.COMPLETED) {
-            throw new CustomException(PayErrorCode.PAY_NOT_COMPLETED);
-        }
-
-        if (payEntity.getFinalAmt() == null || payEntity.getFinalAmt() <= 0) {
-            throw new CustomException(RefundErrorCode.REFUND_AMOUNT_INVALID);
-        }
-
-        boolean exists = refundRepository.existsByPayAndStatus(
-                payEntity.getNo(),
-                List.of(RefundStatus.REQUESTED,
-                        RefundStatus.APPROVED,
-                        RefundStatus.COMPLETED)
-        );
-
-        if (exists) {
-            log.warn("중복 환불 시도 : payNo={}", payEntity.getNo());
-            throw new CustomException(RefundErrorCode.REFUND_DUPLICATE);
-        }
+        PayEntity payEntity = validRefundablePay(payNo);
+        validDuplicate(payEntity);
 
         RefundEntity refundEntity = RefundEntity.builder()
                 .payNo(payEntity)
@@ -152,7 +114,7 @@ public class RefundService {
         pointService.cancelEarnedPoint(payEntity);
 
         PayMethod method = payEntity.getMethod();
-        if(method == PayMethod.KAKAOPAY){
+        if (method == PayMethod.KAKAOPAY) {
             KakaoCancelReqDto cancelReqDto = KakaoCancelReqDto.builder()
                     .tid(payEntity.getTid())
                     .cancelAmount(payEntity.getFinalAmt())
@@ -199,4 +161,33 @@ public class RefundService {
             return RefundRate.DDAY;
         }
     }
+
+    private PayEntity validRefundablePay(Long payNo) {
+        PayEntity payEntity = payRepository.findById(payNo)
+                .orElseThrow(() -> new CustomException(PayErrorCode.PAY_NOT_FOUND));
+        if (payEntity.getStatus() != PayStatus.COMPLETED) {
+            throw new CustomException(PayErrorCode.PAY_NOT_COMPLETED);
+        }
+
+        if (payEntity.getFinalAmt() == null || payEntity.getFinalAmt() <= 0) {
+            throw new CustomException(RefundErrorCode.REFUND_AMOUNT_INVALID);
+        }
+        return payEntity;
+    }
+
+    private void validDuplicate(PayEntity payEntity) {
+        boolean exists = refundRepository.existsByPayAndStatus(
+                payEntity.getNo(),
+                List.of(RefundStatus.REQUESTED,
+                        RefundStatus.APPROVED,
+                        RefundStatus.COMPLETED)
+        );
+
+        if (exists) {
+            log.warn("중복 환불 시도 : payNo={}", payEntity.getNo());
+            throw new CustomException(RefundErrorCode.REFUND_DUPLICATE);
+        }
+    }
+
+
 }

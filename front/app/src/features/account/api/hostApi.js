@@ -10,9 +10,20 @@ export const getHostMyPage = async () => {
   return response.data;
 };
 
-/** 호스트 마이페이지 수정. PATCH /api/host/mypage */
-export const updateHostMyPage = async (data) => {
-  const response = await api.patch('/host/mypage', data);
+/** 호스트 마이페이지 수정. PATCH /api/host/mypage (dto + profileImage) */
+export const updateHostMyPage = async (data, profileImage) => {
+  const formData = new FormData();
+  formData.append(
+    'dto',
+    new Blob([JSON.stringify(data)], { type: 'application/json' })
+  );
+  if (profileImage) {
+    formData.append('profileImage', profileImage);
+  }
+
+  const response = await api.patch('/host/mypage', formData, {
+    headers: { 'Content-Type': 'multipart/form-data' },
+  });
   return response.data;
 };
 
@@ -26,4 +37,9 @@ export const changeHostEmail = async (newEmail) => {
 export const getMyHostApplication = async () => {
   const response = await api.get('/host/mypage/application');
   return response.data;
+};
+
+/** 호스트 탈퇴 (soft delete). DELETE /api/host/mypage */
+export const withdrawHost = async () => {
+  await api.delete('/host/mypage');
 };

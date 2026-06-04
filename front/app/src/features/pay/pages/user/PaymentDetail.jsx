@@ -3,12 +3,13 @@ import { useNavigate, useParams } from 'react-router-dom';
 import styled from 'styled-components';
 
 import PageLayout from '../../../../app/layouts/page/PageLayout';
-import { Button, Card } from '../../../pay_shared/components';
+import { Button, Card, EmptyState } from '../../../pay_shared/components';
 import { PaymentDetailCard } from '../../components/user/PaymentDetailCard';
 import { PaymentStatusBadge } from '../../components/user/PaymentStatusBadge';
 import { PriceBreakdown } from '../../components/user/PriceBreakdown';
 
 import { findPayByNo } from '../../api/payApi';
+import { useAuth } from '../../../auth/hooks/useAuth';
 
 const STATUS_TO_UI = {
   READY: 'pending',
@@ -69,21 +70,42 @@ const calcEarnPoints = (finalAmt) =>
 export default function PaymentDetail() {
   const { no } = useParams();
   const navigate = useNavigate();
+  const { user } = useAuth();
+  const memberNo = user?.memberNo;
 
   const [pay, setPay] = useState(null);
+  const [error, setError] = useState(null);
 
   useEffect(() => {
+    if (!memberNo) {
+      navigate('/login', { replace: true });
+      return;
+    }
     const load = async () => {
       try {
         const resDto = await findPayByNo(no);
         setPay(resDto);
+        setError(null);
       } catch (err) {
         console.error('결제 상세 조회 실패', err);
+        setError(err?.response?.data?.msg ?? '결제 정보를 불러오지 못했습니다.');
       }
     };
     load();
-  }, [no]);
+  }, [no, memberNo, navigate]);
 
+  if (error) {
+    return (
+      <PageLayout
+        title="결제 상세"
+        backTo="/user/payment"
+        backLabel="결제 내역"
+        maxWidth={800}
+      >
+        <EmptyState icon="⚠️" title="조회 실패" description={error} />
+      </PageLayout>
+    );
+  }
   if (!pay) return null;
 
   const uiStatus = STATUS_TO_UI[pay.status] ?? 'pending';

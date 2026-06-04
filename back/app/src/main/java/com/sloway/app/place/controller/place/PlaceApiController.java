@@ -1,5 +1,6 @@
 package com.sloway.app.place.controller.place;
 
+import com.sloway.app.auth.user.CustomUserDetails;
 import com.sloway.app.place.dto.request.sort.ImgSortReqDto;
 import com.sloway.app.place.dto.request.place.PlaceReqDto;
 import com.sloway.app.place.dto.request.place.PlaceUpdateReqDto;
@@ -32,10 +33,15 @@ public class PlaceApiController {
             @RequestPart("dto") PlaceReqDto dto,
             @RequestPart("files") List<MultipartFile> files,
             @RequestPart("sortList") List<ImgSortReqDto> sortList,
-            @AuthenticationPrincipal Long memberNo) {
+            @AuthenticationPrincipal CustomUserDetails userDetails) {
+        if (userDetails == null) {
+            throw new RuntimeException("로그인이 필요합니다.");
+        }
+        Long memberNo = userDetails.getMemberNo();
+
 
         // userNo값 필요 파라미터 추가예정
-        placeService.savePlace(dto, files, sortList, Long.valueOf(2));
+        placeService.savePlace(dto, files, sortList, memberNo);
 
         return ResponseEntity
                 .status(HttpStatus.CREATED)
@@ -47,9 +53,13 @@ public class PlaceApiController {
     public ResponseEntity<Object> updatePlace(
             @PathVariable Long no,
             @RequestBody PlaceUpdateReqDto dto,
-            @AuthenticationPrincipal Long memberNo) {
+            @AuthenticationPrincipal CustomUserDetails userDetails) {
+        if (userDetails == null) {
+            throw new RuntimeException("로그인이 필요합니다.");
+        }
+        Long memberNo = userDetails.getMemberNo();
 
-        placeService.updatePlace(no, dto, Long.valueOf(2));
+        placeService.updatePlace(no, dto, memberNo);
 
         return ResponseEntity
                 .status(HttpStatus.OK)
@@ -62,9 +72,13 @@ public class PlaceApiController {
             @PathVariable Long no,
             @RequestPart(name = "files", required = false) List<MultipartFile> files,
             @RequestPart("sortList") List<ImgUpdateSortReqDto> sortList,
-            @AuthenticationPrincipal Long memberNo) {
+            @AuthenticationPrincipal CustomUserDetails userDetails) {
+        if (userDetails == null) {
+            throw new RuntimeException("로그인이 필요합니다.");
+        }
+        Long memberNo = userDetails.getMemberNo();
 
-        placeService.updatePlaceImg(no, files, sortList, Long.valueOf(2));
+        placeService.updatePlaceImg(no, files, sortList, memberNo);
 
         return ResponseEntity
                 .status(HttpStatus.OK)
@@ -83,8 +97,13 @@ public class PlaceApiController {
     }
 
     @GetMapping("/list/detail/{placeNo}")
-    public ResponseEntity<List<PlaceDetailListRespDto>> placeDetailList(@PathVariable Long placeNo, @AuthenticationPrincipal Long memberNo) {
-        List<PlaceDetailListRespDto> placeList = placeService.placeDetailList(placeNo, Long.valueOf(2));
+    public ResponseEntity<List<PlaceDetailListRespDto>> placeDetailList(@PathVariable Long placeNo, @AuthenticationPrincipal CustomUserDetails userDetails) {
+        if (userDetails == null) {
+            throw new RuntimeException("로그인이 필요합니다.");
+        }
+        Long memberNo = userDetails.getMemberNo();
+
+        List<PlaceDetailListRespDto> placeList = placeService.placeDetailList(placeNo,memberNo);
         return ResponseEntity.ok(placeList);
     }
 
@@ -96,29 +115,49 @@ public class PlaceApiController {
     }
 
     @GetMapping("/list")
-    public ResponseEntity<List<PlaceListRespDto>> placeList(@AuthenticationPrincipal Long memberNo) {
-        List<PlaceListRespDto> placeList = placeService.placeList(Long.valueOf(2));
+    public ResponseEntity<List<PlaceListRespDto>> placeList(@AuthenticationPrincipal CustomUserDetails userDetails) {
+        if (userDetails == null) {
+            throw new RuntimeException("로그인이 필요합니다.");
+        }
+        Long memberNo = userDetails.getMemberNo();
+
+        List<PlaceListRespDto> placeList = placeService.placeList(memberNo);
 
         return ResponseEntity.ok(placeList);
     }
 
     @GetMapping("/master")
-    public ResponseEntity<List<MasterPlaceRespDto>> selectMasterPlaceList(@RequestParam("type") String type, @AuthenticationPrincipal Long memberNo) {
-        List<MasterPlaceRespDto> placeList = placeService.selectMasterPlaceList(type, Long.valueOf(2));
+    public ResponseEntity<List<MasterPlaceRespDto>> selectMasterPlaceList(@RequestParam("type") String type, @AuthenticationPrincipal CustomUserDetails userDetails) {
+        if (userDetails == null) {
+            throw new RuntimeException("로그인이 필요합니다.");
+        }
+        Long memberNo = userDetails.getMemberNo();
+
+        List<MasterPlaceRespDto> placeList = placeService.selectMasterPlaceList(type, memberNo);
 
         return ResponseEntity.ok(placeList);
     }
 
     @GetMapping("/detail/update/{no}")
-    public ResponseEntity<PlaceUpdateReqDto> selectPlaceForUpdate(@AuthenticationPrincipal Long memberNo, @PathVariable Long no) {
-        PlaceUpdateReqDto dto = placeService.selectPlaceForUpdate(Long.valueOf(2), no);
+    public ResponseEntity<PlaceUpdateReqDto> selectPlaceForUpdate(@AuthenticationPrincipal CustomUserDetails userDetails, @PathVariable Long no) {
+        if (userDetails == null) {
+            throw new RuntimeException("로그인이 필요합니다.");
+        }
+        Long memberNo = userDetails.getMemberNo();
+
+        PlaceUpdateReqDto dto = placeService.selectPlaceForUpdate(memberNo, no);
 
         return ResponseEntity.ok(dto);
     }
 
     @GetMapping("/update/image/{no}")
-    public ResponseEntity<PlaceImgListRespDto> selectImageList(@PathVariable Long no, @AuthenticationPrincipal Long memberNo) {
-        PlaceImgListRespDto dto = placeService.selectImageList(no, Long.valueOf(2));
+    public ResponseEntity<PlaceImgListRespDto> selectImageList(@PathVariable Long no, @AuthenticationPrincipal CustomUserDetails userDetails) {
+        if (userDetails == null) {
+            throw new RuntimeException("로그인이 필요합니다.");
+        }
+        Long memberNo = userDetails.getMemberNo();
+
+        PlaceImgListRespDto dto = placeService.selectImageList(no, memberNo);
         return ResponseEntity.ok(dto);
     }
 
@@ -139,6 +178,13 @@ public class PlaceApiController {
     @GetMapping("/random")
     public ResponseEntity<WorkStayCardDto> getRandomWorkStay(){
         WorkStayCardDto dto = placeService.getRandomWorkStay();
+        return ResponseEntity.ok(dto);
+    }
+
+    @GetMapping("/image/list/{no}")
+    public ResponseEntity<PlaceImgListRespDto> getImageList(@PathVariable Long no){
+        PlaceImgListRespDto dto = placeService.getImageList(no);
+
         return ResponseEntity.ok(dto);
     }
 }

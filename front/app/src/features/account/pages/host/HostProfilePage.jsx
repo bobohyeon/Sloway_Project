@@ -8,38 +8,7 @@ import {
   FaFileAlt,
 } from 'react-icons/fa';
 import PageLayout from '../../../../app/layouts/page/PageLayout';
-
-// ─── 더미 데이터 (백엔드 연동 후 GET API로 교체) ────────────
-const DUMMY_HOST = {
-  // 사업자 정보
-  businessName: '청평 힐링 스테이',
-  representative: '김우영',
-  businessNumber: '123-45-67890',
-  attachment: 'business_license.pdf',
-  approvedDate: '2024-03-20',
-
-  // 담당자 연락처
-  contactName: '김우영',
-  email: 'wykim@sloway.co.kr',
-  phone: '010-1234-5678',
-  joinDate: '2024-03-15',
-
-  // 호스트 소개
-  introduction:
-    '청평에서 자연과 함께하는 휴식 공간을 운영하고 있습니다. 도시의 소음에서 벗어나 진짜 쉼을 찾는 분들을 위한 공간이에요.',
-
-  // 정산 계좌
-  bank: 'KB국민은행',
-  accountNumber: '123-456-789012',
-  accountHolder: '김우영',
-
-  // 운영 정보
-  totalSpaces: 3,
-  averageRating: 4.9,
-
-  imgUrl: null,
-};
-
+import { useHostMyPage } from '../../hooks/useHostMyPage';
 // ─── 유틸 ───────────────────────────────────────────────────
 const formatDate = (iso) => (iso ? iso.replace(/-/g, '.') : '-');
 
@@ -228,14 +197,28 @@ const WithdrawBtn = styled.button`
 `;
 
 // ─── 컴포넌트 ──────────────────────────────────────────────
+// ─── 컴포넌트 ──────────────────────────────────────────────
 function HostProfilePage() {
   const navigate = useNavigate();
-  const host = DUMMY_HOST;
+  const { data: host, loading } = useHostMyPage();
+
+  if (loading || !host) {
+    return (
+      <PageLayout
+        title="호스트 정보"
+        description="사업자 정보를 관리할 수 있어요"
+      >
+        <div style={{ padding: 40, color: '#888' }}>불러오는 중...</div>
+      </PageLayout>
+    );
+  }
+
+  const isApproved = host.approvalState === 'A';
 
   return (
     <PageLayout
       title="호스트 정보"
-      description="사업자 정보와 정산 계좌를 관리할 수 있어요"
+      description="사업자 정보를 관리할 수 있어요"
     >
       <CardStack>
         {/* 프로필 카드 */}
@@ -245,23 +228,22 @@ function HostProfilePage() {
               {host.imgUrl ? (
                 <img src={host.imgUrl} alt="프로필" />
               ) : (
-                host.businessName[0]
+                (host.businessName?.[0] ?? 'H')
               )}
             </Avatar>
             <ProfileMeta>
               <NameRow>
                 <BusinessName>{host.businessName}</BusinessName>
-                <ApprovedBadge>
-                  <FaCheckCircle size={10} /> 승인 호스트
-                </ApprovedBadge>
+                {isApproved && (
+                  <ApprovedBadge>
+                    <FaCheckCircle size={10} /> 승인 호스트
+                  </ApprovedBadge>
+                )}
               </NameRow>
-              <SubText>
-                대표 {host.representative} · 사업자등록 {host.businessNumber}
-              </SubText>
-              <SubText>
-                {formatDate(host.approvedDate)} 승인 · 운영 공간{' '}
-                {host.totalSpaces}개 · 평균 평점 {host.averageRating}
-              </SubText>
+              <SubText>사업자등록 {host.businessNo}</SubText>
+              {host.approvedAt && (
+                <SubText>{formatDate(host.approvedAt)} 승인</SubText>
+              )}
             </ProfileMeta>
             <EditBtn onClick={() => navigate('/host/profile/edit')}>
               <FaPencilAlt size={11} /> 수정하기
@@ -277,31 +259,30 @@ function HostProfilePage() {
             <InfoValue>{host.businessName}</InfoValue>
           </InfoRow>
           <InfoRow>
-            <InfoLabel>대표자명</InfoLabel>
-            <InfoValue>{host.representative}</InfoValue>
-          </InfoRow>
-          <InfoRow>
             <InfoLabel>사업자등록번호</InfoLabel>
-            <InfoValue>{host.businessNumber}</InfoValue>
+            <InfoValue>{host.businessNo}</InfoValue>
           </InfoRow>
           <InfoRow>
             <InfoLabel>사업자등록증</InfoLabel>
             <InfoValue>
-              <AttachmentLink>
-                <FaFileAlt size={12} /> {host.attachment}
-              </AttachmentLink>
+              {host.businessDocurl ? (
+                <AttachmentLink
+                  as="a"
+                  href={host.businessDocurl}
+                  target="_blank"
+                  rel="noreferrer"
+                >
+                  <FaFileAlt size={12} /> 서류 보기
+                </AttachmentLink>
+              ) : (
+                '-'
+              )}
             </InfoValue>
           </InfoRow>
           <InfoRow>
             <InfoLabel>승인일</InfoLabel>
-            <InfoValue>{formatDate(host.approvedDate)}</InfoValue>
+            <InfoValue>{formatDate(host.approvedAt)}</InfoValue>
           </InfoRow>
-        </Card>
-
-        {/* 호스트 소개 */}
-        <Card>
-          <SectionTitle>호스트 소개</SectionTitle>
-          <IntroText>{host.introduction}</IntroText>
         </Card>
 
         {/* 담당자 연락처 */}
@@ -309,7 +290,7 @@ function HostProfilePage() {
           <SectionTitle>담당자 연락처</SectionTitle>
           <InfoRow>
             <InfoLabel>담당자명</InfoLabel>
-            <InfoValue>{host.contactName}</InfoValue>
+            <InfoValue>{host.name}</InfoValue>
           </InfoRow>
           <InfoRow>
             <InfoLabel>이메일</InfoLabel>
@@ -321,24 +302,7 @@ function HostProfilePage() {
           </InfoRow>
           <InfoRow>
             <InfoLabel>가입일</InfoLabel>
-            <InfoValue>{formatDate(host.joinDate)}</InfoValue>
-          </InfoRow>
-        </Card>
-
-        {/* 정산 계좌 */}
-        <Card>
-          <SectionTitle>정산 계좌</SectionTitle>
-          <InfoRow>
-            <InfoLabel>은행</InfoLabel>
-            <InfoValue>{host.bank}</InfoValue>
-          </InfoRow>
-          <InfoRow>
-            <InfoLabel>계좌번호</InfoLabel>
-            <InfoValue>{host.accountNumber}</InfoValue>
-          </InfoRow>
-          <InfoRow>
-            <InfoLabel>예금주</InfoLabel>
-            <InfoValue>{host.accountHolder}</InfoValue>
+            <InfoValue>{formatDate(host.createdAt)}</InfoValue>
           </InfoRow>
         </Card>
 

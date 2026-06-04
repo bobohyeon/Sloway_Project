@@ -63,4 +63,10 @@ public class PointApiController {
         PointBalanceResDto balance = pointService.findPointBalanceByMemberNo(no);
         return ResponseEntity.ok(balance);
     }
+
+    @GetMapping("/member/{no}")
+    public ResponseEntity<List<PointResDto>> findPointsByMemberNo(@PathVariable Long no) {
+        List<PointResDto> resDtoList = pointService.findPointsByMemberNo(no);
+        return ResponseEntity.ok(resDtoList);
+    }
 }

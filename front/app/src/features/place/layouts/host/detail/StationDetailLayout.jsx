@@ -1,5 +1,5 @@
-import React from 'react';
-import styled from 'styled-components';
+import React, { useState } from 'react';
+import styled, { keyframes } from 'styled-components';
 import DetailSummaryCards from '../../../components/host/detail/DetailSummaryCards';
 import DetailBasicInfo from './../../../components/host/detail/DetailBasicInfo';
 import DetailFacilities from '../../../components/host/detail/DetailFacilities';
@@ -47,9 +47,17 @@ const ProfileInfo = styled.div`
   gap: 20px;
   .icon {
     font-size: 50px;
-    background: #f1f4ee;
+    background-image: url(${(props) => props.$imageUrl});
+    background-size: cover;
+    background-position: center;
+    background-color: #f1f4ee;
     padding: 15px;
+    width: 180px;
+    height: 150px;
     border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
   }
   .text h2 {
     font-size: 24px;
@@ -70,12 +78,69 @@ const Tag = styled.span`
   color: ${(props) => props.$color || '#888'}; // Transient prop 사용
 `;
 
+/////////////////////////////////////////////모달
+const ModalOverlay = styled.div`
+  position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+  background: rgba(0,0,0,0.8);
+  display: flex; justify-content: center; align-items: center;
+  z-index: 1000;
+`;
+
+const SlideContainer = styled.div`
+  position: relative;
+  img { max-width: 90vw; max-height: 80vh; border-radius: 8px; }
+`;
+
+const ArrowButton = styled.button`
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  ${props => props.left ? 'left: 20px;' : 'right: 20px;'}
+  
+  width: 50px;
+  height: 50px;
+  background: rgba(255, 255, 255, 0.2);
+  backdrop-filter: blur(5px);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  border-radius: 50%;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.3s ease;
+  color: white;
+  font-size: 20px;
+
+  &:hover {
+    background: rgba(255, 255, 255, 0.4);
+    transform: translateY(-50%) scale(1.1);
+  }
+`;
+
+const zoomIn = keyframes`
+  from { transform: scale(0.8); opacity: 0; }
+  to { transform: scale(1); opacity: 1; }
+`;
+
+const AnimatedImage = styled.img`
+  max-width: 90vw;
+  max-height: 80vh;
+  border-radius: 8px;
+  animation: ${zoomIn} 0.6s ease-out;
+`;
+
 // --- 레이아웃 컴포넌트 ---
 function StationDetailLayout({
   data,
   onBack,
   handleUpdateDetail,
   handleImageUpdate,
+  setCurrentIdx,
+  closeModal,
+  openModal,
+  isModalOpen,
+  sortedImages,
+  currentIdx,
 }) {
   return (
     <PageWrapper>
@@ -87,8 +152,12 @@ function StationDetailLayout({
         >
           {/* 프로필 배너 섹션 */}
           <Banner>
-            <ProfileInfo>
-              <div className="icon">🌲</div>
+            <ProfileInfo $imageUrl={data.header.imageUrl}>
+              <div className="icon"
+                onClick={() => openModal(0)} 
+                style={{ cursor: 'pointer' }}>
+                {!data.header.imageUrl && "🌲"}
+              </div>
               <div className="text">
                 <div className="tags">
                   <Tag $color="#888">{data.header.type}</Tag>
@@ -141,7 +210,29 @@ function StationDetailLayout({
           <RecentBookings bookings={data.recentBookings} />
         </PageLayout>
       </Container>
-    </PageWrapper>
+    {isModalOpen && (
+      <ModalOverlay onClick={() => closeModal()}>
+        <SlideContainer onClick={(e) => e.stopPropagation()}>
+          <AnimatedImage 
+            key={currentIdx} 
+            src={sortedImages[currentIdx].preview} 
+            alt="detail" 
+          />       
+          <ArrowButton left onClick={() => setCurrentIdx((prev) => (prev === 0 ? sortedImages.length - 1 : prev - 1))}>
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <polyline points="15 18 9 12 15 6"></polyline>
+            </svg>
+          </ArrowButton>
+
+          <ArrowButton onClick={() => setCurrentIdx((prev) => (prev === sortedImages.length - 1 ? 0 : prev + 1))}>
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <polyline points="9 6 15 12 9 18"></polyline>
+            </svg>
+          </ArrowButton>
+        </SlideContainer>
+      </ModalOverlay>
+    )}
+    </PageWrapper>  
   );
 }
 

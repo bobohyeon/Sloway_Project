@@ -26,7 +26,7 @@ public class HostMyPageResponseDto {
     private  final String name;
     private  final String phone;
     private  final String birthDate;
-    private  final String imgurl;
+    private  final String imgUrl;
     private  final LocalDateTime createdAt;
 
     //호스트 사업자 정보
@@ -45,7 +45,7 @@ public class HostMyPageResponseDto {
                 .name(member.getName())
                 .phone(member.getPhone())
                 .birthDate(member.getBirthDate())
-                .imgurl(member.getImgUrl())
+                .imgUrl(member.getImgUrl())
                 .createdAt(member.getCreatedAt())
                 .hostNo(host.getNo())
                 .businessName(host.getBusinessName())

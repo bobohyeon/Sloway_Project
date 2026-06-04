@@ -171,8 +171,8 @@ function MainHeader({ activePage = 'home' }) {
         >
           워케이션 찾기
         </NavLink>
-        <NavLink onClick={() => navigate('/notices')}>공지사항</NavLink>
-        <NavLink onClick={() => navigate('/faqs')}>자주 묻는 질문</NavLink>
+        <NavLink onClick={() => navigate('/notice')}>공지사항</NavLink>
+        <NavLink onClick={() => navigate('/faq')}>자주 묻는 질문</NavLink>
 
         {isAuthenticated ? (
           <UserArea>

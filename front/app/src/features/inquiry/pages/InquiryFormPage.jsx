@@ -4,6 +4,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { Button, Modal, Card } from '../../pay_shared/components';
 import PageLayout from '../../../app/layouts/page/PageLayout';
 import api from '../../../app/api/axiosApi';
+import { useAuth } from '../../auth/hooks/useAuth';
 
 const CATEGORY_OPTIONS = [
   { label: '예약', value: 'RESERVATION' },
@@ -24,10 +25,13 @@ export default function InquiryFormPage({ isEdit = false }) {
   const [errors, setErrors] = useState({});
   const [cancelModal, setCancelModal] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
+  const { user, role } = useAuth();
 
   useEffect(() => {
-    if (isEdit && id) {
-      api.get(`/inquiry/my/${id}`).then(({ data }) => {
+    if (!isEdit || !id) return;
+    const fetch = async () => {
+      try {
+        const { data } = await api.get(`/inquiry/my/${id}`);
         if (data.status !== 'PENDING') {
           setIsEditable(false);
           return;
@@ -38,8 +42,11 @@ export default function InquiryFormPage({ isEdit = false }) {
           content: data.content,
         });
         setIsEditable(true);
-      }).catch(() => navigate('/user/inquiry', { replace: true }));
-    }
+      } catch {
+        navigate('/inquiry', { replace: true });
+      }
+    };
+    fetch();
   }, [isEdit, id]);
 
   const handleChange = useCallback(
@@ -53,9 +60,11 @@ export default function InquiryFormPage({ isEdit = false }) {
   const validate = () => {
     const errs = {};
     if (!form.title.trim()) errs.title = '제목을 입력해 주세요.';
-    if (form.title.trim().length > 100) errs.title = '제목은 100자 이내로 입력해 주세요.';
+    if (form.title.trim().length > 100)
+      errs.title = '제목은 100자 이내로 입력해 주세요.';
     if (!form.content.trim()) errs.content = '문의 내용을 입력해 주세요.';
-    if (form.content.trim().length < 10) errs.content = '문의 내용을 10자 이상 입력해 주세요.';
+    if (form.content.trim().length < 10)
+      errs.content = '문의 내용을 10자 이상 입력해 주세요.';
     return errs;
   };
 
@@ -67,7 +76,11 @@ export default function InquiryFormPage({ isEdit = false }) {
     }
     setIsSaving(true);
     try {
-      const payload = { title: form.title, category: form.category, content: form.content };
+      const payload = {
+        title: form.title,
+        category: form.category,
+        content: form.content,
+      };
       if (isEdit) {
         await api.put(`/inquiry/${id}`, payload);
       } else {
@@ -198,7 +211,14 @@ export default function InquiryFormPage({ isEdit = false }) {
             <Button variant="secondary" onClick={() => setCancelModal(false)}>
               계속 작성
             </Button>
-            <Button variant="danger" onClick={() => navigate('/user/inquiry')}>
+            <Button
+              variant="danger"
+              onClick={() => {
+                const path =
+                  user?.role === 'U' ? '/user/inquiry' : '/host/inquiry';
+                navigate(path);
+              }}
+            >
               나가기
             </Button>
           </>

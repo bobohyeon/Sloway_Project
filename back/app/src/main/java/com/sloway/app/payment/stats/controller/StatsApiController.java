@@ -1,13 +1,12 @@
 package com.sloway.app.payment.stats.controller;
 
-import com.sloway.app.payment.stats.dto.response.MonthlySalesResDto;
-import com.sloway.app.payment.stats.dto.response.MonthlyTrendResDto;
-import com.sloway.app.payment.stats.dto.response.PayMethodStatResDto;
-import com.sloway.app.payment.stats.dto.response.RefundStatResDto;
+import com.sloway.app.auth.user.CustomUserDetails;
+import com.sloway.app.payment.stats.dto.response.*;
 import com.sloway.app.payment.stats.service.StatsService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -43,6 +42,30 @@ public class StatsApiController {
     @GetMapping("/refund")
     public ResponseEntity<RefundStatResDto> findStatsRefund(@RequestParam int year, @RequestParam int month) {
         RefundStatResDto resDto = statsService.findStatsRefund(year, month);
+        return ResponseEntity.ok(resDto);
+    }
+
+    @GetMapping("/host")
+    public ResponseEntity<HostSalesStatsResDto> findHostSalesStats(@AuthenticationPrincipal CustomUserDetails host, @RequestParam int year, @RequestParam int month) {
+        HostSalesStatsResDto resDto = statsService.findHostSalesStats(host.getMemberNo(), year, month);
+        return ResponseEntity.ok(resDto);
+    }
+
+    @GetMapping("/space")
+    public ResponseEntity<SpaceStatsResDto> findSpaceStat(@RequestParam int year, @RequestParam int month) {
+        SpaceStatsResDto resDto = statsService.findSpaceStats(year, month);
+        return ResponseEntity.ok(resDto);
+    }
+
+    @GetMapping("/booking")
+    public ResponseEntity<BookingStatsResDto> findBookingStats(@RequestParam int year, @RequestParam int month) {
+        BookingStatsResDto resDto = statsService.findBookingStats(year, month);
+        return ResponseEntity.ok(resDto);
+    }
+
+    @GetMapping("/member")
+    public ResponseEntity<MemberStatsResDto> findMemberStats(@RequestParam int year, @RequestParam int month) {
+        MemberStatsResDto resDto = statsService.findMemberStats(year, month);
         return ResponseEntity.ok(resDto);
     }
 

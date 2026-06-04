@@ -34,6 +34,7 @@ export function useLoginForm() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
+  const [suspended, setSuspended] = useState(false); // 정지 계정 여부
   const [loading, setLoading] = useState(false);
 
   /**
@@ -43,6 +44,7 @@ export function useLoginForm() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
+    setSuspended(false); // 재시도 시 초기화
 
     // 입력값 사전 검증 (백엔드도 검증하지만 빠른 피드백)
     if (!email.trim() || !password.trim()) {
@@ -54,18 +56,21 @@ export function useLoginForm() {
     try {
       const result = await userLogin(email, password);
 
-      // refreshToken은 별도 저장 (자동 갱신 시 사용 예정)
       localStorage.setItem('refreshToken', result.refreshToken);
 
-      // accessToken은 Redux 액션이 localStorage 저장 + JWT 파싱 + state 갱신 모두 처리
       dispatch(login(result.accessToken));
-
       navigate('/user/mypage');
     } catch (err) {
       const msg =
         err.response?.data?.message ||
         '로그인 중 오류가 발생했습니다. 잠시 후 다시 시도해주세요';
-      setError(msg);
+
+      // 정지 계정이면 사유 + 고객센터 안내를 알람으로
+      if (err.response?.data?.suspended === true) {
+        alert(msg + '\n\n문의: support@sloway.com');
+      } else {
+        setError(msg);
+      }
     } finally {
       setLoading(false);
     }
@@ -75,6 +80,7 @@ export function useLoginForm() {
     email,
     password,
     error,
+    suspended,
     loading,
     setEmail,
     setPassword,

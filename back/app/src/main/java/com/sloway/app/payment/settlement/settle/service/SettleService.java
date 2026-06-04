@@ -1,11 +1,15 @@
 package com.sloway.app.payment.settlement.settle.service;
 
+import com.sloway.app.common.exception.CustomException;
+import com.sloway.app.host.common.HostErrorCode;
 import com.sloway.app.host.entity.HostEntity;
 import com.sloway.app.host.repository.HostRepository;
 import com.sloway.app.payment.pay.repository.PayRepository;
 import com.sloway.app.payment.refund.repository.RefundRepository;
+import com.sloway.app.payment.settlement.fee.common.FeeErrorCode;
 import com.sloway.app.payment.settlement.fee.common.PlaceType;
 import com.sloway.app.payment.settlement.fee.repository.FeeRepository;
+import com.sloway.app.payment.settlement.settle.common.SettleErrorCode;
 import com.sloway.app.payment.settlement.settle.dto.request.SettleCreateReqDto;
 import com.sloway.app.payment.settlement.settle.dto.response.SettleResDto;
 import com.sloway.app.payment.settlement.settle.entity.SettleEntity;
@@ -13,7 +17,6 @@ import com.sloway.app.payment.settlement.settle.repository.SettleRepository;
 import com.sloway.app.place.entity.hostPlace.ApprovalStatus;
 import com.sloway.app.place.entity.hostPlace.HostPlaceEntity;
 import com.sloway.app.place.repository.hostPlace.HostPlaceRepository;
-import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -41,7 +44,7 @@ public class SettleService {
     @Transactional
     public SettleResDto createSettle(SettleCreateReqDto reqDto) {
         HostEntity host = hostRepository.findById(reqDto.getHostNo())
-                .orElseThrow(() -> new EntityNotFoundException("호스트 정보를 조회할 수 없습니다."));
+                .orElseThrow(() -> new CustomException(HostErrorCode.HOST_NOT_FOUND));
 
         List<HostPlaceEntity> hostPlaces =
                 hostPlaceRepository.findByHostEntityNoAndStatus(host.getNo(), ApprovalStatus.A);
@@ -49,16 +52,19 @@ public class SettleService {
         List<Long> officeNos = hostPlaces.stream()
                 .filter(hp -> hp.getOfficeEntity() != null)
                 .map(hp -> hp.getOfficeEntity().getNo())
+                .distinct()
                 .toList();
 
         List<Long> stationNos = hostPlaces.stream()
                 .filter(hp -> hp.getStationEntity() != null)
                 .map(hp -> hp.getStationEntity().getNo())
+                .distinct()
                 .toList();
 
         List<Long> workStayNos = hostPlaces.stream()
                 .filter(hp -> hp.getWorkStayEntity() != null)
                 .map(hp -> hp.getWorkStayEntity().getNo())
+                .distinct()
                 .toList();
 
         LocalDateTime start = reqDto.getSettleStartDate().atStartOfDay();
@@ -98,42 +104,44 @@ public class SettleService {
     private int calcFee(int amt, PlaceType placeType) {
         if (amt == 0) return 0;
         int rate = feeRepository.findByPlaceTypeAndDelYn(placeType, "N")
-                .orElseThrow(() -> new EntityNotFoundException(placeType + " 수수료 정책이 없습니다."))
+                .orElseThrow(() -> new CustomException(FeeErrorCode.FEE_NOT_FOUND))
                 .getRate();
         return amt * rate / 100;
     }
-
 
     public List<SettleResDto> findSettleAll() {
         return settleRepository.findAll().stream().map(SettleResDto::from).toList();
     }
 
-    public List<SettleResDto> findSettleByHostNo(Long hostNo) {
-        List<SettleEntity> entityList = settleRepository.findByHostNo(hostNo);
+    public List<SettleResDto> findSettleByHostNo(Long memberNo) {
+        HostEntity hostEntity = hostRepository.findByMemberNo(memberNo)
+                .orElseThrow(() -> new CustomException(HostErrorCode.HOST_NOT_FOUND));
+        List<SettleEntity> entityList = settleRepository.findByHostNo(hostEntity.getNo());
         return entityList.stream().map(SettleResDto::from).toList();
     }
 
     public SettleResDto findSettleByNo(Long no) {
-        SettleEntity entity = settleRepository.findById(no)
-                .orElseThrow(() -> new EntityNotFoundException("정산 정보를 조회할 수 없습니다."));
+        SettleEntity entity = findSettleEntity(no);
         return SettleResDto.from(entity);
     }
 
-
     @Transactional
     public SettleResDto completeSettle(Long no) {
-        SettleEntity entity = settleRepository.findById(no)
-                .orElseThrow(() -> new EntityNotFoundException("조회 할 수 없습니다."));
+        SettleEntity entity = findSettleEntity(no);
         entity.completeSettle();
         return SettleResDto.from(entity);
     }
 
     @Transactional
     public SettleResDto issueTaxInvoice(Long no) {
-        SettleEntity entity = settleRepository.findById(no)
-                .orElseThrow(() -> new EntityNotFoundException("조회 할 수 없습니다."));
-        entity.issueTaxInvoice();   // 이미 SettleEntity에 있는 Rich
+        SettleEntity entity = findSettleEntity(no);
+        entity.issueTaxInvoice();
         return SettleResDto.from(entity);
+    }
+
+    private SettleEntity findSettleEntity(Long no){
+        return settleRepository.findById(no)
+                .orElseThrow(() -> new CustomException(SettleErrorCode.SETTLE_NOT_FOUND));
     }
 
 

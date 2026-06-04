@@ -1,6 +1,7 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import styled from 'styled-components';
 import { useNavigate } from 'react-router-dom';
+import { useDispatch } from 'react-redux';
 import {
   FaExclamationTriangle,
   FaCoins,
@@ -11,13 +12,9 @@ import {
   FaTimes,
 } from 'react-icons/fa';
 import PageLayout from '../../../../app/layouts/page/PageLayout';
-
-// ─── 더미 데이터 (백엔드 연동 시 API로 교체) ───────────────
-const DUMMY_STATUS = {
-  ongoingReservations: 0, // 진행 중인 예약 건수 (0이어야 탈퇴 가능)
-  remainingPoints: 2450, // 보유 포인트 (참고용, 소멸 안내)
-  availableCoupons: 3, // 사용 가능 쿠폰 수 (참고용, 소멸 안내)
-};
+import { withdrawUser } from '../../api/userApi';
+import { findMyRsvns } from '../../../rsvn/api/rsvnApi';
+import { logout } from '../../../auth/store/authSlice';
 
 // 사라지는 것들
 const LOSS_ITEMS = [
@@ -334,8 +331,49 @@ const DangerBtn = styled.button`
 // ─── 컴포넌트 ──────────────────────────────────────────────
 function WithdrawPage() {
   const navigate = useNavigate();
-  const status = DUMMY_STATUS;
-  const canWithdraw = status.ongoingReservations === 0;
+  const dispatch = useDispatch();
+
+  const [ongoing, setOngoing] = useState(null); // 진행중 예약 수 (null=로딩중)
+  const [agreed, setAgreed] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
+
+  // 진행중 예약 조회 — status 'S'(예약확정)가 있으면 탈퇴 제한
+  useEffect(() => {
+    let alive = true;
+    (async () => {
+      try {
+        const rsvns = await findMyRsvns();
+        const count = rsvns.filter((r) => r.status === 'S').length;
+        if (alive) setOngoing(count);
+      } catch {
+        if (alive) setOngoing(0); // 조회 실패 시 일단 0 (탈퇴 막지 않음)
+      }
+    })();
+    return () => {
+      alive = false;
+    };
+  }, []);
+
+  const canWithdraw = ongoing === 0 && agreed && !submitting;
+
+  const handleWithdraw = async () => {
+    if (!canWithdraw) return;
+    if (
+      !window.confirm('정말 탈퇴하시겠습니까? 이 작업은 되돌릴 수 없습니다.')
+    ) {
+      return;
+    }
+    setSubmitting(true);
+    try {
+      await withdrawUser();
+      alert('탈퇴가 완료되었습니다. 이용해 주셔서 감사합니다.');
+      dispatch(logout()); // 토큰 폐기
+      navigate('/');
+    } catch (err) {
+      alert(err.response?.data?.message ?? '탈퇴 처리에 실패했습니다.');
+      setSubmitting(false);
+    }
+  };
 
   return (
     <PageLayout title="회원 탈퇴">
@@ -374,38 +412,16 @@ function WithdrawPage() {
         <Card>
           <SectionTitle>탈퇴 가능 여부 확인</SectionTitle>
           <CheckList>
-            <CheckRow $ok={status.ongoingReservations === 0}>
+            <CheckRow $ok={ongoing === 0}>
               <CheckLeft>
-                <CheckIcon $ok={status.ongoingReservations === 0}>
-                  {status.ongoingReservations === 0 ? <FaCheck /> : <FaTimes />}
+                <CheckIcon $ok={ongoing === 0}>
+                  {ongoing === 0 ? <FaCheck /> : <FaTimes />}
                 </CheckIcon>
                 <CheckText>진행 중인 예약</CheckText>
               </CheckLeft>
-              <CheckValue $ok={status.ongoingReservations === 0}>
-                {status.ongoingReservations}건
+              <CheckValue $ok={ongoing === 0}>
+                {ongoing === null ? '확인 중...' : `${ongoing}건`}
               </CheckValue>
-            </CheckRow>
-
-            <CheckRow $ok={true}>
-              <CheckLeft>
-                <CheckIcon $ok={true}>
-                  <FaCheck />
-                </CheckIcon>
-                <CheckText>보유 포인트 (소멸 예정)</CheckText>
-              </CheckLeft>
-              <CheckValue $ok={true}>
-                {status.remainingPoints.toLocaleString()}P
-              </CheckValue>
-            </CheckRow>
-
-            <CheckRow $ok={true}>
-              <CheckLeft>
-                <CheckIcon $ok={true}>
-                  <FaCheck />
-                </CheckIcon>
-                <CheckText>사용 가능 쿠폰 (소멸 예정)</CheckText>
-              </CheckLeft>
-              <CheckValue $ok={true}>{status.availableCoupons}장</CheckValue>
             </CheckRow>
           </CheckList>
 
@@ -431,19 +447,12 @@ function WithdrawPage() {
         {/* 최종 확인 */}
         <Card>
           <SectionTitle>최종 확인</SectionTitle>
-
-          <FormGroup>
-            <Label htmlFor="password">비밀번호 확인</Label>
-            <Input
-              id="password"
-              type="password"
-              placeholder="본인 확인을 위해 현재 비밀번호를 입력해주세요"
-              autoComplete="current-password"
-            />
-          </FormGroup>
-
           <ConfirmRow>
-            <input type="checkbox" />
+            <input
+              type="checkbox"
+              checked={agreed}
+              onChange={(e) => setAgreed(e.target.checked)}
+            />
             <span>
               위 안내사항을 모두 확인했으며, 회원 탈퇴에 따른 포인트·쿠폰 소멸
               및 활동 내역 삭제에 동의합니다.
@@ -456,7 +465,9 @@ function WithdrawPage() {
           <GhostBtn onClick={() => navigate('/user/profile')}>
             돌아가기
           </GhostBtn>
-          <DangerBtn disabled={!canWithdraw}>회원 탈퇴</DangerBtn>
+          <DangerBtn disabled={!canWithdraw} onClick={handleWithdraw}>
+            {submitting ? '처리 중...' : '회원 탈퇴'}
+          </DangerBtn>
         </ButtonRow>
       </CardStack>
     </PageLayout>

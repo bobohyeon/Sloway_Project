@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import styled from 'styled-components';
 import PageLayout from '../../../../app/layouts/page/PageLayout';
 import { PaymentSteps } from '../../components/user/PaymentSteps';
@@ -17,6 +17,8 @@ import { requestTossPayment } from '../../lib/tossSdk';
 import { toPayMethod } from '../../constants/payMethod';
 import { findCouponsByMemberNo } from '../../../coupon/api/couponApi';
 import { findPointBalanceByMemberNo } from '../../../point/api/pointApi';
+import { useAuth } from '../../../auth/hooks/useAuth';
+import { findOneRsvn } from '../../../rsvn/api/rsvnApi';
 
 const Layout = styled.div`
   display: grid;
@@ -42,23 +44,22 @@ const Sidebar = styled.aside`
   }
 `;
 
-const MEMBER_NO = 1;
-const RSVN_NO = 2;
-const PRICE_PER_NIGHT = 185000;
-const NIGHTS = 2;
-const SERVICE_FEE = 12000;
+const LoadErrorBanner = styled.div`
+  margin-bottom: var(--space-4);
+  padding: var(--space-3) var(--space-4);
+  background: #fff4ec;
+  border: 1px solid #f0c9a8;
+  border-radius: var(--radius-md);
+  color: #b5651d;
+  font-size: 0.88rem;
+`;
 
-const BOOKING = {
-  bookingId: 'SW-20260508-000847',
-  name: '청평 숲속 파인뷰 스테이',
-  type: '워크앤스테이',
-  loc: '경기 가평',
-  emoji: '🌲',
-  dates: '5월 8일 (목) ~ 5월 10일 (토)',
-  nights: NIGHTS,
-  guests: '성인 2명',
-  pricePerNight: PRICE_PER_NIGHT,
-};
+const CenterText = styled.div`
+  text-align: center;
+  padding: var(--space-10) var(--space-4);
+  color: var(--gray-600);
+  font-size: 0.95rem;
+`;
 
 const toCouponForUI = (resDto) => ({
   no: resDto.no,
@@ -77,6 +78,10 @@ const toCouponForUI = (resDto) => ({
 
 export default function BookingPaymentPage() {
   const nav = useNavigate();
+  const location = useLocation();
+  const { user } = useAuth();
+  const memberNo = user?.memberNo;
+  const rsvnNo = location.state?.rsvnNo;
 
   const {
     selectedCoupon,
@@ -91,31 +96,73 @@ export default function BookingPaymentPage() {
     setAgrees,
   } = useCheckoutForm();
 
+  const [rsvn, setRsvn] = useState(null);
   const [coupons, setCoupons] = useState([]);
   const [heldPoints, setHeldPoints] = useState(0);
   const [paying, setPaying] = useState(false);
+  const [loadError, setLoadError] = useState(null);
 
   useEffect(() => {
+    // 결제는 로그인 필수 — 비로그인 진입 시 로그인 페이지로 돌려보냄
+    if (!memberNo) {
+      nav('/login', { replace: true });
+      return;
+    }
+    // 예약 없이 직접 진입 차단 — 예약(rsvnNo)을 들고 와야 결제 가능
+    if (!rsvnNo) {
+      nav('/user/reservation', { replace: true });
+      return;
+    }
     const loadData = async () => {
+      // 예약 정보는 필수 — 실패 시 결제 진행 불가
+      try {
+        const rsvnData = await findOneRsvn(rsvnNo);
+        setRsvn(rsvnData);
+      } catch (err) {
+        console.error('예약 정보 조회 실패', err);
+        setLoadError('예약 정보를 불러오지 못했어요. 예약을 다시 확인해주세요.');
+        return;
+      }
+      // 쿠폰·포인트는 선택 — 실패해도 할인 없이 결제 가능
       try {
         const [couponList, balanceResDto] = await Promise.all([
-          findCouponsByMemberNo(MEMBER_NO),
-          findPointBalanceByMemberNo(MEMBER_NO),
+          findCouponsByMemberNo(memberNo),
+          findPointBalanceByMemberNo(memberNo),
         ]);
         setCoupons(couponList.map(toCouponForUI));
         setHeldPoints(balanceResDto.balance);
       } catch (err) {
-        console.error('결제 페이지 데이터 로드 실패', err);
+        console.error('쿠폰·포인트 로드 실패', err);
+        setLoadError(
+          '쿠폰·포인트 정보를 불러오지 못했어요. 할인 없이 결제는 진행할 수 있어요.'
+        );
       }
     };
     loadData();
-  }, []);
+  }, [memberNo, rsvnNo, nav]);
+
+  const nights = rsvn
+    ? Math.max(
+        1,
+        Math.round(
+          (new Date(rsvn.checkOut) - new Date(rsvn.checkIn)) / 86400000
+        )
+      )
+    : 0;
+
+  const booking = rsvn && {
+    emoji: '🏠',
+    type: rsvn.spaceType,
+    name: rsvn.spaceName,
+    loc: '',
+    dates: `${rsvn.checkIn?.slice(0, 10)} ~ ${rsvn.checkOut?.slice(0, 10)}`,
+    guests: `${rsvn.count}명`,
+    nights,
+  };
 
   const { subtotal, couponDiscount, total, earnPoints, canPay } =
     useCheckoutCalc({
-      pricePerNight: PRICE_PER_NIGHT,
-      nights: NIGHTS,
-      serviceFee: SERVICE_FEE,
+      baseAmt: rsvn?.amt,
       selectedCoupon,
       points,
       agrees,
@@ -129,12 +176,12 @@ export default function BookingPaymentPage() {
     setPaying(true);
 
     const reqDto = {
-      rsvnNo: RSVN_NO,
+      rsvnNo,
       ucNo: selectedCoupon?.no ?? null,
       usedPoint: points,
       method,
       baseAmt: subtotal,
-      addAmt: SERVICE_FEE,
+      addAmt: 0,
     };
 
     try {
@@ -144,7 +191,7 @@ export default function BookingPaymentPage() {
           orderId,
           amount,
           orderName,
-          customerKey: `MEMBER_${MEMBER_NO}`,
+          customerKey: `MEMBER_${memberNo}`,
         });
       } else {
         const { nextRedirectPcUrl } = await readyPay(reqDto);
@@ -159,13 +206,23 @@ export default function BookingPaymentPage() {
     }
   };
 
+  if (!rsvn) {
+    return (
+      <PageLayout maxWidth={1200}>
+        <PaymentSteps current={2} />
+        <CenterText>{loadError ?? '예약 정보를 불러오는 중…'}</CenterText>
+      </PageLayout>
+    );
+  }
+
   return (
     <PageLayout maxWidth={1200}>
       <PaymentSteps current={2} />
+      {loadError && <LoadErrorBanner>{loadError}</LoadErrorBanner>}
 
       <Layout>
         <Main>
-          <BookingSummaryCard booking={BOOKING} />
+          <BookingSummaryCard booking={booking} />
 
           <CouponSection
             coupons={coupons}
@@ -190,9 +247,7 @@ export default function BookingPaymentPage() {
 
         <Sidebar>
           <PaymentSummary
-            pricePerNight={BOOKING.pricePerNight}
-            nights={BOOKING.nights}
-            serviceFee={SERVICE_FEE}
+            subtotal={subtotal}
             couponDiscount={couponDiscount}
             usePoints={points}
             total={total}

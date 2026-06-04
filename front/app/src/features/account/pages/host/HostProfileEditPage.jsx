@@ -5,22 +5,10 @@ import { useDispatch } from 'react-redux';
 import { FaLock } from 'react-icons/fa';
 import PageLayout from '../../../../app/layouts/page/PageLayout';
 import EmailVerifyField from '../../components/user/EmailVerifyField';
+import ProfileImageField from '../../components/user/ProfileImageField';
 import { useHostMyPage } from '../../hooks/useHostMyPage';
 import { updateHostMyPage, changeHostEmail } from '../../api/hostApi';
 import { logout } from '../../../auth/store/authSlice';
-
-const BANKS = [
-  'KB국민은행',
-  '신한은행',
-  '우리은행',
-  '하나은행',
-  'NH농협은행',
-  'IBK기업은행',
-  '카카오뱅크',
-  '토스뱅크',
-];
-
-const INTRO_MAX = 500;
 
 // ─── Styled Components ─────────────────────────────────────
 const Form = styled.form`
@@ -79,66 +67,9 @@ const Input = styled.input`
   }
 `;
 
-const Textarea = styled.textarea`
-  padding: 12px 14px;
-  border: 1px solid var(--gray-200);
-  border-radius: 8px;
-  font-size: 14px;
-  background: #fff;
-  color: var(--gray-800);
-  font-family: inherit;
-  resize: vertical;
-  min-height: 120px;
-  transition: border-color 0.15s;
-
-  &:focus {
-    outline: none;
-    border-color: var(--sage);
-  }
-`;
-
-const Select = styled.select`
-  height: 42px;
-  padding: 0 14px;
-  border: 1px solid var(--gray-200);
-  border-radius: 8px;
-  font-size: 14px;
-  background: #fff;
-  color: var(--gray-800);
-
-  &:focus {
-    outline: none;
-    border-color: var(--sage);
-  }
-`;
-
 const HelpText = styled.span`
   font-size: 12px;
   color: var(--gray-400);
-`;
-
-const InputRow = styled.div`
-  display: flex;
-  gap: 8px;
-`;
-
-const BtnAction = styled.button`
-  height: 42px;
-  padding: 0 16px;
-  border-radius: 8px;
-  font-size: 13px;
-  font-weight: 500;
-  cursor: pointer;
-  border: 1px solid var(--gray-200);
-  background: #fff;
-  color: var(--gray-800);
-  white-space: nowrap;
-  flex-shrink: 0;
-
-  &:hover {
-    border-color: var(--sage);
-    color: var(--sage);
-  }
 `;
 
 // 사업자 정보 잠금 안내
@@ -160,85 +91,6 @@ const LockNotice = styled.div`
   }
 `;
 
-// 프로필 이미지
-const ImageRow = styled.div`
-  display: flex;
-  align-items: center;
-  gap: 20px;
-`;
-
-const ImagePreview = styled.div`
-  width: 80px;
-  height: 80px;
-  border-radius: 50%;
-  background: var(--sage);
-  color: #fff;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 28px;
-  font-weight: bold;
-  flex-shrink: 0;
-  overflow: hidden;
-
-  img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-  }
-`;
-
-const ImageActions = styled.div`
-  display: flex;
-  gap: 8px;
-`;
-
-const ImageBtn = styled.label`
-  padding: 8px 14px;
-  border-radius: 8px;
-  font-size: 12px;
-  font-weight: 500;
-  cursor: pointer;
-  border: 1px solid var(--gray-200);
-  background: #fff;
-  color: var(--gray-800);
-  transition: all 0.15s;
-
-  &:hover {
-    border-color: var(--sage);
-    color: var(--sage);
-  }
-`;
-
-const RemoveBtn = styled.button`
-  padding: 8px 14px;
-  border-radius: 8px;
-  font-size: 12px;
-  font-weight: 500;
-  cursor: pointer;
-  border: 1px solid #e8d4d2;
-  background: #fff;
-  color: #a04c42;
-  transition: all 0.15s;
-
-  &:hover {
-    background: #fdf5f4;
-  }
-`;
-
-// 글자 수 카운터
-const TextareaFooter = styled.div`
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-top: 2px;
-`;
-
-const CharCount = styled.span`
-  font-size: 12px;
-  color: var(--gray-400);
-`;
-
 // 버튼
 const ButtonRow = styled.div`
   display: flex;
@@ -258,8 +110,12 @@ const PrimaryBtn = styled.button`
   background: var(--sage);
   color: #fff;
 
-  &:hover {
+  &:hover:not(:disabled) {
     opacity: 0.9;
+  }
+  &:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
   }
 `;
 
@@ -285,9 +141,12 @@ function HostProfileEditPage() {
   const dispatch = useDispatch();
   const { data: initial, loading } = useHostMyPage();
 
-  // 수정 가능 필드 (백엔드가 받는 것만): 상호명·이름·휴대폰
+  // 수정 가능 필드: 상호명·이름·휴대폰
   const [form, setForm] = useState({ businessName: '', name: '', phone: '' });
   const [saving, setSaving] = useState(false);
+
+  // 프로필 이미지
+  const [imageFile, setImageFile] = useState(null);
 
   // 이메일 변경 (별도)
   const [newEmail, setNewEmail] = useState('');
@@ -310,17 +169,24 @@ function HostProfileEditPage() {
     setForm((prev) => ({ ...prev, [name]: value }));
   };
 
-  // ── 기본 정보 저장 (상호명·이름·휴대폰) ──
+  const handleImageChange = (file) => {
+    setImageFile(file);
+  };
+
+  // ── 기본 정보 저장 (상호명·이름·휴대폰·프로필 이미지) ──
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (saving) return;
     setSaving(true);
     try {
-      await updateHostMyPage({
-        businessName: form.businessName.trim(),
-        name: form.name.trim(),
-        phone: form.phone,
-      });
+      await updateHostMyPage(
+        {
+          businessName: form.businessName.trim(),
+          name: form.name.trim(),
+          phone: form.phone.replace(/-/g, ''), // 하이픈 제거 (varchar 11)
+        },
+        imageFile
+      );
       alert('저장되었습니다.');
       navigate('/host/profile');
     } catch (err) {
@@ -357,6 +223,15 @@ function HostProfileEditPage() {
   return (
     <PageLayout title="호스트 정보 수정">
       <Form onSubmit={handleSubmit} noValidate>
+        {/* 프로필 사진 */}
+        <Card>
+          <SectionTitle>프로필 사진</SectionTitle>
+          <ProfileImageField
+            initialUrl={initial.imgUrl ?? null}
+            onChange={handleImageChange}
+          />
+        </Card>
+
         {/* 사업자 정보 */}
         <Card>
           <SectionTitle>사업자 정보</SectionTitle>
@@ -427,7 +302,7 @@ function HostProfileEditPage() {
         </ButtonRow>
       </Form>
 
-      {/* 이메일 변경 — 별도 섹션 (저장과 분리, 성공 시 로그아웃) */}
+      {/* 이메일 변경 — 별도 섹션 */}
       <Card style={{ marginTop: 20 }}>
         <SectionTitle>이메일 변경</SectionTitle>
         <FormGroup>

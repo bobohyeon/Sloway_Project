@@ -37,19 +37,21 @@ export default function NoticeListPage() {
   const [totalPages, setTotalPages] = useState(0);
 
   useEffect(() => {
-    api.get('/notice', {
-      params: {
-        page: page - 1,
-        size: 10,
-        sort: SORT_MAP[sortKey],
-        category: category || undefined,
-        keyword: keyword || undefined,
-        status: 'ACTIVE',
-      },
-    }).then(({ data }) => {
+    const fetch = async () => {
+      const { data } = await api.get('/notice', {
+        params: {
+          page: page - 1,
+          size: 10,
+          sort: SORT_MAP[sortKey],
+          category: category || undefined,
+          keyword: keyword || undefined,
+          status: 'ACTIVE',
+        },
+      });
       setNotices(data.content);
       setTotalPages(data.totalPages);
-    });
+    };
+    fetch();
   }, [page, sortKey, category, keyword]);
 
   const handleSearch = () => {
@@ -123,11 +125,11 @@ export default function NoticeListPage() {
           notices.map((notice) => (
             <NoticeRow
               key={notice.id}
-              onClick={() => navigate(`/notices/${notice.id}`)}
+              onClick={() => navigate(`/notice/${notice.id}`)}
               role="button"
               tabIndex={0}
               onKeyDown={(e) =>
-                e.key === 'Enter' && navigate(`/notices/${notice.id}`)
+                e.key === 'Enter' && navigate(`/notice/${notice.id}`)
               }
               aria-label={notice.title}
             >
@@ -137,7 +139,8 @@ export default function NoticeListPage() {
               <NoticeTitle>{notice.title}</NoticeTitle>
               <NoticeInfo>
                 <Badge size="sm" variant="muted">
-                  {CATEGORY_OPTIONS.find((c) => c.value === notice.category)?.label ?? notice.category}
+                  {CATEGORY_OPTIONS.find((c) => c.value === notice.category)
+                    ?.label ?? notice.category}
                 </Badge>
                 <NoticeDate>{fmtDate(notice.createdAt)}</NoticeDate>
                 <ViewCount>조회 {notice.viewCount}</ViewCount>

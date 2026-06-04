@@ -11,6 +11,7 @@ import {
 } from '../../pay_shared/components';
 import PageLayout from '../../../app/layouts/page/PageLayout';
 import api from '../../../app/api/axiosApi';
+import { useAuth } from '../../auth/hooks/useAuth';
 
 const CATEGORY_LABEL = {
   RESERVATION: '예약',
@@ -21,11 +22,11 @@ const CATEGORY_LABEL = {
 
 const STATUS_CONFIG = {
   ANSWERED: { label: '답변 완료', variant: 'success' },
-  PENDING:  { label: '답변 대기', variant: 'muted' },
+  PENDING: { label: '답변 대기', variant: 'muted' },
 };
 
 const TAB_ITEMS = [
-  { label: '전체',     value: '' },
+  { label: '전체', value: '' },
   { label: '답변 대기', value: 'PENDING' },
   { label: '답변 완료', value: 'ANSWERED' },
 ];
@@ -38,19 +39,19 @@ export default function InquiryListPage() {
   const [page, setPage] = useState(1);
   const [inquiries, setInquiries] = useState([]);
   const [totalPages, setTotalPages] = useState(0);
+  const { user, role } = useAuth();
 
-  const fetchInquiries = useCallback(() => {
-    api.get('/inquiry/my', {
+  const fetchInquiries = useCallback(async () => {
+    const { data } = await api.get('/inquiry/my', {
       params: {
         page: page - 1,
         size: 10,
         sort: 'createdAt,DESC',
         status: tab || undefined,
       },
-    }).then(({ data }) => {
-      setInquiries(data.content);
-      setTotalPages(data.totalPages);
     });
+    setInquiries(data.content);
+    setTotalPages(data.totalPages);
   }, [tab, page]);
 
   useEffect(() => {
@@ -62,7 +63,13 @@ export default function InquiryListPage() {
       title="내 문의사항"
       description="등록한 문의사항과 답변을 확인하세요"
       actions={
-        <Button onClick={() => navigate('/user/inquiry/form')}>
+        <Button
+          onClick={() => {
+            const path =
+              user?.role === 'U' ? '/user/inquiry/form' : '/host/inquiry/form';
+            navigate(path);
+          }}
+        >
           + 문의하기
         </Button>
       }
@@ -87,23 +94,46 @@ export default function InquiryListPage() {
             title="문의사항이 없습니다"
             description="궁금하신 점이 있다면 문의해 주세요."
             action={
-              <Button onClick={() => navigate('/user/inquiry/form')}>
+              <Button
+                onClick={() => {
+                  const path =
+                    user?.role === 'U'
+                      ? '/user/inquiry/form'
+                      : '/host/inquiry/form';
+                  navigate(path);
+                }}
+              >
                 문의하기
               </Button>
             }
           />
         ) : (
           inquiries.map((inquiry) => {
-            const st = STATUS_CONFIG[inquiry.status] ?? { label: inquiry.status, variant: 'muted' };
+            const st = STATUS_CONFIG[inquiry.status] ?? {
+              label: inquiry.status,
+              variant: 'muted',
+            };
             return (
               <InquiryRow
                 key={inquiry.id}
-                onClick={() => navigate(`/user/inquiry/${inquiry.id}`)}
+                onClick={() => {
+                  const path =
+                    user?.role === 'U'
+                      ? `/user/inquiry/${inquiry.id}`
+                      : `/host/inquiry/${inquiry.id}`;
+                  navigate(path);
+                }}
                 role="button"
                 tabIndex={0}
-                onKeyDown={(e) =>
-                  e.key === 'Enter' && navigate(`/user/inquiry/${inquiry.id}`)
-                }
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') {
+                    const path =
+                      user?.role === 'U'
+                        ? `/user/inquiry/${inquiry.id}`
+                        : `/host/inquiry/${inquiry.id}`;
+                    navigate(path);
+                  }
+                }}
                 aria-label={inquiry.title}
               >
                 <RowMain>

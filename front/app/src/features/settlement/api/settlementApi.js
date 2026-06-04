@@ -12,9 +12,9 @@ export async function findSettleByNo(no) {
   return resp.data;
 }
 
-// 호스트별 정산 목록 (최근순) — 호스트 정산 화면용
-export async function findSettleByHostNo(hostNo) {
-  const resp = await api.get(`/payment/settlement/settle/host/${hostNo}`);
+// 호스트 본인 정산 목록 (최근순) — 토큰의 memberNo로 호스트 식별
+export async function findSettleByHostNo() {
+  const resp = await api.get(`/payment/settlement/settle/host`);
   return resp.data;
 }
 

@@ -19,11 +19,30 @@ const TaxInvoiceDoc = forwardRef(({ settle }, ref) => {
   const supply = settle.totalAmt ?? 0; // 공급가액 = 공간 이용 매출
   const vat = Math.round(supply * 0.1); // 부가세 10%
   const total = supply + vat;
+  const issued = settle.invoicedAt ? new Date(settle.invoicedAt) : null;
+  const serialNo = `${issued ? issued.getFullYear() : '----'}-SW${String(
+    settle.no ?? 0
+  ).padStart(5, '0')}`;
 
   return (
     <Doc ref={ref}>
       <DocTitle>세 금 계 산 서</DocTitle>
       <DocSub>(공급받는자 보관용)</DocSub>
+
+      <MetaBar>
+        <MetaItem>
+          <MetaKey>일련번호</MetaKey>
+          <MetaVal>{serialNo}</MetaVal>
+        </MetaItem>
+        <MetaItem>
+          <MetaKey>작성일자</MetaKey>
+          <MetaVal>{fmtDateTime(settle.invoicedAt)}</MetaVal>
+        </MetaItem>
+        <MetaItem>
+          <MetaKey>정산번호</MetaKey>
+          <MetaVal>#{settle.no}</MetaVal>
+        </MetaItem>
+      </MetaBar>
 
       <PartyGrid>
         <Party>
@@ -37,6 +56,10 @@ const TaxInvoiceDoc = forwardRef(({ settle }, ref) => {
             <PartyVal>000-00-00000</PartyVal>
           </PartyRow>
           <PartyRow>
+            <PartyKey>대표자</PartyKey>
+            <PartyVal>호스트 #{settle.hostNo}</PartyVal>
+          </PartyRow>
+          <PartyRow>
             <PartyKey>업태/종목</PartyKey>
             <PartyVal>부동산업 / 공간 임대</PartyVal>
           </PartyRow>
@@ -48,12 +71,16 @@ const TaxInvoiceDoc = forwardRef(({ settle }, ref) => {
             <PartyVal>Sloway</PartyVal>
           </PartyRow>
           <PartyRow>
-            <PartyKey>정산번호</PartyKey>
-            <PartyVal>#{settle.no}</PartyVal>
+            <PartyKey>등록번호</PartyKey>
+            <PartyVal>123-45-67890</PartyVal>
           </PartyRow>
           <PartyRow>
-            <PartyKey>발행일</PartyKey>
-            <PartyVal>{fmtDateTime(settle.invoicedAt)}</PartyVal>
+            <PartyKey>대표자</PartyKey>
+            <PartyVal>Sloway</PartyVal>
+          </PartyRow>
+          <PartyRow>
+            <PartyKey>업태/종목</PartyKey>
+            <PartyVal>플랫폼 / 중개</PartyVal>
           </PartyRow>
         </Party>
       </PartyGrid>
@@ -102,6 +129,10 @@ const TaxInvoiceDoc = forwardRef(({ settle }, ref) => {
         <CarryLine>※ 다음 회차 이월액 {won(settle.carryOver)}</CarryLine>
       )}
 
+      <Remark>
+        비고 : 본 계산서는 공간 이용 매출 정산 건에 대해 발행되었습니다. 공급가액은
+        수수료·환불 차감 전 총매출 기준입니다.
+      </Remark>
       <Footer>본 계산서는 Sloway 정산 시스템에서 자동 발행되었습니다.</Footer>
     </Doc>
   );
@@ -236,4 +267,35 @@ const Footer = styled.div`
   text-align: center;
   font-size: 11px;
   color: #aaaaaa;
+`;
+
+const MetaBar = styled.div`
+  display: flex;
+  gap: 24px;
+  justify-content: flex-end;
+  margin-bottom: 18px;
+`;
+const MetaItem = styled.div`
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  font-size: 12px;
+`;
+const MetaKey = styled.span`
+  color: #888888;
+`;
+const MetaVal = styled.span`
+  color: #1a1a1a;
+  font-weight: 600;
+  font-family: 'JetBrains Mono', monospace;
+`;
+const Remark = styled.div`
+  margin-top: 18px;
+  padding: 12px 14px;
+  background: #f7f7f7;
+  border: 1px solid #eeeeee;
+  border-radius: 6px;
+  font-size: 11px;
+  color: #777777;
+  line-height: 1.6;
 `;

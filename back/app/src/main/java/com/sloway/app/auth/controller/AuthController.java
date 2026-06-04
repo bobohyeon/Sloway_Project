@@ -1,10 +1,8 @@
 package com.sloway.app.auth.controller;
 
-import com.sloway.app.auth.dto.request.JoinRequestDto;
-import com.sloway.app.auth.dto.request.ResetPasswordRequestDto;
-import com.sloway.app.auth.dto.request.SendCodeRequestDto;
-import com.sloway.app.auth.dto.request.VerifyCodeRequestDto;
+import com.sloway.app.auth.dto.request.*;
 import com.sloway.app.auth.dto.response.EmailCheckResponseDto;
+import com.sloway.app.auth.dto.response.FindEmailResponseDto;
 import com.sloway.app.auth.service.AuthService;
 import com.sloway.app.auth.service.EmailService;
 import lombok.RequiredArgsConstructor;
@@ -91,6 +89,16 @@ public class AuthController {
         log.info("비밀번호 재설정 요청: email={}", request.getEmail());
         authService.resetPassword(request);
         return ResponseEntity.ok().build();
+    }
+    /**
+     * 아이디(이메일) 찾기.
+     * 이름 + 전화번호로 가입된 이메일을 마스킹하여 안내.
+     * 비로그인 상태에서 호출 (permitAll).
+     */
+    @PostMapping("/find-email")
+    public ResponseEntity<FindEmailResponseDto> findEmail(
+            @RequestBody FindEmailRequestDto request) {
+        return ResponseEntity.ok(authService.findEmail(request));
     }
 
 }//class

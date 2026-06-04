@@ -63,7 +63,12 @@ export default function RefundRequest() {
   const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
-    if (!payNo) return;
+    // payNo 없이 진입(예: 예약 화면 환불 버튼) 시 백지 대신 결제 내역으로 안내
+    if (!payNo) {
+      alert('환불할 결제를 먼저 선택해주세요.');
+      navigate('/user/payment', { replace: true });
+      return;
+    }
     const load = async () => {
       try {
         const resDto = await findPayByNo(payNo);

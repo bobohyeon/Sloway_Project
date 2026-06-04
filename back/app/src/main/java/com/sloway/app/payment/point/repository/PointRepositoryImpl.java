@@ -15,6 +15,7 @@ import java.util.List;
 @RequiredArgsConstructor
 public class PointRepositoryImpl implements PointRepositoryCustom {
 
+
     private static final QPointEntity qPointEntity = QPointEntity.pointEntity;
     private final JPAQueryFactory jpaQueryFactory;
 
@@ -53,6 +54,16 @@ public class PointRepositoryImpl implements PointRepositoryCustom {
                 .fetch();
     }
 
+    @Override
+    public List<PointEntity> findPointsByMemberNo(Long memberNo) {
+        return jpaQueryFactory
+                .selectFrom(qPointEntity)
+                .where(
+                        qPointEntity.memberNo.no.eq(memberNo)
+                )
+                .orderBy(qPointEntity.createdAt.desc())
+                .fetch();
+    }
 
 
 }

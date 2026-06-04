@@ -1,10 +1,13 @@
 import { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import styled from 'styled-components';
 
 import PageLayout from '../../../../app/layouts/page/PageLayout';
-import { findPointBalanceByMemberNo } from '../../api/pointApi';
-
-const MEMBER_NO = 1;
+import {
+  findPointBalanceByMemberNo,
+  findPointsByMemberNo,
+} from '../../api/pointApi';
+import { useAuth } from '../../../auth/hooks/useAuth';
 
 const POLICIES = [
   { label: '적립률', value: '결제 금액의 1%' },
@@ -15,26 +18,59 @@ const POLICIES = [
   { label: '환산 기준', value: '1P = 1원' },
 ];
 
+const DEAL_LABEL = {
+  EARN: '적립',
+  USE: '사용',
+};
+
+const STATUS_LABEL = {
+  WAIT: '적립 예정',
+  SAVE: '적립 완료',
+  USED: '사용 완료',
+  EXPIRATION: '만료',
+  CANCEL: '취소',
+};
+
+const formatDate = (iso) => {
+  if (!iso) return '—';
+  const d = new Date(iso);
+  const pad = (n) => String(n).padStart(2, '0');
+  return `${d.getFullYear()}.${pad(d.getMonth() + 1)}.${pad(d.getDate())}`;
+};
+
 export default function PointHistory() {
+  const navigate = useNavigate();
+  const { user } = useAuth();
+  const memberNo = user?.memberNo;
+
   const [balance, setBalance] = useState(0);
+  const [history, setHistory] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
   useEffect(() => {
+    if (!memberNo) {
+      navigate('/login', { replace: true });
+      return;
+    }
     const load = async () => {
       setLoading(true);
       try {
-        const balanceResDto = await findPointBalanceByMemberNo(MEMBER_NO);
+        const [balanceResDto, historyResDto] = await Promise.all([
+          findPointBalanceByMemberNo(memberNo),
+          findPointsByMemberNo(memberNo),
+        ]);
         setBalance(balanceResDto.balance ?? 0);
+        setHistory(historyResDto ?? []);
       } catch (err) {
-        console.error('포인트 잔액 조회 실패', err);
+        console.error('포인트 조회 실패', err);
         setError(err?.response?.data?.msg ?? err.message);
       } finally {
         setLoading(false);
       }
     };
     load();
-  }, []);
+  }, [memberNo, navigate]);
 
   return (
     <PageLayout
@@ -64,14 +100,38 @@ export default function PointHistory() {
 
       <Section>
         <SectionTitle>적립·사용 내역</SectionTitle>
-        <EmptyBox>
-          <EmptyIcon>📋</EmptyIcon>
-          <EmptyTitle>아직 표시할 내역이 없어요</EmptyTitle>
-          <EmptyDesc>
-            결제 후 적립이 시작되면 이 영역에서 적립·사용·만료 내역을 확인할 수
-            있어요.
-          </EmptyDesc>
-        </EmptyBox>
+        {history.length === 0 ? (
+          <EmptyBox>
+            <EmptyIcon>📋</EmptyIcon>
+            <EmptyTitle>아직 표시할 내역이 없어요</EmptyTitle>
+            <EmptyDesc>
+              결제 후 적립이 시작되면 이 영역에서 적립·사용·만료 내역을 확인할 수
+              있어요.
+            </EmptyDesc>
+          </EmptyBox>
+        ) : (
+          <HistoryList>
+            {history.map((item) => (
+              <HistoryRow key={item.no}>
+                <HistoryLeft>
+                  <DealBadge $deal={item.dealType}>
+                    {DEAL_LABEL[item.dealType] ?? item.dealType}
+                  </DealBadge>
+                  <HistoryMeta>
+                    <HistoryStatus>
+                      {STATUS_LABEL[item.status] ?? item.status}
+                    </HistoryStatus>
+                    <HistoryDate>{formatDate(item.createdAt)}</HistoryDate>
+                  </HistoryMeta>
+                </HistoryLeft>
+                <HistoryAmount $positive={item.amount > 0}>
+                  {item.amount > 0 ? '+' : ''}
+                  {Number(item.amount).toLocaleString()}P
+                </HistoryAmount>
+              </HistoryRow>
+            ))}
+          </HistoryList>
+        )}
       </Section>
     </PageLayout>
   );
@@ -177,4 +237,63 @@ const EmptyDesc = styled.div`
   font-size: 13px;
   color: var(--gray600);
   line-height: 1.5;
+`;
+
+const HistoryList = styled.div`
+  background: var(--white);
+  border: 1px solid var(--gray200);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+`;
+
+const HistoryRow = styled.div`
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--space-3) var(--space-4);
+  border-bottom: 1px solid var(--gray100);
+
+  &:last-child {
+    border-bottom: none;
+  }
+`;
+
+const HistoryLeft = styled.div`
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+`;
+
+const DealBadge = styled.span`
+  flex: 0 0 auto;
+  padding: 4px 10px;
+  border-radius: var(--radius-full);
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--white);
+  background: ${({ $deal }) =>
+    $deal === 'EARN' ? 'var(--sage)' : 'var(--gray600)'};
+`;
+
+const HistoryMeta = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+`;
+
+const HistoryStatus = styled.span`
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--gray800);
+`;
+
+const HistoryDate = styled.span`
+  font-size: 12px;
+  color: var(--gray600);
+`;
+
+const HistoryAmount = styled.div`
+  font-size: 15px;
+  font-weight: 700;
+  color: ${({ $positive }) => ($positive ? 'var(--sage)' : 'var(--gray800)')};
 `;

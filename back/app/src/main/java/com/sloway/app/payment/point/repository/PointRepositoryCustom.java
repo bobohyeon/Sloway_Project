@@ -15,5 +15,5 @@ public interface PointRepositoryCustom {
 
     List<PointEntity> findExpiredWaitForEarn(LocalDateTime cutoff);
 
-
+    List<PointEntity> findPointsByMemberNo(Long memberNo);
 }

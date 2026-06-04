@@ -12,6 +12,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 /**
  * 호스트 — 본인 영역 API.
@@ -54,16 +55,14 @@ public class HostController {
     //호스트 마이페이지 수정
     @PatchMapping
     public ResponseEntity<HostMyPageResponseDto> update(
-            @RequestBody UpdateHostRequestDto request,
+            @RequestPart("dto") UpdateHostRequestDto request,
+            @RequestPart(value = "profileImage", required = false) MultipartFile profileImage,
             @AuthenticationPrincipal CustomUserDetails host) {
 
         log.info("호스트 마이페이지 수정: memberNo={}", host.getMemberNo());
-        HostMyPageResponseDto result = hostService.update(host.getMemberNo(), request);
+        HostMyPageResponseDto result = hostService.update(host.getMemberNo(), request, profileImage);
         return ResponseEntity.ok(result);
-
-
     }
-
     /**
      * 호스트 비밀번호 변경.
      *
@@ -101,5 +100,17 @@ public class HostController {
         log.info("호스트 신청 현황 조회: memberNo={}", host.getMemberNo());
         HostApplicationResponseDto result = hostService.getMyApplication(host.getMemberNo());
         return ResponseEntity.ok(result);
+    }
+
+    /**
+     * 호스트 탈퇴. DELETE /api/host/mypage
+     *
+     * <p>토큰의 memberNo로 본인만 탈퇴 (soft delete). 성공 시 204.
+     */
+    @DeleteMapping
+    public ResponseEntity<Void> withdraw(@AuthenticationPrincipal CustomUserDetails host) {
+        log.info("호스트 탈퇴: memberNo={}", host.getMemberNo());
+        hostService.withdraw(host.getMemberNo());
+        return ResponseEntity.noContent().build();
     }
 }//class

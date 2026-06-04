@@ -36,12 +36,12 @@ function LoginPage() {
     email,
     password,
     error,
+    suspended,
     loading,
     setEmail,
     setPassword,
     handleSubmit,
   } = useLoginForm();
-
   return (
     <AuthCard>
       <LogoWrap>

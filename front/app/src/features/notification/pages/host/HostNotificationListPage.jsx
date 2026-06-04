@@ -1,106 +1,16 @@
-import { useState } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import styled from 'styled-components';
 import PageLayout from '../../../../app/layouts/page/PageLayout';
 import { useNavigate } from 'react-router-dom';
-
-// ─── 타입 정의 (백엔드 연동 시 API 응답 스펙에 맞게 수정) ────────────────────
-/**
- * @typedef {'reservation' | 'payment' | 'settlement' | 'chat' | 'review' | 'policy' | 'checkin' | 'notice'} HostNotificationType
- * @typedef {'전체' | '안 읽음' | '예약' | '정산'} HostTabType
- */
-
-// ─── Mock 데이터 (백엔드 연동 시 GET /api/host/notifications?tab=&page= 로 대체) ──
-const MOCK_HOST_NOTIFICATIONS = [
-  {
-    id: 1,
-    type: 'reservation',
-    category: '예약',
-    title: '새 예약이 들어왔어요',
-    description: '박민수님이 5/10-5/12 예약을 신청했어요. 승인해주세요.',
-    timeLabel: '방금 전',
-    isRead: false,
-    tabGroup: '예약',
-  },
-  {
-    id: 2,
-    type: 'chat',
-    category: '채팅',
-    title: '박민수님이 메시지를 보냈어요',
-    description: '체크인 오후 4시쯤 가능할까요? 조금 늦을 것 같아서요.',
-    timeLabel: '5분 전',
-    isRead: false,
-    tabGroup: '예약',
-  },
-  {
-    id: 3,
-    type: 'review',
-    category: '리뷰',
-    title: '새 리뷰가 달렸어요',
-    description: '민정님이 청평 숲속 파인뷰에 ★5점 리뷰를 남겼어요.',
-    timeLabel: '2시간 전',
-    isRead: false,
-    tabGroup: '예약',
-  },
-  {
-    id: 4,
-    type: 'settlement',
-    category: '정산',
-    title: '정산 예정 알림',
-    description: '2026년 5월 5일에 2,992,500원이 지급될 예정입니다.',
-    timeLabel: '어제',
-    isRead: true,
-    tabGroup: '정산',
-  },
-  {
-    id: 5,
-    type: 'checkin',
-    category: '체크인',
-    title: '내일 체크인 예정',
-    description: '홍길동님(청평 숲속 파인뷰) 체크인 · 2026.05.08 오후 3시',
-    timeLabel: '어제',
-    isRead: true,
-    tabGroup: '예약',
-  },
-  {
-    id: 6,
-    type: 'notice',
-    category: '공지',
-    title: '호스트 공지사항',
-    description: '2026년 수수료 정책 개편 안내 · 중요 정책 업데이트',
-    timeLabel: '3일 전',
-    isRead: true,
-    tabGroup: '전체',
-  },
-  {
-    id: 7,
-    type: 'review',
-    category: '리뷰',
-    title: '새 리뷰가 달렸어요',
-    description: '지훈님이 성수 브릭라운지에 ★5점 리뷰를 남겼어요.',
-    timeLabel: '5일 전',
-    isRead: true,
-    tabGroup: '예약',
-  },
-  {
-    id: 8,
-    type: 'policy',
-    category: '정책',
-    title: '수수료 정책 개편',
-    description: '2026년 1월부터 코워킹오피스 수수료가 10%로 인하됐어요.',
-    timeLabel: '1주 전',
-    isRead: true,
-    tabGroup: '정산',
-  },
-];
+import api from '../../../../app/api/axiosApi';
 
 const TAB_OPTIONS = [
-  { label: '전체', key: '전체' },
-  { label: '안 읽음', key: '안 읽음' },
-  { label: '예약', key: '예약' },
-  { label: '정산', key: '정산' },
+  { label: '전체', key: 'ALL' },
+  { label: '안 읽음', key: 'UNREAD' },
+  { label: '예약', key: 'RESERVATION' },
+  { label: '정산', key: 'SETTLEMENT' },
 ];
 
-// 알림 타입별 아이콘 — 호스트 중심 타입
 const TYPE_ICON = {
   reservation: '📋',
   payment: '💳',
@@ -112,7 +22,6 @@ const TYPE_ICON = {
   notice: '📢',
 };
 
-// 알림 타입별 배경색 — 디자인 시스템 토큰으로 이동 권장
 const TYPE_BG = {
   reservation: 'rgba(220, 100, 80, 0.1)',
   payment: 'rgba(200, 160, 80, 0.1)',
@@ -128,46 +37,59 @@ const PAGE_SIZE = 8;
 
 export default function HostNotificationListPage() {
   const navigate = useNavigate();
-  const [activeTab, setActiveTab] = useState('전체');
-  // 낙관적 업데이트 — 백엔드 연동 시 PATCH /api/host/notifications/:id/read 후 실패 시 롤백
-  const [readIds, setReadIds] = useState(new Set());
+  const [activeTab, setActiveTab] = useState('ALL');
+  const [notifications, setNotifications] = useState([]);
+  const [totalPages, setTotalPages] = useState(0);
+  const [unreadCount, setUnreadCount] = useState(0);
   const [currentPage, setCurrentPage] = useState(1);
+  const [readIds, setReadIds] = useState(new Set());
 
-  const filtered = MOCK_HOST_NOTIFICATIONS.filter((n) => {
-    if (activeTab === '전체') return true;
-    if (activeTab === '안 읽음') return !n.isRead && !readIds.has(n.id);
-    return n.tabGroup === activeTab;
-  });
+  const fetchNotifications = useCallback(async () => {
+    try {
+      const { data } = await api.get('/host/notifications', {
+        params: { tab: activeTab, page: currentPage - 1, size: PAGE_SIZE },
+      });
+      setNotifications(data.content);
+      setTotalPages(data.totalPages);
+      setUnreadCount(data.unreadCount);
+    } catch {
+      // 인증 오류 등 — 빈 상태 유지
+    }
+  }, [activeTab, currentPage]);
 
-  const totalPages = Math.ceil(filtered.length / PAGE_SIZE);
-  const paginated = filtered.slice(
-    (currentPage - 1) * PAGE_SIZE,
-    currentPage * PAGE_SIZE
-  );
-
-  const unreadCount = MOCK_HOST_NOTIFICATIONS.filter(
-    (n) => !n.isRead && !readIds.has(n.id)
-  ).length;
-
-  const tabCount = (key) => {
-    if (key === '안 읽음') return unreadCount;
-    return null;
-  };
+  useEffect(() => {
+    fetchNotifications();
+  }, [fetchNotifications]);
 
   const handleTabChange = (key) => {
     setActiveTab(key);
     setCurrentPage(1);
   };
 
-  const handleRead = (id) => {
+  const handleRead = async (id) => {
     setReadIds((prev) => new Set([...prev, id]));
-    // TODO: PATCH /api/host/notifications/:id/read
+    try {
+      await api.patch(`/host/notifications/${id}/read`);
+      setUnreadCount((c) => Math.max(0, c - 1));
+    } catch {
+      setReadIds((prev) => {
+        const next = new Set(prev);
+        next.delete(id);
+        return next;
+      });
+    }
   };
 
-  const handleReadAll = () => {
-    const allIds = MOCK_HOST_NOTIFICATIONS.map((n) => n.id);
-    setReadIds(new Set(allIds));
-    // TODO: PATCH /api/host/notifications/read-all
+  const handleReadAll = async () => {
+    const prevUnread = unreadCount;
+    setReadIds(new Set(notifications.map((n) => n.id)));
+    setUnreadCount(0);
+    try {
+      await api.patch('/host/notifications/read-all');
+      fetchNotifications();
+    } catch {
+      setUnreadCount(prevUnread);
+    }
   };
 
   const isRead = (n) => n.isRead || readIds.has(n.id);
@@ -180,7 +102,6 @@ export default function HostNotificationListPage() {
     >
       <Divider />
 
-      {/* 탭 + 우측 액션 — 유저와 동일한 TabRow 구조 */}
       <TabRow>
         <TabList role="tablist" aria-label="알림 카테고리">
           {TAB_OPTIONS.map(({ label, key }) => (
@@ -193,8 +114,8 @@ export default function HostNotificationListPage() {
               type="button"
             >
               {label}
-              {tabCount(key) != null && tabCount(key) > 0 && (
-                <TabBadge>{tabCount(key)}</TabBadge>
+              {key === 'UNREAD' && unreadCount > 0 && (
+                <TabBadge>{unreadCount}</TabBadge>
               )}
             </TabBtn>
           ))}
@@ -203,9 +124,7 @@ export default function HostNotificationListPage() {
         <ActionArea>
           <GhostBtn
             type="button"
-            onClick={() => {
-              navigate(`/host/notification/setting`);
-            }}
+            onClick={() => navigate('/host/notification/setting')}
             aria-label="알림 설정으로 이동"
           >
             ⚙ 알림 설정
@@ -218,8 +137,7 @@ export default function HostNotificationListPage() {
         </ActionArea>
       </TabRow>
 
-      {/* 알림 목록 */}
-      {paginated.length === 0 ? (
+      {notifications.length === 0 ? (
         <EmptyWrap>
           <EmptyIcon aria-hidden="true">🔔</EmptyIcon>
           <EmptyTitle>알림이 없습니다</EmptyTitle>
@@ -227,7 +145,7 @@ export default function HostNotificationListPage() {
         </EmptyWrap>
       ) : (
         <NotiList>
-          {paginated.map((noti) => {
+          {notifications.map((noti) => {
             const read = isRead(noti);
             return (
               <NotiCard
@@ -242,7 +160,6 @@ export default function HostNotificationListPage() {
                 <IconWrap style={{ background: TYPE_BG[noti.type] }}>
                   <span aria-hidden="true">{TYPE_ICON[noti.type]}</span>
                 </IconWrap>
-
                 <NotiContent>
                   <NotiMeta>
                     <CategoryLabel>{noti.category}</CategoryLabel>
@@ -251,7 +168,6 @@ export default function HostNotificationListPage() {
                   <NotiTitle $read={read}>{noti.title}</NotiTitle>
                   <NotiDesc>{noti.description}</NotiDesc>
                 </NotiContent>
-
                 {!read && <UnreadDot aria-label="읽지 않은 알림" />}
               </NotiCard>
             );
@@ -259,7 +175,6 @@ export default function HostNotificationListPage() {
         </NotiList>
       )}
 
-      {/* 페이지네이션 */}
       {totalPages > 1 && (
         <Pagination aria-label="페이지 탐색">
           <PageBtn
@@ -343,7 +258,6 @@ const TabBtn = styled.button`
     left: 0;
     right: 0;
     height: 2px;
-    /* 호스트 테마: 따뜻한 갈색 계열 */
     background: ${(p) => (p.$active ? '#c07040' : 'transparent')};
     transition: background 150ms ease;
   }

@@ -1,5 +1,6 @@
 package com.sloway.app.place.controller.station;
 
+import com.sloway.app.auth.user.CustomUserDetails;
 import com.sloway.app.place.dto.request.sort.ImgSortReqDto;
 import com.sloway.app.place.dto.request.sort.ImgUpdateSortReqDto;
 import com.sloway.app.place.dto.request.station.StationReqDto;
@@ -33,9 +34,13 @@ public class StationApiController {
             @RequestPart("dto") StationReqDto dto,
             @RequestPart("files") List<MultipartFile> files,
             @RequestPart("sortList") List<ImgSortReqDto> sortList,
-            @AuthenticationPrincipal Long memberNo) {
+            @AuthenticationPrincipal CustomUserDetails userDetails) {
+        if (userDetails == null) {
+            throw new RuntimeException("로그인이 필요합니다.");
+        }
+        Long memberNo = userDetails.getMemberNo();
 
-        stationService.saveStation(dto, files, sortList,Long.valueOf(2));
+        stationService.saveStation(dto, files, sortList,memberNo);
 
         return ResponseEntity
                 .status(HttpStatus.CREATED)
@@ -47,9 +52,13 @@ public class StationApiController {
     public ResponseEntity<Object> updateStation(
             @PathVariable Long no,
             @RequestBody StationUpdateReqDto dto,
-            @AuthenticationPrincipal Long memberNo) {
+            @AuthenticationPrincipal CustomUserDetails userDetails) {
+        if (userDetails == null) {
+            throw new RuntimeException("로그인이 필요합니다.");
+        }
+        Long memberNo = userDetails.getMemberNo();
 
-        stationService.updateStation(no, dto, Long.valueOf(2));
+        stationService.updateStation(no, dto, memberNo);
 
         return ResponseEntity
                 .status(HttpStatus.OK)
@@ -63,9 +72,14 @@ public class StationApiController {
             @PathVariable Long no,
             @RequestPart(name = "files", required = false) List<MultipartFile> files,
             @RequestPart("sortList") List<ImgUpdateSortReqDto> sortList,
-            @AuthenticationPrincipal Long memberNo) {
+            @AuthenticationPrincipal CustomUserDetails userDetails) {
+        if (userDetails == null) {
+            throw new RuntimeException("로그인이 필요합니다.");
+        }
+        Long memberNo = userDetails.getMemberNo();
 
-        stationService.updateStationImg(no, files, sortList, Long.valueOf(2));
+
+        stationService.updateStationImg(no, files, sortList, memberNo);
 
         return ResponseEntity
                 .status(HttpStatus.OK)
@@ -84,21 +98,42 @@ public class StationApiController {
     }
 
     @GetMapping("/update/image/{no}")
-    public ResponseEntity<PlaceImgListRespDto> selectImageList(@PathVariable Long no, @AuthenticationPrincipal Long memberNo){
-        PlaceImgListRespDto dto = stationService.selectImageList(no, Long.valueOf(2));
+    public ResponseEntity<PlaceImgListRespDto> selectImageList(@PathVariable Long no, @AuthenticationPrincipal CustomUserDetails userDetails){
+        if (userDetails == null) {
+            throw new RuntimeException("로그인이 필요합니다.");
+        }
+        Long memberNo = userDetails.getMemberNo();
+        PlaceImgListRespDto dto = stationService.selectImageList(no, memberNo);
 
         return ResponseEntity.ok(dto);
     }
 
     @GetMapping("/detail/dash/{no}")
-    public ResponseEntity<StationDetailRespDto> selectStationDetailDashBoard(@PathVariable Long no, @AuthenticationPrincipal Long memberNo){
-        StationDetailRespDto dto = stationService.selectStationDetailDashBoard(no, Long.valueOf(2));
+    public ResponseEntity<StationDetailRespDto> selectStationDetailDashBoard(@PathVariable Long no, @AuthenticationPrincipal CustomUserDetails userDetails){
+        if (userDetails == null) {
+            throw new RuntimeException("로그인이 필요합니다.");
+        }
+        Long memberNo = userDetails.getMemberNo();
+
+        StationDetailRespDto dto = stationService.selectStationDetailDashBoard(no, memberNo);
         return ResponseEntity.ok(dto);
     }
 
     @GetMapping("/update/{no}")
-    public ResponseEntity<StationUpdateDetailRespDto> selectDetailForUpdate(@PathVariable Long no, @AuthenticationPrincipal Long memeberNo){
-        StationUpdateDetailRespDto dto = stationService.selectDetailForUpdate(no, Long.valueOf(2));
+    public ResponseEntity<StationUpdateDetailRespDto> selectDetailForUpdate(@PathVariable Long no, @AuthenticationPrincipal CustomUserDetails userDetails){
+        if (userDetails == null) {
+            throw new RuntimeException("로그인이 필요합니다.");
+        }
+        Long memberNo = userDetails.getMemberNo();
+
+        StationUpdateDetailRespDto dto = stationService.selectDetailForUpdate(no, memberNo);
+
+        return ResponseEntity.ok(dto);
+    }
+
+    @GetMapping("/image/list/{no}")
+    public ResponseEntity<PlaceImgListRespDto> getImageList(@PathVariable Long no){
+        PlaceImgListRespDto dto = stationService.getImageList(no);
 
         return ResponseEntity.ok(dto);
     }

@@ -2,6 +2,7 @@ package com.sloway.app.auth.filter;
 
 import com.sloway.app.auth.dto.request.LoginRequestDto;
 import com.sloway.app.auth.dto.response.LoginResponseDto;
+import com.sloway.app.auth.exception.SuspendedAccountException;
 import com.sloway.app.auth.user.CustomUserDetails;
 import com.sloway.app.auth.util.JwtUtil;
 import jakarta.servlet.FilterChain;
@@ -115,8 +116,37 @@ public class LoginFilter extends UsernamePasswordAuthenticationFilter {
         response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
         response.setContentType("application/json");
         response.setCharacterEncoding("UTF-8");
+
+        // 정지/탈퇴 예외 찾기.
+        // DaoAuthenticationProvider가 loadUserByUsername의 예외를
+        // InternalAuthenticationServiceException으로 감싸므로 cause 체인을 따라간다.
+        SuspendedAccountException suspended = findSuspended(failed);
+        if (suspended != null) {
+            objectMapper.writeValue(
+                    response.getWriter(),
+                    java.util.Map.of(
+                            "message", suspended.getMessage(),
+                            "suspended", true));
+            return;
+        }
+
+        // 그 외(이메일 없음·비번 불일치): 계정 존재 노출 방지 위해 동일 메시지
         objectMapper.writeValue(
                 response.getWriter(),
                 java.util.Map.of("message", "이메일 또는 비밀번호가 일치하지 않습니다"));
+    }
+
+    /**
+     * 예외 체인에서 SuspendedAccountException을 찾는다.
+     * DaoAuthenticationProvider가 예외를 감싸므로 cause를 따라 내려가며 확인.
+     */
+    private SuspendedAccountException findSuspended(Throwable t) {
+        while (t != null) {
+            if (t instanceof SuspendedAccountException sae) {
+                return sae;
+            }
+            t = t.getCause();
+        }
+        return null;
     }
 }//class

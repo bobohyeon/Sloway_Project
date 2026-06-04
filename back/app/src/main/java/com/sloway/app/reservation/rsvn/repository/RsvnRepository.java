@@ -5,6 +5,7 @@ import com.sloway.app.place.entity.office.OfficeEntity;
 import com.sloway.app.place.entity.station.StationEntity;
 import com.sloway.app.place.entity.workStay.WorkStayEntity;
 import com.sloway.app.reservation.rsvn.entity.RsvnEntity;
+import com.sloway.app.reservation.rsvn.entity.RsvnStatus;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.List;
@@ -22,4 +23,7 @@ public interface RsvnRepository extends JpaRepository<RsvnEntity, Long> {
     List<RsvnEntity> findByOfficeNoIn(List<OfficeEntity> offices);
     List<RsvnEntity> findByStationNoIn(List<StationEntity> stations);
     List<RsvnEntity> findByWorkStayNoIn(List<WorkStayEntity> workStays);
+
+    //이용완료 목록 조회
+    List<RsvnEntity> findByMemberNoAndStatus(MemberEntity memberNo, RsvnStatus status);
 }

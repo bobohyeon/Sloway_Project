@@ -1,17 +1,24 @@
 package com.sloway.app.payment.stats.service;
 
 import com.querydsl.core.Tuple;
+import com.sloway.app.common.exception.CustomException;
+import com.sloway.app.host.common.HostErrorCode;
+import com.sloway.app.host.entity.HostEntity;
+import com.sloway.app.host.repository.HostRepository;
+import com.sloway.app.member.common.MemberStatus;
 import com.sloway.app.payment.pay.common.PayMethod;
 import com.sloway.app.payment.pay.repository.PayRepository;
 import com.sloway.app.payment.refund.repository.RefundRepository;
-import com.sloway.app.payment.stats.dto.response.MonthlySalesResDto;
-import com.sloway.app.payment.stats.dto.response.MonthlyTrendResDto;
-import com.sloway.app.payment.stats.dto.response.PayMethodStatResDto;
-import com.sloway.app.payment.stats.dto.response.RefundStatResDto;
+import com.sloway.app.payment.stats.dto.response.*;
 import com.sloway.app.payment.stats.entity.DailyPayStatsEntity;
 import com.sloway.app.payment.stats.entity.DailyRefundStatsEntity;
 import com.sloway.app.payment.stats.repository.DailyPayStatsRepository;
 import com.sloway.app.payment.stats.repository.DailyRefundStatsRepository;
+import com.sloway.app.payment.stats.repository.StatsRepositoryCustom;
+import com.sloway.app.place.entity.hostPlace.ApprovalStatus;
+import com.sloway.app.place.entity.hostPlace.HostPlaceEntity;
+import com.sloway.app.place.repository.hostPlace.HostPlaceRepository;
+import com.sloway.app.reservation.rsvn.entity.RsvnStatus;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -23,6 +30,7 @@ import java.time.LocalDateTime;
 import java.time.YearMonth;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.function.ToIntBiFunction;
 import java.util.stream.Collectors;
 
 @Service
@@ -35,6 +43,9 @@ public class StatsService {
     private final RefundRepository refundRepository;
     private final DailyPayStatsRepository dailyPayStatsRepository;
     private final DailyRefundStatsRepository dailyRefundStatsRepository;
+    private final HostPlaceRepository hostPlaceRepository;
+    private final StatsRepositoryCustom statsRepositoryCustom;
+    private final HostRepository hostRepository;
 
     @Transactional
     public void loadDailyStats(LocalDate targetDate) {
@@ -150,6 +161,120 @@ public class StatsService {
                 .mapToInt(DailyPayStatsEntity::getTotalAmt)
                 .sum();
         return RefundStatResDto.of(refundCount, refundAmt, finalAmt);
+    }
+
+    public HostSalesStatsResDto findHostSalesStats(Long memberNo, int year, int month) {
+
+        HostEntity hostEntity = hostRepository.findByMemberNo(memberNo)
+                .orElseThrow(() -> new CustomException(HostErrorCode.HOST_NOT_FOUND));
+
+        List<HostPlaceEntity> hostPlaces =
+                hostPlaceRepository.findByHostEntityNoAndStatus(hostEntity.getNo(), ApprovalStatus.A);
+
+        List<Long> officeNos = hostPlaces.stream()
+                .filter(hp -> hp.getOfficeEntity() != null)
+                .map(hp -> hp.getOfficeEntity().getNo())
+                .distinct()
+                .toList();
+
+        List<Long> stationNos = hostPlaces.stream()
+                .filter(hp -> hp.getStationEntity() != null)
+                .map(hp -> hp.getStationEntity().getNo())
+                .distinct()
+                .toList();
+
+        List<Long> workStayNos = hostPlaces.stream()
+                .filter(hp -> hp.getWorkStayEntity() != null)
+                .map(hp -> hp.getWorkStayEntity().getNo())
+                .distinct()
+                .toList();
+
+        YearMonth ym = YearMonth.of(year, month);
+        LocalDateTime start = ym.atDay(1).atStartOfDay();
+        LocalDateTime end = ym.atEndOfMonth().atTime(23, 59, 59);
+
+        int officeAmt = payRepository.sumByOfficeIn(officeNos, start, end);
+        int stationAmt = payRepository.sumByStationIn(stationNos, start, end);
+        int workStayAmt = payRepository.sumByWorkStayIn(workStayNos, start, end);
+        int totalAmt = officeAmt + stationAmt + workStayAmt;
+
+        int refundAmt = refundRepository.sumByOfficeIn(officeNos, start, end)
+                .add(refundRepository.sumByStationIn(stationNos, start, end))
+                .add(refundRepository.sumByWorkStayIn(workStayNos, start, end))
+                .intValue();
+
+        Long payCount = payRepository.sumSalesStatsByOfficeIn(officeNos, start, end)
+                + payRepository.sumSalesStatsByStationIn(stationNos, start, end)
+                + payRepository.sumSalesStatsByWorkStayIn(workStayNos, start, end);
+
+        List<MonthlyTrendResDto> trend = buildTrend(ym, (s, e) ->
+                payRepository.sumByOfficeIn(officeNos, s, e)
+                        + payRepository.sumByStationIn(stationNos, s, e)
+                        + payRepository.sumByWorkStayIn(workStayNos, s, e));
+
+        return HostSalesStatsResDto.of(totalAmt, payCount, refundAmt, trend);
+    }
+
+    public SpaceStatsResDto findSpaceStats(int year, int month) {
+
+        YearMonth ym = YearMonth.of(year, month);
+        LocalDateTime start = ym.atDay(1).atStartOfDay();
+        LocalDateTime end = ym.atEndOfMonth().atTime(23, 59, 59);
+
+        Long total = statsRepositoryCustom.countHostPlace();
+        Long active = statsRepositoryCustom.countHostPlaceByStatus(ApprovalStatus.A);
+        Long pending = statsRepositoryCustom.countHostPlaceByStatus(ApprovalStatus.P);
+        Long newReg = statsRepositoryCustom.countHostPlaceByCreatedAtBetween(start, end);
+
+        SpaceTypeCountResDto officeResDto = SpaceTypeCountResDto.of("office", statsRepositoryCustom.countHostPlaceByOffice());
+        SpaceTypeCountResDto stationResDto = SpaceTypeCountResDto.of("station", statsRepositoryCustom.countHostPlaceByStation());
+        SpaceTypeCountResDto workStayResDto = SpaceTypeCountResDto.of("workStay", statsRepositoryCustom.countHostPlaceByWorkStay());
+
+        List<SpaceTypeCountResDto> byType = List.of(officeResDto, stationResDto, workStayResDto);
+        return SpaceStatsResDto.of(total, newReg, active, pending, byType);
+    }
+
+    public BookingStatsResDto findBookingStats(int year, int month) {
+        YearMonth ym = YearMonth.of(year, month);
+        LocalDateTime start = ym.atDay(1).atStartOfDay();
+        LocalDateTime end = ym.atEndOfMonth().atTime(23, 59, 59);
+
+        Long total = statsRepositoryCustom.countRsvnByCreatedAtBetween(start, end);
+        Long confirmed = statsRepositoryCustom.countRsvnByStatusAndCreatedAtBetween(RsvnStatus.S, start, end);
+        Long complete = statsRepositoryCustom.countRsvnByStatusAndCreatedAtBetween(RsvnStatus.E, start, end);
+        Long cancel = statsRepositoryCustom.countRsvnByStatusAndCreatedAtBetween(RsvnStatus.C, start, end);
+
+        List<MonthlyTrendResDto> trend = buildTrend(ym, (s, e)
+                -> Math.toIntExact(statsRepositoryCustom.countRsvnByCreatedAtBetween(s, e)));
+        return BookingStatsResDto.of(total, confirmed, cancel, complete, trend);
+    }
+
+    public MemberStatsResDto findMemberStats(int year, int month) {
+        YearMonth ym = YearMonth.of(year, month);
+        LocalDateTime start = ym.atDay(1).atStartOfDay();
+        LocalDateTime end = ym.atEndOfMonth().atTime(23, 59, 59);
+
+        Long total = statsRepositoryCustom.countMember();
+        Long active = statsRepositoryCustom.countMemberByStatus(MemberStatus.A);
+        Long withdrawn = statsRepositoryCustom.countMemberByStatus(MemberStatus.W);
+        Long newSignup = statsRepositoryCustom.countMemberByCreatedAtBetween(start, end);
+
+        List<MonthlyTrendResDto> trend = buildTrend(ym, (s, e)
+                -> Math.toIntExact(statsRepositoryCustom.countMemberByCreatedAtBetween(s, e)));
+        return MemberStatsResDto.of(total, newSignup, active, withdrawn, trend);
+
+    }
+
+    private List<MonthlyTrendResDto> buildTrend(YearMonth base, ToIntBiFunction<LocalDateTime, LocalDateTime> valueFn) {
+        List<MonthlyTrendResDto> trend = new ArrayList<>();
+        for (int i = 5; i >= 0; i--) {
+            YearMonth ymMinus = base.minusMonths(i);
+            LocalDateTime mStart = ymMinus.atDay(1).atStartOfDay();
+            LocalDateTime mEnd = ymMinus.atEndOfMonth().atTime(23, 59, 59);
+            long mTotal = valueFn.applyAsInt(mStart, mEnd);
+            trend.add(MonthlyTrendResDto.of(ymMinus.toString(), (int) mTotal));
+        }
+        return trend;
     }
 
 }

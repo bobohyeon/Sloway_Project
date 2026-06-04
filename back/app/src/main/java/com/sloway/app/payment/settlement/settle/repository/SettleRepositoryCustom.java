@@ -1,5 +1,6 @@
 package com.sloway.app.payment.settlement.settle.repository;
 
+import com.sloway.app.payment.settlement.settle.common.SettleStatus;
 import com.sloway.app.payment.settlement.settle.entity.SettleEntity;
 
 import java.util.List;
@@ -10,4 +11,6 @@ public interface SettleRepositoryCustom {
     Optional<SettleEntity> findLatestByHostNo(Long hostNo);
 
     List<SettleEntity> findByHostNo(Long hostNo);
+
+    List<SettleEntity> findByStatus(SettleStatus status);
 }

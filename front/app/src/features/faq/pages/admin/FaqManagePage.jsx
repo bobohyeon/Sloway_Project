@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import styled from 'styled-components';
 import { useNavigate } from 'react-router-dom';
 import {
@@ -8,86 +8,76 @@ import {
   Modal,
   Pagination,
   EmptyState,
-  Tabs,
   Card,
-} from '../../pay_shared/components';
-import PageLayout from '../../../app/layouts/page/PageLayout';
-
-// ─── Mock 데이터 (백엔드 연동 시 GET /api/admin/faqs 로 대체) ────────────────
-const MOCK_FAQS = Array.from({ length: 24 }, (_, i) => ({
-  id: i + 1,
-  question: [
-    '예약 취소는 어떻게 하나요?',
-    '환불은 얼마나 걸리나요?',
-    '결제 수단을 변경할 수 있나요?',
-    '1:1 채팅은 어떻게 사용하나요?',
-    '비밀번호를 잊어버렸어요.',
-    '쿠폰은 어떻게 사용하나요?',
-  ][i % 6],
-  category: ['예약·결제', '취소·환불', '계정', '서비스 이용', '기타'][i % 5],
-  order: i + 1,
-  status: i % 7 === 6 ? 'inactive' : 'active',
-  createdAt: `2026.0${(i % 5) + 1}.${String((i % 28) + 1).padStart(2, '0')}`,
-}));
+} from '../../../pay_shared/components';
+import PageLayout from '../../../../app/layouts/page/PageLayout';
+import api from '../../../../app/api/axiosApi';
 
 const CATEGORY_OPTIONS = [
-  '전체',
-  '예약·결제',
-  '취소·환불',
-  '계정',
-  '서비스 이용',
-  '기타',
+  { label: '전체', value: '' },
+  { label: '예약', value: 'RESERVATION' },
+  { label: '결제', value: 'PAYMENT' },
+  { label: '취소', value: 'CANCEL' },
+  { label: '환불', value: 'REFUND' },
+  { label: '계정', value: 'ACCOUNT' },
+  { label: '서비스 이용', value: 'SERVICE' },
+  { label: '기타', value: 'OTHER' },
 ];
 
-const TAB_ITEMS = [
-  { label: '전체', value: 'all', count: MOCK_FAQS.length },
-  {
-    label: '게시중',
-    value: 'active',
-    count: MOCK_FAQS.filter((f) => f.status === 'active').length,
-  },
-  {
-    label: '미게시',
-    value: 'inactive',
-    count: MOCK_FAQS.filter((f) => f.status === 'inactive').length,
-  },
-];
+const CATEGORY_LABEL = {
+  RESERVATION: '예약',
+  PAYMENT: '결제',
+  CANCEL: '취소',
+  REFUND: '환불',
+  ACCOUNT: '계정',
+  SERVICE: '서비스 이용',
+  OTHER: '기타',
+};
 
-const PAGE_SIZE = 10;
+const fmtDate = (iso) => (iso ? iso.slice(0, 10).replace(/-/g, '.') : '');
 
 export default function FaqManagePage() {
   const navigate = useNavigate();
 
-  const [tab, setTab] = useState('all');
-  const [category, setCategory] = useState('전체');
+  const [category, setCategory] = useState('');
   const [inputKeyword, setInputKeyword] = useState('');
   const [keyword, setKeyword] = useState('');
   const [page, setPage] = useState(1);
+  const [faqs, setFaqs] = useState([]);
+  const [totalPages, setTotalPages] = useState(0);
+  const [totalElements, setTotalElements] = useState(0);
   const [selectedIds, setSelectedIds] = useState([]);
   const [deleteModal, setDeleteModal] = useState(false);
 
-  // ─── 필터 (백엔드 연동 시 쿼리 파라미터로 이관) ──────────────────────────
-  const filtered = MOCK_FAQS.filter((f) => {
-    const matchTab = tab === 'all' || f.status === tab;
-    const matchCat = category === '전체' || f.category === category;
-    const matchKw = f.question.includes(keyword);
-    return matchTab && matchCat && matchKw;
-  });
+  const fetchFaqs = useCallback(async () => {
+    const { data } = await api.get('/faq', {
+      params: {
+        page: page - 1,
+        size: 10,
+        category: category || undefined,
+        keyword: keyword || undefined,
+      },
+    });
+    setFaqs(data.content);
+    setTotalPages(data.totalPages);
+    setTotalElements(data.totalElements);
+  }, [page, category, keyword]);
 
-  const totalPages = Math.ceil(filtered.length / PAGE_SIZE);
-  const paged = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
+  useEffect(() => {
+    fetchFaqs();
+  }, [fetchFaqs]);
 
   const isAllSelected =
-    paged.length > 0 && paged.every((f) => selectedIds.includes(f.id));
+    faqs.length > 0 && faqs.every((f) => selectedIds.includes(f.id));
 
   const handleSelectAll = () => {
     if (isAllSelected) {
       setSelectedIds((prev) =>
-        prev.filter((id) => !paged.map((f) => f.id).includes(id))
+        prev.filter((id) => !faqs.map((f) => f.id).includes(id))
       );
     } else {
       setSelectedIds((prev) => [
-        ...new Set([...prev, ...paged.map((f) => f.id)]),
+        ...new Set([...prev, ...faqs.map((f) => f.id)]),
       ]);
     }
   };
@@ -103,31 +93,21 @@ export default function FaqManagePage() {
     setPage(1);
   };
 
-  const handleDelete = () => {
-    // 백엔드 연동 시: DELETE /api/admin/faqs { ids: selectedIds }
+  const handleDelete = async () => {
+    await Promise.all(selectedIds.map((id) => api.delete(`/faq/${id}`)));
     setSelectedIds([]);
     setDeleteModal(false);
+    fetchFaqs();
   };
 
   return (
     <PageLayout
       title="FAQ 관리"
-      description="자주 묻는 질문을 등록하고 노출 순서를 관리합니다"
+      description="자주 묻는 질문을 등록하고 관리합니다"
       actions={
         <Button onClick={() => navigate('/admin/faq/form')}>+ FAQ 등록</Button>
       }
     >
-      <TabWrap>
-        <Tabs
-          items={TAB_ITEMS}
-          value={tab}
-          onChange={(v) => {
-            setTab(v);
-            setPage(1);
-          }}
-        />
-      </TabWrap>
-
       {/* 검색/필터 */}
       <FilterCard padded>
         <FilterRow>
@@ -136,15 +116,15 @@ export default function FaqManagePage() {
             <CategoryBtnGroup>
               {CATEGORY_OPTIONS.map((c) => (
                 <CategoryBtn
-                  key={c}
-                  $active={category === c}
+                  key={c.value}
+                  $active={category === c.value}
                   onClick={() => {
-                    setCategory(c);
+                    setCategory(c.value);
                     setPage(1);
                   }}
                   type="button"
                 >
-                  {c}
+                  {c.label}
                 </CategoryBtn>
               ))}
             </CategoryBtnGroup>
@@ -168,7 +148,7 @@ export default function FaqManagePage() {
       <TableCard elevated>
         <TableToolbar>
           <TableCount>
-            총 <strong>{filtered.length}</strong>건
+            총 <strong>{totalElements}</strong>건
             {selectedIds.length > 0 && (
               <SelectedCount>{selectedIds.length}개 선택됨</SelectedCount>
             )}
@@ -184,7 +164,7 @@ export default function FaqManagePage() {
           )}
         </TableToolbar>
 
-        {paged.length === 0 ? (
+        {faqs.length === 0 ? (
           <EmptyState
             icon="❓"
             title="등록된 FAQ가 없습니다"
@@ -208,22 +188,19 @@ export default function FaqManagePage() {
                       />
                     </Th>
                     <Th $w="60px" $center>
-                      순서
+                      번호
                     </Th>
                     <Th $w="120px" $center>
                       카테고리
                     </Th>
                     <Th>질문</Th>
-                    {/* <Th $w="80px" $center>
-                      상태
-                    </Th> */}
                     <Th $w="110px" $center>
                       등록일
                     </Th>
                   </tr>
                 </thead>
                 <tbody>
-                  {paged.map((faq) => (
+                  {faqs.map((faq) => (
                     <Tr key={faq.id}>
                       <Td>
                         <Checkbox
@@ -231,38 +208,23 @@ export default function FaqManagePage() {
                           onChange={() => handleSelect(faq.id)}
                         />
                       </Td>
-                      <Td $center>
-                        {/* 
-                          실무: 드래그 앤 드롭 순서 변경 시
-                          react-beautiful-dnd 또는 @dnd-kit/core 도입 권장
-                          지금은 순서 번호만 표시
-                        */}
-                        <OrderNum>{faq.order}</OrderNum>
+                      <Td $center $muted>
+                        {faq.id}
                       </Td>
                       <Td $center>
                         <Badge size="sm" variant="muted">
-                          {faq.category}
+                          {CATEGORY_LABEL[faq.category] ?? faq.category}
                         </Badge>
                       </Td>
                       <Td>
                         <QuestionText
                           onClick={() => navigate(`/admin/faq/form/${faq.id}`)}
                         >
-                          {faq.question}
+                          {faq.title}
                         </QuestionText>
                       </Td>
-                      {/* <Td $center>
-                        <Badge
-                          size="sm"
-                          variant={
-                            faq.status === 'active' ? 'success' : 'muted'
-                          }
-                        >
-                          {faq.status === 'active' ? '게시중' : '미게시'}
-                        </Badge>
-                      </Td> */}
                       <Td $center $muted>
-                        {faq.createdAt}
+                        {fmtDate(faq.createdAt)}
                       </Td>
                     </Tr>
                   ))}
@@ -306,44 +268,6 @@ export default function FaqManagePage() {
 }
 
 // ─── Styled Components ───────────────────────────────────────────────────────
-
-const Wrap = styled.div`
-  padding: var(--space-6);
-  max-width: 100%;
-  @media (max-width: 768px) {
-    padding: var(--space-4);
-  }
-`;
-
-const PageHeader = styled.div`
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: var(--space-4);
-  margin-bottom: var(--space-6);
-
-  @media (max-width: 600px) {
-    flex-direction: column;
-  }
-`;
-
-const PageTitle = styled.h1`
-  font-family: var(--font-display);
-  font-size: 1.5rem;
-  font-weight: 600;
-  color: var(--gray-800);
-  letter-spacing: -0.02em;
-  margin-bottom: 4px;
-`;
-
-const PageDesc = styled.p`
-  font-size: 0.88rem;
-  color: var(--gray-400);
-`;
-
-const TabWrap = styled.div`
-  margin-bottom: var(--space-4);
-`;
 
 const FilterCard = styled(Card)`
   margin-bottom: var(--space-4);
@@ -467,7 +391,7 @@ const TableWrap = styled.div`
 const Table = styled.table`
   width: 100%;
   border-collapse: collapse;
-  min-width: 640px;
+  min-width: 560px;
 `;
 
 const Th = styled.th`
@@ -488,7 +412,6 @@ const Tr = styled.tr`
   &:hover {
     background: var(--gray-50, #fafaf9);
   }
-
   &:not(:last-child) td {
     border-bottom: 1px solid var(--gray-100);
   }
@@ -502,19 +425,6 @@ const Td = styled.td`
   vertical-align: middle;
 `;
 
-const OrderNum = styled.span`
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 26px;
-  height: 26px;
-  border-radius: 50%;
-  background: var(--gray-100);
-  font-size: 0.75rem;
-  font-weight: 600;
-  color: var(--gray-500);
-`;
-
 const QuestionText = styled.span`
   font-size: 0.88rem;
   font-weight: 500;
@@ -525,12 +435,6 @@ const QuestionText = styled.span`
     color: var(--sage);
     text-decoration: underline;
   }
-`;
-
-const ActionGroup = styled.div`
-  display: flex;
-  gap: 4px;
-  justify-content: center;
 `;
 
 const ModalText = styled.p`

@@ -1,8 +1,10 @@
 package com.sloway.app.auth.service;
 
+import com.sloway.app.auth.dto.request.FindEmailRequestDto;
 import com.sloway.app.auth.dto.request.JoinRequestDto;
 import com.sloway.app.auth.dto.request.ResetPasswordRequestDto;
 import com.sloway.app.auth.dto.response.EmailCheckResponseDto;
+import com.sloway.app.auth.dto.response.FindEmailResponseDto;
 import com.sloway.app.common.exception.CustomException;
 import com.sloway.app.host.entity.HostEntity;
 import com.sloway.app.host.repository.HostRepository;
@@ -112,7 +114,45 @@ public class AuthService {
                 ? EmailCheckResponseDto.unavailable()
                 : EmailCheckResponseDto.available();
     }
+    /**
+     * 아이디(이메일) 찾기.
+     * 이름 + 전화번호로 회원을 조회해 이메일을 마스킹하여 반환.
+     *
+     * @throws IllegalArgumentException 일치하는 회원이 없을 때
+     */
+    public FindEmailResponseDto findEmail(FindEmailRequestDto request) {
+        // 1) phone 하이픈 제거 (DB는 하이픈 없이 저장)
+        String phone = request.getPhone().replaceAll("-", "");
 
+        // 2) 이름 + 전화번호로 회원 조회
+        MemberEntity member = memberRepository
+                .findByNameAndPhone(request.getName(), phone)
+                .orElseThrow(() ->
+                        new IllegalArgumentException("일치하는 계정 정보가 없습니다."));
+
+        // 3) 이메일 마스킹 후 반환
+        return FindEmailResponseDto.builder()
+                .maskedEmail(maskEmail(member.getEmail()))
+                .build();
+    }
+
+    /**
+     * 이메일 마스킹.
+     * 로컬파트(@ 앞) 앞 2~3글자만 남기고 나머지를 * 처리.
+     * 예: hong@sloway.com → ho**@sloway.com, honggildong@sloway.com → hon********@sloway.com
+     */
+    private String maskEmail(String email) {
+        int at = email.indexOf('@');
+        String local = email.substring(0, at);   // @ 앞
+        String domain = email.substring(at);      // @ 포함 뒤
+
+        // 앞 2글자(2글자 이하면 1글자)만 노출, 나머지 *
+        int visible = local.length() <= 2 ? 1 : 2;
+        String masked = local.substring(0, visible)
+                + "*".repeat(local.length() - visible);
+
+        return masked + domain;
+    }
     /**
      * 비밀번호 찾기(재설정) — 비로그인 상태.
      *
