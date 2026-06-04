@@ -479,7 +479,9 @@ function MainPage() {
 
       {/* ── 워케이션 추천 배너 ── */}
       <WorkationBanner
-        onBookClick={() => navigate('/accommodations/3')}
+        onBookClick={() =>
+          navigate(`/accommodations/${RANDOM_PLACE.workStayNo}`)
+        }
         RANDOM_PLACE={RANDOM_PLACE}
       />
 
