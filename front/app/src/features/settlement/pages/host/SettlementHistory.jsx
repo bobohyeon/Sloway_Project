@@ -6,8 +6,6 @@ import PageLayout from '../../../../app/layouts/page/PageLayout';
 import { Card, EmptyState } from '../../../pay_shared/components';
 import { findSettleByHostNo } from '../../api/settlementApi';
 
-const HOST_NO = 1;
-
 const STATUS_META = {
   WAITING: { label: '정산 대기', color: 'var(--gray-400)' },
   COMPLETE: { label: '정산 완료', color: 'var(--sage)' },
@@ -32,7 +30,7 @@ export default function SettlementHistory() {
   const [filter, setFilter] = useState('all');
 
   useEffect(() => {
-    findSettleByHostNo(HOST_NO)
+    findSettleByHostNo()
       .then(setSettles)
       .catch((err) => console.error('호스트 정산 이력 조회 실패', err));
   }, []);

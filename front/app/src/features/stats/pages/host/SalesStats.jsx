@@ -10,7 +10,6 @@ import { StatsTabs } from '../../components/admin/StatsTabs';
 import { DataTable } from '../../components/admin/DataTable';
 import { findHostSalesStats } from '../../api/statsApi';
 
-const HOST_NO = 1;
 const YEAR_OPTIONS = [2024, 2025, 2026];
 const MONTH_OPTIONS = Array.from({ length: 12 }, (_, i) => i + 1);
 
@@ -37,21 +36,19 @@ export default function SalesStats() {
 
   useEffect(() => {
     let alive = true;
-    setLoading(true);
-    setError(null);
-
-    findHostSalesStats(HOST_NO, year, month)
-      .then((data) => {
+    (async () => {
+      setLoading(true);
+      setError(null);
+      try {
+        const data = await findHostSalesStats(year, month);
         if (alive) setStats(data);
-      })
-      .catch((e) => {
+      } catch (e) {
         if (alive)
           setError(e?.response?.data?.message ?? '매출 통계 조회에 실패했습니다.');
-      })
-      .finally(() => {
+      } finally {
         if (alive) setLoading(false);
-      });
-
+      }
+    })();
     return () => {
       alive = false;
     };

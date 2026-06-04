@@ -8,9 +8,6 @@ import { StatCard } from '../../../pay_shared/components/StatCard';
 import { Card, Section, EmptyState } from '../../../pay_shared/components';
 import { findSettleByHostNo } from '../../api/settlementApi';
 
-// 시연용 — 호스트 인증 연동 전까지 하드코딩 (BookingPayment MEMBER_NO 패턴)
-const HOST_NO = 1;
-
 const STATUS_META = {
   WAITING: { label: '정산 대기', color: 'var(--gray-400)' },
   COMPLETE: { label: '정산 완료', color: 'var(--sage)' },
@@ -26,7 +23,7 @@ export default function SettlementDashboard() {
   const [settles, setSettles] = useState([]);
 
   useEffect(() => {
-    findSettleByHostNo(HOST_NO)
+    findSettleByHostNo()
       .then(setSettles)
       .catch((err) => console.error('호스트 정산 조회 실패', err));
   }, []);
