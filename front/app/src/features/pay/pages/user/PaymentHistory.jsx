@@ -85,6 +85,8 @@ export default function PaymentHistory() {
   const memberNo = user?.memberNo;
 
   const [pays, setPays] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
   const [selectedTab, setSelectedTab] = useState('all');
   const [selectedPeriod, setSelectedPeriod] = useState('3months');
 
@@ -94,11 +96,16 @@ export default function PaymentHistory() {
       return;
     }
     const load = async () => {
+      setLoading(true);
       try {
         const list = await findPaysByMemberNo(memberNo);
         setPays(list);
+        setError(null);
       } catch (err) {
         console.error('결제 내역 조회 실패', err);
+        setError(err?.response?.data?.msg ?? '결제 내역을 불러오지 못했습니다.');
+      } finally {
+        setLoading(false);
       }
     };
     load();
@@ -153,7 +160,15 @@ export default function PaymentHistory() {
         onPeriodChange={setSelectedPeriod}
       />
 
-      {filteredPayments.length === 0 ? (
+      {loading ? (
+        <EmptyState
+          icon="⏳"
+          title="불러오는 중…"
+          description="결제 내역을 확인하고 있어요"
+        />
+      ) : error ? (
+        <EmptyState icon="⚠️" title="조회 실패" description={error} />
+      ) : filteredPayments.length === 0 ? (
         <EmptyState
           icon="🧾"
           title={emptyTitleByTab(selectedTab)}
