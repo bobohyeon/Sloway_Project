@@ -38,7 +38,7 @@ public class MemberEntity extends BaseEntity {
     /**
      * 휴대폰번호 (하이픈 없이 11자: '01012345678')
      */
-    @Column(length = 11, nullable = false)
+    @Column(length = 13, nullable = false)
     private String phone;
 
     /**
@@ -50,7 +50,7 @@ public class MemberEntity extends BaseEntity {
     /**
      * 프로필 이미지 URL
      */
-    @Column(length = 200)
+    @Column(length = 500)
     private String imgUrl;
 
     @Enumerated(EnumType.STRING)

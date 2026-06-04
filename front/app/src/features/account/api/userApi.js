@@ -6,8 +6,8 @@ export const getMyPage = async () => {
   return response.data;
 };
 
-/** 일반회원 마이페이지 수정. PATCH /api/user/mypage (name, phone, imgUrl) */
-export const updateMyPage = async (data) => {
+/** 일반회원 마이페이지 수정. PATCH /api/user/mypage (name, phone, profileImage) */
+export const updateMyPage = async (data, profileImage) => {
   const formData = new FormData();
   // dto는 JSON Blob으로 (백엔드 @RequestPart("dto")와 매칭)
   formData.append(
