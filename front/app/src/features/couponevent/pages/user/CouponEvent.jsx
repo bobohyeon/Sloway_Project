@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import styled from 'styled-components';
 
@@ -35,18 +35,21 @@ export default function CouponEvent() {
   const [events, setEvents] = useState([]);
   const [downloading, setDownloading] = useState(null); // 다운로드 처리 중인 게시 PK
 
-  const loadEvents = async () => {
+  // handleDownload(발급 후 갱신)에서도 재사용 → useCallback으로 참조 고정
+  const loadEvents = useCallback(async () => {
     try {
       const list = await findEventAll();
       setEvents(list);
     } catch (err) {
       console.error('쿠폰 게시 조회 실패', err);
     }
-  };
+  }, []);
 
   useEffect(() => {
-    loadEvents();
-  }, []);
+    (async () => {
+      await loadEvents();
+    })();
+  }, [loadEvents]);
 
   const handleDownload = async (no, couponName) => {
     if (downloading) return;
