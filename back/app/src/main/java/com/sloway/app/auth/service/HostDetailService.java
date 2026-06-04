@@ -1,6 +1,7 @@
 package com.sloway.app.auth.service;
 
 
+import com.sloway.app.auth.exception.SuspendedAccountException;
 import com.sloway.app.auth.user.CustomUserDetails;
 import com.sloway.app.host.entity.HostEntity;
 import com.sloway.app.host.repository.HostRepository;
@@ -37,7 +38,7 @@ public class HostDetailService implements UserDetailsService {
 
 
     @Override
-    public UserDetails loadUserByUsername(String email) throws UsernameNotFoundException {
+    public UserDetails loadUserByUsername(String email) throws UsernameNotFoundException, SuspendedAccountException {
         // 1) email로 Member(공통) 조회
         MemberEntity member =memberRepository.findByEmail(email)
                 .orElseThrow(()->new UsernameNotFoundException("이메일 또는 비밀번호가 일하지 않습니다"));
@@ -45,14 +46,30 @@ public class HostDetailService implements UserDetailsService {
         HostEntity host = hostRepository.findByMemberNo(member.getNo())
                 .orElseThrow(()->new  UsernameNotFoundException("이메일 또는 비밀번호가 일치하지 않습니다"));
 
-        // 탈퇴/정지 회원 차단
+        // 탈퇴
         if (member.getStatus() == MemberStatus.W) {
-            throw new UsernameNotFoundException("이메일 또는 비밀번호가 일치하지 않습니다");
-        }
-        if (member.getStatus() == MemberStatus.B || member.getStatus() == MemberStatus.S) {
-            throw new UsernameNotFoundException("이메일 또는 비밀번호가 일치하지 않습니다");
+            throw new SuspendedAccountException(
+                    "탈퇴한 계정입니다. 동일 이메일로 30일간 재가입이 제한됩니다.");
         }
 
+        // 영구 정지 (suspendUntil 없음)
+        if (member.getStatus() == MemberStatus.B) {
+            String reason = member.getSuspendReason() != null
+                    ? member.getSuspendReason() : "운영 정책 위반";
+            throw new SuspendedAccountException(
+                    "이용이 영구 정지된 계정입니다. 사유: " + reason);
+        }
+
+        // 기간 정지 (suspendUntil = 해제 날짜)
+        if (member.getStatus() == MemberStatus.S) {
+            String reason = member.getSuspendReason() != null
+                    ? member.getSuspendReason() : "운영 정책 위반";
+            String until = member.getSuspendUntil() != null
+                    ? member.getSuspendUntil().toLocalDate().toString()
+                    : "기한 미정";
+            throw new SuspendedAccountException(
+                    "일시 정지된 계정입니다. 사유: " + reason + " / 정지 해제일: " + until);
+        }
         // 3) 인증 정보 반환 (승인 여부와 무관하게 로그인 허용 — 기능 제한은 각 호스트 API에서)
         return new CustomUserDetails(
                 member.getNo(),

@@ -1,5 +1,6 @@
 package com.sloway.app.auth.service;
 
+import com.sloway.app.auth.exception.SuspendedAccountException;
 import com.sloway.app.auth.user.CustomUserDetails;
 import com.sloway.app.member.common.MemberRole;
 import com.sloway.app.member.common.MemberStatus;
@@ -38,17 +39,30 @@ public class UserDetailsServiceImpl implements UserDetailsService {
         MemberEntity member = memberRepository.findByEmail(emmail)
                 .orElseThrow(() -> new UsernameNotFoundException("이메일 또는 비밀번호가 일치하지 않습니다"));
 
-        // 1-1) 탈퇴/정지 회원 차단
+        // 탈퇴
         if (member.getStatus() == MemberStatus.W) {
-            throw new UsernameNotFoundException("탈퇴한 계정입니다.");
-        }
-        if (member.getStatus() == MemberStatus.B) {
-            throw new UsernameNotFoundException("이용이 정지된 계정입니다.");
-        }
-        if (member.getStatus() == MemberStatus.S) {
-            throw new UsernameNotFoundException("일시 정지된 계정입니다.");
+            throw new SuspendedAccountException(
+                    "탈퇴한 계정입니다. 동일 이메일로 30일간 재가입이 제한됩니다.");
         }
 
+        // 영구 정지 (suspendUntil 없음)
+        if (member.getStatus() == MemberStatus.B) {
+            String reason = member.getSuspendReason() != null
+                    ? member.getSuspendReason() : "운영 정책 위반";
+            throw new SuspendedAccountException(
+                    "이용이 영구 정지된 계정입니다. 사유: " + reason);
+        }
+
+        // 기간 정지 (suspendUntil = 해제 날짜)
+        if (member.getStatus() == MemberStatus.S) {
+            String reason = member.getSuspendReason() != null
+                    ? member.getSuspendReason() : "운영 정책 위반";
+            String until = member.getSuspendUntil() != null
+                    ? member.getSuspendUntil().toLocalDate().toString()
+                    : "기한 미정";
+            throw new SuspendedAccountException(
+                    "일시 정지된 계정입니다. 사유: " + reason + " / 정지 해제일: " + until);
+        }
         // 2) memberNo로 User(일반회원 전용 - 비번 보유) 조회
         UserEntity user = userRepository.findByMemberNo(member.getNo())
                 .orElseThrow(() -> new UsernameNotFoundException("이메일 또는 비밀번호가 일치하지 않습니다"));
