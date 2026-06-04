@@ -1,107 +1,16 @@
-import { useState } from 'react';
-import styled, { css } from 'styled-components';
+import { useState, useEffect, useCallback } from 'react';
+import styled from 'styled-components';
 import PageLayout from '../../../../app/layouts/page/PageLayout';
 import { useNavigate } from 'react-router-dom';
+import api from '../../../../app/api/axiosApi';
 
-// ─── 타입 정의 (백엔드 연동 시 API 응답 스펙에 맞게 수정) ────────────────────
-/**
- * @typedef {'chat' | 'reservation' | 'payment' | 'point' | 'coupon' | 'review' | 'inquiry' | 'event'} NotificationType
- * @typedef {'전체' | '안 읽음' | '예약·결제' | '이벤트'} TabType
- */
-
-// ─── Mock 데이터 (백엔드 연동 시 GET /api/notifications?tab=&page= 로 대체) ──
-const MOCK_NOTIFICATIONS = [
-  {
-    id: 1,
-    type: 'chat',
-    category: '채팅',
-    title: '청량스테이님이 메시지를 보냈어요',
-    description: '체크인 관련 안내드립니다. 도착 예정 시간 알려주세요!',
-    timeLabel: '방금 전',
-    isRead: false,
-    tabGroup: '안 읽음',
-  },
-  {
-    id: 2,
-    type: 'reservation',
-    category: '예약',
-    title: '체크인 D-1 안내',
-    description: '내일 오후 3시 체크인 예정이에요. 즐거운 위케이션 되세요!',
-    timeLabel: '5분 전',
-    isRead: false,
-    tabGroup: '안 읽음',
-  },
-  {
-    id: 3,
-    type: 'payment',
-    category: '결제',
-    title: '결제가 완료됐어요',
-    description: '청량 숲속 파인뷰 스테이 · 326,500원 결제 완료',
-    timeLabel: '1시간 전',
-    isRead: true,
-    tabGroup: '예약·결제',
-  },
-  {
-    id: 4,
-    type: 'point',
-    category: '포인트',
-    title: '포인트가 적립됐어요',
-    description: '+4,440P · 제주 돌담길 리트릿 이용 완료 적립',
-    timeLabel: '어제',
-    isRead: true,
-    tabGroup: '예약·결제',
-  },
-  {
-    id: 5,
-    type: 'coupon',
-    category: '쿠폰',
-    title: '쿠폰이 곧 만료돼요',
-    description: '"신규 회원 첫 예약 20,000원 할인" 쿠폰이 D-6 만료 예정',
-    timeLabel: '2일 전',
-    isRead: true,
-    tabGroup: '예약·결제',
-  },
-  {
-    id: 6,
-    type: 'review',
-    category: '리뷰',
-    title: '리뷰 답글이 달렸어요',
-    description: '성수 브릭라운지 호스트님이 리뷰에 답글을 남겼어요',
-    timeLabel: '3일 전',
-    isRead: true,
-    tabGroup: '전체',
-  },
-  {
-    id: 7,
-    type: 'inquiry',
-    category: '문의',
-    title: '문의 답변이 등록됐어요',
-    description: '"결제 오류 관련 문의"에 대한 답변이 달렸어요',
-    timeLabel: '3일 전',
-    isRead: true,
-    tabGroup: '전체',
-  },
-  {
-    id: 8,
-    type: 'event',
-    category: '이벤트',
-    title: '5월 봄맞이 15% 할인 쿠폰이 도착했어요',
-    description: '위크엔스테이 전체 적용 · 5/7까지 유효',
-    timeLabel: '1주 전',
-    isRead: true,
-    tabGroup: '이벤트',
-  },
-];
-
-// 탭별 카운트 계산 (백엔드 연동 시 API 응답의 counts 필드로 대체)
 const TAB_OPTIONS = [
-  { label: '전체', key: '전체' },
-  { label: '안 읽음', key: '안 읽음' },
-  { label: '예약·결제', key: '예약·결제' },
-  { label: '이벤트', key: '이벤트' },
+  { label: '전체', key: 'ALL' },
+  { label: '안 읽음', key: 'UNREAD' },
+  { label: '예약·결제', key: 'BOOKING_PAYMENT' },
+  { label: '이벤트', key: 'EVENT' },
 ];
 
-// 알림 타입별 이모지 아이콘 (백엔드 연동 시 type 필드 기준으로 매핑)
 const TYPE_ICON = {
   chat: '💬',
   reservation: '📅',
@@ -113,7 +22,6 @@ const TYPE_ICON = {
   event: '🎁',
 };
 
-// 알림 타입별 배경색 (디자인 시스템 토큰으로 이동 권장)
 const TYPE_BG = {
   chat: 'rgba(168, 184, 159, 0.15)',
   reservation: 'rgba(220, 100, 80, 0.1)',
@@ -125,57 +33,63 @@ const TYPE_BG = {
   event: 'rgba(200, 100, 140, 0.1)',
 };
 
-// ─── 페이지 단위 상수 ─────────────────────────────────────────────────────────
-const PAGE_SIZE = 8; // 백엔드 연동 시 서버 페이지 사이즈와 맞출 것
+const PAGE_SIZE = 8;
 
 export default function NotificationListPage() {
   const navigate = useNavigate();
-  const [activeTab, setActiveTab] = useState('전체');
-  // 읽음 상태는 로컬에서 낙관적 업데이트(Optimistic Update) 처리
-  // 백엔드 연동 시: PATCH /api/notifications/:id/read 호출 후 실패 시 롤백
-  const [readIds, setReadIds] = useState(new Set());
+  const [activeTab, setActiveTab] = useState('ALL');
+  const [notifications, setNotifications] = useState([]);
+  const [totalPages, setTotalPages] = useState(0);
+  const [unreadCount, setUnreadCount] = useState(0);
   const [currentPage, setCurrentPage] = useState(1);
+  const [readIds, setReadIds] = useState(new Set());
 
-  // 탭 필터링 — 백엔드 연동 시 쿼리 파라미터로 이동
-  const filtered = MOCK_NOTIFICATIONS.filter((n) => {
-    if (activeTab === '전체') return true;
-    if (activeTab === '안 읽음') return !n.isRead && !readIds.has(n.id);
-    return n.tabGroup === activeTab;
-  });
+  const fetchNotifications = useCallback(async () => {
+    try {
+      const { data } = await api.get('/notifications', {
+        params: { tab: activeTab, page: currentPage - 1, size: PAGE_SIZE },
+      });
+      setNotifications(data.content);
+      setTotalPages(data.totalPages);
+      setUnreadCount(data.unreadCount);
+    } catch {
+      // 인증 오류 등 — 빈 상태 유지
+    }
+  }, [activeTab, currentPage]);
 
-  // 클라이언트 페이지네이션 — 백엔드 연동 시 서버 페이지네이션으로 교체
-  const totalPages = Math.ceil(filtered.length / PAGE_SIZE);
-  const paginated = filtered.slice(
-    (currentPage - 1) * PAGE_SIZE,
-    currentPage * PAGE_SIZE
-  );
-
-  // 탭별 안 읽음 카운트 계산
-  const unreadCount = MOCK_NOTIFICATIONS.filter(
-    (n) => !n.isRead && !readIds.has(n.id)
-  ).length;
-
-  const tabCount = (key) => {
-    if (key === '안 읽음') return unreadCount;
-    return null; // 다른 탭은 카운트 미표시
-  };
+  useEffect(() => {
+    fetchNotifications();
+  }, [fetchNotifications]);
 
   const handleTabChange = (key) => {
     setActiveTab(key);
-    setCurrentPage(1); // 탭 변경 시 첫 페이지로 리셋
+    setCurrentPage(1);
   };
 
-  // 단일 알림 읽음 처리
-  const handleRead = (id) => {
+  const handleRead = async (id) => {
     setReadIds((prev) => new Set([...prev, id]));
-    // TODO: PATCH /api/notifications/:id/read
+    try {
+      await api.patch(`/notifications/${id}/read`);
+      setUnreadCount((c) => Math.max(0, c - 1));
+    } catch {
+      setReadIds((prev) => {
+        const next = new Set(prev);
+        next.delete(id);
+        return next;
+      });
+    }
   };
 
-  // 전체 읽음 처리 — 백엔드 연동 시 PATCH /api/notifications/read-all
-  const handleReadAll = () => {
-    const allIds = MOCK_NOTIFICATIONS.map((n) => n.id);
-    setReadIds(new Set(allIds));
-    // TODO: PATCH /api/notifications/read-all
+  const handleReadAll = async () => {
+    const prevUnread = unreadCount;
+    setReadIds(new Set(notifications.map((n) => n.id)));
+    setUnreadCount(0);
+    try {
+      await api.patch('/notifications/read-all');
+      fetchNotifications();
+    } catch {
+      setUnreadCount(prevUnread);
+    }
   };
 
   const isRead = (n) => n.isRead || readIds.has(n.id);
@@ -188,7 +102,6 @@ export default function NotificationListPage() {
     >
       <Divider />
 
-      {/* 탭 + 우측 액션 */}
       <TabRow>
         <TabList role="tablist" aria-label="알림 카테고리">
           {TAB_OPTIONS.map(({ label, key }) => (
@@ -201,8 +114,8 @@ export default function NotificationListPage() {
               type="button"
             >
               {label}
-              {tabCount(key) != null && tabCount(key) > 0 && (
-                <TabBadge>{tabCount(key)}</TabBadge>
+              {key === 'UNREAD' && unreadCount > 0 && (
+                <TabBadge>{unreadCount}</TabBadge>
               )}
             </TabBtn>
           ))}
@@ -211,10 +124,7 @@ export default function NotificationListPage() {
         <ActionArea>
           <GhostBtn
             type="button"
-            onClick={() => {
-              /* TODO: navigate to /notifications/settings */
-              navigate(`/user/notification/setting`);
-            }}
+            onClick={() => navigate('/user/notification/setting')}
             aria-label="알림 설정으로 이동"
           >
             ⚙ 알림 설정
@@ -227,8 +137,7 @@ export default function NotificationListPage() {
         </ActionArea>
       </TabRow>
 
-      {/* 알림 목록 */}
-      {paginated.length === 0 ? (
+      {notifications.length === 0 ? (
         <EmptyWrap>
           <EmptyIcon aria-hidden="true">🔔</EmptyIcon>
           <EmptyTitle>알림이 없습니다</EmptyTitle>
@@ -236,7 +145,7 @@ export default function NotificationListPage() {
         </EmptyWrap>
       ) : (
         <NotiList>
-          {paginated.map((noti) => {
+          {notifications.map((noti) => {
             const read = isRead(noti);
             return (
               <NotiCard
@@ -248,12 +157,9 @@ export default function NotificationListPage() {
                 aria-label={`${noti.title}${read ? '' : ' (읽지 않음)'}`}
                 onKeyDown={(e) => e.key === 'Enter' && handleRead(noti.id)}
               >
-                {/* 아이콘 */}
                 <IconWrap style={{ background: TYPE_BG[noti.type] }}>
                   <span aria-hidden="true">{TYPE_ICON[noti.type]}</span>
                 </IconWrap>
-
-                {/* 본문 */}
                 <NotiContent>
                   <NotiMeta>
                     <CategoryLabel>{noti.category}</CategoryLabel>
@@ -262,8 +168,6 @@ export default function NotificationListPage() {
                   <NotiTitle $read={read}>{noti.title}</NotiTitle>
                   <NotiDesc>{noti.description}</NotiDesc>
                 </NotiContent>
-
-                {/* 안 읽음 닷 */}
                 {!read && <UnreadDot aria-label="읽지 않은 알림" />}
               </NotiCard>
             );
@@ -271,7 +175,6 @@ export default function NotificationListPage() {
         </NotiList>
       )}
 
-      {/* 페이지네이션 — 백엔드 연동 시 totalPages를 API 응답값으로 교체 */}
       {totalPages > 1 && (
         <Pagination aria-label="페이지 탐색">
           <PageBtn
@@ -348,7 +251,6 @@ const TabBtn = styled.button`
   white-space: nowrap;
   transition: color 150ms ease;
 
-  /* 활성 탭 하단 라인 */
   &::after {
     content: '';
     position: absolute;
