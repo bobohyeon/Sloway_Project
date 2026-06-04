@@ -1,5 +1,6 @@
 import React, { useRef, useState } from 'react';
 import styled from 'styled-components';
+import imageCompression from 'browser-image-compression';
 
 const FormCard = styled.div`
   background: white;
@@ -31,16 +32,16 @@ const ImageGrid = styled.div`
 
 const ImageBox = styled.div`
   aspect-ratio: 4 / 3;
-  border: 2px dashed ${(props) => (props.isMain ? '#d46a4f' : '#e0e0e0')};
+  border: 2px dashed ${(props) => (props.$isMain ? '#d46a4f' : '#e0e0e0')};
   border-radius: 12px;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  cursor: grab; /* 드래그 가능 표시 */
+  cursor: grab;
   overflow: hidden;
   position: relative;
-  background-color: ${(props) => (props.isMain ? '#fff9f7' : '#fff')};
+  background-color: ${(props) => (props.$isMain ? '#fff9f7' : '#fff')};
   transition:
     transform 0.2s,
     box-shadow 0.2s;
@@ -48,8 +49,6 @@ const ImageBox = styled.div`
   &:active {
     cursor: grabbing;
   }
-
-  /* 드래그 중인 아이템 효과 */
   &.dragging {
     opacity: 0.5;
     transform: scale(0.95);
@@ -59,7 +58,8 @@ const ImageBox = styled.div`
     width: 100%;
     height: 100%;
     object-fit: cover;
-    pointer-events: none; /* 이미지 클릭 방해 금지 */
+    pointer-events: none;
+    display: block;
   }
 `;
 
@@ -68,12 +68,6 @@ const LabelWrap = styled.div`
   font-size: 13px;
   color: #aaa;
   pointer-events: none;
-
-  .main-text {
-    color: #d46a4f;
-    font-weight: 600;
-    margin-top: 5px;
-  }
 `;
 
 const RemoveButton = styled.button`
@@ -133,64 +127,77 @@ function InsertImageComponent({ formData, setFormData, prev, next }) {
   const fileInputRef = useRef(null);
   const [draggedIndex, setDraggedIndex] = useState(null);
 
-  // 이미지 업로드 로직 (JPG/JPEG 제한 포함)
-  const handleImageUpload = (e) => {
+  const handleImageUpload = async (e) => {
     const files = Array.from(e.target.files);
-    const allowedExtensions = ['jpg', 'jpeg'];
-    const filteredFiles = files.filter((file) => {
-      const extension = file.name.split('.').pop().toLowerCase();
-      return allowedExtensions.includes(extension);
-    });
+    const options = {
+      maxSizeMB: 1,
+      maxWidthOrHeight: 1200,
+      useWebWorker: true,
+    };
 
-    if (filteredFiles.length !== files.length)
-      alert('JPG, JPEG 파일만 업로드 가능합니다.');
-    if (filteredFiles.length === 0) return;
-    if (formData.images.length + filteredFiles.length > 10) {
-      alert('최대 10장까지 가능합니다.');
+    const newImages = await Promise.all(
+      files.map(async (file, index) => {
+        // 1. 실제 파일 타입 체크 (확장자 대신 MIME 타입 확인)
+        if (!file.type.startsWith('image/')) {
+          console.error('이미지 파일이 아님:', file.name);
+          return null;
+        }
+
+        try {
+          const compressedFile = await imageCompression(file, options);
+
+          // 2. Base64로 변환 시 오류 방지를 위한 정밀한 FileReader 사용
+          return new Promise((resolve) => {
+            const reader = new FileReader();
+            reader.onload = () => {
+              // 결과물이 정상적인 데이터인지 확인
+              if (reader.result && reader.result.startsWith('data:image/')) {
+                resolve({
+                  id: crypto.randomUUID(),
+                  file: new File(
+                    [compressedFile],
+                    `img_${Date.now()}_${index}.jpg`,
+                    { type: 'image/jpeg' }
+                  ),
+                  preview: reader.result,
+                });
+              } else {
+                resolve(null);
+              }
+            };
+            reader.onerror = () => resolve(null);
+            reader.readAsDataURL(compressedFile);
+          });
+        } catch (err) {
+          console.error('처리 에러:', err);
+          return null;
+        }
+      })
+    );
+
+    const validImages = newImages.filter((img) => img !== null);
+
+    if (validImages.length === 0) {
+      alert('이미지 처리 실패: 올바른 이미지 파일을 선택해주세요.');
       return;
     }
 
-    const newImages = filteredFiles.map((file) => ({
-      file,
-      preview: URL.createObjectURL(file),
-    }));
-
     setFormData((prev) => ({
       ...prev,
-      images: [...prev.images, ...newImages],
+      images: [...prev.images, ...validImages],
     }));
     e.target.value = '';
   };
-
-  // --- 드래그 앤 드롭 핸들러 ---
-
-  const onDragStart = (index) => {
-    setDraggedIndex(index);
-  };
+  const onDragStart = (index) => setDraggedIndex(index);
 
   const onDragEnter = (index) => {
     if (draggedIndex === index) return;
-
     const newImages = [...formData.images];
     const draggedItem = newImages[draggedIndex];
-
-    // 배열에서 삭제 후 새로운 위치에 삽입
     newImages.splice(draggedIndex, 1);
     newImages.splice(index, 0, draggedItem);
-
     setDraggedIndex(index);
     setFormData((prev) => ({ ...prev, images: newImages }));
-  };
-
-  const onDragEnd = () => {
-    setDraggedIndex(null);
-  };
-
-  const removeImage = (index) => {
-    setFormData((prev) => ({
-      ...prev,
-      images: prev.images.filter((_, i) => i !== index),
-    }));
   };
 
   return (
@@ -203,7 +210,7 @@ function InsertImageComponent({ formData, setFormData, prev, next }) {
       <input
         type="file"
         multiple
-        accept=".jpg, .jpeg"
+        accept=".jpg, .jpeg, .png"
         style={{ display: 'none' }}
         ref={fileInputRef}
         onChange={handleImageUpload}
@@ -212,20 +219,23 @@ function InsertImageComponent({ formData, setFormData, prev, next }) {
       <ImageGrid>
         {formData.images.map((img, index) => (
           <ImageBox
-            key={img.preview} // 인덱스 대신 고유값 사용 권장
-            isMain={index === 0}
+            key={img.id}
+            $isMain={index === 0}
             draggable
             onDragStart={() => onDragStart(index)}
             onDragEnter={() => onDragEnter(index)}
-            onDragEnd={onDragEnd}
-            onDragOver={(e) => e.preventDefault()} // 드롭 허용
+            onDragEnd={() => setDraggedIndex(null)}
+            onDragOver={(e) => e.preventDefault()}
             className={draggedIndex === index ? 'dragging' : ''}
           >
             <img src={img.preview} alt={`upload-${index}`} />
             <RemoveButton
               onClick={(e) => {
                 e.stopPropagation();
-                removeImage(index);
+                setFormData((p) => ({
+                  ...p,
+                  images: p.images.filter((_, i) => i !== index),
+                }));
               }}
             >
               ×
@@ -250,10 +260,7 @@ function InsertImageComponent({ formData, setFormData, prev, next }) {
         ))}
 
         {formData.images.length < 10 && (
-          <ImageBox
-            isMain={formData.images.length === 0}
-            onClick={() => fileInputRef.current.click()}
-          >
+          <ImageBox onClick={() => fileInputRef.current.click()}>
             <LabelWrap>
               <span style={{ fontSize: '24px' }}>+</span>
               <div style={{ marginTop: '5px' }}>

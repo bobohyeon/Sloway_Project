@@ -1,5 +1,6 @@
 package com.sloway.app.place.controller.office;
 
+import com.sloway.app.auth.user.CustomUserDetails;
 import com.sloway.app.place.dto.request.office.OfficeUpdateReqDto;
 import com.sloway.app.place.dto.request.office.OfficeReqDto;
 import com.sloway.app.place.dto.request.sort.ImgSortReqDto;
@@ -33,7 +34,11 @@ public class OfficeApiController {
             @RequestPart("dto") OfficeReqDto dto,
             @RequestPart("files") List<MultipartFile> files,
             @RequestPart("sortList") List<ImgSortReqDto> sortList,
-            @AuthenticationPrincipal Long memberNo) {
+            @AuthenticationPrincipal CustomUserDetails userDetails) {
+        if (userDetails == null) {
+            throw new RuntimeException("로그인이 필요합니다.");
+        }
+        Long memberNo = userDetails.getMemberNo();
 
         // userNo값 필요 파라미터 추가예정
         officeService.saveOffice(dto, files, sortList, memberNo);
@@ -48,7 +53,12 @@ public class OfficeApiController {
     public ResponseEntity<Object> updateOffice(
             @PathVariable Long no,
             @RequestBody OfficeUpdateReqDto dto,
-            @AuthenticationPrincipal Long memberNo) {
+            @AuthenticationPrincipal CustomUserDetails userDetails) {
+        if (userDetails == null) {
+            throw new RuntimeException("로그인이 필요합니다.");
+        }
+        Long memberNo = userDetails.getMemberNo();
+
 
         officeService.updateOffice(no, dto, memberNo);
 
@@ -63,7 +73,11 @@ public class OfficeApiController {
             @PathVariable Long no,
             @RequestPart(name = "files", required = false) List<MultipartFile> files,
             @RequestPart("sortList") List<ImgUpdateSortReqDto> sortList,
-            @AuthenticationPrincipal Long memberNo) {
+            @AuthenticationPrincipal CustomUserDetails userDetails) {
+        if (userDetails == null) {
+            throw new RuntimeException("로그인이 필요합니다.");
+        }
+        Long memberNo = userDetails.getMemberNo();
 
         officeService.updateOfficeImg(no, files, sortList, memberNo);
 
@@ -84,19 +98,34 @@ public class OfficeApiController {
     }
 
     @GetMapping("/update/image/{no}")
-    public ResponseEntity<PlaceImgListRespDto> selectImageList(@PathVariable Long no, @AuthenticationPrincipal Long memberNo){
+    public ResponseEntity<PlaceImgListRespDto> selectImageList(@PathVariable Long no, @AuthenticationPrincipal CustomUserDetails userDetails){
+        if (userDetails == null) {
+            throw new RuntimeException("로그인이 필요합니다.");
+        }
+        Long memberNo = userDetails.getMemberNo();
+
         PlaceImgListRespDto dto = officeService.selectImageList(no, memberNo);
         return ResponseEntity.ok(dto);
     }
 
     @GetMapping("/detail/dash/{no}")
-    public ResponseEntity<StationDetailRespDto> selectStationDetailDashBoard(@PathVariable Long no, @AuthenticationPrincipal Long memberNo){
+    public ResponseEntity<StationDetailRespDto> selectStationDetailDashBoard(@PathVariable Long no, @AuthenticationPrincipal CustomUserDetails userDetails){
+        if (userDetails == null) {
+            throw new RuntimeException("로그인이 필요합니다.");
+        }
+        Long memberNo = userDetails.getMemberNo();
+
         StationDetailRespDto dto = officeService.selectOfficeDetailDashBoard(no, memberNo);
         return ResponseEntity.ok(dto);
     }
 
     @GetMapping("/update/{no}")
-    public ResponseEntity<OfficeUpdateDetailReqDto> selectOfficeForUpdate(@PathVariable Long no, @AuthenticationPrincipal Long memberNo){
+    public ResponseEntity<OfficeUpdateDetailReqDto> selectOfficeForUpdate(@PathVariable Long no, @AuthenticationPrincipal CustomUserDetails userDetails){
+        if (userDetails == null) {
+            throw new RuntimeException("로그인이 필요합니다.");
+        }
+        Long memberNo = userDetails.getMemberNo();
+
         OfficeUpdateDetailReqDto dto = officeService.selectOfficeForUpdate(no, memberNo);
 
         return ResponseEntity.ok(dto);

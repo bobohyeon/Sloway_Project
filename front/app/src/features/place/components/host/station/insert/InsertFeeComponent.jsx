@@ -175,7 +175,7 @@ const RefundItem = styled.div`
     display: block;
     margin-top: 5px;
     font-weight: 700;
-    color: ${(props) => (props.highlight ? '#d46a4f' : '#666')};
+    color: ${(props) => (props.$highlight ? '#d46a4f' : '#666')};
   }
 `;
 
@@ -368,13 +368,13 @@ function InsertFeeComponent({
           <RefundItem>
             7일 전<span className="percent">100% 환불</span>
           </RefundItem>
-          <RefundItem highlight>
+          <RefundItem $highlight>
             3~4일 전<span className="percent">50% 환불</span>
           </RefundItem>
-          <RefundItem highlight>
+          <RefundItem $highlight>
             1~2일 전<span className="percent">30% 환불</span>
           </RefundItem>
-          <RefundItem highlight>
+          <RefundItem $highlight>
             당일<span className="percent">환불 불가</span>
           </RefundItem>
         </RefundGrid>
