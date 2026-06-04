@@ -14,7 +14,7 @@ const CATEGORY_LABEL = {
 
 const STATUS_CONFIG = {
   ANSWERED: { label: '답변 완료', variant: 'success' },
-  PENDING:  { label: '답변 대기', variant: 'muted' },
+  PENDING: { label: '답변 대기', variant: 'muted' },
 };
 
 const fmtDate = (iso) => (iso ? iso.slice(0, 10).replace(/-/g, '.') : '');
@@ -35,7 +35,9 @@ export default function InquiryDetailPage() {
         const { data } = await api.get(endpoint);
         setInquiry(data);
       } catch {
-        navigate(isAdmin ? '/admin/inquiry' : '/user/inquiry', { replace: true });
+        navigate(isAdmin ? '/admin/inquiry' : '/inquiry', {
+          replace: true,
+        });
       }
     };
     fetch();
@@ -45,7 +47,10 @@ export default function InquiryDetailPage() {
 
   const canEdit = !isAdmin && inquiry.status === 'PENDING';
   const canDelete = !isAdmin && inquiry.status === 'PENDING';
-  const st = STATUS_CONFIG[inquiry.status] ?? { label: inquiry.status, variant: 'muted' };
+  const st = STATUS_CONFIG[inquiry.status] ?? {
+    label: inquiry.status,
+    variant: 'muted',
+  };
 
   const handleDelete = async () => {
     await api.delete(`/inquiry/${id}`);
@@ -56,7 +61,9 @@ export default function InquiryDetailPage() {
     <PageLayout maxWidth={800}>
       {/* 브레드크럼 */}
       <Breadcrumb>
-        <BreadcrumbBtn onClick={() => navigate(isAdmin ? '/admin/inquiry' : '/user/inquiry')}>
+        <BreadcrumbBtn
+          onClick={() => navigate(isAdmin ? '/admin/inquiry' : '/user/inquiry')}
+        >
           {isAdmin ? '문의사항 관리' : '내 문의사항'}
         </BreadcrumbBtn>
         <BreadcrumbSep>›</BreadcrumbSep>
@@ -111,7 +118,9 @@ export default function InquiryDetailPage() {
               </Button>
             )}
             {inquiry.status === 'ANSWERED' && !isAdmin && (
-              <StatusNote>답변이 완료된 문의는 수정/삭제할 수 없습니다.</StatusNote>
+              <StatusNote>
+                답변이 완료된 문의는 수정/삭제할 수 없습니다.
+              </StatusNote>
             )}
           </UserActionRow>
         )}

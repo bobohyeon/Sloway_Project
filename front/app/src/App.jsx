@@ -306,9 +306,10 @@ function App() {
         <Route path="/user/review/edit/:id" element={<ReviewEditPage />} />
         <Route path="/user/review/report" element={<ReviewReportPage />} />
         <Route path="/review/:id" element={<ReviewDetailPage />} />
-        <Route path="/inquiry" element={<InquiryListPage />} />
-        <Route path="/inquiry/form/:id" element={<InquiryFormPage isEdit />} />
-        <Route path="/inquiry/:id" element={<InquiryDetailPage />} />
+        <Route path="/user/inquiry" element={<InquiryListPage />} />
+        <Route path="/user/inquiry/form" element={<InquiryFormPage />} />
+        <Route path="/user/inquiry/form/:id" element={<InquiryFormPage isEdit />} />
+        <Route path="/user/inquiry/:id" element={<InquiryDetailPage />} />
         {/* 소통 */}
         <Route path="/user/chat" element={<UserChatListPage />} />
         <Route path="/user/chat/:id" element={<UserChatDetailPage />} />

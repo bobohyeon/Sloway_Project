@@ -125,11 +125,11 @@ export default function NoticeListPage() {
           notices.map((notice) => (
             <NoticeRow
               key={notice.id}
-              onClick={() => navigate(`/notices/${notice.id}`)}
+              onClick={() => navigate(`/notice/${notice.id}`)}
               role="button"
               tabIndex={0}
               onKeyDown={(e) =>
-                e.key === 'Enter' && navigate(`/notices/${notice.id}`)
+                e.key === 'Enter' && navigate(`/notice/${notice.id}`)
               }
               aria-label={notice.title}
             >
@@ -139,7 +139,8 @@ export default function NoticeListPage() {
               <NoticeTitle>{notice.title}</NoticeTitle>
               <NoticeInfo>
                 <Badge size="sm" variant="muted">
-                  {CATEGORY_OPTIONS.find((c) => c.value === notice.category)?.label ?? notice.category}
+                  {CATEGORY_OPTIONS.find((c) => c.value === notice.category)
+                    ?.label ?? notice.category}
                 </Badge>
                 <NoticeDate>{fmtDate(notice.createdAt)}</NoticeDate>
                 <ViewCount>조회 {notice.viewCount}</ViewCount>
