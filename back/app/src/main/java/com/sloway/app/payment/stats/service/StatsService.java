@@ -26,6 +26,7 @@ import java.time.LocalDateTime;
 import java.time.YearMonth;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.function.ToIntBiFunction;
 import java.util.stream.Collectors;
 
 @Service
@@ -195,16 +196,11 @@ public class StatsService {
                 + payRepository.sumSalesStatsByStationIn(stationNos, start, end)
                 + payRepository.sumSalesStatsByWorkStayIn(workStayNos, start, end);
 
-        List<MonthlyTrendResDto> trend = new ArrayList<>();
-        for (int i = 5; i >= 0; i--) {
-            YearMonth ymMinus = ym.minusMonths(i);
-            LocalDateTime mStart = ymMinus.atDay(1).atStartOfDay();
-            LocalDateTime mEnd = ymMinus.atEndOfMonth().atTime(23, 59, 59);
-            int mTotal = payRepository.sumByOfficeIn(officeNos, mStart, mEnd)
-                    + payRepository.sumByStationIn(stationNos, mStart, mEnd)
-                    + payRepository.sumByWorkStayIn(workStayNos, mStart, mEnd);
-            trend.add(MonthlyTrendResDto.of(ymMinus.toString(), mTotal));
-        }
+        List<MonthlyTrendResDto> trend = buildTrend(ym, (s, e) ->
+                payRepository.sumByOfficeIn(officeNos, s, e)
+                        + payRepository.sumByStationIn(stationNos, s, e)
+                        + payRepository.sumByWorkStayIn(workStayNos, s, e));
+
         return HostSalesStatsResDto.of(totalAmt, payCount, refundAmt, trend);
     }
 
@@ -237,14 +233,8 @@ public class StatsService {
         Long complete = statsRepositoryCustom.countRsvnByStatusAndCreatedAtBetween(RsvnStatus.E, start, end);
         Long cancel = statsRepositoryCustom.countRsvnByStatusAndCreatedAtBetween(RsvnStatus.C, start, end);
 
-        List<MonthlyTrendResDto> trend = new ArrayList<>();
-        for (int i = 5; i >= 0; i--) {
-            YearMonth ymMinus = ym.minusMonths(i);
-            LocalDateTime mStart = ymMinus.atDay(1).atStartOfDay();
-            LocalDateTime mEnd = ymMinus.atEndOfMonth().atTime(23, 59, 59);
-            long mTotal = statsRepositoryCustom.countRsvnByCreatedAtBetween(mStart, mEnd);
-            trend.add(MonthlyTrendResDto.of(ymMinus.toString(), (int) mTotal));
-        }
+        List<MonthlyTrendResDto> trend = buildTrend(ym, (s, e)
+                -> Math.toIntExact(statsRepositoryCustom.countRsvnByCreatedAtBetween(s, e)));
         return BookingStatsResDto.of(total, confirmed, cancel, complete, trend);
     }
 
@@ -258,16 +248,22 @@ public class StatsService {
         Long withdrawn = statsRepositoryCustom.countMemberByStatus(MemberStatus.W);
         Long newSignup = statsRepositoryCustom.countMemberByCreatedAtBetween(start, end);
 
-        List<MonthlyTrendResDto> trend = new ArrayList<>();
-        for (int i = 5; i >= 0; i--) {
-            YearMonth ymMinus = ym.minusMonths(i);
-            LocalDateTime mStart = ymMinus.atDay(1).atStartOfDay();
-            LocalDateTime mEnd = ymMinus.atEndOfMonth().atTime(23, 59, 59);
-            long mTotal = statsRepositoryCustom.countMemberByCreatedAtBetween(mStart, mEnd);
-            trend.add(MonthlyTrendResDto.of(ymMinus.toString(), (int) mTotal));
-        }
+        List<MonthlyTrendResDto> trend = buildTrend(ym, (s, e)
+                -> Math.toIntExact(statsRepositoryCustom.countMemberByCreatedAtBetween(s, e)));
         return MemberStatsResDto.of(total, newSignup, active, withdrawn, trend);
 
+    }
+
+    private List<MonthlyTrendResDto> buildTrend(YearMonth base, ToIntBiFunction<LocalDateTime, LocalDateTime> valueFn) {
+        List<MonthlyTrendResDto> trend = new ArrayList<>();
+        for (int i = 5; i >= 0; i--) {
+            YearMonth ymMinus = base.minusMonths(i);
+            LocalDateTime mStart = ymMinus.atDay(1).atStartOfDay();
+            LocalDateTime mEnd = ymMinus.atEndOfMonth().atTime(23, 59, 59);
+            long mTotal = valueFn.applyAsInt(mStart, mEnd);
+            trend.add(MonthlyTrendResDto.of(ymMinus.toString(), (int) mTotal));
+        }
+        return trend;
     }
 
 }
