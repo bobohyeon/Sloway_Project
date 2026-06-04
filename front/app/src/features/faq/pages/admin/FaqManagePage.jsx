@@ -9,29 +9,29 @@ import {
   Pagination,
   EmptyState,
   Card,
-} from '../../pay_shared/components';
-import PageLayout from '../../../app/layouts/page/PageLayout';
-import api from '../../../app/api/axiosApi';
+} from '../../../pay_shared/components';
+import PageLayout from '../../../../app/layouts/page/PageLayout';
+import api from '../../../../app/api/axiosApi';
 
 const CATEGORY_OPTIONS = [
-  { label: '전체',       value: '' },
-  { label: '예약',       value: 'RESERVATION' },
-  { label: '결제',       value: 'PAYMENT' },
-  { label: '취소',       value: 'CANCEL' },
-  { label: '환불',       value: 'REFUND' },
-  { label: '계정',       value: 'ACCOUNT' },
+  { label: '전체', value: '' },
+  { label: '예약', value: 'RESERVATION' },
+  { label: '결제', value: 'PAYMENT' },
+  { label: '취소', value: 'CANCEL' },
+  { label: '환불', value: 'REFUND' },
+  { label: '계정', value: 'ACCOUNT' },
   { label: '서비스 이용', value: 'SERVICE' },
-  { label: '기타',       value: 'OTHER' },
+  { label: '기타', value: 'OTHER' },
 ];
 
 const CATEGORY_LABEL = {
   RESERVATION: '예약',
-  PAYMENT:     '결제',
-  CANCEL:      '취소',
-  REFUND:      '환불',
-  ACCOUNT:     '계정',
-  SERVICE:     '서비스 이용',
-  OTHER:       '기타',
+  PAYMENT: '결제',
+  CANCEL: '취소',
+  REFUND: '환불',
+  ACCOUNT: '계정',
+  SERVICE: '서비스 이용',
+  OTHER: '기타',
 };
 
 const fmtDate = (iso) => (iso ? iso.slice(0, 10).replace(/-/g, '.') : '');
@@ -72,9 +72,13 @@ export default function FaqManagePage() {
 
   const handleSelectAll = () => {
     if (isAllSelected) {
-      setSelectedIds((prev) => prev.filter((id) => !faqs.map((f) => f.id).includes(id)));
+      setSelectedIds((prev) =>
+        prev.filter((id) => !faqs.map((f) => f.id).includes(id))
+      );
     } else {
-      setSelectedIds((prev) => [...new Set([...prev, ...faqs.map((f) => f.id)])]);
+      setSelectedIds((prev) => [
+        ...new Set([...prev, ...faqs.map((f) => f.id)]),
+      ]);
     }
   };
 
@@ -114,7 +118,10 @@ export default function FaqManagePage() {
                 <CategoryBtn
                   key={c.value}
                   $active={category === c.value}
-                  onClick={() => { setCategory(c.value); setPage(1); }}
+                  onClick={() => {
+                    setCategory(c.value);
+                    setPage(1);
+                  }}
                   type="button"
                 >
                   {c.label}
@@ -147,7 +154,11 @@ export default function FaqManagePage() {
             )}
           </TableCount>
           {selectedIds.length > 0 && (
-            <Button size="sm" variant="danger" onClick={() => setDeleteModal(true)}>
+            <Button
+              size="sm"
+              variant="danger"
+              onClick={() => setDeleteModal(true)}
+            >
               선택 삭제
             </Button>
           )}
@@ -159,7 +170,9 @@ export default function FaqManagePage() {
             title="등록된 FAQ가 없습니다"
             description="자주 묻는 질문을 등록해 보세요."
             action={
-              <Button onClick={() => navigate('/admin/faq/form')}>FAQ 등록</Button>
+              <Button onClick={() => navigate('/admin/faq/form')}>
+                FAQ 등록
+              </Button>
             }
           />
         ) : (
@@ -169,12 +182,21 @@ export default function FaqManagePage() {
                 <thead>
                   <tr>
                     <Th $w="44px">
-                      <Checkbox checked={isAllSelected} onChange={handleSelectAll} />
+                      <Checkbox
+                        checked={isAllSelected}
+                        onChange={handleSelectAll}
+                      />
                     </Th>
-                    <Th $w="60px" $center>번호</Th>
-                    <Th $w="120px" $center>카테고리</Th>
+                    <Th $w="60px" $center>
+                      번호
+                    </Th>
+                    <Th $w="120px" $center>
+                      카테고리
+                    </Th>
                     <Th>질문</Th>
-                    <Th $w="110px" $center>등록일</Th>
+                    <Th $w="110px" $center>
+                      등록일
+                    </Th>
                   </tr>
                 </thead>
                 <tbody>
@@ -186,24 +208,34 @@ export default function FaqManagePage() {
                           onChange={() => handleSelect(faq.id)}
                         />
                       </Td>
-                      <Td $center $muted>{faq.id}</Td>
+                      <Td $center $muted>
+                        {faq.id}
+                      </Td>
                       <Td $center>
                         <Badge size="sm" variant="muted">
                           {CATEGORY_LABEL[faq.category] ?? faq.category}
                         </Badge>
                       </Td>
                       <Td>
-                        <QuestionText onClick={() => navigate(`/admin/faq/form/${faq.id}`)}>
+                        <QuestionText
+                          onClick={() => navigate(`/admin/faq/form/${faq.id}`)}
+                        >
                           {faq.title}
                         </QuestionText>
                       </Td>
-                      <Td $center $muted>{fmtDate(faq.createdAt)}</Td>
+                      <Td $center $muted>
+                        {fmtDate(faq.createdAt)}
+                      </Td>
                     </Tr>
                   ))}
                 </tbody>
               </Table>
             </TableWrap>
-            <Pagination currentPage={page} totalPages={totalPages} onChange={setPage} />
+            <Pagination
+              currentPage={page}
+              totalPages={totalPages}
+              onChange={setPage}
+            />
           </>
         )}
       </TableCard>
@@ -225,7 +257,8 @@ export default function FaqManagePage() {
         }
       >
         <ModalText>
-          선택한 <strong>{selectedIds.length}개</strong>의 FAQ를 삭제하시겠습니까?
+          선택한 <strong>{selectedIds.length}개</strong>의 FAQ를
+          삭제하시겠습니까?
           <br />
           삭제된 항목은 복구할 수 없습니다.
         </ModalText>
@@ -304,10 +337,16 @@ const SearchInput = styled.input`
   outline: none;
   transition: border-color 160ms ease;
 
-  &:focus { border-color: var(--sage); }
-  &::placeholder { color: var(--gray-400); }
+  &:focus {
+    border-color: var(--sage);
+  }
+  &::placeholder {
+    color: var(--gray-400);
+  }
 
-  @media (max-width: 600px) { min-width: 140px; }
+  @media (max-width: 600px) {
+    min-width: 140px;
+  }
 `;
 
 const TableCard = styled(Card)`
@@ -329,7 +368,10 @@ const TableCount = styled.div`
   align-items: center;
   gap: var(--space-2);
 
-  strong { color: var(--gray-800); font-weight: 600; }
+  strong {
+    color: var(--gray-800);
+    font-weight: 600;
+  }
 `;
 
 const SelectedCount = styled.span`
@@ -367,8 +409,12 @@ const Th = styled.th`
 const Tr = styled.tr`
   transition: background 120ms ease;
 
-  &:hover { background: var(--gray-50, #fafaf9); }
-  &:not(:last-child) td { border-bottom: 1px solid var(--gray-100); }
+  &:hover {
+    background: var(--gray-50, #fafaf9);
+  }
+  &:not(:last-child) td {
+    border-bottom: 1px solid var(--gray-100);
+  }
 `;
 
 const Td = styled.td`
@@ -396,5 +442,7 @@ const ModalText = styled.p`
   color: var(--gray-700);
   line-height: 1.6;
 
-  strong { color: #b85a4e; }
+  strong {
+    color: #b85a4e;
+  }
 `;
