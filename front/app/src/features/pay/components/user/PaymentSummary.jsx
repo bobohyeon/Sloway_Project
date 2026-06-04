@@ -3,9 +3,7 @@ import { Card, Button } from '../../../pay_shared/components';
 import { PriceRow } from './PriceRow';
 
 export function PaymentSummary({
-  pricePerNight,
-  nights,
-  serviceFee,
+  subtotal,
   couponDiscount,
   usePoints,
   total,
@@ -18,11 +16,7 @@ export function PaymentSummary({
       <Title>결제 금액</Title>
 
       <Breakdown>
-        <PriceRow
-          label={`${pricePerNight.toLocaleString()}원 × ${nights}박`}
-          amount={pricePerNight * nights}
-        />
-        <PriceRow label="서비스 수수료" amount={serviceFee} />
+        <PriceRow label="예약 금액" amount={subtotal} />
 
         {couponDiscount > 0 && (
           <PriceRow
