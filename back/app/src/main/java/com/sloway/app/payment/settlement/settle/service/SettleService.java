@@ -110,8 +110,10 @@ public class SettleService {
         return settleRepository.findAll().stream().map(SettleResDto::from).toList();
     }
 
-    public List<SettleResDto> findSettleByHostNo(Long hostNo) {
-        List<SettleEntity> entityList = settleRepository.findByHostNo(hostNo);
+    public List<SettleResDto> findSettleByHostNo(Long memberNo) {
+        HostEntity hostEntity = hostRepository.findByMemberNo(memberNo)
+                .orElseThrow(() -> new CustomException(HostErrorCode.HOST_NOT_FOUND));
+        List<SettleEntity> entityList = settleRepository.findByHostNo(hostEntity.getNo());
         return entityList.stream().map(SettleResDto::from).toList();
     }
 

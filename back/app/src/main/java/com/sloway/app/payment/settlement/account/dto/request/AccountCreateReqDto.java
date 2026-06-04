@@ -10,7 +10,6 @@ import lombok.*;
 @AllArgsConstructor(access = AccessLevel.PRIVATE)
 public class AccountCreateReqDto {
 
-    private Long hostNo;
     private String bankName;
     private String accountNo;
     private String holder;

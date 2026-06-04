@@ -1,6 +1,10 @@
 package com.sloway.app.payment.stats.service;
 
 import com.querydsl.core.Tuple;
+import com.sloway.app.common.exception.CustomException;
+import com.sloway.app.host.common.HostErrorCode;
+import com.sloway.app.host.entity.HostEntity;
+import com.sloway.app.host.repository.HostRepository;
 import com.sloway.app.member.common.MemberStatus;
 import com.sloway.app.payment.pay.common.PayMethod;
 import com.sloway.app.payment.pay.repository.PayRepository;
@@ -41,6 +45,7 @@ public class StatsService {
     private final DailyRefundStatsRepository dailyRefundStatsRepository;
     private final HostPlaceRepository hostPlaceRepository;
     private final StatsRepositoryCustom statsRepositoryCustom;
+    private final HostRepository hostRepository;
 
     @Transactional
     public void loadDailyStats(LocalDate targetDate) {
@@ -158,10 +163,13 @@ public class StatsService {
         return RefundStatResDto.of(refundCount, refundAmt, finalAmt);
     }
 
-    public HostSalesStatsResDto findHostSalesStats(Long hostNo, int year, int month) {
+    public HostSalesStatsResDto findHostSalesStats(Long memberNo, int year, int month) {
+
+        HostEntity hostEntity = hostRepository.findByMemberNo(memberNo)
+                .orElseThrow(() -> new CustomException(HostErrorCode.HOST_NOT_FOUND));
 
         List<HostPlaceEntity> hostPlaces =
-                hostPlaceRepository.findByHostEntityNoAndStatus(hostNo, ApprovalStatus.A);
+                hostPlaceRepository.findByHostEntityNoAndStatus(hostEntity.getNo(), ApprovalStatus.A);
 
         List<Long> officeNos = hostPlaces.stream()
                 .filter(hp -> hp.getOfficeEntity() != null)

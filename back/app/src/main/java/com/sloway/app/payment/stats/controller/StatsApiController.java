@@ -1,10 +1,12 @@
 package com.sloway.app.payment.stats.controller;
 
+import com.sloway.app.auth.user.CustomUserDetails;
 import com.sloway.app.payment.stats.dto.response.*;
 import com.sloway.app.payment.stats.service.StatsService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -43,9 +45,9 @@ public class StatsApiController {
         return ResponseEntity.ok(resDto);
     }
 
-    @GetMapping("/host/{hostNo}")
-    public ResponseEntity<HostSalesStatsResDto> findHostSalesStats(@PathVariable Long hostNo, @RequestParam int year, @RequestParam int month) {
-        HostSalesStatsResDto resDto = statsService.findHostSalesStats(hostNo, year, month);
+    @GetMapping("/host")
+    public ResponseEntity<HostSalesStatsResDto> findHostSalesStats(@AuthenticationPrincipal CustomUserDetails host, @RequestParam int year, @RequestParam int month) {
+        HostSalesStatsResDto resDto = statsService.findHostSalesStats(host.getMemberNo(), year, month);
         return ResponseEntity.ok(resDto);
     }
 
