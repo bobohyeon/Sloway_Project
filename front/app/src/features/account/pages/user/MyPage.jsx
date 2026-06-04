@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import styled from 'styled-components';
 import { useNavigate } from 'react-router-dom';
 import {
@@ -15,30 +15,7 @@ import PageLayout from '../../../../app/layouts/page/PageLayout';
 import { useMyPage } from '../../hooks/useMyPage';
 import { useMyPageSummary } from '../../hooks/useMyPageSummary';
 import { useAuth } from '../../../auth/hooks/useAuth';
-
-const DUMMY_RESERVATIONS = [
-  {
-    id: 1,
-    spaceName: '제주 돌담집 리트릿',
-    type: '숙소',
-    checkIn: '2026.05.20',
-    status: 'S',
-  },
-  {
-    id: 2,
-    spaceName: '판교 테크오피스',
-    type: '코워킹',
-    checkIn: '2026.05.15',
-    status: 'E',
-  },
-  {
-    id: 3,
-    spaceName: '성수 워크앤스테이',
-    type: '워크앤스테이',
-    checkIn: '2026.04.30',
-    status: 'C',
-  },
-];
+import { findMyRsvns } from '../../../rsvn/api/rsvnApi';
 
 const STATUS_LABEL = { S: '확정', E: '이용완료', C: '취소', R: '거절' };
 const STATUS_COLOR = { S: '#5a7a42', E: '#A8B89F', C: '#e24b4a', R: '#e24b4a' };
@@ -257,6 +234,13 @@ const RsvnStatus = styled.span`
   margin-right: 12px;
 `;
 
+const EmptyText = styled.div`
+  padding: 32px 24px;
+  text-align: center;
+  font-size: 13px;
+  color: var(--gray-400);
+`;
+
 // 퀵 메뉴
 const QuickMenuGrid = styled.div`
   display: grid;
@@ -317,6 +301,28 @@ function MyPage() {
   const { user } = useAuth(); // 토큰 정보 (memberNo)
   const { point, couponCount } = useMyPageSummary(user?.memberNo);
 
+  // 예약 조회 (예약 도메인 API 호출 — 조회만)
+  const [reservations, setReservations] = useState([]);
+  useEffect(() => {
+    let alive = true;
+    (async () => {
+      try {
+        const data = await findMyRsvns();
+        if (alive) setReservations(data);
+      } catch {
+        if (alive) setReservations([]);
+      }
+    })();
+    return () => {
+      alive = false;
+    };
+  }, []);
+
+  // 진행중 예약 수 (status 'S' = 예약확정)
+  const ongoingCount = reservations.filter((r) => r.status === 'S').length;
+  // 최근 예약 5건
+  const recentReservations = reservations.slice(0, 5);
+
   return (
     <PageLayout>
       <CardStack>
@@ -354,13 +360,13 @@ function MyPage() {
 
         {/* 통계 카드 3개 */}
         <StatsRow>
-          {/* 진행중 예약 — 예약 API 연동 전까지 더미 '2' 유지 */}
+          {/* 진행중 예약 — 실데이터 (status 'S' 카운트) */}
           <StatCard onClick={() => navigate('/user/reservation')}>
             <StatIcon $bg="rgba(168,184,159,0.15)" $color="#5b6b53">
               <FaCalendarAlt />
             </StatIcon>
             <StatInfo>
-              <StatValue>2</StatValue>
+              <StatValue>{ongoingCount}</StatValue>
               <StatLabel>진행중인 예약</StatLabel>
             </StatInfo>
           </StatCard>
@@ -415,23 +421,27 @@ function MyPage() {
             </SeeAllBtn>
           </SectionHeader>
           <ReservationList>
-            {DUMMY_RESERVATIONS.map((r) => (
-              <ReservationItem
-                key={r.id}
-                onClick={() => navigate(`/user/reservation/${r.id}`)}
-              >
-                <RsvnInfo>
-                  <RsvnName>{r.spaceName}</RsvnName>
-                  <RsvnMeta>
-                    {r.type} · 체크인 {r.checkIn}
-                  </RsvnMeta>
-                </RsvnInfo>
-                <RsvnStatus $color={STATUS_COLOR[r.status]}>
-                  {STATUS_LABEL[r.status]}
-                </RsvnStatus>
-                <FaChevronRight size={12} color="#ccc" />
-              </ReservationItem>
-            ))}
+            {recentReservations.length === 0 ? (
+              <EmptyText>예약 내역이 없어요.</EmptyText>
+            ) : (
+              recentReservations.map((r) => (
+                <ReservationItem
+                  key={r.no}
+                  onClick={() => navigate(`/user/reservation/${r.no}`)}
+                >
+                  <RsvnInfo>
+                    <RsvnName>{r.spaceName}</RsvnName>
+                    <RsvnMeta>
+                      {r.spaceType} · 체크인 {r.checkIn?.slice(0, 10)}
+                    </RsvnMeta>
+                  </RsvnInfo>
+                  <RsvnStatus $color={STATUS_COLOR[r.status]}>
+                    {STATUS_LABEL[r.status]}
+                  </RsvnStatus>
+                  <FaChevronRight size={12} color="#ccc" />
+                </ReservationItem>
+              ))
+            )}
           </ReservationList>
         </Section>
       </CardStack>
