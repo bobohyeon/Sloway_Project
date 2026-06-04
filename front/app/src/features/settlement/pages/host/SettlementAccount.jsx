@@ -30,8 +30,9 @@ export default function SettlementAccount() {
   };
 
   useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    load();
+    (async () => {
+      await load();
+    })();
   }, []);
 
   const handleSave = async () => {

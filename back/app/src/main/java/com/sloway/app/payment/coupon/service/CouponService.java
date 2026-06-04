@@ -1,6 +1,7 @@
 package com.sloway.app.payment.coupon.service;
 
 import com.sloway.app.common.exception.CustomException;
+import com.sloway.app.member.common.MemberErrorCode;
 import com.sloway.app.member.entity.MemberEntity;
 import com.sloway.app.member.repository.MemberRepository;
 import com.sloway.app.payment.coupon.common.CouponErrorCode;
@@ -9,7 +10,6 @@ import com.sloway.app.payment.coupon.dto.request.CouponCreateReqDto;
 import com.sloway.app.payment.coupon.dto.response.CouponResDto;
 import com.sloway.app.payment.coupon.entity.CouponEntity;
 import com.sloway.app.payment.coupon.repository.CouponRepository;
-import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -29,8 +29,7 @@ public class CouponService {
 
     @Transactional
     public CouponResDto createCoupon(CouponCreateReqDto couponCreateReqDto) {
-        MemberEntity memberEntity = memberRepository.findById(couponCreateReqDto.getMemberNo())
-                .orElseThrow(() -> new EntityNotFoundException("회원 정보를 조회할 수 없습니다."));
+        MemberEntity memberEntity = findMember(couponCreateReqDto.getMemberNo());
         CouponEntity entity = couponCreateReqDto.toEntity(memberEntity);
         return CouponResDto.from(couponRepository.save(entity));
     }
@@ -48,9 +47,13 @@ public class CouponService {
 
 
     public List<CouponResDto> findCouponsByMemberNo(Long no) {
-        MemberEntity memberEntity = memberRepository.findById(no)
-                .orElseThrow(() -> new EntityNotFoundException("회원 정보를 조회할 수 없습니다."));
+        MemberEntity memberEntity = findMember(no);
         List<CouponEntity> memberCouponList = couponRepository.findByMemberAndStatus(memberEntity.getNo(), CouponStatus.AVAILABLE);
         return memberCouponList.stream().map(CouponResDto::from).toList();
+    }
+
+    private MemberEntity findMember(Long memberNo) {
+        return memberRepository.findById(memberNo)
+                .orElseThrow(() -> new CustomException(MemberErrorCode.MEMBER_NOT_FOUND));
     }
 }
