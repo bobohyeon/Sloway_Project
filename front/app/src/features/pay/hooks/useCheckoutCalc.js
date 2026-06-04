@@ -1,12 +1,11 @@
 export const useCheckoutCalc = ({
-  pricePerNight,
-  nights,
-  serviceFee,
+  baseAmt,
   selectedCoupon,
   points,
   agrees,
 }) => {
-  const subtotal = pricePerNight * nights;
+  // 예약 금액(amt)이 서비스피 포함 총액 — 별도 serviceFee 없음
+  const subtotal = baseAmt ?? 0;
 
   const couponDiscount = selectedCoupon
     ? selectedCoupon.type === 'percent'
@@ -14,7 +13,7 @@ export const useCheckoutCalc = ({
       : selectedCoupon.discount
     : 0;
 
-  const total = subtotal + serviceFee - couponDiscount - points;
+  const total = subtotal - couponDiscount - points;
   const earnPoints = Math.floor(total * 0.01);
 
   const canPay = Object.values(agrees).every(Boolean);

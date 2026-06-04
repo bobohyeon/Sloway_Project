@@ -73,7 +73,7 @@ export function BookingSummaryCard({ booking }) {
             {booking.type}
           </Badge>
           <Name>{booking.name}</Name>
-          <Loc>📍 {booking.loc}</Loc>
+          {booking.loc && <Loc>📍 {booking.loc}</Loc>}
           <InfoList>
             <InfoRow>
               <span>일정</span>

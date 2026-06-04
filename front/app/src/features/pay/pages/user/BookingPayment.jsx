@@ -18,6 +18,7 @@ import { toPayMethod } from '../../constants/payMethod';
 import { findCouponsByMemberNo } from '../../../coupon/api/couponApi';
 import { findPointBalanceByMemberNo } from '../../../point/api/pointApi';
 import { useAuth } from '../../../auth/hooks/useAuth';
+import { findOneRsvn } from '../../../rsvn/api/rsvnApi';
 
 const Layout = styled.div`
   display: grid;
@@ -53,22 +54,12 @@ const LoadErrorBanner = styled.div`
   font-size: 0.88rem;
 `;
 
-// TODO(예약 정보): 공간명·금액은 아직 하드코딩 — rsvnNo로 예약 상세를 조회해 교체 필요 (김보현 예약 API)
-const PRICE_PER_NIGHT = 185000;
-const NIGHTS = 2;
-const SERVICE_FEE = 12000;
-
-const BOOKING = {
-  bookingId: 'SW-20260508-000847',
-  name: '청평 숲속 파인뷰 스테이',
-  type: '워크앤스테이',
-  loc: '경기 가평',
-  emoji: '🌲',
-  dates: '5월 8일 (목) ~ 5월 10일 (토)',
-  nights: NIGHTS,
-  guests: '성인 2명',
-  pricePerNight: PRICE_PER_NIGHT,
-};
+const CenterText = styled.div`
+  text-align: center;
+  padding: var(--space-10) var(--space-4);
+  color: var(--gray-600);
+  font-size: 0.95rem;
+`;
 
 const toCouponForUI = (resDto) => ({
   no: resDto.no,
@@ -105,6 +96,7 @@ export default function BookingPaymentPage() {
     setAgrees,
   } = useCheckoutForm();
 
+  const [rsvn, setRsvn] = useState(null);
   const [coupons, setCoupons] = useState([]);
   const [heldPoints, setHeldPoints] = useState(0);
   const [paying, setPaying] = useState(false);
@@ -122,6 +114,16 @@ export default function BookingPaymentPage() {
       return;
     }
     const loadData = async () => {
+      // 예약 정보는 필수 — 실패 시 결제 진행 불가
+      try {
+        const rsvnData = await findOneRsvn(rsvnNo);
+        setRsvn(rsvnData);
+      } catch (err) {
+        console.error('예약 정보 조회 실패', err);
+        setLoadError('예약 정보를 불러오지 못했어요. 예약을 다시 확인해주세요.');
+        return;
+      }
+      // 쿠폰·포인트는 선택 — 실패해도 할인 없이 결제 가능
       try {
         const [couponList, balanceResDto] = await Promise.all([
           findCouponsByMemberNo(memberNo),
@@ -130,7 +132,7 @@ export default function BookingPaymentPage() {
         setCoupons(couponList.map(toCouponForUI));
         setHeldPoints(balanceResDto.balance);
       } catch (err) {
-        console.error('결제 페이지 데이터 로드 실패', err);
+        console.error('쿠폰·포인트 로드 실패', err);
         setLoadError(
           '쿠폰·포인트 정보를 불러오지 못했어요. 할인 없이 결제는 진행할 수 있어요.'
         );
@@ -139,11 +141,28 @@ export default function BookingPaymentPage() {
     loadData();
   }, [memberNo, rsvnNo, nav]);
 
+  const nights = rsvn
+    ? Math.max(
+        1,
+        Math.round(
+          (new Date(rsvn.checkOut) - new Date(rsvn.checkIn)) / 86400000
+        )
+      )
+    : 0;
+
+  const booking = rsvn && {
+    emoji: '🏠',
+    type: rsvn.spaceType,
+    name: rsvn.spaceName,
+    loc: '',
+    dates: `${rsvn.checkIn?.slice(0, 10)} ~ ${rsvn.checkOut?.slice(0, 10)}`,
+    guests: `${rsvn.count}명`,
+    nights,
+  };
+
   const { subtotal, couponDiscount, total, earnPoints, canPay } =
     useCheckoutCalc({
-      pricePerNight: PRICE_PER_NIGHT,
-      nights: NIGHTS,
-      serviceFee: SERVICE_FEE,
+      baseAmt: rsvn?.amt,
       selectedCoupon,
       points,
       agrees,
@@ -162,7 +181,7 @@ export default function BookingPaymentPage() {
       usedPoint: points,
       method,
       baseAmt: subtotal,
-      addAmt: SERVICE_FEE,
+      addAmt: 0,
     };
 
     try {
@@ -187,6 +206,15 @@ export default function BookingPaymentPage() {
     }
   };
 
+  if (!rsvn) {
+    return (
+      <PageLayout maxWidth={1200}>
+        <PaymentSteps current={2} />
+        <CenterText>{loadError ?? '예약 정보를 불러오는 중…'}</CenterText>
+      </PageLayout>
+    );
+  }
+
   return (
     <PageLayout maxWidth={1200}>
       <PaymentSteps current={2} />
@@ -194,7 +222,7 @@ export default function BookingPaymentPage() {
 
       <Layout>
         <Main>
-          <BookingSummaryCard booking={BOOKING} />
+          <BookingSummaryCard booking={booking} />
 
           <CouponSection
             coupons={coupons}
@@ -219,9 +247,7 @@ export default function BookingPaymentPage() {
 
         <Sidebar>
           <PaymentSummary
-            pricePerNight={BOOKING.pricePerNight}
-            nights={BOOKING.nights}
-            serviceFee={SERVICE_FEE}
+            subtotal={subtotal}
             couponDiscount={couponDiscount}
             usePoints={points}
             total={total}
