@@ -1,5 +1,6 @@
 package com.sloway.app.place.controller.like;
 
+import com.sloway.app.auth.user.CustomUserDetails;
 import com.sloway.app.place.dto.response.like.LikeRespDto;
 import com.sloway.app.place.entity.like.LikeEntity;
 import com.sloway.app.place.service.like.LikeService;
@@ -21,8 +22,13 @@ public class LikeApiController {
     private final LikeService likeService;
 
     @PostMapping("/{no}")
-    public ResponseEntity<Object> saveLike(@PathVariable Long placeNo, @AuthenticationPrincipal Long userNo){
-        likeService.saveLike(placeNo, userNo);
+    public ResponseEntity<Object> saveLike(@PathVariable Long placeNo, @AuthenticationPrincipal CustomUserDetails userDetails){
+        if (userDetails == null) {
+            throw new RuntimeException("로그인이 필요합니다.");
+        }
+        Long memberNo = userDetails.getMemberNo();
+
+        likeService.saveLike(placeNo, memberNo);
 
         return ResponseEntity
                 .status(HttpStatus.CREATED)
@@ -30,8 +36,13 @@ public class LikeApiController {
     }
 
     @DeleteMapping("/{likeNo}")
-    public ResponseEntity<Object> deleteLike(@PathVariable Long likeNo,@RequestBody Long placeNo, @AuthenticationPrincipal Long userNo){
-        likeService.deleteLike(likeNo, placeNo, userNo);
+    public ResponseEntity<Object> deleteLike(@PathVariable Long likeNo, @AuthenticationPrincipal CustomUserDetails userDetails){
+        if (userDetails == null) {
+            throw new RuntimeException("로그인이 필요합니다.");
+        }
+        Long memberNo = userDetails.getMemberNo();
+
+        likeService.deleteLike(likeNo, memberNo);
 
         return ResponseEntity
                 .status(HttpStatus.OK)
@@ -39,8 +50,13 @@ public class LikeApiController {
     }
 
     @GetMapping
-    public ResponseEntity<List<LikeRespDto>> likeList(@AuthenticationPrincipal Long userNo){
-        List<LikeRespDto> list = likeService.likeList(userNo);
+    public ResponseEntity<List<LikeRespDto>> likeList(@AuthenticationPrincipal CustomUserDetails userDetails){
+        if (userDetails == null) {
+            throw new RuntimeException("로그인이 필요합니다.");
+        }
+        Long memberNo = userDetails.getMemberNo();
+
+        List<LikeRespDto> list = likeService.likeList(memberNo);
         return ResponseEntity
                 .status(HttpStatus.OK)
                 .body(list);

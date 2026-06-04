@@ -79,6 +79,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
      */
     private void setAuthentication(String token) {
         Long memberNo = jwtUtil.getMemberNo(token);
+        System.out.println("memberNo = " + memberNo);
         String email = jwtUtil.getEmail(token);
 
         MemberRole role =  MemberRole.valueOf(jwtUtil.getRole(token));

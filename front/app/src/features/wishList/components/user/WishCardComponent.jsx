@@ -1,9 +1,9 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import styled from 'styled-components';
+import styled, { keyframes, css } from 'styled-components';
 import { FaHeart } from 'react-icons/fa';
 
-// --- 스타일 컴포넌트 (참고용) ---
+// --- 스타일 컴포넌트 ---
 const Grid = styled.div`
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
@@ -11,18 +11,39 @@ const Grid = styled.div`
   padding: 20px;
 `;
 
+const fadeOut = keyframes`
+  0% { 
+    opacity: 1; 
+    transform: scale(1);
+    max-height: 500px; /* 카드의 평균 높이보다 크게 설정 */
+    margin-bottom: 20px; /* 기존 gap에 대응 */
+  }
+  100% { 
+    opacity: 0; 
+    transform: scale(0.9);
+    max-height: 0; 
+    margin-bottom: 0;
+    padding-top: 0;
+    padding-bottom: 0;
+    border: 0;
+  }
+`;
+
 const Card = styled.div`
+  /* 기존 스타일 유지 */
   border: 1px solid #eee;
   border-radius: 12px;
   overflow: hidden;
   cursor: pointer;
   transition: transform 0.2s;
-  &:hover {
-    transform: translateY(-4px);
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-  }
-`;
 
+  ${(props) =>
+    props.$isDeleting &&
+    css`
+      animation: ${fadeOut} 0.5s ease-in-out forwards;
+      pointer-events: none; /* 애니메이션 도중 클릭 방지 */
+    `}
+`;
 const ImageBox = styled.div`
   position: relative;
   height: 180px;
@@ -33,20 +54,27 @@ const ImageBox = styled.div`
   font-size: 3rem;
 `;
 
-const HeartBadge = styled.div`
+// 수정된 하트 버튼 스타일 (원형/배경 제거)
+const HeartButton = styled.button`
   position: absolute;
   top: 12px;
   right: 12px;
-  color: #ff4d4f;
-  background: white;
-  width: 20px;
-  height: 20px;
-  border-radius: 50%;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  padding: 0;
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+  color: #ff4d4f;
+  font-size: 24px;
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.2));
+  transition: transform 0.2s;
   z-index: 2;
+
+  &:hover {
+    transform: scale(1.1);
+  }
 `;
 
 const Content = styled.div`
@@ -84,50 +112,70 @@ const Content = styled.div`
     }
   }
 `;
+
 const WishCardComponent = ({ data, onToggleWish }) => {
+  const [deletingId, setDeletingId] = React.useState(null);
   const navigate = useNavigate();
 
-  // 1. 유형별 경로 매핑 (DB의 type 값과 URL 경로를 연결)
+  const handleRemove = (e, id) => {
+    e.stopPropagation();
+    setDeletingId(id); // 애니메이션 시작
+
+    // 애니메이션이 끝난 후(0.5초 뒤) 실제 삭제 처리
+    setTimeout(() => {
+      onToggleWish(id);
+      setDeletingId(null);
+    }, 500);
+  };
+
   const pathMap = {
     WORK_STAY: 'workstays',
     OFFICE: 'coworking-offices',
-    ACCOMMODATION: 'accommodations',
-  };
-
-  const handleCardClick = (item) => {
-    // 매핑된 경로가 있으면 해당 경로로, 없으면 기본값(예: accommodations) 설정
-    const basePath = pathMap[item.type] || 'accommodations';
-    navigate(`/${basePath}/${item.id}`);
+    STATION: 'stations',
   };
 
   return (
     <Grid>
       {data.map((item) => (
-        <Card key={item.id} onClick={() => handleCardClick(item)}>
+        <Card
+          key={item.no}
+          $isDeleting={deletingId === item.no} // 삭제 중인지 여부 전달
+          onClick={() =>
+            navigate(`/${pathMap[item.type] || 'accommodations'}/${item.no}`)
+          }
+        >
           <ImageBox>
-            {item.icon}
-            <HeartBadge
-              onClick={(e) => {
-                e.stopPropagation();
-                onToggleWish(item.id);
-              }}
-            >
+            {item.thumbnail ? (
+              <img
+                src={item.thumbnail}
+                alt={item.placeTitle}
+                style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+              />
+            ) : (
+              '🏠'
+            )}
+
+            {/* 수정된 하트 버튼 적용 */}
+            <HeartButton onClick={(e) => handleRemove(e, item.no)}>
               <FaHeart />
-            </HeartBadge>
+            </HeartButton>
           </ImageBox>
 
           <Content>
             <div className="type-tag">
-              {item.typeLabel} · 찜한 날 {item.wishDate}
+              {item.type} · 찜한 날{' '}
+              {item.createdAt
+                ? new Date(item.createdAt).toLocaleDateString()
+                : ''}
             </div>
-            <div className="title">{item.title}</div>
-            <div className="info">📍 {item.location}</div>
+            <div className="title">{item.placeTitle}</div>
+            <div className="info">📍 {item.address}</div>
             <div className="price-row">
               <span className="rating">⭐ {item.rating}</span>
               <span className="price">
-                {item.price.toLocaleString()}원
+                {item.price?.toLocaleString()}원
                 <span className="unit">
-                  {item.type === 'OFFICE' ? '1h' : '박'}
+                  {item.type === 'OFFICE' ? ' /시간' : ' /박'}
                 </span>
               </span>
             </div>
