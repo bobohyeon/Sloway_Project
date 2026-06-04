@@ -24,8 +24,8 @@ public class AccountService {
     private final HostRepository hostRepository;
 
     @Transactional
-    public AccountResDto registerAccount(AccountCreateReqDto reqDto) {
-        HostEntity hostEntity = hostRepository.findById(reqDto.getHostNo())
+    public AccountResDto registerAccount(Long memberNo,AccountCreateReqDto reqDto) {
+        HostEntity hostEntity = hostRepository.findByMemberNo(memberNo)
                 .orElseThrow(() -> new CustomException(HostErrorCode.HOST_NOT_FOUND));
         AccountEntity accountEntity = accountRepository.findByHostNo(hostEntity.getNo());
 
@@ -37,8 +37,10 @@ public class AccountService {
         }
     }
 
-    public AccountResDto findAccountByHostNo(Long hostNo) {
-        AccountEntity accountEntity = accountRepository.findByHostNo(hostNo);
+    public AccountResDto findAccountByHostNo(Long memberNo) {
+        HostEntity hostEntity = hostRepository.findByMemberNo(memberNo)
+                .orElseThrow(() -> new CustomException(HostErrorCode.HOST_NOT_FOUND));
+        AccountEntity accountEntity = accountRepository.findByHostNo(hostEntity.getNo());
         if (accountEntity == null) return null;
         return AccountResDto.from(accountEntity);
     }
