@@ -174,16 +174,19 @@ public class StatsService {
         List<Long> officeNos = hostPlaces.stream()
                 .filter(hp -> hp.getOfficeEntity() != null)
                 .map(hp -> hp.getOfficeEntity().getNo())
+                .distinct()
                 .toList();
 
         List<Long> stationNos = hostPlaces.stream()
                 .filter(hp -> hp.getStationEntity() != null)
                 .map(hp -> hp.getStationEntity().getNo())
+                .distinct()
                 .toList();
 
         List<Long> workStayNos = hostPlaces.stream()
                 .filter(hp -> hp.getWorkStayEntity() != null)
                 .map(hp -> hp.getWorkStayEntity().getNo())
+                .distinct()
                 .toList();
 
         YearMonth ym = YearMonth.of(year, month);
