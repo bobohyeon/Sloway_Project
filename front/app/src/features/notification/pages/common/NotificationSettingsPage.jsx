@@ -1,17 +1,9 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import styled, { css } from 'styled-components';
 import PageLayout from '../../../../app/layouts/page/PageLayout';
 import { useNavigate } from 'react-router-dom';
+import api from '../../../../app/api/axiosApi';
 
-// ─── 알림 채널 타입 ───────────────────────────────────────────────────────────
-// 백엔드 연동 시 PUT /api/notifications/settings 바디 스펙과 키 이름 맞출 것
-/**
- * @typedef {{ push: boolean }} ChannelState
- * @typedef {{ [itemKey: string]: ChannelState }} SettingMap
- */
-
-// ─── 설정 그룹 정의 ──────────────────────────────────────────────────────────
-// label: UI 표시명 | key: API 전송 키 | description: 부가 설명
 const SETTING_GROUPS = [
   {
     groupKey: 'communication',
@@ -66,15 +58,12 @@ const SETTING_GROUPS = [
         key: 'eventNews',
         label: '이벤트 소식',
         description: '프로모션, 할인 이벤트 안내',
-        // 마케팅성 알림 — 법적 수신 동의 필요
         isMarketing: true,
       },
     ],
   },
 ];
 
-// ─── 초기 설정값 생성 ─────────────────────────────────────────────────────────
-// 백엔드 연동 시 GET /api/notifications/settings 응답값으로 초기화
 const buildInitialSettings = () => {
   const map = {};
   SETTING_GROUPS.forEach(({ items }) => {
@@ -85,41 +74,41 @@ const buildInitialSettings = () => {
   return map;
 };
 
-const CHANNEL_LABELS = {
-  push: '앱 푸시',
-};
+const CHANNEL_LABELS = { push: '앱 푸시' };
 
 export default function NotificationSettingsPage() {
   const navigate = useNavigate();
-  // 알림 설정 맵 — key: itemKey, value: { push, email, sms }
   const [settings, setSettings] = useState(buildInitialSettings);
+  const [isSaving, setIsSaving] = useState(false);
 
-  // 채널 토글 핸들러
-  // isMandatory 항목은 push 채널 비활성화 방지
+  useEffect(() => {
+    const fetch = async () => {
+      try {
+        const { data } = await api.get('/notifications/settings');
+        setSettings(data.settings);
+      } catch {
+        // 기본값 유지
+      }
+    };
+    fetch();
+  }, []);
+
   const handleToggle = (itemKey, channel, isMandatory) => {
-    if (isMandatory && channel === 'push') return; // 필수 알림 push는 끄기 불가
+    if (isMandatory && channel === 'push') return;
     setSettings((prev) => ({
       ...prev,
-      [itemKey]: {
-        ...prev[itemKey],
-        [channel]: !prev[itemKey][channel],
-      },
+      [itemKey]: { ...prev[itemKey], [channel]: !prev[itemKey][channel] },
     }));
   };
 
-  // 저장 — 백엔드 연동 시 PUT /api/notifications/settings 로 교체
-  const handleSave = () => {
-    const payload = {
-      settings,
-    };
-    console.log('[저장 payload]', payload);
-    // TODO: await api.put('/notifications/settings', payload)
-    alert('설정이 저장됐습니다.');
-    navigate(`/user/notification`);
-  };
-
-  const handleCancel = () => {
-    navigate(-1);
+  const handleSave = async () => {
+    setIsSaving(true);
+    try {
+      await api.put('/notifications/settings', { settings });
+      navigate('/user/notification');
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   return (
@@ -128,7 +117,6 @@ export default function NotificationSettingsPage() {
       description="받고 싶은 알림만 선택하실 수 있어요"
       maxWidth={800}
     >
-      {/* 채널 헤더 범례 */}
       <ChannelLegend aria-hidden="true">
         <LegendSpacer />
         {['push'].map((ch) => (
@@ -136,7 +124,6 @@ export default function NotificationSettingsPage() {
         ))}
       </ChannelLegend>
 
-      {/* 그룹별 설정 */}
       {SETTING_GROUPS.map((group) => (
         <SectionCard key={group.groupKey}>
           <GroupHeader>
@@ -149,24 +136,17 @@ export default function NotificationSettingsPage() {
 
           <ItemList>
             {group.items.map((item, idx) => {
-              const itemSetting = settings[item.key];
+              const itemSetting = settings[item.key] ?? { push: true };
               return (
-                <SettingItem
-                  key={item.key}
-                  $last={idx === group.items.length - 1}
-                >
+                <SettingItem key={item.key} $last={idx === group.items.length - 1}>
                   <ItemInfo>
                     <ItemLabel>
                       {item.label}
                       {item.isMandatory && (
-                        <MandatoryBadge aria-label="필수 알림">
-                          필수
-                        </MandatoryBadge>
+                        <MandatoryBadge aria-label="필수 알림">필수</MandatoryBadge>
                       )}
                       {item.isMarketing && (
-                        <MarketingBadge aria-label="마케팅 알림">
-                          마케팅
-                        </MarketingBadge>
+                        <MarketingBadge aria-label="마케팅 알림">마케팅</MarketingBadge>
                       )}
                     </ItemLabel>
                     <ItemDesc>{item.description}</ItemDesc>
@@ -177,9 +157,7 @@ export default function NotificationSettingsPage() {
                       <Toggle
                         key={ch}
                         checked={itemSetting[ch]}
-                        onChange={() =>
-                          handleToggle(item.key, ch, item.isMandatory)
-                        }
+                        onChange={() => handleToggle(item.key, ch, item.isMandatory)}
                         disabled={item.isMandatory && ch === 'push'}
                         aria-label={`${item.label} ${CHANNEL_LABELS[ch]} 알림`}
                       />
@@ -192,26 +170,23 @@ export default function NotificationSettingsPage() {
         </SectionCard>
       ))}
 
-      {/* 마케팅 수신 동의 안내 */}
       <MarketingNotice>
         📌 정산, 세금계산서 등 금융 관련 알림, 예약 관련 알림, 결제 관련 알림은
         필수 발송되며 수신 거부가 불가합니다.
       </MarketingNotice>
 
-      {/* 저장 버튼 */}
       <FooterActions>
-        <CancelBtn type="button" onClick={handleCancel}>
+        <CancelBtn type="button" onClick={() => navigate(-1)}>
           취소
         </CancelBtn>
-        <SaveBtn type="button" onClick={handleSave}>
-          설정 저장
+        <SaveBtn type="button" onClick={handleSave} disabled={isSaving}>
+          {isSaving ? '저장 중...' : '설정 저장'}
         </SaveBtn>
       </FooterActions>
     </PageLayout>
   );
 }
 
-// ─── Toggle 컴포넌트 (재사용 가능하도록 분리) ────────────────────────────────
 function Toggle({ checked, onChange, disabled, 'aria-label': ariaLabel }) {
   return (
     <ToggleWrap
@@ -239,8 +214,6 @@ const SectionCard = styled.div`
   margin-bottom: var(--space-3);
 `;
 
-// ─── 채널 범례 ────────────────────────────────────────────────────────────────
-
 const ChannelLegend = styled.div`
   display: flex;
   align-items: center;
@@ -250,9 +223,7 @@ const ChannelLegend = styled.div`
   margin-bottom: 4px;
 `;
 
-const LegendSpacer = styled.div`
-  flex: 1;
-`;
+const LegendSpacer = styled.div`flex: 1;`;
 
 const LegendLabel = styled.span`
   width: 56px;
@@ -261,8 +232,6 @@ const LegendLabel = styled.span`
   color: var(--gray-400);
   font-weight: 500;
 `;
-
-// ─── 그룹 헤더 ────────────────────────────────────────────────────────────────
 
 const GroupHeader = styled.div`
   display: flex;
@@ -273,10 +242,7 @@ const GroupHeader = styled.div`
   border-bottom: 1px solid var(--gray-100);
 `;
 
-const GroupIcon = styled.span`
-  font-size: 1.1rem;
-`;
-
+const GroupIcon = styled.span`font-size: 1.1rem;`;
 const GroupInfo = styled.div``;
 
 const GroupLabel = styled.p`
@@ -290,8 +256,6 @@ const GroupDesc = styled.p`
   color: var(--gray-400);
   margin-top: 1px;
 `;
-
-// ─── 설정 아이템 ──────────────────────────────────────────────────────────────
 
 const ItemList = styled.div`
   display: flex;
@@ -356,8 +320,6 @@ const ChannelToggles = styled.div`
   gap: 0;
 `;
 
-// ─── Toggle 스타일 ────────────────────────────────────────────────────────────
-// width: 56px은 LegendLabel과 동일하게 맞춰 열 정렬 유지
 const ToggleWrap = styled.div`
   width: 56px;
   display: flex;
@@ -391,8 +353,6 @@ const ToggleThumb = styled.div`
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
   transition: left 180ms ease;
 `;
-
-// ─── 하단 ─────────────────────────────────────────────────────────────────────
 
 const MarketingNotice = styled.p`
   font-size: 0.78rem;
@@ -434,10 +394,11 @@ const SaveBtn = styled.button`
   color: var(--white);
   background: var(--sage);
   border-radius: var(--radius-md);
-  cursor: pointer;
+  cursor: ${(p) => (p.disabled ? 'not-allowed' : 'pointer')};
+  opacity: ${(p) => (p.disabled ? 0.6 : 1)};
   transition: filter 150ms ease;
 
-  &:hover {
+  &:hover:not(:disabled) {
     filter: brightness(0.92);
   }
 `;

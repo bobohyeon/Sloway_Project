@@ -1,5 +1,6 @@
-import React from "react";
-import styled from "styled-components";
+import React from 'react';
+import { useNavigate } from 'react-router-dom';
+import styled from 'styled-components';
 
 const Section = styled.div`
   background: white;
@@ -77,29 +78,55 @@ const PriceArea = styled.div`
 `;
 
 function RecentBookings({ bookings = [] }) {
+  const navigate = useNavigate();
+  const formatBookingPeriod = (periodString) => {
+    if (!periodString) return '';
+    const parts = periodString.split('-');
+    const dates = periodString.match(/\d{4}-\d{2}-\d{2}/g);
+    if (!dates || dates.length < 2) return periodString;
+
+    const formatDate = (dateStr) => {
+      const [year, month, day] = dateStr.split('-');
+      return `${month}.${day}`;
+    };
+
+    return `${formatDate(dates[0])} ~ ${formatDate(dates[1])}`;
+  };
   return (
     <Section>
       <TitleArea>
         <h3>최근 예약</h3>
-        <div className="view-all">전체 →</div>
+        <div
+          className="view-all"
+          onClick={() => {
+            navigate(`/host/reservation/list`);
+          }}
+        >
+          전체 →
+        </div>
       </TitleArea>
 
       {bookings.length > 0 ? (
         bookings.map((booking) => (
-          <BookingCard key={booking.id}>
+          <BookingCard
+            key={booking.bookingId}
+            onClick={() => {
+              navigate(`/host/reservation/list/${booking.bookingId}`);
+            }}
+          >
             <UserIcon>👤</UserIcon>
             <BookingInfo>
-              <div className="user-name">{booking.name}</div>
+              <div className="user-name">{booking.userName}</div>
               <div className="sub-info">
-                <span>{booking.code}</span>
-                <span>📅 {booking.date}</span>
+                <span>{booking.bookingCode}</span>
+                <span>📅 {formatBookingPeriod(booking.bookingPeriod)}</span>
               </div>
             </BookingInfo>
-            <PriceArea>{booking.price}원</PriceArea>
+            <PriceArea>{booking.totalPrice}원</PriceArea>
           </BookingCard>
         ))
       ) : (
-        <div style={{ textAlign: "center", padding: "30px", color: "#ccc" }}>
+        <div style={{ textAlign: 'center', padding: '30px', color: '#ccc' }}>
           최근 예약 내역이 없습니다.
         </div>
       )}

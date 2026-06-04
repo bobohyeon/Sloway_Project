@@ -4,6 +4,7 @@ import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import { Badge, Button, Modal, Card } from '../../pay_shared/components';
 import PageLayout from '../../../app/layouts/page/PageLayout';
 import api from '../../../app/api/axiosApi';
+import { useAuth } from '../../auth/hooks/useAuth';
 
 const CATEGORY_LABEL = {
   RESERVATION: '예약',
@@ -23,6 +24,7 @@ export default function InquiryDetailPage() {
   const navigate = useNavigate();
   const location = useLocation();
   const { id } = useParams();
+  const { user, role } = useAuth();
   const isAdmin = location.pathname.startsWith('/admin');
 
   const [inquiry, setInquiry] = useState(null);
@@ -62,7 +64,14 @@ export default function InquiryDetailPage() {
       {/* 브레드크럼 */}
       <Breadcrumb>
         <BreadcrumbBtn
-          onClick={() => navigate(isAdmin ? '/admin/inquiry' : '/user/inquiry')}
+          onClick={() => {
+            const path = isAdmin
+              ? '/admin/inquiry'
+              : user?.role === 'U'
+                ? '/user/inquiry'
+                : '/host/inquiry';
+            navigate(path);
+          }}
         >
           {isAdmin ? '문의사항 관리' : '내 문의사항'}
         </BreadcrumbBtn>
@@ -103,7 +112,13 @@ export default function InquiryDetailPage() {
               <Button
                 size="sm"
                 variant="secondary"
-                onClick={() => navigate(`/user/inquiry/form/${id}`)}
+                onClick={() => {
+                  const path =
+                    user?.role === 'U'
+                      ? `/user/inquiry/form/${id}`
+                      : `/host/inquiry/form/${id}`;
+                  navigate(path);
+                }}
               >
                 수정
               </Button>
@@ -152,7 +167,16 @@ export default function InquiryDetailPage() {
       <BackBtn>
         <Button
           variant="secondary"
-          onClick={() => navigate(isAdmin ? '/admin/inquiry' : '/user/inquiry')}
+          onClick={() => {
+            const path = isAdmin
+              ? '/admin/inquiry'
+              : user?.role === 'U'
+                ? '/user/inquiry'
+                : '/host/inquiry';
+            navigate(path);
+          }}
+
+          // onClick={() => navigate(isAdmin ? '/admin/inquiry' : '/user/inquiry')}
         >
           ← 목록으로
         </Button>

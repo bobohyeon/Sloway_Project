@@ -181,7 +181,7 @@ import FaqListPage from './features/faq/pages/FaqListPage';
 
 // ── FAQ (관리자) ──────────────────────────────────────────
 import FaqFormPage from './features/faq/pages/FaqFormPage';
-import FaqManagePage from './features/faq/pages/FaqManagePage';
+import FaqManagePage from './features/faq/pages/admin/FaqManagePage';
 
 // ── 알림 (공통) ───────────────────────────────────────────
 import NotificationListPage from './features/notification/pages/common/NotificationListPage';
@@ -308,7 +308,10 @@ function App() {
         <Route path="/review/:id" element={<ReviewDetailPage />} />
         <Route path="/user/inquiry" element={<InquiryListPage />} />
         <Route path="/user/inquiry/form" element={<InquiryFormPage />} />
-        <Route path="/user/inquiry/form/:id" element={<InquiryFormPage isEdit />} />
+        <Route
+          path="/user/inquiry/form/:id"
+          element={<InquiryFormPage isEdit />}
+        />
         <Route path="/user/inquiry/:id" element={<InquiryDetailPage />} />
         {/* 소통 */}
         <Route path="/user/chat" element={<UserChatListPage />} />
@@ -406,6 +409,13 @@ function App() {
         <Route path="/host/settlement/tax" element={<TaxInvoice />} />
         <Route path="/host/stats/sales" element={<SalesStats />} />
         {/* 소통 */}
+        <Route path="/host/inquiry" element={<InquiryListPage />} />
+        <Route path="/host/inquiry/form" element={<InquiryFormPage />} />
+        <Route
+          path="/host/inquiry/form/:id"
+          element={<InquiryFormPage isEdit />}
+        />
+        <Route path="/host/inquiry/:id" element={<InquiryDetailPage />} />
         <Route path="/host/review" element={<HostReviewPage />} />
         <Route path="/host/chat" element={<HostChatListPage />} />
         <Route path="/host/chat/:id" element={<HostChatDetailPage />} />

@@ -1,5 +1,6 @@
 package com.sloway.app.place.controller.workStay;
 
+import com.sloway.app.auth.user.CustomUserDetails;
 import com.sloway.app.place.dto.request.sort.ImgSortReqDto;
 import com.sloway.app.place.dto.request.sort.ImgUpdateSortReqDto;
 import com.sloway.app.place.dto.request.workStay.WorkStayReqDto;
@@ -38,7 +39,11 @@ public class WorkStayApiController {
             @RequestPart(name = "officeFiles", required = false) List<MultipartFile> officeFiles,
             @RequestPart("sortList") List<ImgSortReqDto> sortList,
             @RequestPart("officeSortList") List<ImgSortReqDto> officeSortList,
-            @AuthenticationPrincipal Long memberNo) {
+            @AuthenticationPrincipal CustomUserDetails userDetails) {
+        if (userDetails == null) {
+            throw new RuntimeException("로그인이 필요합니다.");
+        }
+        Long memberNo = userDetails.getMemberNo();
 
         workStayService.saveWorkStay(dto, officeDto, files, officeFiles,sortList, officeSortList, memberNo);
 
@@ -52,8 +57,12 @@ public class WorkStayApiController {
     public ResponseEntity<Object> updateWorkStay(
             @PathVariable Long no,
             @RequestBody WorkUpdateDtoWrapper wrapper,
-            @AuthenticationPrincipal Long memberNo
+            @AuthenticationPrincipal CustomUserDetails userDetails
     ) {
+        if (userDetails == null) {
+            throw new RuntimeException("로그인이 필요합니다.");
+        }
+        Long memberNo = userDetails.getMemberNo();
 
         workStayService.updateWorkStay(no, wrapper.getStay(), wrapper.getOffice(), memberNo);
 
@@ -71,7 +80,11 @@ public class WorkStayApiController {
             @RequestPart(name = "officeFiles", required = false) List<MultipartFile> officeFiles,
             @RequestPart("sortList") List<ImgUpdateSortReqDto> sortList,
             @RequestPart("officeSortList") List<ImgUpdateSortReqDto> officeSortList,
-            @AuthenticationPrincipal Long memberNo) {
+            @AuthenticationPrincipal CustomUserDetails userDetails) {
+        if (userDetails == null) {
+            throw new RuntimeException("로그인이 필요합니다.");
+        }
+        Long memberNo = userDetails.getMemberNo();
 
         workStayService.updateImageWorkStay(no, files, sortList, officeFiles, officeSortList, memberNo);
 
@@ -92,20 +105,35 @@ public class WorkStayApiController {
     }
 
     @GetMapping("/update/image/{no}")
-    public ResponseEntity<WorkStayImageListRespDto> selectImageList(@PathVariable Long no, @AuthenticationPrincipal Long memberNo){
+    public ResponseEntity<WorkStayImageListRespDto> selectImageList(@PathVariable Long no, @AuthenticationPrincipal CustomUserDetails userDetails){
+        if (userDetails == null) {
+            throw new RuntimeException("로그인이 필요합니다.");
+        }
+        Long memberNo = userDetails.getMemberNo();
+
         WorkStayImageListRespDto dto = workStayService.selectImageList(no, memberNo);
 
         return ResponseEntity.ok(dto);
     }
 
     @GetMapping("/detail/dash/{no}")
-    public ResponseEntity<StationDetailRespDto> selectWorkStayDetailDashBoard(@PathVariable Long no, @AuthenticationPrincipal Long memberNo){
+    public ResponseEntity<StationDetailRespDto> selectWorkStayDetailDashBoard(@PathVariable Long no, @AuthenticationPrincipal CustomUserDetails userDetails){
+        if (userDetails == null) {
+            throw new RuntimeException("로그인이 필요합니다.");
+        }
+        Long memberNo = userDetails.getMemberNo();
+
         StationDetailRespDto dto = workStayService.selectWorkStayDetailDashBoard(no, memberNo);
         return ResponseEntity.ok(dto);
     }
 
     @GetMapping("/update/{no}")
-    public ResponseEntity<WorkStayUpdateDetailRespDto> selectDetailForUpdate(@PathVariable Long no, @AuthenticationPrincipal Long memberNo){
+    public ResponseEntity<WorkStayUpdateDetailRespDto> selectDetailForUpdate(@PathVariable Long no, @AuthenticationPrincipal CustomUserDetails userDetails){
+        if (userDetails == null) {
+            throw new RuntimeException("로그인이 필요합니다.");
+        }
+        Long memberNo = userDetails.getMemberNo();
+
         WorkStayUpdateDetailRespDto dto = workStayService.selectDetailForUpdate(no, memberNo);
 
         return ResponseEntity.ok(dto);

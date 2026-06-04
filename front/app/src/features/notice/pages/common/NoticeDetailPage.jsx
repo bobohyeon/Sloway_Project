@@ -11,7 +11,7 @@ export default function NoticeDetailPage() {
   const navigate = useNavigate();
   const { id } = useParams();
   const location = useLocation();
-  const backPath = location.state?.from ?? '/notices';
+  const backPath = location.state?.from ?? '/notice';
 
   const [notice, setNotice] = useState(null);
 
@@ -21,7 +21,7 @@ export default function NoticeDetailPage() {
         const { data } = await api.get(`/notice/${id}`);
         setNotice(data);
       } catch {
-        navigate('/notices', { replace: true });
+        navigate('/notice', { replace: true });
       }
     };
     fetch();
@@ -77,10 +77,7 @@ export default function NoticeDetailPage() {
             >
               수정
             </Button>
-            <Button
-              variant="danger"
-              onClick={handleDelete}
-            >
+            <Button variant="danger" onClick={handleDelete}>
               삭제
             </Button>
           </RightActions>

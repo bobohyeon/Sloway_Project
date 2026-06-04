@@ -27,10 +27,10 @@ public class LikeService {
     private final UserRepository userRepository;
 
     @Transactional
-    public void saveLike(Long placeNo, Long userNo) {
+    public void saveLike(Long placeNo, Long memberNo) {
         PlaceEntity placeEntity = placeRepository.findByNo(placeNo)
                 .orElseThrow(()->new EntityNotFoundException("[PLACE-380] Place Not Found For Like Insert"));
-        UserEntity userEntity = userRepository.findById(userNo)
+        UserEntity userEntity = userRepository.findByMemberNo(memberNo)
                 .orElseThrow(()->new EntityNotFoundException("[USER-311] User Not Found For Like Insert"));
 
         LikeEntity like = LikeEntity.builder()
@@ -42,15 +42,20 @@ public class LikeService {
     }
 
     @Transactional
-    public void deleteLike(Long likeNo, Long placeNo,Long userNo) {
-        PlaceEntity placeEntity = placeRepository.findByNo(placeNo)
-                .orElseThrow(()->new EntityNotFoundException("[PLACE-381] Place Not Found For Like Delete"));
-        UserEntity userEntity = userRepository.findById(userNo)
+    public void deleteLike(Long likeNo,Long memberNo) {
+        UserEntity userEntity = userRepository.findByMemberNo(memberNo)
                 .orElseThrow(()->new EntityNotFoundException("[USER-312] User Not Found For Like Delete"));
 
+        LikeEntity like = likeRespository.findById(likeNo)
+                .orElseThrow(()->new EntityNotFoundException("[LIKE-301] Like Not Found For Like Delete"));
+        if(like.getUserEntity().equals(userEntity)) {
+            likeRespository.delete(like);
+        }else {
+            return;
+        }
     }
 
-    public List<LikeRespDto> likeList(Long userNo) {
-        return likeRespository.findLikeByUserId(userNo);
+    public List<LikeRespDto> likeList(Long memberNo) {
+        return likeRespository.findByMemberNo(memberNo);
     }
 }

@@ -1,44 +1,26 @@
-import { useState } from 'react';
-import styled, { keyframes } from 'styled-components';
-import ReviewItem from './ReviewItem';
-import { COLOR } from '../../../../rsvn/components/user/RsvnStyled';
+import React from 'react';
+import { useNavigate } from 'react-router-dom';
+import styled from 'styled-components';
+import { FaHeart, FaRegHeart } from 'react-icons/fa'; // FaRegHeart 추가
 
-const TABS = ['공간 정보', '편의시설', '리뷰', '위치·주변'];
-
-const fadeIn = keyframes`
-  from { opacity: 0; transform: translateY(6px); }
-  to   { opacity: 1; transform: translateY(0); }
+// --- 기존 스타일 유지 및 ActionBtn 추가 ---
+const Grid = styled.div`
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 20px;
+  padding: 20px;
 `;
 
-const Wrap = styled.div`
-  font-family: 'Noto Sans KR', sans-serif;
-  color: #1a1a1a;
-`;
-
-const TypeBadge = styled.span`
-  display: inline-block;
-  font-size: 11px;
-  color: #4a4a4a;
-  border: 1px solid #e8dfd0;
-  border-radius: 4px;
-  padding: 2px 8px;
-  margin-bottom: 10px;
-`;
-
-const TitleRow = styled.div`
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 12px;
-  margin-bottom: 10px;
-`;
-
-const Title = styled.h1`
-  font-family: 'DM Serif Display', 'Noto Serif KR', serif;
-  font-size: 26px;
-  font-weight: 400;
-  color: #0d2418;
-  line-height: 1.3;
+const Card = styled.div`
+  border: 1px solid #eee;
+  border-radius: 12px;
+  overflow: hidden;
+  cursor: pointer;
+  transition: transform 0.2s;
+  &:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  }
 `;
 
 const Meta = styled.div`
@@ -49,79 +31,52 @@ const Meta = styled.div`
   color: #4a4a4a;
   margin-bottom: 20px;
 `;
-
-const Score = styled.span`
-  color: #c97d4c;
-  font-weight: 600;
-`;
-
-const Tabs = styled.div`
+const ImageBox = styled.div`
+  position: relative;
+  height: 180px;
+  background: #f5f5f5;
   display: flex;
-  border-bottom: 1px solid #e8dfd0;
+  align-items: center;
+  justify-content: center;
+  font-size: 3rem;
 `;
 
-const TabBtn = styled.button`
-  padding: 12px 16px;
-  font-size: 13px;
-  font-family: 'Noto Sans KR', sans-serif;
-  color: ${({ $active }) => ($active ? '#1A3A2A' : '#8A8A8A')};
-  font-weight: ${({ $active }) => ($active ? 600 : 400)};
-  background: none;
-  border: none;
-  border-bottom: 2px solid
-    ${({ $active }) => ($active ? '#2D6A4F' : 'transparent')};
+// 주신 ActionBtn 스타일 적용
+const HeartBtn = styled.button`
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  border: 1px solid #e8dfd0;
+  background: #fff;
+  font-size: 16px;
   cursor: pointer;
   display: flex;
   align-items: center;
-  gap: 4px;
-  margin-bottom: -1px;
+  justify-content: center;
   transition: all 0.2s;
+  z-index: 2;
+
+  /* 찜한 상태일 때의 스타일 */
+  color: #e65100;
+  border-color: #e65100;
+  background: #fff3e0;
+
   &:hover {
-    color: #2d6a4f;
+    background: #ffeccf;
+    border-color: #e65100;
   }
 `;
 
-const TabCount = styled.span`
-  font-size: 11px;
-  color: #8a8a8a;
+const Content = styled.div`
+  padding: 16px;
+  /* ... 기존 컨텐츠 스타일 동일 ... */
 `;
 
-const TabContent = styled.div`
-  animation: ${fadeIn} 0.2s ease;
-  padding-top: 28px;
-`;
-
-const SectionTitle = styled.h2`
-  font-family: 'DM Serif Display', serif;
-  font-size: 18px;
-  font-weight: 400;
-  color: #0d2418;
-  margin: 28px 0 14px;
-  &:first-child {
-    margin-top: 0;
-  }
-`;
-
-const Desc = styled.p`
-  font-size: 14px;
-  line-height: 1.8;
-  color: #4a4a4a;
-`;
-
-const InfoGrid = styled.div`
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 16px 40px;
-  background: ${COLOR.gray100};
-  border-radius: 10px;
-  padding: 16px 20px;
-`;
-
-const InfoItem = styled.div`
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-`;
+const WishCardComponent = ({ data, onToggleWish }) => {
+  const navigate = useNavigate();
 
 const InfoLabel = styled.span`
   font-size: 11px;
@@ -314,18 +269,61 @@ function DetailMainBox({ space = {}, reviews = [] }) {
           )}
         </TabContent>
       )}
+  const pathMap = {
+    WORK_STAY: 'workstays',
+    OFFICE: 'coworking-offices',
+    STATION: 'stations',
+  };
 
-      {/* ── 위치·주변 탭 ── */}
-      {activeTab === 3 && (
-        <TabContent>
-          <SectionTitle>위치·주변</SectionTitle>
-          <div style={{ color: COLOR.gray400, fontSize: 13 }}>
-            카카오맵 연동 예정
-          </div>
-        </TabContent>
-      )}
-    </Wrap>
+  return (
+    <Grid>
+      {data.map((item) => (
+        <Card
+          key={item.no}
+          onClick={() =>
+            navigate(`/${pathMap[item.type] || 'accommodations'}/${item.no}`)
+          }
+        >
+          <ImageBox>
+            {item.thumbnail ? (
+              <img
+                src={item.thumbnail}
+                alt={item.placeTitle}
+                style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+              />
+            ) : (
+              '🏠'
+            )}
+
+            {/* 개선된 하트 버튼 */}
+            <HeartBtn
+              onClick={(e) => {
+                e.stopPropagation();
+                onToggleWish(item.no);
+              }}
+            >
+              <FaHeart />
+            </HeartBtn>
+          </ImageBox>
+
+          <Content>
+            <div className="type-tag">{item.type}</div>
+            <div className="title">{item.placeTitle}</div>
+            <div className="info">📍 {item.address}</div>
+            <div className="price-row">
+              <span className="rating">⭐ {item.rating}</span>
+              <span className="price">
+                {item.price?.toLocaleString()}원
+                <span className="unit">
+                  {item.type === 'OFFICE' ? ' /시간' : ' /박'}
+                </span>
+              </span>
+            </div>
+          </Content>
+        </Card>
+      ))}
+    </Grid>
   );
-}
+};
 
-export default DetailMainBox;
+export default WishCardComponent;

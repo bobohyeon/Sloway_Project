@@ -1,6 +1,7 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import styled from 'styled-components';
 import { useNavigate } from 'react-router-dom';
+import { useDispatch } from 'react-redux';
 import {
   FaExclamationTriangle,
   FaStore,
@@ -11,13 +12,11 @@ import {
   FaTimes,
 } from 'react-icons/fa';
 import PageLayout from '../../../../app/layouts/page/PageLayout';
-
-// ─── 더미 데이터 (백엔드 연동 시 API로 교체) ───────────────
-const DUMMY_STATUS = {
-  ongoingReservations: 0, // 진행 중인 예약 건수 (0이어야 탈퇴 가능)
-  unsettledAmount: 0, // 미정산 금액 (0이어야 탈퇴 가능)
-  activeSpaces: 3, // 운영 중인 공간 수 (참고용)
-};
+import { withdrawHost } from '../../api/hostApi';
+import { useHostMyPage } from '../../hooks/useHostMyPage';
+import { findHostRsvns } from '../../../rsvn/api/rsvnApi';
+import { findSettleByHostNo } from '../../../settlement/api/settlementApi';
+import { logout } from '../../../auth/store/authSlice';
 
 // 사라지는 것들
 const LOSS_ITEMS = [
@@ -252,35 +251,6 @@ const ConfirmRow = styled.label`
   }
 `;
 
-const FormGroup = styled.div`
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-  margin-bottom: 16px;
-`;
-
-const Label = styled.label`
-  font-size: 13px;
-  font-weight: 500;
-  color: var(--gray-800);
-`;
-
-const Input = styled.input`
-  height: 42px;
-  padding: 0 14px;
-  border: 1px solid var(--gray-200);
-  border-radius: 8px;
-  font-size: 14px;
-  background: #fff;
-  color: var(--gray-800);
-  transition: border-color 0.15s;
-
-  &:focus {
-    outline: none;
-    border-color: var(--sage);
-  }
-`;
-
 const HelpText = styled.span`
   font-size: 12px;
   color: var(--gray-400);
@@ -321,17 +291,85 @@ const DangerBtn = styled.button`
   background: #e24b4a;
   color: #fff;
 
-  &:hover {
+  &:hover:not(:disabled) {
     opacity: 0.9;
+  }
+  &:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
   }
 `;
 
 // ─── 컴포넌트 ──────────────────────────────────────────────
 function HostWithdrawPage() {
   const navigate = useNavigate();
-  const status = DUMMY_STATUS;
-  const canWithdraw =
-    status.ongoingReservations === 0 && status.unsettledAmount === 0;
+  const dispatch = useDispatch();
+  const { data: host } = useHostMyPage(); // hostNo 필요 (정산 조회용)
+
+  const [ongoing, setOngoing] = useState(null); // 진행중 예약 수
+  const [unsettled, setUnsettled] = useState(null); // 미정산 금액
+  const [agreed, setAgreed] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
+
+  // 진행중 예약 조회 — status 'S'(예약확정)
+  useEffect(() => {
+    let alive = true;
+    (async () => {
+      try {
+        const rsvns = await findHostRsvns();
+        const count = rsvns.filter((r) => r.status === 'S').length;
+        if (alive) setOngoing(count);
+      } catch {
+        if (alive) setOngoing(0);
+      }
+    })();
+    return () => {
+      alive = false;
+    };
+  }, []);
+
+  // 미정산 금액 조회 — SettleStatus 'WAITING'(정산 대기)의 payoutAmt 합
+  useEffect(() => {
+    if (!host?.hostNo) return;
+    let alive = true;
+    (async () => {
+      try {
+        const settles = await findSettleByHostNo(host.hostNo);
+        const amount = settles
+          .filter((s) => s.status === 'WAITING')
+          .reduce((sum, s) => sum + (s.payoutAmt ?? 0), 0);
+        if (alive) setUnsettled(amount);
+      } catch {
+        if (alive) setUnsettled(0);
+      }
+    })();
+    return () => {
+      alive = false;
+    };
+  }, [host?.hostNo]);
+
+  const canWithdraw = ongoing === 0 && unsettled === 0 && agreed && !submitting;
+
+  const handleWithdraw = async () => {
+    if (!canWithdraw) return;
+    if (
+      !window.confirm(
+        '정말 호스트를 탈퇴하시겠습니까? 이 작업은 되돌릴 수 없습니다.'
+      )
+    ) {
+      return;
+    }
+    setSubmitting(true);
+    try {
+      await withdrawHost();
+      alert('호스트 탈퇴가 완료되었습니다.');
+      dispatch(logout());
+      navigate('/');
+    } catch (err) {
+      alert(err.response?.data?.message ?? '탈퇴 처리에 실패했습니다.');
+      setSubmitting(false);
+    }
+  };
 
   return (
     <PageLayout title="호스트 탈퇴">
@@ -371,38 +409,30 @@ function HostWithdrawPage() {
         <Card>
           <SectionTitle>탈퇴 가능 여부 확인</SectionTitle>
           <CheckList>
-            <CheckRow $ok={status.ongoingReservations === 0}>
+            <CheckRow $ok={ongoing === 0}>
               <CheckLeft>
-                <CheckIcon $ok={status.ongoingReservations === 0}>
-                  {status.ongoingReservations === 0 ? <FaCheck /> : <FaTimes />}
+                <CheckIcon $ok={ongoing === 0}>
+                  {ongoing === 0 ? <FaCheck /> : <FaTimes />}
                 </CheckIcon>
                 <CheckText>진행 중인 예약</CheckText>
               </CheckLeft>
-              <CheckValue $ok={status.ongoingReservations === 0}>
-                {status.ongoingReservations}건
+              <CheckValue $ok={ongoing === 0}>
+                {ongoing === null ? '확인 중...' : `${ongoing}건`}
               </CheckValue>
             </CheckRow>
 
-            <CheckRow $ok={status.unsettledAmount === 0}>
+            <CheckRow $ok={unsettled === 0}>
               <CheckLeft>
-                <CheckIcon $ok={status.unsettledAmount === 0}>
-                  {status.unsettledAmount === 0 ? <FaCheck /> : <FaTimes />}
+                <CheckIcon $ok={unsettled === 0}>
+                  {unsettled === 0 ? <FaCheck /> : <FaTimes />}
                 </CheckIcon>
                 <CheckText>미정산 금액</CheckText>
               </CheckLeft>
-              <CheckValue $ok={status.unsettledAmount === 0}>
-                {status.unsettledAmount.toLocaleString()}원
+              <CheckValue $ok={unsettled === 0}>
+                {unsettled === null
+                  ? '확인 중...'
+                  : `${unsettled.toLocaleString()}원`}
               </CheckValue>
-            </CheckRow>
-
-            <CheckRow $ok={true}>
-              <CheckLeft>
-                <CheckIcon $ok={true}>
-                  <FaCheck />
-                </CheckIcon>
-                <CheckText>운영 중인 공간 (참고)</CheckText>
-              </CheckLeft>
-              <CheckValue $ok={true}>{status.activeSpaces}개</CheckValue>
             </CheckRow>
           </CheckList>
 
@@ -427,19 +457,12 @@ function HostWithdrawPage() {
         {/* 최종 확인 */}
         <Card>
           <SectionTitle>최종 확인</SectionTitle>
-
-          <FormGroup>
-            <Label htmlFor="password">비밀번호 확인</Label>
-            <Input
-              id="password"
-              type="password"
-              placeholder="본인 확인을 위해 현재 비밀번호를 입력해주세요"
-              autoComplete="current-password"
-            />
-          </FormGroup>
-
           <ConfirmRow>
-            <input type="checkbox" />
+            <input
+              type="checkbox"
+              checked={agreed}
+              onChange={(e) => setAgreed(e.target.checked)}
+            />
             <span>
               위 안내사항을 모두 확인했으며, 호스트 탈퇴에 따른 운영 공간
               비공개·정산 권한 종료에 동의합니다.
@@ -452,7 +475,9 @@ function HostWithdrawPage() {
           <GhostBtn onClick={() => navigate('/host/profile')}>
             돌아가기
           </GhostBtn>
-          <DangerBtn disabled={!canWithdraw}>호스트 탈퇴 신청</DangerBtn>
+          <DangerBtn disabled={!canWithdraw} onClick={handleWithdraw}>
+            {submitting ? '처리 중...' : '호스트 탈퇴'}
+          </DangerBtn>
         </ButtonRow>
       </CardStack>
     </PageLayout>

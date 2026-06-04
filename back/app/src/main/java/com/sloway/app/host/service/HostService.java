@@ -171,4 +171,18 @@ public class HostService {
 
         return HostApplicationResponseDto.from(host);
     }
-}
+    /**
+     * 호스트 탈퇴 (soft delete).
+     *
+     * <p>회원 공통(Member) status=W + delYn='Y'. 호스트도 Member 상속 구조라 동일 처리.
+     * 제한 체크(진행중 예약·미정산)는 프론트 선검증 — 발표 단계.
+     */
+    @Transactional
+    public void withdraw(Long memberNo) {
+        MemberEntity member = memberRepository.findById(memberNo)
+                .orElseThrow(() -> new CustomException(MemberErrorCode.MEMBER_NOT_FOUND));
+
+        member.withdraw(); // status=W, delYn='Y'
+    }
+
+}//class
