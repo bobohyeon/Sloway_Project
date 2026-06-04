@@ -35,9 +35,6 @@ public class PayEntity extends BaseEntity {
     @Column(length = 60)
     private String tid;
 
-    @Column(length = 60)
-    private String payToken;
-
     private Integer baseAmt;
     private Integer addAmt;
     private Integer finalAmt;
@@ -63,6 +60,9 @@ public class PayEntity extends BaseEntity {
     }
 
     public void cancelPay() {
+        if (this.status == PayStatus.CANCELED) {
+            throw new CustomException(PayErrorCode.PAY_ALREADY_CANCELED);
+        }
         if (this.status != PayStatus.COMPLETED) {
             throw new CustomException(PayErrorCode.PAY_NOT_COMPLETED);
         }

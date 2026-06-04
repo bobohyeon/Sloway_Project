@@ -1,9 +1,11 @@
 import { useEffect, useMemo, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import styled from 'styled-components';
 import PageLayout from '../../../../app/layouts/page/PageLayout';
 import { Tabs, EmptyState } from '../../../pay_shared/components';
 import { CouponTicket } from '../../components/user/CouponTicket';
 import { findCouponsByMemberNo } from '../../api/couponApi';
+import { useAuth } from '../../../auth/hooks/useAuth';
 
 const emptyTitleByFilter = (filter) => {
   if (filter === 'available') return '사용 가능한 쿠폰이 없어요';
@@ -27,7 +29,6 @@ const CouponList = styled.div`
   margin-bottom: var(--space-6);
 `;
 
-const MEMBER_NO = 1;
 const STATUS_TO_UI = {
   AVAILABLE: 'available',
   USED: 'used',
@@ -59,20 +60,28 @@ const toCouponForUI = (resDto) => {
 };
 
 export default function MyCoupons() {
+  const navigate = useNavigate();
+  const { user } = useAuth();
+  const memberNo = user?.memberNo;
+
   const [coupons, setCoupons] = useState([]);
   const [filter, setFilter] = useState('available');
 
   useEffect(() => {
+    if (!memberNo) {
+      navigate('/login', { replace: true });
+      return;
+    }
     const load = async () => {
       try {
-        const list = await findCouponsByMemberNo(MEMBER_NO);
+        const list = await findCouponsByMemberNo(memberNo);
         setCoupons(list);
       } catch (err) {
         console.error('보유 쿠폰 조회 실패', err);
       }
     };
     load();
-  }, []);
+  }, [memberNo, navigate]);
 
   const counts = useMemo(() => {
     const c = { available: 0, used: 0, expired: 0 };

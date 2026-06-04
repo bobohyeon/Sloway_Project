@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import styled from 'styled-components';
 
 import PageLayout from '../../../../app/layouts/page/PageLayout';
@@ -6,8 +7,7 @@ import {
   findPointBalanceByMemberNo,
   findPointsByMemberNo,
 } from '../../api/pointApi';
-
-const MEMBER_NO = 1;
+import { useAuth } from '../../../auth/hooks/useAuth';
 
 const POLICIES = [
   { label: '적립률', value: '결제 금액의 1%' },
@@ -39,18 +39,26 @@ const formatDate = (iso) => {
 };
 
 export default function PointHistory() {
+  const navigate = useNavigate();
+  const { user } = useAuth();
+  const memberNo = user?.memberNo;
+
   const [balance, setBalance] = useState(0);
   const [history, setHistory] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
   useEffect(() => {
+    if (!memberNo) {
+      navigate('/login', { replace: true });
+      return;
+    }
     const load = async () => {
       setLoading(true);
       try {
         const [balanceResDto, historyResDto] = await Promise.all([
-          findPointBalanceByMemberNo(MEMBER_NO),
-          findPointsByMemberNo(MEMBER_NO),
+          findPointBalanceByMemberNo(memberNo),
+          findPointsByMemberNo(memberNo),
         ]);
         setBalance(balanceResDto.balance ?? 0);
         setHistory(historyResDto ?? []);
@@ -62,7 +70,7 @@ export default function PointHistory() {
       }
     };
     load();
-  }, []);
+  }, [memberNo, navigate]);
 
   return (
     <PageLayout

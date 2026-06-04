@@ -17,6 +17,7 @@ import { requestTossPayment } from '../../lib/tossSdk';
 import { toPayMethod } from '../../constants/payMethod';
 import { findCouponsByMemberNo } from '../../../coupon/api/couponApi';
 import { findPointBalanceByMemberNo } from '../../../point/api/pointApi';
+import { useAuth } from '../../../auth/hooks/useAuth';
 
 const Layout = styled.div`
   display: grid;
@@ -42,7 +43,7 @@ const Sidebar = styled.aside`
   }
 `;
 
-const MEMBER_NO = 1;
+// TODO(예약 연동): 예약 상세에서 rsvnNo를 넘겨받도록 교체 — 현재는 시연용 고정값 (김보현 협의 안건)
 const RSVN_NO = 2;
 const PRICE_PER_NIGHT = 185000;
 const NIGHTS = 2;
@@ -77,6 +78,8 @@ const toCouponForUI = (resDto) => ({
 
 export default function BookingPaymentPage() {
   const nav = useNavigate();
+  const { user } = useAuth();
+  const memberNo = user?.memberNo;
 
   const {
     selectedCoupon,
@@ -96,11 +99,16 @@ export default function BookingPaymentPage() {
   const [paying, setPaying] = useState(false);
 
   useEffect(() => {
+    // 결제는 로그인 필수 — 비로그인 진입 시 로그인 페이지로 돌려보냄
+    if (!memberNo) {
+      nav('/login', { replace: true });
+      return;
+    }
     const loadData = async () => {
       try {
         const [couponList, balanceResDto] = await Promise.all([
-          findCouponsByMemberNo(MEMBER_NO),
-          findPointBalanceByMemberNo(MEMBER_NO),
+          findCouponsByMemberNo(memberNo),
+          findPointBalanceByMemberNo(memberNo),
         ]);
         setCoupons(couponList.map(toCouponForUI));
         setHeldPoints(balanceResDto.balance);
@@ -109,7 +117,7 @@ export default function BookingPaymentPage() {
       }
     };
     loadData();
-  }, []);
+  }, [memberNo, nav]);
 
   const { subtotal, couponDiscount, total, earnPoints, canPay } =
     useCheckoutCalc({
@@ -144,7 +152,7 @@ export default function BookingPaymentPage() {
           orderId,
           amount,
           orderName,
-          customerKey: `MEMBER_${MEMBER_NO}`,
+          customerKey: `MEMBER_${memberNo}`,
         });
       } else {
         const { nextRedirectPcUrl } = await readyPay(reqDto);

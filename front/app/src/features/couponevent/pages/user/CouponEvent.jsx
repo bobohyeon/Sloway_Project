@@ -1,13 +1,12 @@
 import { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import styled from 'styled-components';
 
 import PageLayout from '../../../../app/layouts/page/PageLayout';
 import { Button, EmptyState } from '../../../pay_shared/components';
+import { useAuth } from '../../../auth/hooks/useAuth';
 
 import { downloadCoupon, findEventAll } from '../../api/couponEventApi';
-
-// 시연 영역 — 회원 PK hardcoded (로그인 영역 미진입, 본인 5/22 SSOT 일관)
-const HARDCODED_MEMBER_NO = 1;
 
 const STATUS_INFO = {
   OPEN: { label: '게시중', color: 'var(--sage)' },
@@ -29,6 +28,10 @@ const formatDcValue = (dcType, dcValue) => {
 };
 
 export default function CouponEvent() {
+  const navigate = useNavigate();
+  const { user } = useAuth();
+  const memberNo = user?.memberNo;
+
   const [events, setEvents] = useState([]);
   const [downloading, setDownloading] = useState(null); // 다운로드 처리 중인 게시 PK
 
@@ -47,11 +50,17 @@ export default function CouponEvent() {
 
   const handleDownload = async (no, couponName) => {
     if (downloading) return;
+    // 게시 목록은 공개 — 발급(다운로드) 시점에만 로그인 요구
+    if (!memberNo) {
+      alert('쿠폰 발급은 로그인 후 이용할 수 있어요.');
+      navigate('/login');
+      return;
+    }
     if (!window.confirm(`'${couponName}' 쿠폰을 발급받으시겠어요?`)) return;
 
     setDownloading(no);
     try {
-      await downloadCoupon(no, HARDCODED_MEMBER_NO);
+      await downloadCoupon(no, memberNo);
       await loadEvents(); // 발급 현황 갱신
       alert('쿠폰이 발급됐어요. 쿠폰함에서 확인하세요.');
     } catch (err) {
