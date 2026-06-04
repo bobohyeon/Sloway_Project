@@ -62,7 +62,7 @@ public class RsvnEntity {
     @PrePersist
     public void prePersist(){
         this.createdAt = LocalDateTime.now();
-        this.status = RsvnStatus.S;
+        this.status = RsvnStatus.P;
     }
 
     public void cancel(){
@@ -70,6 +70,10 @@ public class RsvnEntity {
     }
 
     public void reject(){this.status = RsvnStatus.R;}
+
+    public void complete(){this.status = RsvnStatus.E;}
+
+    public void confirm(){this.status = RsvnStatus.S;}
 
 
 }

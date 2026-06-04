@@ -13,6 +13,7 @@ public class RsvnResDto {
 
     private Long no;
     private Long memberNo;
+    private Long payNo;
     private String guestName;
     private Long officeNo;
     private Long stationNo;
@@ -27,7 +28,7 @@ public class RsvnResDto {
     private RsvnStatus status;
     private LocalDateTime createdAt;
 
-    public static RsvnResDto from(RsvnEntity entity){
+    public static RsvnResDto from(RsvnEntity entity, Long payNo){
         String spaceName = null;
         String spaceType = null;
         if (entity.getOfficeNo() != null) {
@@ -44,6 +45,7 @@ public class RsvnResDto {
         return RsvnResDto.builder()
                 .no(entity.getNo())
                 .memberNo(entity.getMemberNo().getNo())
+                .payNo(payNo)
                 .guestName(entity.getMemberNo().getName())
                 .officeNo(entity.getOfficeNo() != null ? entity.getOfficeNo().getNo() : null)
                 .stationNo(entity.getStationNo() != null ? entity.getStationNo().getNo() : null)

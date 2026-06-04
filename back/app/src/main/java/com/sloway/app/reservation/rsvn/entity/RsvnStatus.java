@@ -7,7 +7,7 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public enum RsvnStatus {
 
-    S("예약확정"), R("예약거절"), C("예약취소"),E("이용완료");
+    P("결제대기"),S("예약확정"), R("예약거절"), C("예약취소"),E("이용완료");
 
     private final String code;
 }

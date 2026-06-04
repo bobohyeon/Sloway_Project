@@ -7,10 +7,8 @@ import com.sloway.app.member.entity.MemberEntity;
 import com.sloway.app.member.repository.MemberRepository;
 import com.sloway.app.payment.pay.common.PayErrorCode;
 import com.sloway.app.payment.pay.common.PayStatus;
-import com.sloway.app.payment.pay.dto.request.PayCreateReqDto;
 import com.sloway.app.payment.pay.entity.PayEntity;
 import com.sloway.app.payment.pay.repository.PayRepository;
-import com.sloway.app.payment.pay.service.PayService;
 import com.sloway.app.payment.refund.common.RefundReason;
 import com.sloway.app.payment.refund.dto.request.RefundCreateReqDto;
 import com.sloway.app.payment.refund.service.RefundService;
@@ -35,6 +33,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Slf4j
@@ -54,7 +53,7 @@ public class RsvnService {
     private final HostPlaceRepository hostPlaceRepository;
 
     @Transactional
-    public void save(Long memberNo, RsvnReqDto dto) {
+    public long save(Long memberNo, RsvnReqDto dto) {
         MemberEntity member = memberRepository.findById(memberNo).orElseThrow(() ->
                 new CustomException(RsvnErrorCode.MEMBER_NOT_FOUND));
 
@@ -74,7 +73,7 @@ public class RsvnService {
         }
 
 
-        rsvnRepository.save(
+        RsvnEntity entity = rsvnRepository.save(
                 RsvnEntity.builder()
                         .memberNo(member)
                         .officeNo(office)
@@ -87,6 +86,8 @@ public class RsvnService {
                         .checkOut(dto.getCheckOut())
                         .build()
         );
+
+        return entity.getNo();
     }
 
     //내 예약 목록 조회
@@ -94,9 +95,14 @@ public class RsvnService {
         MemberEntity member = memberRepository.findById(memberNo).orElseThrow(() ->
                 new CustomException(RsvnErrorCode.MEMBER_NOT_FOUND)
         );
+
         return rsvnRepository.findByMemberNo(member)
                 .stream()
-                .map(RsvnResDto::from)
+                .map(entity -> {
+                    Long payNo = findCompletePayNo(entity.getNo());
+                    return RsvnResDto.from(entity, payNo);
+                }
+                        )
                 .toList();
     }
 
@@ -108,7 +114,9 @@ public class RsvnService {
         RsvnEntity entity = rsvnRepository.findByNoAndMemberNo(rsvnNo, member)
                 .orElseThrow(() -> new CustomException(RsvnErrorCode.RESERVATION_NOT_FOUND));
 
-        return RsvnResDto.from(entity);
+        Long payNo = findCompletePayNo(entity.getNo());
+
+        return RsvnResDto.from(entity, payNo);
     }
 
     //호스트 — 내 공간 목록 조회 (placeNo + 공간명)
@@ -151,7 +159,10 @@ public class RsvnService {
 
         return result.stream()
                 .sorted(java.util.Comparator.comparing(RsvnEntity::getCreatedAt).reversed())
-                .map(RsvnResDto::from)
+                .map(entity -> {
+                    Long payNo = findCompletePayNo(entity.getNo());
+                    return RsvnResDto.from(entity, payNo);
+                })
                 .toList();
     }
 
@@ -164,11 +175,18 @@ public class RsvnService {
         RsvnEntity entity = rsvnRepository.findByNoAndMemberNo(rsvnNo, member)
                 .orElseThrow(() -> new CustomException(RsvnErrorCode.RESERVATION_NOT_FOUND));
 
-        if((entity.getStatus().equals(RsvnStatus.C)) || (entity.getStatus().equals(RsvnStatus.R))){
+        if((entity.getStatus().equals(RsvnStatus.C))
+                || (entity.getStatus().equals(RsvnStatus.R))
+        ){
             throw new CustomException(RsvnErrorCode.ALREADY_CANCELLED);
         }
-        entity.cancel();
 
+        if (entity.getStatus().equals((RsvnStatus.P))){
+         entity.cancel();
+         return;
+        }
+
+        entity.cancel();
         List<PayEntity> pay = payRepository.findByRsvn(rsvnNo);
 
         // 해당예약의 결제완료건만 가져오기
@@ -185,6 +203,19 @@ public class RsvnService {
 
         refundService.createRefund(refundCreateReqDto);
     }
+
+    //예약완료조회
+    public Long findCompletePayNo(Long rsvnNo){
+        List<PayEntity> pay = payRepository.findByRsvn(rsvnNo);
+
+        Long completedPay = pay.stream()
+                .filter(p -> p.getStatus() == PayStatus.COMPLETED)
+                .map(PayEntity::getNo)
+                .findFirst()
+                .orElse(null);
+        return completedPay;
+    }
+
 
     // 호스트 예약 거절
     @Transactional
@@ -225,5 +256,22 @@ public class RsvnService {
                 throw new CustomException(RsvnErrorCode.UNAUTHORIZED_ACCESS);
             }
         }
+    }
+
+    //리뷰작성 가능 예약 목록 조회
+    public List<RsvnResDto> findReviewable(Long memberNo){
+        MemberEntity member = memberRepository.findById(memberNo)
+                .orElseThrow(()-> new CustomException(RsvnErrorCode.MEMBER_NOT_FOUND));
+
+        List<RsvnEntity> reviewable = rsvnRepository.findByMemberNoAndStatus(member, RsvnStatus.E);
+        return reviewable
+                .stream()
+                .filter(entity -> LocalDateTime.now().isBefore(entity.getCheckOut().plusDays(14)))
+                .map(entity -> {
+                    Long payNo = findCompletePayNo(entity.getNo());
+                    return RsvnResDto.from(entity, payNo);
+                })
+                .toList()
+                ;
     }
 }
