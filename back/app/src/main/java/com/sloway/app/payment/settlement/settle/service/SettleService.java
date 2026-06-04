@@ -6,6 +6,7 @@ import com.sloway.app.host.entity.HostEntity;
 import com.sloway.app.host.repository.HostRepository;
 import com.sloway.app.payment.pay.repository.PayRepository;
 import com.sloway.app.payment.refund.repository.RefundRepository;
+import com.sloway.app.payment.settlement.fee.common.FeeErrorCode;
 import com.sloway.app.payment.settlement.fee.common.PlaceType;
 import com.sloway.app.payment.settlement.fee.repository.FeeRepository;
 import com.sloway.app.payment.settlement.settle.common.SettleErrorCode;
@@ -100,7 +101,7 @@ public class SettleService {
     private int calcFee(int amt, PlaceType placeType) {
         if (amt == 0) return 0;
         int rate = feeRepository.findByPlaceTypeAndDelYn(placeType, "N")
-                .orElseThrow(() -> new CustomException(SettleErrorCode.FEE_POLICY_NOT_FOUND))
+                .orElseThrow(() -> new CustomException(FeeErrorCode.FEE_NOT_FOUND))
                 .getRate();
         return amt * rate / 100;
     }

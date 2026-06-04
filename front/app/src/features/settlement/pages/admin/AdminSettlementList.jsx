@@ -52,8 +52,9 @@ export default function AdminSettlementList() {
   };
 
   useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    load();
+    (async () => {
+      await load();
+    })();
   }, []);
 
   // 상태별 건수 + 총 정산액 집계 (클라이언트 사이드)

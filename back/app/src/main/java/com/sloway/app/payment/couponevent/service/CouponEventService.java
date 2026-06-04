@@ -1,6 +1,7 @@
 package com.sloway.app.payment.couponevent.service;
 
 import com.sloway.app.common.exception.CustomException;
+import com.sloway.app.member.common.MemberErrorCode;
 import com.sloway.app.member.entity.MemberEntity;
 import com.sloway.app.member.repository.MemberRepository;
 import com.sloway.app.payment.coupon.common.CouponStatus;
@@ -12,7 +13,6 @@ import com.sloway.app.payment.couponevent.dto.request.CouponEventCreateReqDto;
 import com.sloway.app.payment.couponevent.dto.response.CouponEventResDto;
 import com.sloway.app.payment.couponevent.entity.CouponEventEntity;
 import com.sloway.app.payment.couponevent.repository.CouponEventRepository;
-import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -60,7 +60,7 @@ public class CouponEventService {
         }
 
         MemberEntity memberEntity = memberRepository.findById(memberNo)
-                .orElseThrow(() -> new EntityNotFoundException("회원 정보를 조회할 수 없습니다."));
+                .orElseThrow(() -> new CustomException(MemberErrorCode.MEMBER_NOT_FOUND));
 
         LocalDateTime expiredAt = LocalDateTime.now().plusDays(couponEventEntity.getValidDays());
 
