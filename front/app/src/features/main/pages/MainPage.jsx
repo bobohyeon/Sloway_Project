@@ -265,6 +265,7 @@ function MainPage() {
     RANDOM_PLACE,
     goSearch,
     goDetail,
+
     navigate,
   } = useRecommend();
 

@@ -64,7 +64,7 @@ export const useRecommend = () => {
     RANDOM_PLACE,
     goSearch,
     goDetail,
-    goBannerBook,
+
     navigate,
   };
 };
