@@ -38,3 +38,8 @@ export const getMyHostApplication = async () => {
   const response = await api.get('/host/mypage/application');
   return response.data;
 };
+
+/** 호스트 탈퇴 (soft delete). DELETE /api/host/mypage */
+export const withdrawHost = async () => {
+  await api.delete('/host/mypage');
+};

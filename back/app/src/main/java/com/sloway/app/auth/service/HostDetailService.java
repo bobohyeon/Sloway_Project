@@ -5,6 +5,7 @@ import com.sloway.app.auth.user.CustomUserDetails;
 import com.sloway.app.host.entity.HostEntity;
 import com.sloway.app.host.repository.HostRepository;
 import com.sloway.app.member.common.MemberRole;
+import com.sloway.app.member.common.MemberStatus;
 import com.sloway.app.member.entity.MemberEntity;
 import com.sloway.app.member.repository.MemberRepository;
 import lombok.RequiredArgsConstructor;
@@ -43,6 +44,14 @@ public class HostDetailService implements UserDetailsService {
         // 2) memberNo로 Host(호스트 전용) 조회
         HostEntity host = hostRepository.findByMemberNo(member.getNo())
                 .orElseThrow(()->new  UsernameNotFoundException("이메일 또는 비밀번호가 일치하지 않습니다"));
+
+        // 탈퇴/정지 회원 차단
+        if (member.getStatus() == MemberStatus.W) {
+            throw new UsernameNotFoundException("이메일 또는 비밀번호가 일치하지 않습니다");
+        }
+        if (member.getStatus() == MemberStatus.B || member.getStatus() == MemberStatus.S) {
+            throw new UsernameNotFoundException("이메일 또는 비밀번호가 일치하지 않습니다");
+        }
 
         // 3) 인증 정보 반환 (승인 여부와 무관하게 로그인 허용 — 기능 제한은 각 호스트 API에서)
         return new CustomUserDetails(

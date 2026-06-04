@@ -113,4 +113,9 @@ public class MemberEntity extends BaseEntity {
     public void updateImgUrl(String imgUrl) {
         this.imgUrl = imgUrl;
     }
+
+    public void withdraw(){
+        this.status = MemberStatus.W;
+        delete();  // BaseEntity : delYn="Y"
+    }
 }//class
