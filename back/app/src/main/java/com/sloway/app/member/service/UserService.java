@@ -174,4 +174,13 @@ public class UserService {
                 .map(SocialAccountResponseDto::from)
                 .toList();
     }
+
+    @Transactional
+    public void withdraw(Long memberNo){
+        MemberEntity member = memberRepository.findById(memberNo)
+                .orElseThrow(()->new CustomException(MemberErrorCode.MEMBER_NOT_FOUND));
+        //상태값 변경
+        member.withdraw();
+    }
+
 }//class

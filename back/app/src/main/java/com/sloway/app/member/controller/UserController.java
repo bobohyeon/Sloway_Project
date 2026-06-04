@@ -99,4 +99,16 @@ public class UserController {
         return ResponseEntity.ok(accounts);
     }
 
+    /**
+     * 회원 탈퇴. DELETE /api/user/mypage
+     *
+     * <p>토큰의 memberNo로 본인 계정만 탈퇴 (soft delete).
+     * 성공 시 204. 프론트는 이후 로그아웃 처리.
+     */
+    @DeleteMapping
+    public ResponseEntity<Void> withdraw(@AuthenticationPrincipal CustomUserDetails user) {
+        log.info("회원 탈퇴: memberNo={}", user.getMemberNo());
+        userService.withdraw(user.getMemberNo());
+        return ResponseEntity.noContent().build();
+    }
 }

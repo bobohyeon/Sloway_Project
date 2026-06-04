@@ -42,3 +42,8 @@ export const getMySocialAccounts = async () => {
   const response = await api.get('/user/mypage/social-accounts'); // /user/social-accounts → /user/mypage/social-accounts
   return response.data;
 };
+
+/** 회원 탈퇴 (soft delete). DELETE /api/user/mypage */
+export const withdrawUser = async () => {
+  await api.delete('/user/mypage');
+};

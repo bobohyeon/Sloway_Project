@@ -101,4 +101,16 @@ public class HostController {
         HostApplicationResponseDto result = hostService.getMyApplication(host.getMemberNo());
         return ResponseEntity.ok(result);
     }
+
+    /**
+     * 호스트 탈퇴. DELETE /api/host/mypage
+     *
+     * <p>토큰의 memberNo로 본인만 탈퇴 (soft delete). 성공 시 204.
+     */
+    @DeleteMapping
+    public ResponseEntity<Void> withdraw(@AuthenticationPrincipal CustomUserDetails host) {
+        log.info("호스트 탈퇴: memberNo={}", host.getMemberNo());
+        hostService.withdraw(host.getMemberNo());
+        return ResponseEntity.noContent().build();
+    }
 }//class
