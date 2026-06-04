@@ -21,9 +21,9 @@ import com.sloway.app.payment.pay.pg.toss.dto.request.TossConfirmReqDto;
 import com.sloway.app.payment.pay.pg.toss.dto.response.TossConfirmResDto;
 import com.sloway.app.payment.pay.repository.PayRepository;
 import com.sloway.app.payment.point.service.PointService;
+import com.sloway.app.reservation.RsvnErrorCode;
 import com.sloway.app.reservation.rsvn.entity.RsvnEntity;
 import com.sloway.app.reservation.rsvn.repository.RsvnRepository;
-import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -53,35 +53,14 @@ public class PayService {
 
     @Transactional
     public PayReadyResDto readyPay(PayCreateReqDto payCreateReqDto) {
-        validAmt(payCreateReqDto);
-        RsvnEntity rsvn = validRsvn(payCreateReqDto);
-
-        Long memberNo = rsvn.getMemberNo().getNo();
-
-        CouponEntity coupon = null;
-        if (payCreateReqDto.getUcNo() != null) {
-            coupon = couponRepository.findById(payCreateReqDto.getUcNo())
-                    .orElseThrow(() -> new CustomException(CouponErrorCode.COUPON_NOT_FOUND));
-        }
-
-        int dcAmt = calculateDcAmt(coupon, payCreateReqDto.getBaseAmt());
-        int usedPoint = payCreateReqDto.getUsedPoint() == null
-                ? 0 : payCreateReqDto.getUsedPoint();
-
-        int finalAmt = payCreateReqDto.getBaseAmt() + payCreateReqDto.getAddAmt()
-                - dcAmt - usedPoint;
-
-        validFinalAmt(payCreateReqDto, finalAmt, dcAmt, usedPoint);
-
-        PayEntity payEntity = payCreateReqDto.toEntity(rsvn, coupon, dcAmt, finalAmt);
-        payRepository.save(payEntity);
+        PayEntity payEntity = buildReadyPay(payCreateReqDto);
 
         KakaoReadyReqDto reqDto = KakaoReadyReqDto.builder()
                 .partnerOrderId(payEntity.getNo().toString())
-                .partnerUserId(memberNo.toString())
+                .partnerUserId(payEntity.getRsvnNo().getMemberNo().getNo().toString())
                 .itemName("Sloway 공간예약")
                 .quantity(1)
-                .totalAmount(finalAmt)
+                .totalAmount(payEntity.getFinalAmt())
                 .taxFreeAmount(0)
                 .approvalUrl(baseUrl + "/api/payment/pay/approve?payNo=" + payEntity.getNo())
                 .cancelUrl(frontendUrl + "/user/payment/fail")
@@ -132,26 +111,7 @@ public class PayService {
 
     @Transactional
     public TossPrepareResDto prepareTossPay(PayCreateReqDto payCreateReqDto) {
-        validAmt(payCreateReqDto);
-        RsvnEntity rsvn = validRsvn(payCreateReqDto);
-
-        CouponEntity coupon = null;
-        if (payCreateReqDto.getUcNo() != null) {
-            coupon = couponRepository.findById(payCreateReqDto.getUcNo())
-                    .orElseThrow(() -> new CustomException(CouponErrorCode.COUPON_NOT_FOUND));
-        }
-
-        int dcAmt = calculateDcAmt(coupon, payCreateReqDto.getBaseAmt());
-        int usedPoint = payCreateReqDto.getUsedPoint() == null
-                ? 0 : payCreateReqDto.getUsedPoint();
-
-        int finalAmt = payCreateReqDto.getBaseAmt() + payCreateReqDto.getAddAmt()
-                - dcAmt - usedPoint;
-
-        validFinalAmt(payCreateReqDto, finalAmt, dcAmt, usedPoint);
-
-        PayEntity payEntity = payCreateReqDto.toEntity(rsvn, coupon, dcAmt, finalAmt);
-        payRepository.save(payEntity);
+        PayEntity payEntity = buildReadyPay(payCreateReqDto);
 
         String orderId = "SLOWAY_" + payEntity.getNo();
         return TossPrepareResDto.of(payEntity, orderId);
@@ -224,7 +184,7 @@ public class PayService {
 
     private RsvnEntity validRsvn(PayCreateReqDto payCreateReqDto) {
         return rsvnRepository.findById(payCreateReqDto.getRsvnNo())
-                .orElseThrow(() -> new EntityNotFoundException("예약 정보를 조회할 수 없습니다."));
+                .orElseThrow(() -> new CustomException(RsvnErrorCode.RESERVATION_NOT_FOUND));
     }
 
     private void validFinalAmt(PayCreateReqDto payCreateReqDto, int finalAmt, int dcAmt, int usedPoint) {
@@ -237,5 +197,38 @@ public class PayService {
             throw new CustomException(PayErrorCode.PAY_AMOUNT_NEGATIVE);
         }
     }
+
+    private void validDuplicate(Long rsvnNo) {
+        for (PayEntity entity : payRepository.findByRsvn(rsvnNo)) {
+            if (entity.getStatus() == PayStatus.COMPLETED) {
+                throw new CustomException(PayErrorCode.PAY_DUPLICATE);
+            }
+        }
+    }
+
+    private PayEntity buildReadyPay(PayCreateReqDto payCreateReqDto){
+        validAmt(payCreateReqDto);
+        RsvnEntity rsvn = validRsvn(payCreateReqDto);
+        validDuplicate(rsvn.getNo());
+
+        CouponEntity coupon = null;
+        if (payCreateReqDto.getUcNo() != null) {
+            coupon = couponRepository.findById(payCreateReqDto.getUcNo())
+                    .orElseThrow(() -> new CustomException(CouponErrorCode.COUPON_NOT_FOUND));
+        }
+
+        int dcAmt = calculateDcAmt(coupon, payCreateReqDto.getBaseAmt());
+        int usedPoint = payCreateReqDto.getUsedPoint() == null
+                ? 0 : payCreateReqDto.getUsedPoint();
+
+        int finalAmt = payCreateReqDto.getBaseAmt() + payCreateReqDto.getAddAmt()
+                - dcAmt - usedPoint;
+
+        validFinalAmt(payCreateReqDto, finalAmt, dcAmt, usedPoint);
+
+        PayEntity payEntity = payCreateReqDto.toEntity(rsvn, coupon, dcAmt, finalAmt);
+        return payRepository.save(payEntity);
+    }
+
 
 }

@@ -6,6 +6,7 @@ import { EmptyState } from '../../../pay_shared/components';
 import { PaymentFilterBar } from '../../components/user/PaymentFilterBar';
 import { PaymentListItem } from '../../components/user/PaymentListItem';
 import { findPaysByMemberNo } from '../../api/payApi';
+import { useAuth } from '../../../auth/hooks/useAuth';
 
 const emptyTitleByTab = (tab) => {
   if (tab === 'completed') return '결제 완료된 내역이 없어요';
@@ -21,7 +22,6 @@ const List = styled.div`
   margin-bottom: var(--space-6);
 `;
 
-const MEMBER_NO = 1;
 const STATUS_TO_UI = {
   READY: 'pending',
   COMPLETED: 'completed',
@@ -81,22 +81,28 @@ const toPaymentForUI = (resDto) => {
 
 export default function PaymentHistory() {
   const navigate = useNavigate();
+  const { user } = useAuth();
+  const memberNo = user?.memberNo;
 
   const [pays, setPays] = useState([]);
   const [selectedTab, setSelectedTab] = useState('all');
   const [selectedPeriod, setSelectedPeriod] = useState('3months');
 
   useEffect(() => {
+    if (!memberNo) {
+      navigate('/login', { replace: true });
+      return;
+    }
     const load = async () => {
       try {
-        const list = await findPaysByMemberNo(MEMBER_NO);
+        const list = await findPaysByMemberNo(memberNo);
         setPays(list);
       } catch (err) {
         console.error('결제 내역 조회 실패', err);
       }
     };
     load();
-  }, []);
+  }, [memberNo, navigate]);
 
   const tabsWithCount = useMemo(() => {
     const counts = { all: pays.length, completed: 0, refunded: 0, failed: 0 };
