@@ -194,8 +194,8 @@ export default function NotificationSettingsPage() {
 
       {/* 마케팅 수신 동의 안내 */}
       <MarketingNotice>
-        📌 광고·마케팅 관련 알림은 별도 마케팅 수신 동의 시 서비스 이용약관에
-        따라 발송됩니다.
+        📌 정산, 세금계산서 등 금융 관련 알림, 예약 관련 알림, 결제 관련 알림은
+        필수 발송되며 수신 거부가 불가합니다.
       </MarketingNotice>
 
       {/* 저장 버튼 */}

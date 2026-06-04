@@ -21,11 +21,11 @@ const CATEGORY_LABEL = {
 
 const STATUS_CONFIG = {
   ANSWERED: { label: '답변 완료', variant: 'success' },
-  PENDING:  { label: '답변 대기', variant: 'muted' },
+  PENDING: { label: '답변 대기', variant: 'muted' },
 };
 
 const TAB_ITEMS = [
-  { label: '전체',     value: '' },
+  { label: '전체', value: '' },
   { label: '답변 대기', value: 'PENDING' },
   { label: '답변 완료', value: 'ANSWERED' },
 ];
@@ -61,9 +61,7 @@ export default function InquiryListPage() {
       title="내 문의사항"
       description="등록한 문의사항과 답변을 확인하세요"
       actions={
-        <Button onClick={() => navigate('/user/inquiry/form')}>
-          + 문의하기
-        </Button>
+        <Button onClick={() => navigate('/user/inquiry/form')}>+ 문의하기</Button>
       }
     >
       {/* 탭 */}
@@ -93,7 +91,10 @@ export default function InquiryListPage() {
           />
         ) : (
           inquiries.map((inquiry) => {
-            const st = STATUS_CONFIG[inquiry.status] ?? { label: inquiry.status, variant: 'muted' };
+            const st = STATUS_CONFIG[inquiry.status] ?? {
+              label: inquiry.status,
+              variant: 'muted',
+            };
             return (
               <InquiryRow
                 key={inquiry.id}

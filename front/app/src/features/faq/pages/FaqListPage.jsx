@@ -1,28 +1,33 @@
 import { useState, useEffect, useCallback } from 'react';
 import styled, { css } from 'styled-components';
-import { Badge, EmptyState, Card, Pagination } from '../../pay_shared/components';
+import {
+  Badge,
+  EmptyState,
+  Card,
+  Pagination,
+} from '../../pay_shared/components';
 import PageLayout from '../../../app/layouts/page/PageLayout';
 import api from '../../../app/api/axiosApi';
 
 const CATEGORY_OPTIONS = [
-  { label: '전체',       value: '' },
-  { label: '예약',       value: 'RESERVATION' },
-  { label: '결제',       value: 'PAYMENT' },
-  { label: '취소',       value: 'CANCEL' },
-  { label: '환불',       value: 'REFUND' },
-  { label: '계정',       value: 'ACCOUNT' },
+  { label: '전체', value: '' },
+  { label: '예약', value: 'RESERVATION' },
+  { label: '결제', value: 'PAYMENT' },
+  { label: '취소', value: 'CANCEL' },
+  { label: '환불', value: 'REFUND' },
+  { label: '계정', value: 'ACCOUNT' },
   { label: '서비스 이용', value: 'SERVICE' },
-  { label: '기타',       value: 'OTHER' },
+  { label: '기타', value: 'OTHER' },
 ];
 
 const CATEGORY_LABEL = {
   RESERVATION: '예약',
-  PAYMENT:     '결제',
-  CANCEL:      '취소',
-  REFUND:      '환불',
-  ACCOUNT:     '계정',
-  SERVICE:     '서비스 이용',
-  OTHER:       '기타',
+  PAYMENT: '결제',
+  CANCEL: '취소',
+  REFUND: '환불',
+  ACCOUNT: '계정',
+  SERVICE: '서비스 이용',
+  OTHER: '기타',
 };
 
 export default function FaqListPage() {
@@ -116,7 +121,11 @@ export default function FaqListPage() {
         <EmptyState
           icon="🔍"
           title="검색 결과가 없습니다"
-          description={keyword ? `"${keyword}"에 해당하는 FAQ를 찾지 못했습니다.` : '등록된 FAQ가 없습니다.'}
+          description={
+            keyword
+              ? `"${keyword}"에 해당하는 FAQ를 찾지 못했습니다.`
+              : '등록된 FAQ가 없습니다.'
+          }
         />
       ) : (
         <AccordionList>
@@ -138,7 +147,9 @@ export default function FaqListPage() {
                     <Badge size="sm" variant="muted">
                       {CATEGORY_LABEL[faq.category] ?? faq.category}
                     </Badge>
-                    <ChevronIcon $open={isOpen} aria-hidden="true">›</ChevronIcon>
+                    <ChevronIcon $open={isOpen} aria-hidden="true">
+                      ›
+                    </ChevronIcon>
                   </RightArea>
                 </AccordionHeader>
 
@@ -202,8 +213,12 @@ const SearchInput = styled.input`
   outline: none;
   transition: border-color 160ms ease;
 
-  &:focus { border-color: var(--sage); }
-  &::placeholder { color: var(--gray-400); }
+  &:focus {
+    border-color: var(--sage);
+  }
+  &::placeholder {
+    color: var(--gray-400);
+  }
 `;
 
 const SearchBtn = styled.button`
@@ -218,7 +233,9 @@ const SearchBtn = styled.button`
   cursor: pointer;
   white-space: nowrap;
 
-  &:hover { filter: brightness(0.92); }
+  &:hover {
+    filter: brightness(0.92);
+  }
 `;
 
 const CategoryRow = styled.div`
@@ -275,7 +292,9 @@ const AccordionItem = styled.div`
   border-radius: var(--radius-lg);
   overflow: hidden;
   background: var(--white);
-  transition: border-color 200ms ease, box-shadow 200ms ease;
+  transition:
+    border-color 200ms ease,
+    box-shadow 200ms ease;
 
   ${(p) =>
     p.$open &&
@@ -297,8 +316,13 @@ const AccordionHeader = styled.button`
   background: transparent;
   transition: background 140ms ease;
 
-  &:hover { background: var(--gray-50, #fafaf9); }
-  &:focus-visible { outline: 2px solid var(--sage); outline-offset: -2px; }
+  &:hover {
+    background: var(--gray-50, #fafaf9);
+  }
+  &:focus-visible {
+    outline: 2px solid var(--sage);
+    outline-offset: -2px;
+  }
 `;
 
 const QuestionRow = styled.div`
@@ -429,5 +453,7 @@ const ContactLink = styled.a`
   text-decoration: none;
   transition: filter 160ms ease;
 
-  &:hover { filter: brightness(0.92); }
+  &:hover {
+    filter: brightness(0.92);
+  }
 `;
