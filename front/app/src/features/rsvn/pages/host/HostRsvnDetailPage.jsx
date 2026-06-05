@@ -14,21 +14,31 @@ import {
 } from '../../components/user/RsvnStyled';
 import { ApproveBtn } from '../../components/host/HostRsvnStyled';
 import api from '../../../../app/api/axiosApi';
+import { rejectRsvn } from '../../api/rsvnApi';
 
 const SpaceThumb = styled.div`
-  width: 52px; height: 52px;
+  width: 52px;
+  height: 52px;
   background: ${COLOR.cream};
   border-radius: 10px;
-  display: flex; align-items: center; justify-content: center;
-  font-size: 26px; flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 26px;
+  flex-shrink: 0;
 `;
 
 const GuestAvatar = styled.div`
-  width: 44px; height: 44px;
+  width: 44px;
+  height: 44px;
   border-radius: 50%;
   background: ${COLOR.sage};
-  display: flex; align-items: center; justify-content: center;
-  font-weight: 700; font-size: 16px; color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 16px;
+  color: #fff;
 `;
 
 const PayRow = styled.div`
@@ -61,14 +71,22 @@ function HostRsvnDetailPage() {
   const handleReject = async () => {
     const ok = window.confirm('예약을 거절하시겠어요?');
     if (!ok) return;
-    // TODO: payNo는 결제 도메인(4번 우영님) 연동 후 실제 값으로 교체
-    // 현재는 payNo 없이 호출 불가 — 우영님 완료 후 수정
-    alert('결제 도메인 연동 후 거절 기능이 활성화됩니다');
+    try {
+      const reject = await rejectRsvn(rsvn.no, rsvn.payNo);
+      navigate('/host/reservation/list');
+    } catch {
+      alert('거절 처리에 실패했습니다.');
+    }
   };
 
   if (!rsvn) {
     return (
-      <PageLayout title="예약 상세" backTo="/host/reservation/list" backLabel="예약 목록" maxWidth={960}>
+      <PageLayout
+        title="예약 상세"
+        backTo="/host/reservation/list"
+        backLabel="예약 목록"
+        maxWidth={960}
+      >
         <div style={{ textAlign: 'center', padding: 40, color: COLOR.gray400 }}>
           예약 데이터를 불러오지 못했어요
         </div>
@@ -90,7 +108,10 @@ function HostRsvnDetailPage() {
           <SpaceThumb>{rsvn.icon ?? '🏠'}</SpaceThumb>
           <div style={{ flex: 1 }}>
             <div style={{ display: 'flex', gap: 6, marginBottom: 6 }}>
-              <RsvnStatusBadge type="status" label={STATUS_LABEL[rsvn.status] ?? rsvn.status} />
+              <RsvnStatusBadge
+                type="status"
+                label={STATUS_LABEL[rsvn.status] ?? rsvn.status}
+              />
             </div>
             <div style={{ fontSize: 18, fontWeight: 700 }}>{rsvn.title}</div>
             <div style={{ fontSize: 12, color: COLOR.gray400, marginTop: 4 }}>
@@ -103,10 +124,19 @@ function HostRsvnDetailPage() {
       {/* 게스트 정보 */}
       <SectionBox>
         <SectionTitle>게스트 정보</SectionTitle>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 16 }}>
+        <div
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: 12,
+            marginBottom: 16,
+          }}
+        >
           <GuestAvatar>{rsvn.guestName?.[0] ?? '?'}</GuestAvatar>
           <div style={{ flex: 1 }}>
-            <div style={{ fontSize: 15, fontWeight: 700 }}>{rsvn.guestName}</div>
+            <div style={{ fontSize: 15, fontWeight: 700 }}>
+              {rsvn.guestName}
+            </div>
             <div style={{ fontSize: 12, color: COLOR.gray400 }}>
               👤 {rsvn.guests}명
             </div>
@@ -133,9 +163,7 @@ function HostRsvnDetailPage() {
             <InfoValue>{rsvn.guests}명</InfoValue>
           </InfoItem>
         </InfoGrid>
-        {rsvn.special && (
-          <RequestBox>💬 {rsvn.special}</RequestBox>
-        )}
+        {rsvn.special && <RequestBox>💬 {rsvn.special}</RequestBox>}
       </SectionBox>
 
       {/* 결제 정보 */}
@@ -150,7 +178,15 @@ function HostRsvnDetailPage() {
 
       {/* 거절 버튼 — 확정 상태일 때만 */}
       {rsvn.status === 'S' && (
-        <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: 24, paddingTop: 20, borderTop: `1px solid ${COLOR.gray200}` }}>
+        <div
+          style={{
+            display: 'flex',
+            justifyContent: 'flex-end',
+            marginTop: 24,
+            paddingTop: 20,
+            borderTop: `1px solid ${COLOR.gray200}`,
+          }}
+        >
           <ApproveBtn $reject onClick={handleReject}>
             예약 거절
           </ApproveBtn>
