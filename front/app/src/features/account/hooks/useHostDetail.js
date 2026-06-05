@@ -19,13 +19,17 @@ const STATE_MAP = {
   V: 'REVOKED',
 };
 
+// 계좌번호 마스킹 — 민감 개인정보라 뒤 4자리만 노출 (예: ****1234)
+// 어드민도 풀번호를 볼 필요는 없음. 식별엔 뒤 4자리로 충분.
+const maskAccountNo = (no) =>
+  !no || no === '-' ? '-' : '****' + String(no).slice(-4);
+
 /**
  * 어드민 — 호스트 상세 조회 훅.
  *
  * 백엔드(GET /api/admin/hosts/{id})가 주는 필드: 사업자정보·회원정보·승인상태.
  * 운영데이터(공간/예약/정산/리뷰)는 타 도메인 소관 → A안(각 도메인 어드민 엔드포인트)으로 받음.
- * 아직 미회신이라 지금은 더미로 채움. 엔드포인트 회신되면 주석 처리된 병렬 호출만 풀면 됨.
- * (하나 실패/미연동이어도 나머지는 그려지게 Promise.allSettled 사용)
+ * 6개 운영데이터를 Promise.allSettled로 병렬 호출 (하나 실패해도 나머지는 그려짐).
  */
 export const useHostDetail = (hostId) => {
   const [host, setHost] = useState(null);
@@ -38,7 +42,6 @@ export const useHostDetail = (hostId) => {
       setError(null); // 재호출 시 이전 에러 초기화
 
       // ── 병렬 호출 ── 기본정보(필수) + 운영데이터(옵셔널)
-      // 엔드포인트 회신되면 아래 주석 줄 해제 (배열 순서 = 구조분해 순서 유지)
       const now = new Date();
       const [
         detailRes,
@@ -65,13 +68,14 @@ export const useHostDetail = (hostId) => {
       const data = detailRes.value;
 
       // 운영데이터는 옵셔널 — 실패/미연동이면 폴백(하나 실패해도 나머지는 그려짐)
-      const salesStats = statsRes.status === 'fulfilled' ? statsRes.value : null;
+      const salesStats =
+        statsRes.status === 'fulfilled' ? statsRes.value : null;
       const settleList =
-        settleRes.status === 'fulfilled' ? settleRes.value ?? [] : [];
+        settleRes.status === 'fulfilled' ? (settleRes.value ?? []) : [];
       const account =
         accountRes.status === 'fulfilled' ? accountRes.value : null;
       const spaceList =
-        spacesRes.status === 'fulfilled' ? spacesRes.value ?? [] : [];
+        spacesRes.status === 'fulfilled' ? (spacesRes.value ?? []) : [];
       const reservation =
         reservationRes.status === 'fulfilled' ? reservationRes.value : null;
       const review = reviewRes.status === 'fulfilled' ? reviewRes.value : null;
@@ -112,7 +116,7 @@ export const useHostDetail = (hostId) => {
         },
         bankAccount: {
           bankName: account?.bankName ?? '-',
-          accountNumber: account?.accountNo ?? '-',
+          accountNumber: maskAccountNo(account?.accountNo), // 마스킹 적용 (뒤 4자리만)
           accountHolder: account?.holder ?? '-',
           verified: !!account, // 계좌가 등록돼 있으면 인증된 것으로 표시
         },
