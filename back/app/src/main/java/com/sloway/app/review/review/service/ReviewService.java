@@ -85,8 +85,8 @@ public class ReviewService {
     }
 
     //해당 공간의 리뷰 목록
-    public List<ReviewResDto> findAll(Long entityNo){
-        return reviewRepository.findByEntityNo(entityNo)
+    public List<ReviewResDto> findAll(Long entityNo, String type){
+        return reviewRepository.findByEntityNo(entityNo, type)
                 .stream()
                 .map(entity -> ReviewResDto.from(entity, toReplyDtos(entity)))
                 .toList();

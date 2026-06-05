@@ -25,7 +25,7 @@ function StayDetailPage() {
       try {
         const [spaceData, reviewData] = await Promise.all([
           getStationDetail(Number(id)),
-          findReviewsByPlace(Number(id)),
+          findReviewsByPlace(Number(id), 'station'),
         ]);
         setSpace(spaceData);
         setReviews(reviewData);

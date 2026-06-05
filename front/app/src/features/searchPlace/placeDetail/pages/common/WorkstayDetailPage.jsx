@@ -24,7 +24,7 @@ function WorkstayDetailPage() {
       try {
         const [spaceData, reviewData] = await Promise.all([
           getWorkStayDetail(Number(id)),
-          findReviewsByPlace(Number(id)),
+          findReviewsByPlace(Number(id), 'workstay'),
         ]);
         setSpace(spaceData);
         setReviews(reviewData);
