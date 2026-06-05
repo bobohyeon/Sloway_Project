@@ -16,6 +16,9 @@ public interface PayRepositoryCustom {
 
     List<PayEntity> findByRsvn(Long rsvnNo);
 
+    // 여러 예약의 결제를 한 번에 조회 — 예약 목록의 N+1(예약마다 findByRsvn) 제거용
+    List<PayEntity> findByRsvnNoIn(List<Long> rsvnNos);
+
     List<Tuple> sumByMethodBetween(LocalDateTime startDateTime, LocalDateTime endDateTime);
 
     Long sumByOfficeIn(List<Long> officeNos, LocalDateTime start, LocalDateTime end);

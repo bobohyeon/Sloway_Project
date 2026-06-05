@@ -14,17 +14,10 @@ import { VerticalBarChart } from '../../components/admin/VerticalBarChart';
 import { DataTable } from '../../components/admin/DataTable';
 import { findBookingStats } from '../../api/statsApi';
 import { StatsRangeTabs } from '../../components/admin/StatsRangeTabs';
-import { rangeLabel } from '../../components/admin/statsRange';
-
-function getPrevMonth() {
-  const d = new Date();
-  d.setDate(1);
-  d.setMonth(d.getMonth() - 1);
-  return { year: d.getFullYear(), month: d.getMonth() + 1 };
-}
+import { rangeLabel, getAnchorMonth } from '../../components/admin/statsRange';
 
 export default function BookingStats() {
-  const { year, month } = useMemo(() => getPrevMonth(), []);
+  const { year, month } = useMemo(() => getAnchorMonth(), []);
   const [months, setMonths] = useState(1);
 
   const [stats, setStats] = useState(null);

@@ -19,6 +19,7 @@ import { Card, Section, EmptyState } from '../../../pay_shared/components';
 import { VerticalBarChart } from '../../../stats/components/admin/VerticalBarChart';
 import { findHostSalesStats } from '../../../stats/api/statsApi';
 import { findHostSpaces, findHostRsvns } from '../../../rsvn/api/rsvnApi';
+import { getAnchorMonth } from '../../../stats/components/admin/statsRange';
 
 const QUICK_ACTIONS = [
   {
@@ -65,13 +66,6 @@ const QUICK_ACTIONS = [
   },
 ];
 
-function getPrevMonth() {
-  const d = new Date();
-  d.setDate(1);
-  d.setMonth(d.getMonth() - 1);
-  return { year: d.getFullYear(), month: d.getMonth() + 1 };
-}
-
 function formatMan(value) {
   return `${Math.floor(Number(value ?? 0) / 10000).toLocaleString()}만`;
 }
@@ -82,7 +76,7 @@ function spaceName(s, idx) {
 
 export default function HostDashboard() {
   const nav = useNavigate();
-  const { year, month } = useMemo(() => getPrevMonth(), []);
+  const { year, month } = useMemo(() => getAnchorMonth(), []);
 
   const [sales, setSales] = useState(null);
   const [spaces, setSpaces] = useState([]);

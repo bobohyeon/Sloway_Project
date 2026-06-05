@@ -9,7 +9,7 @@ import { HorizontalBarChart } from '../../components/admin/HorizontalBarChart';
 import { DataTable } from '../../components/admin/DataTable';
 import { findSpaceStats } from '../../api/statsApi';
 import { StatsRangeTabs } from '../../components/admin/StatsRangeTabs';
-import { rangeLabel } from '../../components/admin/statsRange';
+import { rangeLabel, getAnchorMonth } from '../../components/admin/statsRange';
 
 const TYPE_META = {
   office: { label: '오피스', color: '#0064FF' },
@@ -17,15 +17,8 @@ const TYPE_META = {
   workStay: { label: '워크앤스테이', color: '#F5A623' },
 };
 
-function getPrevMonth() {
-  const d = new Date();
-  d.setDate(1);
-  d.setMonth(d.getMonth() - 1);
-  return { year: d.getFullYear(), month: d.getMonth() + 1 };
-}
-
 export default function SpaceStats() {
-  const { year, month } = useMemo(() => getPrevMonth(), []);
+  const { year, month } = useMemo(() => getAnchorMonth(), []);
   const [months, setMonths] = useState(1);
 
   const [stats, setStats] = useState(null);

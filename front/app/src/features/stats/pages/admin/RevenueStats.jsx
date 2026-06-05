@@ -14,18 +14,11 @@ import {
   findStatsRefund,
 } from '../../api/statsApi';
 import { StatsRangeTabs } from '../../components/admin/StatsRangeTabs';
-import { rangeLabel } from '../../components/admin/statsRange';
-
-function getPrevMonth() {
-  const d = new Date();
-  d.setDate(1);
-  d.setMonth(d.getMonth() - 1);
-  return { year: d.getFullYear(), month: d.getMonth() + 1 };
-}
+import { rangeLabel, getAnchorMonth } from '../../components/admin/statsRange';
 
 export default function RevenueStats() {
   const nav = useNavigate();
-  const { year, month } = useMemo(() => getPrevMonth(), []);
+  const { year, month } = useMemo(() => getAnchorMonth(), []);
   const [months, setMonths] = useState(1);
 
   const [summary, setSummary] = useState(null);

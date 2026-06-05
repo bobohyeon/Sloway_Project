@@ -96,13 +96,12 @@ public class RsvnService {
                 new CustomException(RsvnErrorCode.MEMBER_NOT_FOUND)
         );
 
-        return rsvnRepository.findByMemberNo(member)
-                .stream()
-                .map(entity -> {
-                    Long payNo = findCompletePayNo(entity.getNo());
-                    return RsvnResDto.from(entity, payNo);
-                }
-                        )
+        List<RsvnEntity> list = rsvnRepository.findByMemberNo(member);
+        // 예약들의 payNo 를 한 번에 조회(N+1 제거)
+        java.util.Map<Long, Long> payNoMap =
+                findCompletePayNoMap(list.stream().map(RsvnEntity::getNo).toList());
+        return list.stream()
+                .map(entity -> RsvnResDto.from(entity, payNoMap.get(entity.getNo())))
                 .toList();
     }
 
@@ -157,12 +156,14 @@ public class RsvnService {
         if (!stations.isEmpty()) result.addAll(rsvnRepository.findByStationNoIn(stations));
         if (!workStays.isEmpty()) result.addAll(rsvnRepository.findByWorkStayNoIn(workStays));
 
-        return result.stream()
+        List<RsvnEntity> sorted = result.stream()
                 .sorted(java.util.Comparator.comparing(RsvnEntity::getCreatedAt).reversed())
-                .map(entity -> {
-                    Long payNo = findCompletePayNo(entity.getNo());
-                    return RsvnResDto.from(entity, payNo);
-                })
+                .toList();
+        // 예약들의 payNo 를 한 번에 조회(N+1 제거)
+        java.util.Map<Long, Long> payNoMap =
+                findCompletePayNoMap(sorted.stream().map(RsvnEntity::getNo).toList());
+        return sorted.stream()
+                .map(entity -> RsvnResDto.from(entity, payNoMap.get(entity.getNo())))
                 .toList();
     }
 
@@ -204,7 +205,7 @@ public class RsvnService {
         refundService.createRefund(refundCreateReqDto);
     }
 
-    //예약완료조회
+    //예약완료조회 (단건 — findOne 등에서 사용)
     public Long findCompletePayNo(Long rsvnNo){
         List<PayEntity> pay = payRepository.findByRsvn(rsvnNo);
 
@@ -214,6 +215,18 @@ public class RsvnService {
                 .findFirst()
                 .orElse(null);
         return completedPay;
+    }
+
+    // 여러 예약의 완료결제 payNo 를 한 번에 조회 → Map<rsvnNo, payNo> (목록 조회 N+1 제거용)
+    private java.util.Map<Long, Long> findCompletePayNoMap(List<Long> rsvnNos) {
+        if (rsvnNos.isEmpty()) return java.util.Map.of();
+        return payRepository.findByRsvnNoIn(rsvnNos).stream()
+                .filter(p -> p.getStatus() == PayStatus.COMPLETED)
+                .collect(java.util.stream.Collectors.toMap(
+                        p -> p.getRsvnNo().getNo(),   // 예약 FK 의 PK
+                        PayEntity::getNo,
+                        (a, b) -> a                    // 한 예약에 완료결제 여러 건이면 첫 건
+                ));
     }
 
 
@@ -263,15 +276,15 @@ public class RsvnService {
         MemberEntity member = memberRepository.findById(memberNo)
                 .orElseThrow(()-> new CustomException(RsvnErrorCode.MEMBER_NOT_FOUND));
 
-        List<RsvnEntity> reviewable = rsvnRepository.findByMemberNoAndStatus(member, RsvnStatus.E);
-        return reviewable
+        List<RsvnEntity> reviewable = rsvnRepository.findByMemberNoAndStatus(member, RsvnStatus.E)
                 .stream()
                 .filter(entity -> LocalDateTime.now().isBefore(entity.getCheckOut().plusDays(14)))
-                .map(entity -> {
-                    Long payNo = findCompletePayNo(entity.getNo());
-                    return RsvnResDto.from(entity, payNo);
-                })
-                .toList()
-                ;
+                .toList();
+        // 예약들의 payNo 를 한 번에 조회(N+1 제거)
+        java.util.Map<Long, Long> payNoMap =
+                findCompletePayNoMap(reviewable.stream().map(RsvnEntity::getNo).toList());
+        return reviewable.stream()
+                .map(entity -> RsvnResDto.from(entity, payNoMap.get(entity.getNo())))
+                .toList();
     }
 }
