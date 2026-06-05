@@ -3,12 +3,13 @@ import {
   getAdminHostDetail,
   revokeHost,
   restoreHost,
-  // ── A안 운영데이터: 각 도메인 어드민 엔드포인트 회신되면 주석 해제 ──
+  getAdminHostStats, // 4번 — 매출/월별 추이
+  getAdminHostSettleList, // 4번 — 정산목록(미정산 집계)
+  getAdminHostAccount, // 4번 — 계좌
+  // ── A안 운영데이터: 타 도메인 어드민 엔드포인트 회신되면 주석 해제 ──
   // getAdminHostReservationStats, // 보현 — 예약 건수
   // getAdminHostReviewStats,      // 보현 — 평점/리뷰수
-  // getAdminHostSpaces,           // 공간 담당 — 공간 목록/개수
-  // getAdminHostSettlement,       // 정산 담당 — 매출/미정산/월별
-  // getAdminHostAccount,          // 정산 담당 — 계좌(verified)
+  // getAdminHostSpaces,           // 서현진 — 공간 목록/개수
 } from '../api/adminApi';
 
 // 백엔드 approvalState(P/A/R/V) → 화면 상태값 매핑 (useHostList와 동일)
@@ -39,20 +40,23 @@ export const useHostDetail = (hostId) => {
 
       // ── 병렬 호출 ── 기본정보(필수) + 운영데이터(옵셔널)
       // 엔드포인트 회신되면 아래 주석 줄 해제 (배열 순서 = 구조분해 순서 유지)
+      const now = new Date();
       const [
         detailRes,
-        // reservationRes,
-        // reviewRes,
-        // spacesRes,
-        // settlementRes,
-        // accountRes,
+        statsRes, // 4번 — 매출/월별
+        settleRes, // 4번 — 정산목록(미정산)
+        accountRes, // 4번 — 계좌
+        // reservationRes,  // 보현
+        // reviewRes,       // 보현
+        // spacesRes,       // 서현진
       ] = await Promise.allSettled([
         getAdminHostDetail(hostId),
+        getAdminHostStats(hostId, now.getFullYear(), now.getMonth() + 1, 12),
+        getAdminHostSettleList(hostId),
+        getAdminHostAccount(hostId),
         // getAdminHostReservationStats(hostId),
         // getAdminHostReviewStats(hostId),
         // getAdminHostSpaces(hostId),
-        // getAdminHostSettlement(hostId),
-        // getAdminHostAccount(hostId),
       ]);
 
       // 기본정보는 필수 — 실패하면 화면을 못 그리므로 에러로 처리
@@ -61,16 +65,21 @@ export const useHostDetail = (hostId) => {
       }
       const data = detailRes.value;
 
-      // 운영데이터는 옵셔널 — 실패/미연동이면 빈 객체로 폴백(더미 유지)
-      // const reservation = reservationRes.status === 'fulfilled' ? reservationRes.value : {};
-      // const review      = reviewRes.status      === 'fulfilled' ? reviewRes.value      : {};
-      // const spaceData   = spacesRes.status      === 'fulfilled' ? spacesRes.value      : {};
-      // const settlement  = settlementRes.status  === 'fulfilled' ? settlementRes.value  : {};
-      // const account     = accountRes.status     === 'fulfilled' ? accountRes.value     : {};
+      // 운영데이터는 옵셔널 — 실패/미연동이면 폴백(하나 실패해도 나머지는 그려짐)
+      const salesStats = statsRes.status === 'fulfilled' ? statsRes.value : null;
+      const settleList =
+        settleRes.status === 'fulfilled' ? settleRes.value ?? [] : [];
+      const account =
+        accountRes.status === 'fulfilled' ? accountRes.value : null;
+
+      // 미정산액 = 정산대기(WAITING) 건의 지급액(payoutAmt) 합
+      const unsettledAmount = settleList
+        .filter((s) => s.status === 'WAITING')
+        .reduce((sum, s) => sum + (s.payoutAmt ?? 0), 0);
 
       // 백엔드 응답 → 화면 구조로 매핑
       setHost({
-        // ─ 네 도메인 (실데이터) ─
+        // ─ 회원/호스트 기본정보 ─
         hostId: data.hostNo,
         name: data.memberName,
         email: data.memberEmail,
@@ -84,25 +93,29 @@ export const useHostDetail = (hostId) => {
         createdAt: data.createdAt,
         rejectReason: data.rejectReason,
 
-        // ─ 타 도메인 (미연동, 더미) — JSX 구조에 맞춤 ─
-        // 엔드포인트 회신되면 0/'-' 대신 우측 주석의 응답값으로 교체
         stats: {
-          averageRating: 0, // ← review.averageRating
-          reviewCount: 0, // ← review.reviewCount
-          spaceCount: 0, // ← spaceData.spaceCount
-          ongoingReservationCount: 0, // ← reservation.ongoingReservationCount
-          completedReservationCount: 0, // ← reservation.completedReservationCount
-          totalRevenue: 0, // ← settlement.totalRevenue
-          unsettledAmount: 0, // ← settlement.unsettledAmount
+          // 타 도메인(보현/서현진) 미연동 — 회신되면 교체
+          averageRating: 0,
+          reviewCount: 0,
+          spaceCount: 0,
+          ongoingReservationCount: 0,
+          completedReservationCount: 0,
+          // 4번 도메인 실데이터
+          totalRevenue: salesStats?.totalAmt ?? 0,
+          unsettledAmount,
         },
         bankAccount: {
-          bankName: '-', // ← account.bankName
-          accountNumber: '-', // 계좌번호 미수신(민감정보) — '-' 고정
-          accountHolder: '-', // 예금주 미수신(민감정보) — '-' 고정
-          verified: false, // ← account.verified
+          bankName: account?.bankName ?? '-',
+          accountNumber: account?.accountNo ?? '-',
+          accountHolder: account?.holder ?? '-',
+          verified: !!account, // 계좌가 등록돼 있으면 인증된 것으로 표시
         },
-        monthlyRevenue: [], // ← settlement.monthlyRevenue
-        spaces: [], // ← spaceData.spaces
+        // 월별 매출 추이: trend[{yearMonth, totalAmt}] → 화면용 {month, revenue}
+        monthlyRevenue: (salesStats?.trend ?? []).map((t) => ({
+          month: t.yearMonth,
+          revenue: t.totalAmt,
+        })),
+        spaces: [], // 서현진 공간 API 회신되면 연동
       });
     } catch (err) {
       setError(
@@ -114,7 +127,10 @@ export const useHostDetail = (hostId) => {
   }, [hostId]);
 
   useEffect(() => {
-    fetchDetail();
+    // set-state-in-effect 회피: 비동기 IIFE 로 감싸 setState 를 effect 동기 본문 밖으로
+    (async () => {
+      await fetchDetail();
+    })();
   }, [fetchDetail]);
 
   // 자격 취소
