@@ -1,6 +1,10 @@
 package com.sloway.app.place.service.place;
 
 import com.sloway.app.aws.service.S3Service;
+import com.sloway.app.common.exception.CustomException;
+import com.sloway.app.host.common.HostErrorCode;
+import com.sloway.app.host.entity.HostEntity;
+import com.sloway.app.host.repository.HostRepository;
 import com.sloway.app.place.dto.request.sort.ImgSortReqDto;
 import com.sloway.app.place.dto.request.place.PlaceReqDto;
 import com.sloway.app.place.dto.request.place.PlaceUpdateReqDto;
@@ -37,6 +41,8 @@ public class PlaceService {
     private final HostPlaceService hostPlaceService;
     private final HostPlaceRepository hostPlaceRepository;
     private final S3Service s3Service;
+    private final HostRepository hostRepository;
+
 
     @Transactional
     public void savePlace(PlaceReqDto dto, List<MultipartFile> files, List<ImgSortReqDto> sortList, Long memberNo) {
@@ -193,4 +199,11 @@ public class PlaceService {
                 .placeImages(imageList)
                 .build();
     }
+    //오준호 수정
+    public List<PlaceListRespDto> placeListForAdmin(Long hostNo) {
+        HostEntity host = hostRepository.findById(hostNo)
+                .orElseThrow(() -> new CustomException(HostErrorCode.HOST_NOT_FOUND));
+        return placeList(host.getMemberNo());
+    }
+    
 }
