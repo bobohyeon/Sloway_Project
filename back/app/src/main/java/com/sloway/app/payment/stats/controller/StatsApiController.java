@@ -47,14 +47,19 @@ public class StatsApiController {
 
     @GetMapping("/host")
     public ResponseEntity<HostSalesStatsResDto> findHostSalesStats(@AuthenticationPrincipal CustomUserDetails host, @RequestParam int year, @RequestParam int month, @RequestParam(defaultValue = "1") int months) {
+        long start = System.currentTimeMillis();
         HostSalesStatsResDto resDto = statsService.findHostSalesStats(host.getMemberNo(), year, month, months);
+        log.info("[STATS] findHostSalesStats 처리시간 {}ms (memberNo={}, {}-{}, {}개월)",
+                System.currentTimeMillis() - start, host.getMemberNo(), year, month, months);
         return ResponseEntity.ok(resDto);
     }
 
-    // 어드민 — 특정 호스트 매출 통계 조회 (SecurityConfig 에서 ADMIN 권한 필요)
     @GetMapping("/admin/host/{hostNo}")
     public ResponseEntity<HostSalesStatsResDto> findHostSalesStatsForAdmin(@PathVariable Long hostNo, @RequestParam int year, @RequestParam int month, @RequestParam(defaultValue = "1") int months) {
+        long start = System.currentTimeMillis();
         HostSalesStatsResDto resDto = statsService.findHostSalesStatsForAdmin(hostNo, year, month, months);
+        log.info("[STATS] findHostSalesStatsForAdmin 처리시간 {}ms (hostNo={}, {}-{}, {}개월)",
+                System.currentTimeMillis() - start, hostNo, year, month, months);
         return ResponseEntity.ok(resDto);
     }
 
