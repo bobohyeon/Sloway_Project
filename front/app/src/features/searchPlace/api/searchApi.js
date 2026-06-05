@@ -35,6 +35,11 @@ export async function getWorkStayDetail(no) {
   return res.data;
 }
 
+export async function findSpaceByEntityNo(entityNo) {
+  const res = await api.get(`/spaces/find/${entityNo}`);
+  return res.data;
+}
+
 export async function searchSpaces({ region, placeType, sort, checkIn, checkOut, guestCount } = {}) {
   const params = {};
   if (region && region !== '전체') params.region = REGION_MAP[region];
