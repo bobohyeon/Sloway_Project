@@ -184,6 +184,13 @@ public class RsvnService {
                 .toList();
     }
 
+    public List<RsvnResDto> findAllByHostForAdmin(Long hostNo) {
+        HostEntity host = hostRepository.findById(hostNo)
+                .orElseThrow(() -> new CustomException(ReviewErrorCode.HOST_NOT_FOUND));
+        return findAllByHost(host.getMemberNo());
+    }
+
+
     // 호스트 공간(office/station/work)의 예약 목록을 모아서 반환 (내부 헬퍼)
     private List<RsvnEntity> findRsvnsByHostNo(Long hostNo) {
         List<HostPlaceEntity> hostPlaces = hostPlaceRepository.findByHostEntityNo(hostNo);
