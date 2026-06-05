@@ -17,6 +17,11 @@ public class PlaceDetailController {
 
     private final PlaceDetailService placeDetailService;
 
+    @GetMapping("/find/{entityNo}")
+    public ResponseEntity<PlaceDetailResDto> findByEntityNo(@PathVariable Long entityNo){
+        return ResponseEntity.ok(placeDetailService.findByEntityNo(entityNo));
+    }
+
     @GetMapping("/office/{no}")
     public ResponseEntity<PlaceDetailResDto> getOfficeDetail(@PathVariable Long no){
         PlaceDetailResDto dtoList = placeDetailService.getOfficeDetail(no);
