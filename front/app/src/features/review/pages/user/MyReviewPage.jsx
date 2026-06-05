@@ -17,6 +17,7 @@ import {
 } from '../../../rsvn/components/user/RsvnStyled';
 import RsvnStatusBadge from '../../../rsvn/components/user/RsvnStatusBadge';
 import { findMyReviews } from '../../api/reviewApi';
+import { findReviewable } from '../../../rsvn/api/rsvnApi';
 
 const fadeInUp = keyframes`
   from { opacity: 0; transform: translateY(10px); }
@@ -58,7 +59,9 @@ const WriteBtn = styled.button`
   display: flex;
   align-items: center;
   gap: 4px;
-  &:hover { background: #1a3a2a; }
+  &:hover {
+    background: #1a3a2a;
+  }
 `;
 
 const Stars = styled.span`
@@ -66,31 +69,43 @@ const Stars = styled.span`
   font-size: 13px;
 `;
 
-// 작성 가능 더미 — 추후 예약 도메인 API 연동 시 교체
-const DUMMY_AVAILABLE = [
-  { id: 1, type: '워크앤스테이', dday: 'D-25', title: '청평 숲속 파인뷰 스테이', date: '이용일 · 2026.04.18', icon: '🌲' },
-  { id: 2, type: '오피스', dday: 'D-9', title: '강릉 바다향 커먼워크', date: '이용일 · 2026.04.02', icon: '🌊' },
-];
+// spaceType(enum) → 한글 라벨 / 아이콘
+const TYPE_LABEL = { WORK_STAY: '워크앤스테이', OFFICE: '오피스', STATION: '숙소' };
+const TYPE_ICON  = { WORK_STAY: '🌲', OFFICE: '💻', STATION: '🛌' };
+
+// checkOut 기준 +14일 마감까지 남은 일수 → 'D-N'
+function calcDday(checkOut) {
+  const deadline = new Date(checkOut);
+  deadline.setDate(deadline.getDate() + 14);
+  const diff = Math.ceil((deadline - new Date()) / (1000 * 60 * 60 * 24));
+  return `D-${diff}`;
+}
 
 function MyReviewPage() {
   const [activeTab, setActiveTab] = useState(0);
   const [myReviews, setMyReviews] = useState([]);
+  const [reviewable, setReviewable] = useState([]);
   const navigate = useNavigate();
 
   useEffect(() => {
-    const fetchMyReviews = async () => {
+    const fetchAll = async () => {
       try {
-        const data = await findMyReviews();
-        setMyReviews(data);
+        const [reviews, available] = await Promise.all([
+          findMyReviews(),
+          findReviewable(),
+        ]);
+        setMyReviews(reviews);
+        setReviewable(available);
       } catch {
         setMyReviews([]);
+        setReviewable([]);
       }
     };
-    fetchMyReviews();
+    fetchAll();
   }, []);
 
   const TABS = [
-    { label: '작성 가능', count: DUMMY_AVAILABLE.length },
+    { label: '작성 가능', count: reviewable.length },
     { label: '작성 완료', count: myReviews.length },
   ];
 
@@ -104,7 +119,11 @@ function MyReviewPage() {
     >
       <TabBar>
         {TABS.map((tab, idx) => (
-          <TabBtn key={idx} $active={activeTab === idx} onClick={() => setActiveTab(idx)}>
+          <TabBtn
+            key={idx}
+            $active={activeTab === idx}
+            onClick={() => setActiveTab(idx)}
+          >
             {tab.label}
             <TabCount $active={activeTab === idx}>{tab.count}</TabCount>
           </TabBtn>
@@ -116,20 +135,26 @@ function MyReviewPage() {
           <NoticeBanner>
             💡 리뷰는 이용 완료 후 14일 이내에 작성 가능해요
           </NoticeBanner>
-          {DUMMY_AVAILABLE.map((item) => (
-            <Card key={item.id} style={{ cursor: 'default' }}>
+          {reviewable.map((item) => (
+            <Card key={item.no} style={{ cursor: 'default' }}>
               <CardRow>
-                <Thumb>{item.icon}</Thumb>
+                <Thumb>{TYPE_ICON[item.spaceType] ?? '🏠'}</Thumb>
                 <CardBody>
                   <TagRow>
-                    <RsvnStatusBadge type="type" label={item.type} />
-                    <WriteBadge>{item.dday}</WriteBadge>
+                    <RsvnStatusBadge type="type" label={TYPE_LABEL[item.spaceType] ?? item.spaceType} />
+                    <WriteBadge>{calcDday(item.checkOut)}</WriteBadge>
                   </TagRow>
-                  <CardTitle>{item.title}</CardTitle>
-                  <CardMeta><span>{item.date}</span></CardMeta>
+                  <CardTitle>{item.spaceName}</CardTitle>
+                  <CardMeta>
+                    <span>이용일 · {formatDate(item.checkOut)}</span>
+                  </CardMeta>
                 </CardBody>
                 <WriteBtn
-                  onClick={() => navigate('/user/review/write', { state: { rsvnNo: item.id } })}
+                  onClick={() =>
+                    navigate('/user/review/write', {
+                      state: { rsvnNo: item.no },
+                    })
+                  }
                 >
                   ⭐ 리뷰 작성
                 </WriteBtn>
@@ -142,7 +167,14 @@ function MyReviewPage() {
       {activeTab === 1 && (
         <>
           {myReviews.length === 0 && (
-            <div style={{ textAlign: 'center', padding: '40px 0', color: COLOR.gray400, fontSize: 14 }}>
+            <div
+              style={{
+                textAlign: 'center',
+                padding: '40px 0',
+                color: COLOR.gray400,
+                fontSize: 14,
+              }}
+            >
               작성한 리뷰가 없어요
             </div>
           )}
@@ -152,17 +184,41 @@ function MyReviewPage() {
                 <Thumb>📝</Thumb>
                 <CardBody>
                   <TagRow>
-                    <RsvnStatusBadge type="type" label={item.spaceType ?? '공간'} />
-                    <Stars>{'★'.repeat(item.scoreTotal)}{'☆'.repeat(5 - item.scoreTotal)}</Stars>
-                    <span style={{ fontSize: 12, fontWeight: 600, color: '#C97D4C' }}>
+                    <RsvnStatusBadge
+                      type="type"
+                      label={item.spaceType ?? '공간'}
+                    />
+                    <Stars>
+                      {'★'.repeat(item.scoreTotal)}
+                      {'☆'.repeat(5 - item.scoreTotal)}
+                    </Stars>
+                    <span
+                      style={{
+                        fontSize: 12,
+                        fontWeight: 600,
+                        color: '#C97D4C',
+                      }}
+                    >
                       {item.scoreTotal}.0
                     </span>
                   </TagRow>
                   <CardTitle>{item.spaceName}</CardTitle>
                   <CardMeta>
-                    <span>이용일 · {formatDate(item.checkIn)} ~ {formatDate(item.checkOut)}</span>
+                    <span>
+                      이용일 · {formatDate(item.checkIn)} ~{' '}
+                      {formatDate(item.checkOut)}
+                    </span>
                   </CardMeta>
-                  <div style={{ fontSize: 13, color: '#555', marginTop: 6, overflow: 'hidden', whiteSpace: 'nowrap', textOverflow: 'ellipsis' }}>
+                  <div
+                    style={{
+                      fontSize: 13,
+                      color: '#555',
+                      marginTop: 6,
+                      overflow: 'hidden',
+                      whiteSpace: 'nowrap',
+                      textOverflow: 'ellipsis',
+                    }}
+                  >
                     {item.content}
                   </div>
                 </CardBody>
