@@ -31,9 +31,9 @@ public class DailyPayStatsEntity extends BaseEntity {
 
     private Integer payCount;
 
-    private Integer totalAmt;
+    private Long totalAmt;
 
-    public void updateStats(Integer payCount, Integer totalAmt) {
+    public void updateStats(Integer payCount, Long totalAmt) {
         this.payCount = payCount;
         this.totalAmt = totalAmt;
     }

@@ -57,7 +57,7 @@ public class StatsService {
         for (Tuple tuple : list) {
             PayMethod payMethod = tuple.get(0, PayMethod.class);
             Long count = tuple.get(1, Long.class);
-            Integer sum = tuple.get(2, Integer.class);
+            Long sum = tuple.get(2, Long.class);
             dailyPayStatsRepository
                     .findByStatDateAndPayMethod(targetDate,
                             payMethod)

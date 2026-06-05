@@ -54,7 +54,7 @@ public class PayRepositoryImpl implements PayRepositoryCustom {
                 .select(
                         qPayEntity.method,
                         qPayEntity.count(),
-                        qPayEntity.finalAmt.sum()
+                        qPayEntity.finalAmt.sum().longValue()
                 )
                 .from(qPayEntity)
                 .where(
