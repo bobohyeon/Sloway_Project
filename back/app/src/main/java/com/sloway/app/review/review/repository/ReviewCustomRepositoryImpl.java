@@ -53,9 +53,9 @@ public class ReviewCustomRepositoryImpl implements ReviewCustomRepository {
     public List<ReviewEntity> findByEntityNo(Long entityNo, String type) {
         // type에 따라 해당 공간 테이블 FK만 비교 (OR 퉁치기 방지)
         BooleanExpression cond = switch (type) {
-            case "office"   -> rsvn.officeNo.no.eq(entityNo);
-            case "workstay" -> rsvn.workStayNo.no.eq(entityNo);
-            default         -> rsvn.stationNo.no.eq(entityNo);
+            case "OFFICE"    -> rsvn.officeNo.no.eq(entityNo);
+            case "WORK_STAY" -> rsvn.workStayNo.no.eq(entityNo);
+            default          -> rsvn.stationNo.no.eq(entityNo);
         };
         return queryFactory
                 .selectFrom(review)

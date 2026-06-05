@@ -354,9 +354,9 @@ function RoomListPage() {
   // 방 선택 → 공간 유형에 따라 상세 페이지로 이동
   const goDetail = (room) => {
     const path =
-      space.type === 'office'
+      space.type === 'OFFICE'
         ? `/coworking-offices/${spaceId}`
-        : space.type === 'workstay'
+        : space.type === 'WORK_STAY'
           ? `/workstays/${spaceId}`
           : `/accommodations/${spaceId}`;
     navigate(path, { state: { selectedRoom: room, space } });
