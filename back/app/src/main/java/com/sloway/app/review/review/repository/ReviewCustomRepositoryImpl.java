@@ -1,5 +1,6 @@
 package com.sloway.app.review.review.repository;
 
+import com.querydsl.core.Tuple;
 import com.querydsl.core.types.OrderSpecifier;
 import com.querydsl.core.types.dsl.BooleanExpression;
 import com.querydsl.jpa.impl.JPAQueryFactory;
@@ -65,6 +66,25 @@ public class ReviewCustomRepositoryImpl implements ReviewCustomRepository {
                 .leftJoin(rsvn.workStayNo, workStay)
                 .where(cond, review.delYn.eq("N"))
                 .fetch();
+    }
+
+    // 호스트 공간(placeNo 목록)의 리뷰 평균 평점·개수 — review→rsvn→office/station/work 조인
+    @Override
+    public Tuple findHostReviewStats(List<Long> placeNos) {
+        return queryFactory
+                .select(review.scoreTotal.avg(), review.count())
+                .from(review)
+                .join(review.rsvnNo, rsvn)
+                .leftJoin(rsvn.officeNo, office)
+                .leftJoin(rsvn.stationNo, station)
+                .leftJoin(rsvn.workStayNo, workStay)
+                .where(
+                        office.placeEntity.no.in(placeNos)
+                                .or(station.placeEntity.no.in(placeNos))
+                                .or(workStay.placeEntity.no.in(placeNos)),
+                        review.delYn.eq("N")
+                )
+                .fetchOne();
     }
 
     //최소 평점 필터
