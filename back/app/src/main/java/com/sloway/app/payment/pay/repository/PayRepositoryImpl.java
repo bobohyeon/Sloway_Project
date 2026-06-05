@@ -116,17 +116,14 @@ public class PayRepositoryImpl implements PayRepositoryCustom {
 
     @Override
     public List<Tuple> sumByMonthBetween(List<Long> officeNos, List<Long> stationNos, List<Long> workStayNos, LocalDateTime start, LocalDateTime end) {
-        // 호스트 공간(office/station/work)의 COMPLETED 결제를 월별로 1쿼리 합산.
-        // 월 표현식은 변수로 빼서 select 와 groupBy 에 "같은 객체"를 써야 Tuple 매칭됨.
         var month = com.querydsl.core.types.dsl.Expressions
                 .stringTemplate("to_char({0}, 'YYYY-MM')", qPayEntity.createdAt);
         return jpaQueryFactory
-                .select(month, qPayEntity.finalAmt.sum().longValue())   // (월 'YYYY-MM', 합계) — longValue 오버플로우 방지
+                .select(month, qPayEntity.finalAmt.sum().longValue())
                 .from(qPayEntity)
                 .where(
                         qPayEntity.status.eq(PayStatus.COMPLETED),
                         qPayEntity.createdAt.between(start, end),
-                        // 공간 3타입 한 번에 (빈 리스트는 항상 false 라 안전)
                         qPayEntity.rsvnNo.officeNo.no.in(officeNos)
                                 .or(qPayEntity.rsvnNo.stationNo.no.in(stationNos))
                                 .or(qPayEntity.rsvnNo.workStayNo.no.in(workStayNos))

@@ -208,17 +208,15 @@ public class StatsService {
                 + payRepository.sumSalesStatsByStationIn(stationNos, start, end)
                 + payRepository.sumSalesStatsByWorkStayIn(workStayNos, start, end);
 
-        // 6개월 추이: 월별 합계를 1쿼리로 받아 Map 으로 만든다 (이전엔 buildTrend 가 월마다 3쿼리 = 18번 DB 쳤음 → 1번으로).
         Map<String, Long> monthlySales = payRepository
                 .sumByMonthBetween(officeNos, stationNos, workStayNos, start, end)
                 .stream()
                 .collect(Collectors.toMap(
-                        t -> t.get(0, String.class),                 // 월 'YYYY-MM'
-                        t -> {                                       // 합계 (null 방어 — toMap 은 null 값 금지)
+                        t -> t.get(0, String.class),
+                        t -> {
                             Long v = t.get(1, Long.class);
                             return v == null ? 0L : v;
                         }));
-        // buildTrend 는 그대로 재사용 — 람다가 DB 대신 Map 만 읽음(메모리). s(mStart)로 월키 만들어 조회.
         List<MonthlyTrendResDto> trend = buildTrend(ym, months,
                 (s, e) -> monthlySales.getOrDefault(YearMonth.from(s).toString(), 0L));
 
