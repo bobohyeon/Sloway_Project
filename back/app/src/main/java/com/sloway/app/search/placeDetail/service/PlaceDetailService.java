@@ -25,20 +25,20 @@ public class PlaceDetailService {
     private final StationRepository stationRepository;
     private final WorkStayRepository workStayRepository;
 
-    public PlaceDetailResDto getOfficeDetail(Long placeNo) {
-        OfficeEntity entity = officeRepository.findByPlaceNo(placeNo)
+    public PlaceDetailResDto getOfficeDetail(Long entityNo) {
+        OfficeEntity entity = officeRepository.findById(entityNo)
                 .orElseThrow(()->new CustomException(RsvnErrorCode.PLACE_NOT_FOUND));
         return PlaceDetailResDto.from(entity);
     }
 
-    public PlaceDetailResDto getStationDetail(Long placeNo) {
-        StationEntity entity = stationRepository.findByPlaceNo(placeNo)
+    public PlaceDetailResDto getStationDetail(Long entityNo) {
+        StationEntity entity = stationRepository.findById(entityNo)
                 .orElseThrow(()->new CustomException(RsvnErrorCode.PLACE_NOT_FOUND));
         return PlaceDetailResDto.from(entity);
     }
 
-    public PlaceDetailResDto getWorkStayDetail(Long placeNo) {
-        WorkStayEntity entity = workStayRepository.findByPlaceNo(placeNo)
+    public PlaceDetailResDto getWorkStayDetail(Long entityNo) {
+        WorkStayEntity entity = workStayRepository.findById(entityNo)
                 .orElseThrow(()->new CustomException(RsvnErrorCode.PLACE_NOT_FOUND));
         return PlaceDetailResDto.from(entity);
     }

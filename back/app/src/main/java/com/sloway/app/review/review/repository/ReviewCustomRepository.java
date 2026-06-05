@@ -8,7 +8,7 @@ import java.util.List;
 
 public interface ReviewCustomRepository {
 
-    List<ReviewEntity> findByPlaceNo(PlaceEntity placeNo);
+    List<ReviewEntity> findByEntityNo(Long entityNo);
 
     List<ReviewEntity> findByHostFilter(PlaceEntity placeEntity, Integer minScore, PeriodType period);
 }
