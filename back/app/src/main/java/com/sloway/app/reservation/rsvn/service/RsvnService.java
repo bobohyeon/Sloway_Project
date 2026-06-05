@@ -13,11 +13,13 @@ import com.sloway.app.payment.refund.common.RefundReason;
 import com.sloway.app.payment.refund.dto.request.RefundCreateReqDto;
 import com.sloway.app.payment.refund.service.RefundService;
 import com.sloway.app.place.entity.office.OfficeEntity;
+import com.sloway.app.place.entity.place.ImgPlaceEntity;
 import com.sloway.app.place.entity.station.StationEntity;
 import com.sloway.app.place.entity.workStay.WorkStayEntity;
 import com.sloway.app.place.entity.hostPlace.HostPlaceEntity;
 import com.sloway.app.place.repository.hostPlace.HostPlaceRepository;
 import com.sloway.app.place.repository.office.OfficeRepository;
+import com.sloway.app.place.repository.place.ImgPlaceRepository;
 import com.sloway.app.place.repository.station.StationRepository;
 import com.sloway.app.place.repository.workStay.WorkStayRepository;
 import com.sloway.app.reservation.RsvnErrorCode;
@@ -35,7 +37,11 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.util.Collections;
 import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.stream.Collectors;
 
 @Slf4j
 @RequiredArgsConstructor
@@ -52,6 +58,7 @@ public class RsvnService {
     private final RefundService refundService;
     private final HostRepository hostRepository;
     private final HostPlaceRepository hostPlaceRepository;
+    private final ImgPlaceRepository imgPlaceRepository;
 
     @Transactional
     public long save(Long memberNo, RsvnReqDto dto) {
@@ -124,12 +131,43 @@ public class RsvnService {
         HostEntity host = hostRepository.findByMemberNo(memberNo)
                 .orElseThrow(() -> new CustomException(ReviewErrorCode.HOST_NOT_FOUND));
 
-        return hostPlaceRepository.findByHostEntityNo(host.getNo())
-                .stream()
-                .map(HostSpaceResDto::from)
-                .filter(dto -> dto.getPlaceNo() != null)
+        // 1. 해당 호스트의 모든 공간 정보 조회
+        List<HostPlaceEntity> hostPlaces = hostPlaceRepository.findByHostEntityNo(host.getNo());
+
+        // 2. 각 HostPlace에서 PlaceNo만 추출 (중복 제거를 위해 Set 또는 distinct 사용)
+        List<Long> placeNos = hostPlaces.stream()
+                .map(this::getPlaceNoFromHostPlace) // 별도 추출 메서드 활용
+                .filter(Objects::nonNull)
                 .distinct()
                 .toList();
+
+        // 3. 이미지 정보 일괄 조회 (N+1 방지)
+        Map<Long, String> imageMap = imgPlaceRepository.findByPlaceEntity_NoInAndSort(placeNos, 1)
+                .stream()
+                .collect(Collectors.toMap(
+                        img -> img.getPlaceEntity().getNo(),
+                        ImgPlaceEntity::getCurrentUrl,
+                        (existing, replacement) -> existing // 중복 시 기존값 유지
+                ));
+
+        // 4. DTO 매핑
+        return hostPlaces.stream()
+                .map(hp -> {
+                    Long pid = getPlaceNoFromHostPlace(hp);
+                    String imageUrl = imageMap.getOrDefault(pid, null); // 매칭되는 이미지가 없으면 null
+                    return HostSpaceResDto.from(hp, imageUrl);
+                })
+                .distinct() // 주의: HostSpaceResDto에 equals/hashCode 필요
+                .toList();
+    }
+
+    // HostPlaceEntity에서 PlaceNo를 가져오는 헬퍼 메서드
+    private Long getPlaceNoFromHostPlace(HostPlaceEntity hp) {
+        if (hp.getWorkStayEntity() != null) return hp.getWorkStayEntity().getPlaceEntity().getNo();
+        if (hp.getOfficeEntity() != null) return hp.getOfficeEntity().getPlaceEntity().getNo();
+        if (hp.getStationEntity() != null) return hp.getStationEntity().getPlaceEntity().getNo();
+        if (hp.getPlaceEntity() != null) return hp.getPlaceEntity().getNo();
+        return null;
     }
 
     //어드민 — 특정 호스트의 공간 목록 조회 (hostNo 직접, 공간별 예약수 포함)
@@ -161,7 +199,7 @@ public class RsvnService {
                     } else if (hp.getWorkStayEntity() != null) {
                         cnt = workCnt.getOrDefault(hp.getWorkStayEntity().getNo(), 0L);
                     }
-                    return HostSpaceResDto.from(hp, cnt);
+                    return HostSpaceResDto.from(hp, cnt, "");
                 })
                 .filter(dto -> dto.getPlaceNo() != null)
                 .distinct()

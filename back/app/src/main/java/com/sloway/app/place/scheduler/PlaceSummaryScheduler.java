@@ -21,15 +21,26 @@ public class PlaceSummaryScheduler {
                 final_score, rsvn_count, avg_score, amenities, status, updated_at
             )
             WITH RsvnStats AS (
-                -- 장소 고유 번호와 타입을 기준으로 예약 통계 산출
-                SELECT p.no as place_no, p.type,
-                       COUNT(DISTINCT r.no) AS rsvn_cnt, 
-                       AVG(rev.score_total) AS avg_score
-                FROM place p
-                LEFT JOIN rsvn r ON (r.station_no = p.no OR r.office_no = p.no OR r.work_stay_no = p.no)
-                LEFT JOIN review rev ON rev.rsvn_no = r.no
-                GROUP BY p.no, p.type
-            )
+                        SELECT
+                            p.no as place_no,
+                            p.type,
+                            COUNT(DISTINCT r.no) AS rsvn_cnt,
+                            AVG(rev.score_total) AS avg_score
+                        FROM place p
+                        -- 1. 각각의 상세 테이블을 먼저 조인하여 PK(no)를 맞춤
+                        LEFT JOIN station s ON p.type = 'STATION' AND s.place_no = p.no
+                        LEFT JOIN office o ON p.type = 'OFFICE' AND o.place_no = p.no
+                        LEFT JOIN work_stay w ON p.type = 'WORK_STAY' AND w.place_no = p.no
+                
+                        -- 2. 이제 상세 테이블의 PK와 rsvn의 FK를 비교
+                        LEFT JOIN rsvn r ON (
+                            (p.type = 'STATION' AND r.station_no = s.no) OR
+                            (p.type = 'OFFICE' AND r.office_no = o.no) OR
+                            (p.type = 'WORK_STAY' AND r.work_stay_no = w.no)
+                        )
+                        LEFT JOIN review rev ON rev.rsvn_no = r.no
+                        GROUP BY p.no, p.type
+                    )
             SELECT 
                 p.no, p.type,
                 CASE WHEN p.type = 'STATION' THEN s.no WHEN p.type = 'OFFICE' THEN o.no ELSE w.no END,
