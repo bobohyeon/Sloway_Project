@@ -6,14 +6,17 @@ import MainHeader from '../../../../main/layouts/MainHeader';
 import { COLOR } from '../../../../rsvn/components/user/RsvnStyled';
 import { searchSpaces } from '../../../api/searchApi';
 
-// 타입별 기본 아이콘 · 가격 단위
-const TYPE_ICON  = { 워크앤스테이: '🌿', 오피스: '💻', 숙소: '🛌' };
-const TYPE_UNIT  = { 워크앤스테이: '원/박', 오피스: '원/4h', 숙소: '원/박' };
+// 타입별 기본 아이콘 · 가격 단위 (DB 영문 대문자 기준)
+const TYPE_ICON  = { WORK_STAY: '🌿', OFFICE: '💻', STATION: '🛌' };
+const TYPE_UNIT  = { WORK_STAY: '원/박', OFFICE: '원/4h', STATION: '원/박' };
+
+// 탭 한글 → API 타입값 매핑
+const TAB_TO_TYPE = { '워크앤스테이': 'WORK_STAY', '오피스': 'OFFICE', '숙소': 'STATION' };
 
 // SearchResDto → SpaceCard 호환 객체
 function toSpaceCard(dto) {
   return {
-    id: dto.placeNo,
+    id: dto.entityNo,
     type: dto.type,
     title: dto.title,
     location: dto.address,
@@ -341,7 +344,7 @@ function SearchResultPage() {
     async function load() {
       setLoading(true);
       try {
-        const placeType = activeTab > 0 ? TYPE_TABS[activeTab] : null;
+        const placeType = activeTab > 0 ? TAB_TO_TYPE[TYPE_TABS[activeTab]] : null;
         const data = await searchSpaces({ region, placeType, sort, checkIn, checkOut });
         setSpaces(data.map(toSpaceCard));
       } catch (e) {

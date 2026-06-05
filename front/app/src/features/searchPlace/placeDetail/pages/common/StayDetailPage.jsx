@@ -22,7 +22,6 @@ function StayDetailPage() {
   const [reviews, setReviews] = useState([]);
 
   useEffect(() => {
-    console.log('station id:', id);
     const load = async () => {
       try {
         const [spaceData, reviewData] = await Promise.all([
