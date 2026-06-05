@@ -31,7 +31,7 @@ public class ReviewCustomRepositoryImpl implements ReviewCustomRepository {
     private static final QWorkStayEntity workStay = QWorkStayEntity.workStayEntity;
 
     @Override
-    public List<ReviewEntity> findByHostFilter(PlaceEntity placeNo, Integer minScore, PeriodType period) {
+    public List<ReviewEntity> findByHostFilter(PlaceEntity placeEntity, Integer minScore, PeriodType period) {
         return queryFactory
                 .selectFrom(review)
                 .join(review.rsvnNo, rsvn)
@@ -39,9 +39,9 @@ public class ReviewCustomRepositoryImpl implements ReviewCustomRepository {
                 .leftJoin(rsvn.stationNo, station)
                 .leftJoin(rsvn.workStayNo, workStay)
                 .where(
-                        office.placeEntity.no.eq(placeNo.getNo())
-                                .or(station.placeEntity.no.eq(placeNo.getNo()))
-                                .or(workStay.placeEntity.no.eq(placeNo.getNo()))
+                        office.placeEntity.no.eq(placeEntity.getNo())
+                                .or(station.placeEntity.no.eq(placeEntity.getNo()))
+                                .or(workStay.placeEntity.no.eq(placeEntity.getNo()))
                         ,review.delYn.eq("N")
                         ,min(minScore)
                         ,periodBoolean(period)
@@ -50,7 +50,7 @@ public class ReviewCustomRepositoryImpl implements ReviewCustomRepository {
     }
 
     @Override
-    public List<ReviewEntity> findByPlaceNo(PlaceEntity placeNo) {
+    public List<ReviewEntity> findByEntityNo(Long entityNo) {
         return queryFactory
                 .selectFrom(review)
                 .join(review.rsvnNo, rsvn)
@@ -58,9 +58,9 @@ public class ReviewCustomRepositoryImpl implements ReviewCustomRepository {
                 .leftJoin(rsvn.stationNo, station)
                 .leftJoin(rsvn.workStayNo, workStay)
                 .where(
-                        office.placeEntity.no.eq(placeNo.getNo())
-                        .or(station.placeEntity.no.eq(placeNo.getNo()))
-                        .or(workStay.placeEntity.no.eq(placeNo.getNo()))
+                        rsvn.officeNo.no.eq(entityNo)
+                        .or(rsvn.stationNo.no.eq(entityNo))
+                        .or(rsvn.workStayNo.no.eq(entityNo))
                         ,review.delYn.eq("N")
                 )
                 .fetch();

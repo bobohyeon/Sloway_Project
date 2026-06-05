@@ -61,7 +61,11 @@ public class SearchCustomRepositoryImpl implements SearchCustomRepository{
     public List<SearchResDto> search(SearchReqDto dto) {
         return queryFactory
                 .select(Projections.constructor(SearchResDto.class,
-                        p.no,
+                        Expressions.numberTemplate(Long.class, "COALESCE({0},{1},{2})",
+                            JPAExpressions.select(o.no).from(o).where(o.placeEntity.eq(p)),
+                            JPAExpressions.select(ws.no).from(ws).where(ws.placeEntity.eq(p)),
+                            JPAExpressions.select(st.no).from(st).where(st.placeEntity.eq(p))
+                        ),
                         p.title,
                         p.type,
                         p.address,

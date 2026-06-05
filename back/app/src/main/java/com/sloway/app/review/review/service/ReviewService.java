@@ -2,8 +2,6 @@ package com.sloway.app.review.review.service;
 
 import com.sloway.app.aws.service.S3Service;
 import com.sloway.app.common.exception.CustomException;
-import com.sloway.app.place.entity.place.PlaceEntity;
-import com.sloway.app.place.repository.place.PlaceRepository;
 import com.sloway.app.reservation.RsvnErrorCode;
 import com.sloway.app.reservation.rsvn.entity.RsvnEntity;
 import com.sloway.app.reservation.rsvn.entity.RsvnStatus;
@@ -37,7 +35,6 @@ public class ReviewService {
 
     private final ReviewRepository reviewRepository;
     private final RsvnRepository rsvnRepository;
-    private final PlaceRepository placeRepository;
     private final ReviewReplyRepository reviewReplyRepository;
     private final S3Service s3Service;
     private final ReviewImgRepository reviewImgRepository;
@@ -88,10 +85,8 @@ public class ReviewService {
     }
 
     //해당 공간의 리뷰 목록
-    public List<ReviewResDto> findAll(Long placeNo){
-        PlaceEntity place = placeRepository.findByNo(placeNo)
-                .orElseThrow(()->new CustomException(RsvnErrorCode.PLACE_NOT_FOUND));
-        return reviewRepository.findByPlaceNo(place)
+    public List<ReviewResDto> findAll(Long entityNo){
+        return reviewRepository.findByEntityNo(entityNo)
                 .stream()
                 .map(entity -> ReviewResDto.from(entity, toReplyDtos(entity)))
                 .toList();
