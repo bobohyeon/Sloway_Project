@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../../auth/hooks/useAuth';
 import { findMyRefunds } from '../../../refund/api/refundApi';
+import { Pagination } from '../../../pay_shared/components/Pagination';
 import styled, { keyframes } from 'styled-components';
 import PageLayout from '../../../../app/layouts/page/PageLayout';
 import RsvnStatusBadge from '../../components/user/RsvnStatusBadge';
@@ -71,6 +72,7 @@ const SumLbl = styled.div`
 function RefundListPage() {
   const [activeTab, setActiveTab] = useState(0);
   const [refunds, setRefunds] = useState([]);
+  const [page, setPage] = useState(1);
   const navigate = useNavigate();
   const { user } = useAuth();
 
@@ -93,6 +95,8 @@ function RefundListPage() {
   );
 
   const totalAmt = refunds.reduce((sum, r) => sum + Number(r.refundAmt ?? 0), 0);
+  const totalPages = Math.ceil(filtered.length / 10);
+  const paged = filtered.slice((page - 1) * 10, page * 10);
 
   const formatDate = (dt) => dt?.slice(0, 10).replaceAll('-', '.') ?? '';
   const formatCode = (r) =>
@@ -109,7 +113,7 @@ function RefundListPage() {
           <TabBtn
             key={idx}
             $active={activeTab === idx}
-            onClick={() => setActiveTab(idx)}
+            onClick={() => { setActiveTab(idx); setPage(1); }}
           >
             {tab.label}
             <TabCount $active={activeTab === idx}>{counts[idx]}</TabCount>
@@ -121,7 +125,7 @@ function RefundListPage() {
           취소·환불 내역이 없어요
         </div>
       )}
-      {filtered.map((item) => (
+      {paged.map((item) => (
         <Card key={item.no} style={{ cursor: 'default' }}>
           <CardRow>
             <Thumb>💳</Thumb>
@@ -146,6 +150,11 @@ function RefundListPage() {
         </Card>
       ))}
 
+      <Pagination
+        currentPage={page}
+        totalPages={totalPages}
+        onChange={(p) => { setPage(p); window.scrollTo(0, 0); }}
+      />
       <SummaryBox>
         <div>
           <SumVal>{refunds.length}</SumVal>
