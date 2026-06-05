@@ -18,7 +18,7 @@ import { StatCard } from '../../../pay_shared/components/StatCard';
 import { Card, Section, EmptyState } from '../../../pay_shared/components';
 import { VerticalBarChart } from '../../../stats/components/admin/VerticalBarChart';
 import { findHostSalesStats } from '../../../stats/api/statsApi';
-import { findHostSpaces, findHostRsvns } from '../../../rsvn/api/rsvnApi';
+import { findHostSpaces } from '../../../rsvn/api/rsvnApi';
 import { getAnchorMonth } from '../../../stats/components/admin/statsRange';
 
 const QUICK_ACTIONS = [
@@ -80,7 +80,6 @@ export default function HostDashboard() {
 
   const [sales, setSales] = useState(null);
   const [spaces, setSpaces] = useState([]);
-  const [rsvns, setRsvns] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
@@ -90,15 +89,13 @@ export default function HostDashboard() {
       setLoading(true);
       setError(null);
       try {
-        const [s, sp, rs] = await Promise.all([
+        const [s, sp] = await Promise.all([
           findHostSalesStats(year, month, 6),
           findHostSpaces().catch(() => []),
-          findHostRsvns().catch(() => []),
         ]);
         if (!alive) return;
         setSales(s);
         setSpaces(Array.isArray(sp) ? sp : []);
-        setRsvns(Array.isArray(rs) ? rs : []);
       } catch (e) {
         if (alive)
           setError(e?.response?.data?.message ?? '대시보드 데이터를 불러오지 못했습니다.');
@@ -192,17 +189,13 @@ export default function HostDashboard() {
         )}
       </Section>
 
-      <Section title="예약 현황">
-        {rsvns.length > 0 ? (
-          <Card padded>
-            <SectionMeta>전체 예약 {rsvns.length.toLocaleString()}건</SectionMeta>
-            <MutedNote>최근 예약 상세는 '예약 관리'에서 확인하세요.</MutedNote>
-          </Card>
-        ) : (
-          <EmptyCard padded>
-            <EmptyState title="예약 내역이 없습니다" />
-          </EmptyCard>
-        )}
+      <Section title="결제·예약 현황">
+        <Card padded>
+          <SectionMeta>
+            최근 6개월 결제 {Number(sales?.payCount ?? 0).toLocaleString()}건
+          </SectionMeta>
+          <MutedNote>예약 상세는 '예약 관리'에서 확인하세요.</MutedNote>
+        </Card>
       </Section>
 
       <Section title="빠른 액션">

@@ -208,15 +208,23 @@ public class StatsService {
                 + payRepository.sumSalesStatsByStationIn(stationNos, start, end)
                 + payRepository.sumSalesStatsByWorkStayIn(workStayNos, start, end);
 
-        List<MonthlyTrendResDto> trend = buildTrend(ym, months, (s, e) ->
-                payRepository.sumByOfficeIn(officeNos, s, e)
-                        + payRepository.sumByStationIn(stationNos, s, e)
-                        + payRepository.sumByWorkStayIn(workStayNos, s, e));
+        // 6개월 추이: 월별 합계를 1쿼리로 받아 Map 으로 만든다 (이전엔 buildTrend 가 월마다 3쿼리 = 18번 DB 쳤음 → 1번으로).
+        Map<String, Long> monthlySales = payRepository
+                .sumByMonthBetween(officeNos, stationNos, workStayNos, start, end)
+                .stream()
+                .collect(Collectors.toMap(
+                        t -> t.get(0, String.class),                 // 월 'YYYY-MM'
+                        t -> {                                       // 합계 (null 방어 — toMap 은 null 값 금지)
+                            Long v = t.get(1, Long.class);
+                            return v == null ? 0L : v;
+                        }));
+        // buildTrend 는 그대로 재사용 — 람다가 DB 대신 Map 만 읽음(메모리). s(mStart)로 월키 만들어 조회.
+        List<MonthlyTrendResDto> trend = buildTrend(ym, months,
+                (s, e) -> monthlySales.getOrDefault(YearMonth.from(s).toString(), 0L));
 
         return HostSalesStatsResDto.of(totalAmt, payCount, refundAmt, trend);
     }
 
-    // 어드민 — hostNo 로 호스트 매출 통계 조회 (hostNo→memberNo 역변환 후 본인용 로직 재사용)
     public HostSalesStatsResDto findHostSalesStatsForAdmin(Long hostNo, int year, int month, int months) {
         HostEntity hostEntity = hostRepository.findById(hostNo)
                 .orElseThrow(() -> new CustomException(HostErrorCode.HOST_NOT_FOUND));
@@ -247,7 +255,6 @@ public class StatsService {
         LocalDateTime start = ym.minusMonths(months - 1).atDay(1).atStartOfDay();
         LocalDateTime end = ym.atEndOfMonth().atTime(23, 59, 59);
 
-        // 상태별 집계 1번으로 confirmed/complete/cancel + total(합) 동시 확보 (status count 4번 제거)
         Map<RsvnStatus, Long> counts = statsRepositoryCustom.countRsvnGroupByStatus(start, end);
         long confirmed = counts.getOrDefault(RsvnStatus.S, 0L);
         long complete = counts.getOrDefault(RsvnStatus.E, 0L);
