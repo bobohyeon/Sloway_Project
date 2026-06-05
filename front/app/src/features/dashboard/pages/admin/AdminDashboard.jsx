@@ -21,6 +21,7 @@ import {
   findStatsPayMethods,
   findStatsRefund,
 } from '../../../stats/api/statsApi';
+import { getAnchorMonth } from '../../../stats/components/admin/statsRange';
 
 const PAY_METHOD_META = {
   KAKAOPAY: { label: '카카오페이', color: '#FEE500' },
@@ -73,16 +74,9 @@ const QUICK_ACTIONS = [
   },
 ];
 
-function getPrevMonth() {
-  const d = new Date();
-  d.setDate(1);
-  d.setMonth(d.getMonth() - 1);
-  return { year: d.getFullYear(), month: d.getMonth() + 1 };
-}
-
 export default function AdminDashboard() {
   const nav = useNavigate();
-  const { year, month } = useMemo(() => getPrevMonth(), []);
+  const { year, month } = useMemo(() => getAnchorMonth(), []);
 
   const [summary, setSummary] = useState(null);
   const [methods, setMethods] = useState([]);

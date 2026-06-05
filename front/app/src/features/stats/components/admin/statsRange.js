@@ -8,3 +8,15 @@ export const RANGE_PRESETS = [
 export function rangeLabel(months) {
   return months === 1 ? '전월' : `최근 ${months}개월`;
 }
+
+// 통계 기준 시점 — 시드 더미(2025-06~2026-05)에 맞춘 고정 앵커. PC 시계와 무관.
+// 운영 전환 시 이 한 줄만 `const DEMO_NOW = new Date();` 로 바꾸면 됨.
+const DEMO_NOW = new Date(2026, 5, 5); // 2026-06-05 (month는 0-base라 5=6월)
+
+// 기준 시점의 "지난달" {year, month(1-base)} 반환
+export function getAnchorMonth() {
+  const d = new Date(DEMO_NOW);
+  d.setDate(1);
+  d.setMonth(d.getMonth() - 1);
+  return { year: d.getFullYear(), month: d.getMonth() + 1 };
+}

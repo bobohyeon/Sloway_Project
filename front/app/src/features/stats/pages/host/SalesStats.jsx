@@ -9,21 +9,14 @@ import { VerticalBarChart } from '../../components/admin/VerticalBarChart';
 import { DataTable } from '../../components/admin/DataTable';
 import { findHostSalesStats } from '../../api/statsApi';
 import { StatsRangeTabs } from '../../components/admin/StatsRangeTabs';
-import { rangeLabel } from '../../components/admin/statsRange';
-
-function getPrevMonth() {
-  const d = new Date();
-  d.setDate(1);
-  d.setMonth(d.getMonth() - 1);
-  return { year: d.getFullYear(), month: d.getMonth() + 1 };
-}
+import { rangeLabel, getAnchorMonth } from '../../components/admin/statsRange';
 
 function formatMan(value) {
   return `${Math.floor(Number(value ?? 0) / 10000).toLocaleString()}만`;
 }
 
 export default function SalesStats() {
-  const { year, month } = useMemo(() => getPrevMonth(), []);
+  const { year, month } = useMemo(() => getAnchorMonth(), []);
   const [months, setMonths] = useState(1);
 
   const [stats, setStats] = useState(null);

@@ -14,20 +14,13 @@ import {
   findStatsRefund,
 } from '../../api/statsApi';
 import { StatsRangeTabs } from '../../components/admin/StatsRangeTabs';
-import { rangeLabel } from '../../components/admin/statsRange';
+import { rangeLabel, getAnchorMonth } from '../../components/admin/statsRange';
 
 const PAY_METHOD_META = {
   KAKAOPAY: { label: '카카오페이', color: '#FEE500' },
   TOSSPAY: { label: '토스페이', color: '#0064FF' },
   NAVERPAY: { label: '네이버페이', color: '#03C75A' },
 };
-
-function getPrevMonth() {
-  const d = new Date();
-  d.setDate(1);
-  d.setMonth(d.getMonth() - 1);
-  return { year: d.getFullYear(), month: d.getMonth() + 1 };
-}
 
 function formatWon(value) {
   const n = Number(value ?? 0);
@@ -40,7 +33,7 @@ function formatMan(value) {
 }
 
 export default function StatsOverview() {
-  const { year, month } = useMemo(() => getPrevMonth(), []);
+  const { year, month } = useMemo(() => getAnchorMonth(), []);
   const [months, setMonths] = useState(1);
 
   const [summary, setSummary] = useState(null);

@@ -48,6 +48,17 @@ public class PayRepositoryImpl implements PayRepositoryCustom {
         return payEntityList;
     }
 
+    // 여러 예약의 결제를 IN 절로 한 번에 — 예약 목록 N+1 제거용
+    @Override
+    public List<PayEntity> findByRsvnNoIn(List<Long> rsvnNos) {
+        return jpaQueryFactory
+                .selectFrom(qPayEntity)
+                .where(
+                        qPayEntity.rsvnNo.no.in(rsvnNos)
+                )
+                .fetch();
+    }
+
     @Override
     public List<Tuple> sumByMethodBetween(LocalDateTime startDateTime, LocalDateTime endDateTime) {
         return jpaQueryFactory
