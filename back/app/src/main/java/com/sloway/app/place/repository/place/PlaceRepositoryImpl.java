@@ -344,7 +344,11 @@ public class PlaceRepositoryImpl implements PlaceRepositoryCustom {
                 .intValue();
 
         // 2. 재사용 가능한 식 정의 (SELECT와 GROUP BY에서 동일하게 사용)
-        NumberExpression<Long> targetNo = stationEntity.no.coalesce(officeEntity.no).coalesce(workStayEntity.no);
+        NumberExpression<Long> targetNo = new CaseBuilder()
+                .when(placeEntity.type.eq("STATION")).then(stationEntity.no)
+                .when(placeEntity.type.eq("OFFICE")).then(officeEntity.no)
+                .when(placeEntity.type.eq("WORK_STAY")).then(workStayEntity.no)
+                .otherwise(0L);
         StringExpression combinedTitle = placeEntity.title.concat(" ").concat(
                 stationEntity.title.coalesce(officeEntity.title).coalesce(workStayEntity.title)
         );
@@ -419,7 +423,11 @@ public class PlaceRepositoryImpl implements PlaceRepositoryCustom {
         return queryFactory
                 .select(Projections.constructor(PlaceCardDto.class,
                         placeEntity.no,
-                        stationEntity.no.coalesce(officeEntity.no).coalesce(workStayEntity.no), // targetNo
+                        new CaseBuilder()
+                                .when(placeEntity.type.eq("STATION")).then(stationEntity.no)
+                                .when(placeEntity.type.eq("OFFICE")).then(officeEntity.no)
+                                .when(placeEntity.type.eq("WORK_STAY")).then(workStayEntity.no)
+                                .otherwise(0L),
                         placeEntity.title.concat(" - ").concat(stationEntity.title.coalesce(officeEntity.title).coalesce(workStayEntity.title)), // combinedTitle
                         placeEntity.type,
                         imgPlaceEntity.currentUrl,
