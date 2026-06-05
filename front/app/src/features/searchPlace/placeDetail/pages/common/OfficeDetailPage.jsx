@@ -24,7 +24,7 @@ function OfficeDetailPage() {
       try {
         const [spaceData, reviewData] = await Promise.all([
           getOfficeDetail(Number(id)),
-          findReviewsByPlace(Number(id), 'office'),
+          findReviewsByPlace(Number(id), 'OFFICE'),
         ]);
         setSpace(spaceData);
         setReviews(reviewData);
