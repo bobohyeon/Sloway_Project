@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { hostSignup, sendVerifyCode, verifyCode } from '../api/authApi';
+import { isValidPassword, PASSWORD_GUIDE } from '../utils/passwordValidator';
 
 /**
  * 호스트 회원가입 폼 로직 (상태 + 이메일 인증 + 제출).
@@ -81,8 +82,8 @@ export function useHostSignupForm() {
       setError('이메일 인증을 완료해주세요.');
       return;
     }
-    if (form.password.length < 4) {
-      setError('비밀번호는 4자 이상이어야 합니다.');
+    if (!isValidPassword(form.password)) {
+      setError(PASSWORD_GUIDE);
       return;
     }
     if (form.password !== form.passwordConfirm) {

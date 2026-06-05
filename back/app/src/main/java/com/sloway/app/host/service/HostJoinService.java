@@ -3,6 +3,7 @@ package com.sloway.app.host.service;
 import com.sloway.app.auth.service.EmailService;
 import com.sloway.app.aws.service.S3Service;
 import com.sloway.app.common.exception.CustomException;
+import com.sloway.app.common.util.PasswordValidator;
 import com.sloway.app.host.common.ApprovalState;
 import com.sloway.app.host.dto.request.HostJoinRequestDto;
 import com.sloway.app.host.entity.HostEntity;
@@ -54,9 +55,9 @@ public class HostJoinService {
         if (request.getEmail() == null || request.getEmail().isBlank()) {
             throw new IllegalArgumentException("이메일은 필수입니다");
         }
-        if (request.getPassword() == null || request.getPassword().isBlank()) {
-            throw new IllegalArgumentException("비밀번호는 필수입니다");
-        }
+        //비밀번호
+        PasswordValidator.validate(request.getPassword());
+
         if (request.getName() == null || request.getName().isBlank()) {
             throw new IllegalArgumentException("이름은 필수입니다");
         }

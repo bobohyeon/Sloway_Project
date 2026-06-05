@@ -7,6 +7,10 @@ import EmailVerifyField from '../../components/user/EmailVerifyField';
 import { useMyPage } from '../../hooks/useMyPage';
 import { changeMyPassword } from '../../api/userApi';
 import { logout } from '../../../auth/store/authSlice';
+import {
+  isValidPassword,
+  PASSWORD_GUIDE,
+} from '../../../auth/utils/passwordValidator';
 
 // ─── Styled Components ─────────────────────────────────────
 const CardStack = styled.div`
@@ -131,8 +135,8 @@ function ChangePasswordPage() {
       setError('현재 비밀번호를 입력해주세요.');
       return;
     }
-    if (newPw.length < 4) {
-      setError('새 비밀번호는 4자 이상이어야 합니다.');
+    if (!isValidPassword(newPw)) {
+      setError(PASSWORD_GUIDE);
       return;
     }
     if (newPw !== newPwConfirm) {
@@ -188,12 +192,12 @@ function ChangePasswordPage() {
             <Input
               id="newPw"
               type="password"
-              placeholder="4자 이상"
+              placeholder="영문·숫자·특수문자 8자 이상"
               autoComplete="new-password"
               value={newPw}
               onChange={(e) => setNewPw(e.target.value)}
             />
-            <HelpText>4자 이상 입력해주세요.</HelpText>
+            <HelpText>영문·숫자·특수문자 8자 이상 입력해주세요.</HelpText>
           </FormGroup>
 
           <FormGroup>

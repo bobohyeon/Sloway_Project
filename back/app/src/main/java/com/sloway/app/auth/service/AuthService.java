@@ -6,6 +6,7 @@ import com.sloway.app.auth.dto.request.ResetPasswordRequestDto;
 import com.sloway.app.auth.dto.response.EmailCheckResponseDto;
 import com.sloway.app.auth.dto.response.FindEmailResponseDto;
 import com.sloway.app.common.exception.CustomException;
+import com.sloway.app.common.util.PasswordValidator;
 import com.sloway.app.host.entity.HostEntity;
 import com.sloway.app.host.repository.HostRepository;
 import com.sloway.app.member.common.AuthType;
@@ -55,9 +56,9 @@ public class AuthService {
         if (request.getEmail() == null || request.getEmail().isBlank()) {
             throw new IllegalArgumentException("이메일을 입력하세요");
         }
-        if (request.getPassword() == null || request.getPassword().isBlank()) {
-            throw new IllegalArgumentException("비밀번호룰을 입력하세요");
-        }
+        //비밀번호 검증
+        PasswordValidator.validate(request.getPassword());
+
         if (request.getName() == null || request.getName().isBlank()) {
             throw new IllegalArgumentException("이름을 입력하세요");
         }
@@ -170,10 +171,8 @@ public class AuthService {
         if (email == null || email.isBlank()) {
             throw new IllegalArgumentException("이메일을 입력하세요");
         }
-        if (newPassword == null || newPassword.length() < 4) {
-            throw new CustomException(MemberErrorCode.PASSWORD_TOO_SHORT);
-        }
-
+        //비번
+        PasswordValidator.validate(newPassword);
         // 2) 인증 완료 여부 재검증 (프론트 우회 방지) — 핵심 보안 게이트
         if (!emailService.isVerified(email)) {
             throw new CustomException(MemberErrorCode.EMAIL_NOT_VERIFIED);
