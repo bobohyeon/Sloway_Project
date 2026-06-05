@@ -121,6 +121,11 @@ public class SettleService {
         return entityList.stream().map(SettleResDto::from).toList();
     }
 
+    // 어드민 — hostNo 직접 조회 (호스트 본인 토큰용과 분리, ADMIN 권한 가정)
+    public List<SettleResDto> findSettleByHostNoForAdmin(Long hostNo) {
+        return settleRepository.findByHostNo(hostNo).stream().map(SettleResDto::from).toList();
+    }
+
     public SettleResDto findSettleByNo(Long no) {
         SettleEntity entity = findSettleEntity(no);
         return SettleResDto.from(entity);

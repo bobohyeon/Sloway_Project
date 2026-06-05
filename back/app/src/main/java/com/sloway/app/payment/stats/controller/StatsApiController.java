@@ -51,6 +51,13 @@ public class StatsApiController {
         return ResponseEntity.ok(resDto);
     }
 
+    // 어드민 — 특정 호스트 매출 통계 조회 (SecurityConfig 에서 ADMIN 권한 필요)
+    @GetMapping("/admin/host/{hostNo}")
+    public ResponseEntity<HostSalesStatsResDto> findHostSalesStatsForAdmin(@PathVariable Long hostNo, @RequestParam int year, @RequestParam int month, @RequestParam(defaultValue = "1") int months) {
+        HostSalesStatsResDto resDto = statsService.findHostSalesStatsForAdmin(hostNo, year, month, months);
+        return ResponseEntity.ok(resDto);
+    }
+
     @GetMapping("/space")
     public ResponseEntity<SpaceStatsResDto> findSpaceStat(@RequestParam int year, @RequestParam int month, @RequestParam(defaultValue = "1") int months) {
         SpaceStatsResDto resDto = statsService.findSpaceStats(year, month, months);

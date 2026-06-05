@@ -32,5 +32,11 @@ public class AccountApiController {
         return ResponseEntity.ok(resDto);
     }
 
+    // 어드민 — 특정 호스트 정산계좌 조회 (SecurityConfig 에서 ADMIN 권한 필요)
+    @GetMapping("/admin/host/{hostNo}")
+    public ResponseEntity<AccountResDto> findAccountByHostNoForAdmin(@PathVariable Long hostNo) {
+        return ResponseEntity.ok(accountService.findAccountByHostNoForAdmin(hostNo));
+    }
+
 
 }
