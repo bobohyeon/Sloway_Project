@@ -11,6 +11,7 @@ import java.util.List;
 @ToString
 public class WorkStayCardDto {
 
+    private Long masterNo;
     private Long workStayNo;
     private String title;
     private String address;

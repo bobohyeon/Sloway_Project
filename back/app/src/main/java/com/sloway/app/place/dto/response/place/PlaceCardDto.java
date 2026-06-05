@@ -9,6 +9,8 @@ import lombok.AllArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 public class PlaceCardDto {
+
+    private Long masterNo;
     private Long placeNo;
     private String title;
     private String type;

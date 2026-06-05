@@ -351,6 +351,7 @@ public class PlaceRepositoryImpl implements PlaceRepositoryCustom {
 
         return queryFactory
                 .select(Projections.constructor(PlaceCardDto.class,
+                        placeEntity.no,
                         targetNo,
                         combinedTitle,
                         placeEntity.type,
@@ -417,6 +418,7 @@ public class PlaceRepositoryImpl implements PlaceRepositoryCustom {
 
         return queryFactory
                 .select(Projections.constructor(PlaceCardDto.class,
+                        placeEntity.no,
                         stationEntity.no.coalesce(officeEntity.no).coalesce(workStayEntity.no), // targetNo
                         placeEntity.title.concat(" - ").concat(stationEntity.title.coalesce(officeEntity.title).coalesce(workStayEntity.title)), // combinedTitle
                         placeEntity.type,
@@ -473,6 +475,7 @@ public class PlaceRepositoryImpl implements PlaceRepositoryCustom {
         // 2. 쿼리 구성 (WorkStay 중심)
         List<Tuple> results = queryFactory
                 .select(
+                        workStayEntity.placeEntity.no,
                         workStayEntity.no,
                         placeEntity.title.concat(" ").concat(workStayEntity.title),
                         placeEntity.address,
@@ -505,13 +508,14 @@ public class PlaceRepositoryImpl implements PlaceRepositoryCustom {
 
         // 3. 변환 (DTO 매핑 및 랜덤 선택)
         List<WorkStayCardDto> candidates = results.stream().map(tuple -> WorkStayCardDto.builder()
-                .workStayNo(tuple.get(0, Long.class))
-                .title(tuple.get(1, String.class))
-                .address(tuple.get(2, String.class))
-                .mainImageUrl(tuple.get(3, String.class))
-                .price(tuple.get(4, Integer.class))
-                .amenities(tuple.get(5, String.class) != null ? Arrays.asList(tuple.get(5, String.class).split(",")) : null)
-                .placeNo(tuple.get(6, Long.class)) // 추가(보현)
+                .masterNo(tuple.get(0, Long.class))
+                .workStayNo(tuple.get(1, Long.class))
+                .title(tuple.get(2, String.class))
+                .address(tuple.get(3, String.class))
+                .mainImageUrl(tuple.get(4, String.class))
+                .price(tuple.get(5, Integer.class))
+                .amenities(tuple.get(6, String.class) != null ? Arrays.asList(tuple.get(5, String.class).split(",")) : null)
+                .placeNo(tuple.get(7, Long.class)) // 추가(보현)
                 .build()).toList();
 
         return candidates.isEmpty() ? null : candidates.get(new Random().nextInt(candidates.size()));
