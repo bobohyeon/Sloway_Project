@@ -223,7 +223,7 @@ function App() {
           ════════════════════════════════════════════ */}
       <Route path="/spaces/search" element={<SearchResultPage />} />
       <Route path="/spaces/search/map" element={<MapPage />} />
-      <Route path="/accommodations/:id" element={<StayDetailPage />} />
+      <Route path="/stations/:id" element={<StayDetailPage />} />
       <Route path="/workstays/:id" element={<WorkstayDetailPage />} />
       <Route path="/coworking-offices/:id" element={<OfficeDetailPage />} />
       <Route path="/spaces/:spaceId/rooms" element={<RoomListPage />} />
