@@ -127,7 +127,10 @@ export const useHostDetail = (hostId) => {
   }, [hostId]);
 
   useEffect(() => {
-    fetchDetail();
+    // set-state-in-effect 회피: 비동기 IIFE 로 감싸 setState 를 effect 동기 본문 밖으로
+    (async () => {
+      await fetchDetail();
+    })();
   }, [fetchDetail]);
 
   // 자격 취소
