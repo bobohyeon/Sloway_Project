@@ -160,12 +160,16 @@ function HostReviewPage() {
   }, [placeNo, minScore, period]);
 
   async function findReview(placeNo, minScore, period) {
-    const resp = await findReviewsByHost(
-      placeNo,
-      minScore || null,
-      period || null
-    );
-    setReviews(resp);
+    try {
+      const resp = await findReviewsByHost(
+        placeNo,
+        minScore || null,
+        period || null
+      );
+      setReviews(resp);
+    } catch {
+      setReviews([]);
+    }
   }
 
   const counts = TABS.map((tab, idx) =>
@@ -196,14 +200,18 @@ function HostReviewPage() {
 
   const handleSubmit = async (id, replyNo) => {
     if (!replyTexts[id]?.trim()) return;
-    if (replyNo) {
-      await updateReply(replyNo, replyTexts[id]);
-    } else {
-      await saveReply(id, replyTexts[id]);
+    try {
+      if (replyNo) {
+        await updateReply(replyNo, replyTexts[id]);
+      } else {
+        await saveReply(id, replyTexts[id]);
+      }
+      await findReview(placeNo, minScore, period);
+      setEditingId(null);
+      setReplyTexts((prev) => ({ ...prev, [id]: '' }));
+    } catch {
+      alert('답글 처리에 실패했습니다.');
     }
-    await findReview(placeNo, minScore, period);
-    setEditingId(null);
-    setReplyTexts((prev) => ({ ...prev, [id]: '' }));
   };
 
   return (
