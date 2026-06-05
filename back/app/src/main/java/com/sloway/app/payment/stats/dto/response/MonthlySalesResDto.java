@@ -7,15 +7,16 @@ import lombok.Getter;
 @Builder
 public class MonthlySalesResDto {
     private String yearMonth;
-    private Integer totalAmt;
+    private Long totalAmt;
     private Long payCount;
-    private Integer avgAmt;
-    private Integer refundAmt;
-    private Integer netAmt;
+    private Long avgAmt;
+    private Long refundAmt;
+    private Long netAmt;
 
-    public static MonthlySalesResDto of(String yearMonth, Integer totalAmt, Long payCount, Integer refundAmt) {
-        int avgAmt = payCount == 0 ? 0 : (int) (totalAmt / payCount);
-        int netAmt = totalAmt - refundAmt;
+    // 금액 필드는 Long — 월 매출이 수백억이라 int(약 21억) 오버플로우(음수) 방지
+    public static MonthlySalesResDto of(String yearMonth, Long totalAmt, Long payCount, Long refundAmt) {
+        long avgAmt = payCount == 0 ? 0 : totalAmt / payCount;
+        long netAmt = totalAmt - refundAmt;
 
         return MonthlySalesResDto.builder()
                 .yearMonth(yearMonth)

@@ -1,11 +1,18 @@
 package com.sloway.app.payment.pay.repository;
 
 import com.querydsl.core.Tuple;
+import com.querydsl.core.types.dsl.BooleanExpression;
+import com.querydsl.core.types.dsl.NumberExpression;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import com.sloway.app.payment.pay.common.PayStatus;
+import com.sloway.app.payment.pay.dto.response.PayResDto;
+import com.sloway.app.payment.pay.dto.response.PayStatsResDto;
 import com.sloway.app.payment.pay.entity.PayEntity;
 import com.sloway.app.payment.pay.entity.QPayEntity;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Repository;
 
 import java.time.LocalDateTime;
@@ -59,9 +66,9 @@ public class PayRepositoryImpl implements PayRepositoryCustom {
     }
 
     @Override
-    public Integer sumByOfficeIn(List<Long> officeNos, LocalDateTime start, LocalDateTime end) {
+    public Long sumByOfficeIn(List<Long> officeNos, LocalDateTime start, LocalDateTime end) {
         return jpaQueryFactory
-                .select(qPayEntity.finalAmt.sum().coalesce(0))
+                .select(qPayEntity.finalAmt.sum().longValue().coalesce(0L))
                 .from(qPayEntity)
                 .where(
                         qPayEntity.rsvnNo.officeNo.no.in(officeNos),
@@ -72,9 +79,9 @@ public class PayRepositoryImpl implements PayRepositoryCustom {
     }
 
     @Override
-    public Integer sumByStationIn(List<Long> stationNos, LocalDateTime start, LocalDateTime end) {
+    public Long sumByStationIn(List<Long> stationNos, LocalDateTime start, LocalDateTime end) {
         return jpaQueryFactory
-                .select(qPayEntity.finalAmt.sum().coalesce(0))
+                .select(qPayEntity.finalAmt.sum().longValue().coalesce(0L))
                 .from(qPayEntity)
                 .where(
                         qPayEntity.rsvnNo.stationNo.no.in(stationNos),
@@ -85,9 +92,9 @@ public class PayRepositoryImpl implements PayRepositoryCustom {
     }
 
     @Override
-    public Integer sumByWorkStayIn(List<Long> workStayNos, LocalDateTime start, LocalDateTime end) {
+    public Long sumByWorkStayIn(List<Long> workStayNos, LocalDateTime start, LocalDateTime end) {
         return jpaQueryFactory
-                .select(qPayEntity.finalAmt.sum().coalesce(0))
+                .select(qPayEntity.finalAmt.sum().longValue().coalesce(0L))
                 .from(qPayEntity)
                 .where(
                         qPayEntity.rsvnNo.workStayNo.no.in(workStayNos),
@@ -136,5 +143,74 @@ public class PayRepositoryImpl implements PayRepositoryCustom {
                 .fetchOne();
     }
 
+    @Override
+    public Page<PayResDto> findPayAll(PageRequest pageRequest, PayStatus status, LocalDateTime from) {
+        List<PayEntity> payEntityList = jpaQueryFactory
+                .selectFrom(qPayEntity)
+                .where(statusEq(status), createdAfter(from))
+                .orderBy(qPayEntity.no.desc())
+                .offset(pageRequest.getOffset())
+                .limit(pageRequest.getPageSize())
+                .fetch();
 
+        Long total = jpaQueryFactory
+                .select(qPayEntity.count())
+                .from(qPayEntity)
+                .where(statusEq(status), createdAfter(from))
+                .fetchOne();
+
+        List<PayResDto> list = payEntityList.stream().map(PayResDto::from).toList();
+
+        return new PageImpl<>(list, pageRequest, total == null ? 0 : total);
+    }
+
+    @Override
+    public PayStatsResDto findPayStats(LocalDateTime from) {
+        // 금액 합계를 long 으로 올림 — 300만건 합계는 int(약 21억)를 넘겨 오버플로우 위험
+        // select 와 row.get() 에 같은 expression 객체를 써야 Tuple 매칭이 정확
+        NumberExpression<Long> amtSum = qPayEntity.finalAmt.sum().longValue().coalesce(0L);
+
+        List<Tuple> rows = jpaQueryFactory
+                .select(
+                        qPayEntity.status,
+                        qPayEntity.count(),
+                        amtSum
+                )
+                .from(qPayEntity)
+                .where(createdAfter(from))
+                .groupBy(qPayEntity.status)
+                .fetch();
+
+        long total = 0, completed = 0, completedAmt = 0, refunded = 0, failed = 0;
+        for (Tuple row : rows) {
+            PayStatus status = row.get(qPayEntity.status);
+            long cnt = row.get(qPayEntity.count());  // count() 는 Long
+            long amt = row.get(amtSum);              // long 합계
+            total += cnt;
+            if (status == PayStatus.COMPLETED) {
+                completed = cnt;
+                completedAmt = amt;
+            } else if (status == PayStatus.CANCELED) {
+                refunded = cnt;
+            } else if (status == PayStatus.FAILED) {
+                failed = cnt;
+            }
+        }
+
+        return PayStatsResDto.builder()
+                .total(total)
+                .completed(completed)
+                .completedAmt(completedAmt)
+                .refunded(refunded)
+                .failed(failed)
+                .build();
+    }
+
+    private BooleanExpression statusEq(PayStatus status) {
+        return status == null ? null : qPayEntity.status.eq(status);
+    }
+
+    private BooleanExpression createdAfter(LocalDateTime from) {
+        return from == null ? null : qPayEntity.createdAt.goe(from);
+    }
 }

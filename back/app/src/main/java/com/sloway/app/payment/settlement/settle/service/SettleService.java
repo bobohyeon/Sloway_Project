@@ -70,9 +70,10 @@ public class SettleService {
         LocalDateTime start = reqDto.getSettleStartDate().atStartOfDay();
         LocalDateTime end = reqDto.getSettleEndDate().atTime(LocalTime.MAX);
 
-        int officeAmt = payRepository.sumByOfficeIn(officeNos, start, end);
-        int stationAmt = payRepository.sumByStationIn(stationNos, start, end);
-        int workStayAmt = payRepository.sumByWorkStayIn(workStayNos, start, end);
+        // sumByXxxIn 은 Long 반환(통계 월합산 오버플로우 방지). 정산은 4일 단위라 int 범위 안 → intValue 로 받음
+        int officeAmt = payRepository.sumByOfficeIn(officeNos, start, end).intValue();
+        int stationAmt = payRepository.sumByStationIn(stationNos, start, end).intValue();
+        int workStayAmt = payRepository.sumByWorkStayIn(workStayNos, start, end).intValue();
         int totalAmt = officeAmt + stationAmt + workStayAmt;
 
         int feeAmt = calcFee(officeAmt, PlaceType.office)
