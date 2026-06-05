@@ -6,7 +6,6 @@ import { StatCard } from '../../../pay_shared/components/StatCard';
 import { Card, Section } from '../../../pay_shared/components';
 import { HorizontalBarChart } from '../../components/admin/HorizontalBarChart';
 import { VerticalBarChart } from '../../components/admin/VerticalBarChart';
-import { StatsTabs } from '../../components/admin/StatsTabs';
 import { DataTable } from '../../components/admin/DataTable';
 import {
   findStatsMonthlySales,
@@ -14,22 +13,14 @@ import {
   findStatsMonthlyTrend,
   findStatsRefund,
 } from '../../api/statsApi';
+import { StatsRangeTabs } from '../../components/admin/StatsRangeTabs';
+import { rangeLabel, getAnchorMonth } from '../../components/admin/statsRange';
 
 const PAY_METHOD_META = {
   KAKAOPAY: { label: '카카오페이', color: '#FEE500' },
   TOSSPAY: { label: '토스페이', color: '#0064FF' },
   NAVERPAY: { label: '네이버페이', color: '#03C75A' },
 };
-
-const YEAR_OPTIONS = [2024, 2025, 2026];
-const MONTH_OPTIONS = Array.from({ length: 12 }, (_, i) => i + 1);
-
-function getPrevMonth() {
-  const d = new Date();
-  d.setDate(1);
-  d.setMonth(d.getMonth() - 1);
-  return { year: d.getFullYear(), month: d.getMonth() + 1 };
-}
 
 function formatWon(value) {
   const n = Number(value ?? 0);
@@ -42,9 +33,8 @@ function formatMan(value) {
 }
 
 export default function StatsOverview() {
-  const init = useMemo(() => getPrevMonth(), []);
-  const [year, setYear] = useState(init.year);
-  const [month, setMonth] = useState(init.month);
+  const { year, month } = useMemo(() => getAnchorMonth(), []);
+  const [months, setMonths] = useState(1);
 
   const [summary, setSummary] = useState(null);
   const [methods, setMethods] = useState([]);
@@ -52,7 +42,6 @@ export default function StatsOverview() {
   const [refund, setRefund] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
-  const [view, setView] = useState('chart');
 
   useEffect(() => {
     let alive = true;
@@ -60,10 +49,10 @@ export default function StatsOverview() {
     setError(null);
 
     Promise.all([
-      findStatsMonthlySales(year, month),
-      findStatsPayMethods(year, month),
-      findStatsMonthlyTrend(year, month),
-      findStatsRefund(year, month),
+      findStatsMonthlySales(year, month, months),
+      findStatsPayMethods(year, month, months),
+      findStatsMonthlyTrend(year, month, months),
+      findStatsRefund(year, month, months),
     ])
       .then(([s, m, t, r]) => {
         if (!alive) return;
@@ -83,7 +72,7 @@ export default function StatsOverview() {
     return () => {
       alive = false;
     };
-  }, [year, month]);
+  }, [year, month, months]);
 
   const currentYm = `${year}-${String(month).padStart(2, '0')}`;
 
@@ -112,30 +101,11 @@ export default function StatsOverview() {
   return (
     <PageLayout
       title="통계 대시보드"
-      description={`${year}년 ${month}월 결제·환불 통계 요약`}
+      description={`${rangeLabel(months)} 결제·환불 통계 요약`}
       maxWidth={1200}
     >
       <FilterBar>
-        <FilterGroup>
-          <FilterLabel>연도</FilterLabel>
-          <Select value={year} onChange={(e) => setYear(Number(e.target.value))}>
-            {YEAR_OPTIONS.map((y) => (
-              <option key={y} value={y}>
-                {y}년
-              </option>
-            ))}
-          </Select>
-        </FilterGroup>
-        <FilterGroup>
-          <FilterLabel>월</FilterLabel>
-          <Select value={month} onChange={(e) => setMonth(Number(e.target.value))}>
-            {MONTH_OPTIONS.map((m) => (
-              <option key={m} value={m}>
-                {m}월
-              </option>
-            ))}
-          </Select>
-        </FilterGroup>
+        <StatsRangeTabs value={months} onChange={setMonths} />
         {loading && <StatusText>불러오는 중...</StatusText>}
         {error && <ErrorText>{error}</ErrorText>}
       </FilterBar>
@@ -164,68 +134,53 @@ export default function StatsOverview() {
         />
       </KPIGrid>
 
-      <StatsTabs
-        active={view}
-        onChange={setView}
-        tabs={[
-          { key: 'chart', label: '차트' },
-          { key: 'list', label: '리스트' },
-        ]}
-      />
-
-      {view === 'chart' ? (
-        <>
-          <ChartBlock>
-            {methodChartData.length > 0 ? (
-              <HorizontalBarChart
-                title="결제수단별 매출"
-                data={methodChartData}
-                formatValue={formatWon}
-              />
-            ) : (
-              <Section title="결제수단별 매출">
-                <EmptyCard padded>
-                  해당 월에 집계된 결제수단 데이터가 없습니다.
-                </EmptyCard>
-              </Section>
-            )}
-          </ChartBlock>
-
-          <ChartBlock>
-            {trendChartData.length > 0 ? (
-              <VerticalBarChart
-                title="최근 6개월 매출 추이"
-                data={trendChartData}
-                formatValue={formatMan}
-              />
-            ) : (
-              <Section title="최근 6개월 매출 추이">
-                <EmptyCard padded>시계열 데이터가 없습니다.</EmptyCard>
-              </Section>
-            )}
-          </ChartBlock>
-        </>
-      ) : (
-        <>
-          <DataTable
+      <ChartBlock>
+        {methodChartData.length > 0 ? (
+          <HorizontalBarChart
             title="결제수단별 매출"
-            columns={['결제수단', '매출', '건수']}
-            rows={methodChartData.map((d) => [
-              d.label,
-              `${Number(d.value).toLocaleString()}원`,
-              d.subValue,
-            ])}
+            data={methodChartData}
+            formatValue={formatWon}
           />
-          <DataTable
-            title="최근 6개월 매출 추이"
-            columns={['월', '매출']}
-            rows={trendChartData.map((d) => [
-              `${d.label}월`,
-              `${Number(d.value).toLocaleString()}원`,
-            ])}
+        ) : (
+          <Section title="결제수단별 매출">
+            <EmptyCard padded>
+              해당 기간에 집계된 결제수단 데이터가 없습니다.
+            </EmptyCard>
+          </Section>
+        )}
+      </ChartBlock>
+
+      <ChartBlock>
+        {trendChartData.length > 0 ? (
+          <VerticalBarChart
+            title={`${rangeLabel(months)} 매출 추이`}
+            data={trendChartData}
+            formatValue={formatMan}
           />
-        </>
-      )}
+        ) : (
+          <Section title={`${rangeLabel(months)} 매출 추이`}>
+            <EmptyCard padded>시계열 데이터가 없습니다.</EmptyCard>
+          </Section>
+        )}
+      </ChartBlock>
+
+      <DataTable
+        title="결제수단별 매출"
+        columns={['결제수단', '매출', '건수']}
+        rows={methodChartData.map((d) => [
+          d.label,
+          `${Number(d.value).toLocaleString()}원`,
+          d.subValue,
+        ])}
+      />
+      <DataTable
+        title={`${rangeLabel(months)} 매출 추이`}
+        columns={['월', '매출']}
+        rows={trendChartData.map((d) => [
+          `${d.label}월`,
+          `${Number(d.value).toLocaleString()}원`,
+        ])}
+      />
 
       <Section title="환불 통계">
         <RefundCard padded>

@@ -6,6 +6,7 @@ import com.sloway.app.member.common.MemberRole;
 import com.sloway.app.payment.refund.common.RefundReason;
 import com.sloway.app.reservation.RsvnErrorCode;
 import com.sloway.app.reservation.rsvn.dto.request.RsvnReqDto;
+import com.sloway.app.reservation.rsvn.dto.response.HostReservationStatsResDto;
 import com.sloway.app.reservation.rsvn.dto.response.HostSpaceResDto;
 import com.sloway.app.reservation.rsvn.dto.response.RsvnResDto;
 import com.sloway.app.reservation.rsvn.service.RsvnService;
@@ -58,6 +59,22 @@ public class RsvnController {
     ){
         List<HostSpaceResDto> dtoList = rsvnService.findHostSpaces(userDetails.getMemberNo());
         return ResponseEntity.ok(dtoList);
+    }
+
+    //어드민 — 특정 호스트의 공간 목록 조회
+    @GetMapping("/admin/host/{hostNo}/spaces")
+    public ResponseEntity<List<HostSpaceResDto>> findHostSpacesForAdmin(
+            @PathVariable Long hostNo
+    ){
+        return ResponseEntity.ok(rsvnService.findHostSpacesForAdmin(hostNo));
+    }
+
+    //어드민 — 특정 호스트의 예약 건수 통계 (진행중/완료)
+    @GetMapping("/admin/host/{hostNo}/reservation-stats")
+    public ResponseEntity<HostReservationStatsResDto> findHostReservationStatsForAdmin(
+            @PathVariable Long hostNo
+    ){
+        return ResponseEntity.ok(rsvnService.findHostReservationStatsForAdmin(hostNo));
     }
 
     //내 공간 예약 목록 조회 (호스트)

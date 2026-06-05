@@ -11,11 +11,11 @@ import java.util.List;
 @ToString
 public class WorkStayCardDto {
 
+    private Long masterNo;
     private Long workStayNo;
     private String title;
     private String address;
     private String mainImageUrl;
     private Integer price;
     private List<String> amenities;
-
 }

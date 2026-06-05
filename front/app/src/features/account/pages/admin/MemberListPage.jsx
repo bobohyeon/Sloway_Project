@@ -36,6 +36,7 @@ import {
   Pagination,
   PageBtn,
 } from './MemberListPage.styled';
+import { getPageNumbers } from '../../utils/pagination';
 
 const STATUS_LABEL = {
   ACTIVE: '활성',
@@ -274,31 +275,51 @@ function MemberListPage() {
         </TableWrap>
 
         {/* 페이지네이션 */}
-        {totalPages > 1 && (
-          <Pagination>
-            <PageBtn
-              disabled={currentPage === 1}
-              onClick={() => setPage(currentPage - 1)}
-            >
-              이전
-            </PageBtn>
-            {Array.from({ length: totalPages }, (_, i) => i + 1).map((p) => (
-              <PageBtn
-                key={p}
-                $active={p === currentPage}
-                onClick={() => setPage(p)}
-              >
-                {p}
-              </PageBtn>
-            ))}
-            <PageBtn
-              disabled={currentPage === totalPages}
-              onClick={() => setPage(currentPage + 1)}
-            >
-              다음
-            </PageBtn>
-          </Pagination>
-        )}
+        {totalPages > 1 &&
+          (() => {
+            const {
+              pages,
+              hasPrevBlock,
+              hasNextBlock,
+              prevBlockPage,
+              nextBlockPage,
+            } = getPageNumbers(currentPage, totalPages);
+            return (
+              <Pagination>
+                <PageBtn
+                  disabled={currentPage === 1}
+                  onClick={() => setPage(currentPage - 1)}
+                >
+                  이전
+                </PageBtn>
+
+                {hasPrevBlock && (
+                  <PageBtn onClick={() => setPage(prevBlockPage)}>…</PageBtn>
+                )}
+
+                {pages.map((p) => (
+                  <PageBtn
+                    key={p}
+                    $active={p === currentPage}
+                    onClick={() => setPage(p)}
+                  >
+                    {p}
+                  </PageBtn>
+                ))}
+
+                {hasNextBlock && (
+                  <PageBtn onClick={() => setPage(nextBlockPage)}>…</PageBtn>
+                )}
+
+                <PageBtn
+                  disabled={currentPage === totalPages}
+                  onClick={() => setPage(currentPage + 1)}
+                >
+                  다음
+                </PageBtn>
+              </Pagination>
+            );
+          })()}
       </PageLayout>
 
       {/* 정지 모달 */}

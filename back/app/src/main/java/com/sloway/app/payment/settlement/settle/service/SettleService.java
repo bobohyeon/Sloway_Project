@@ -70,9 +70,10 @@ public class SettleService {
         LocalDateTime start = reqDto.getSettleStartDate().atStartOfDay();
         LocalDateTime end = reqDto.getSettleEndDate().atTime(LocalTime.MAX);
 
-        int officeAmt = payRepository.sumByOfficeIn(officeNos, start, end);
-        int stationAmt = payRepository.sumByStationIn(stationNos, start, end);
-        int workStayAmt = payRepository.sumByWorkStayIn(workStayNos, start, end);
+        // sumByXxxIn 은 Long 반환(통계 월합산 오버플로우 방지). 정산은 4일 단위라 int 범위 안 → intValue 로 받음
+        int officeAmt = payRepository.sumByOfficeIn(officeNos, start, end).intValue();
+        int stationAmt = payRepository.sumByStationIn(stationNos, start, end).intValue();
+        int workStayAmt = payRepository.sumByWorkStayIn(workStayNos, start, end).intValue();
         int totalAmt = officeAmt + stationAmt + workStayAmt;
 
         int feeAmt = calcFee(officeAmt, PlaceType.office)
@@ -118,6 +119,11 @@ public class SettleService {
                 .orElseThrow(() -> new CustomException(HostErrorCode.HOST_NOT_FOUND));
         List<SettleEntity> entityList = settleRepository.findByHostNo(hostEntity.getNo());
         return entityList.stream().map(SettleResDto::from).toList();
+    }
+
+    // 어드민 — hostNo 직접 조회 (호스트 본인 토큰용과 분리, ADMIN 권한 가정)
+    public List<SettleResDto> findSettleByHostNoForAdmin(Long hostNo) {
+        return settleRepository.findByHostNo(hostNo).stream().map(SettleResDto::from).toList();
     }
 
     public SettleResDto findSettleByNo(Long no) {

@@ -10,6 +10,7 @@ import com.sloway.app.payment.pay.common.PayStatus;
 import com.sloway.app.payment.pay.dto.request.PayCreateReqDto;
 import com.sloway.app.payment.pay.dto.response.PayReadyResDto;
 import com.sloway.app.payment.pay.dto.response.PayResDto;
+import com.sloway.app.payment.pay.dto.response.PayStatsResDto;
 import com.sloway.app.payment.pay.dto.response.TossPrepareResDto;
 import com.sloway.app.payment.pay.entity.PayEntity;
 import com.sloway.app.payment.pay.pg.kakao.KakaoPayClient;
@@ -27,9 +28,12 @@ import com.sloway.app.reservation.rsvn.repository.RsvnRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Service
@@ -159,8 +163,35 @@ public class PayService {
         return 0;
     }
 
-    public List<PayResDto> findPayAll() {
-        return payRepository.findAll().stream().map(PayResDto::from).toList();
+    public Page<PayResDto> findPayAll(int pno, String tab, String period) {
+        PageRequest pageRequest = PageRequest.of(pno, 10);
+        return payRepository.findPayAll(pageRequest, toStatus(tab), toFrom(period));
+    }
+
+    public PayStatsResDto findPayStats(String period) {
+        return payRepository.findPayStats(toFrom(period));
+    }
+
+    private PayStatus toStatus(String tab) {
+        if (tab == null) return null;
+        return switch (tab) {
+            case "completed" -> PayStatus.COMPLETED;
+            case "refunded" -> PayStatus.CANCELED;
+            case "failed" -> PayStatus.FAILED;
+            default -> null;
+        };
+    }
+
+    private LocalDateTime toFrom(String period) {
+        if (period == null) return null;
+        LocalDateTime now = LocalDateTime.now();
+        return switch (period) {
+            case "month" -> now.minusDays(30);
+            case "3months" -> now.minusDays(90);
+            case "6months" -> now.minusDays(180);
+            case "year" -> now.minusDays(365);
+            default -> null;
+        };
     }
 
     public PayResDto findPayByNo(Long no) {

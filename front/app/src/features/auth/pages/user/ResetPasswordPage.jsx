@@ -13,6 +13,7 @@ import {
 import SlowyLogo from '../../components/common/SlowyLogo';
 import ErrorMessage from '../../components/common/ErrorMessage';
 import { sendVerifyCode, verifyCode, resetPassword } from '../../api/authApi';
+import { isValidPassword, PASSWORD_GUIDE } from '../../utils/passwordValidator';
 
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
@@ -75,8 +76,8 @@ function ResetPasswordPage() {
 
   // ── 새 비번 설정 ──
   const handleReset = async () => {
-    if (pw.length < 4) {
-      setError('비밀번호는 4자 이상이어야 합니다.');
+    if (!isValidPassword(pw)) {
+      setError(PASSWORD_GUIDE);
       return;
     }
     if (pw !== pwConfirm) {

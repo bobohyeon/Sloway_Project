@@ -61,5 +61,5 @@ export function VerticalBarChart({ title, data, formatValue, action }) {
 }
 
 const Wrap = styled.div`
-  height: 280px;
+  height: 340px;
 `;

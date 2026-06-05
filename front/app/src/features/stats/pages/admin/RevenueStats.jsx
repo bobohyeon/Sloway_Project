@@ -7,45 +7,34 @@ import PageLayout from '../../../../app/layouts/page/PageLayout';
 import { StatCard } from '../../../pay_shared/components/StatCard';
 import { Card, Section, EmptyState } from '../../../pay_shared/components';
 import { VerticalBarChart } from '../../components/admin/VerticalBarChart';
-import { StatsTabs } from '../../components/admin/StatsTabs';
 import { DataTable } from '../../components/admin/DataTable';
 import {
   findStatsMonthlySales,
   findStatsMonthlyTrend,
   findStatsRefund,
 } from '../../api/statsApi';
-
-const YEAR_OPTIONS = [2024, 2025, 2026];
-const MONTH_OPTIONS = Array.from({ length: 12 }, (_, i) => i + 1);
-
-function getPrevMonth() {
-  const d = new Date();
-  d.setDate(1);
-  d.setMonth(d.getMonth() - 1);
-  return { year: d.getFullYear(), month: d.getMonth() + 1 };
-}
+import { StatsRangeTabs } from '../../components/admin/StatsRangeTabs';
+import { rangeLabel, getAnchorMonth } from '../../components/admin/statsRange';
 
 export default function RevenueStats() {
   const nav = useNavigate();
-  const init = useMemo(() => getPrevMonth(), []);
-  const [year, setYear] = useState(init.year);
-  const [month, setMonth] = useState(init.month);
+  const { year, month } = useMemo(() => getAnchorMonth(), []);
+  const [months, setMonths] = useState(1);
 
   const [summary, setSummary] = useState(null);
   const [trend, setTrend] = useState([]);
   const [refund, setRefund] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
-  const [view, setView] = useState('chart');
 
   useEffect(() => {
     let alive = true;
     setLoading(true);
     setError(null);
     Promise.all([
-      findStatsMonthlySales(year, month),
-      findStatsMonthlyTrend(year, month),
-      findStatsRefund(year, month),
+      findStatsMonthlySales(year, month, months),
+      findStatsMonthlyTrend(year, month, months),
+      findStatsRefund(year, month, months),
     ])
       .then(([s, t, r]) => {
         if (!alive) return;
@@ -58,7 +47,7 @@ export default function RevenueStats() {
       })
       .finally(() => { if (alive) setLoading(false); });
     return () => { alive = false; };
-  }, [year, month]);
+  }, [year, month, months]);
 
   const currentYm = `${year}-${String(month).padStart(2, '0')}`;
   const trendData = trend.map((row) => ({
@@ -74,18 +63,7 @@ export default function RevenueStats() {
       maxWidth={1200}
     >
       <FilterBar>
-        <FilterGroup>
-          <FilterLabel>연도</FilterLabel>
-          <Select value={year} onChange={(e) => setYear(Number(e.target.value))}>
-            {YEAR_OPTIONS.map((y) => <option key={y} value={y}>{y}년</option>)}
-          </Select>
-        </FilterGroup>
-        <FilterGroup>
-          <FilterLabel>월</FilterLabel>
-          <Select value={month} onChange={(e) => setMonth(Number(e.target.value))}>
-            {MONTH_OPTIONS.map((m) => <option key={m} value={m}>{m}월</option>)}
-          </Select>
-        </FilterGroup>
+        <StatsRangeTabs value={months} onChange={setMonths} />
         {loading && <StatusText>불러오는 중...</StatusText>}
         {error && <ErrorText>{error}</ErrorText>}
         <Spacer />
@@ -99,46 +77,35 @@ export default function RevenueStats() {
         <StatCard label="환불율" value={Number(refund?.refundRate ?? 0)} unit="%" icon={<FaUndo />} />
       </KPIGrid>
 
-      <StatsTabs
-        active={view}
-        onChange={setView}
-        tabs={[
-          { key: 'chart', label: '차트' },
-          { key: 'list', label: '리스트' },
-        ]}
-      />
+      <ChartBlock>
+        {trendData.length > 0 ? (
+          <VerticalBarChart
+            title={`${rangeLabel(months)} 매출 추이`}
+            data={trendData}
+            formatValue={(v) =>
+              `${Math.floor(Number(v) / 10000).toLocaleString()}만`
+            }
+          />
+        ) : (
+          <Section title={`${rangeLabel(months)} 매출 추이`}>
+            <EmptyCard padded>
+              <EmptyState
+                title="시계열 데이터가 없습니다"
+                description="배치 적재 진입 후 노출됩니다."
+              />
+            </EmptyCard>
+          </Section>
+        )}
+      </ChartBlock>
 
-      {view === 'chart' ? (
-        <ChartBlock>
-          {trendData.length > 0 ? (
-            <VerticalBarChart
-              title="최근 6개월 매출 추이"
-              data={trendData}
-              formatValue={(v) =>
-                `${Math.floor(Number(v) / 10000).toLocaleString()}만`
-              }
-            />
-          ) : (
-            <Section title="최근 6개월 매출 추이">
-              <EmptyCard padded>
-                <EmptyState
-                  title="시계열 데이터가 없습니다"
-                  description="배치 적재 진입 후 노출됩니다."
-                />
-              </EmptyCard>
-            </Section>
-          )}
-        </ChartBlock>
-      ) : (
-        <DataTable
-          title="최근 6개월 매출 추이"
-          columns={['월', '매출']}
-          rows={trendData.map((d) => [
-            `${d.label}월`,
-            `${Number(d.value).toLocaleString()}원`,
-          ])}
-        />
-      )}
+      <DataTable
+        title={`${rangeLabel(months)} 매출 추이`}
+        columns={['월', '매출']}
+        rows={trendData.map((d) => [
+          `${d.label}월`,
+          `${Number(d.value).toLocaleString()}원`,
+        ])}
+      />
     </PageLayout>
   );
 }

@@ -238,7 +238,11 @@ export default function NoticeManagePage() {
                       <Td>
                         <TitleCell>
                           <TitleText
-                            onClick={() => navigate(`/notices/${notice.id}`, { state: { from: '/admin/notice' } })}
+                            onClick={() =>
+                              navigate(`/notice/${notice.id}`, {
+                                state: { from: '/admin/notice' },
+                              })
+                            }
                           >
                             {notice.title}
                           </TitleText>

@@ -4,6 +4,7 @@ import com.sloway.app.auth.dto.request.ChangePasswordRequestDto;
 import com.sloway.app.auth.service.EmailService;
 import com.sloway.app.aws.service.S3Service;
 import com.sloway.app.common.exception.CustomException;
+import com.sloway.app.common.util.PasswordValidator;
 import com.sloway.app.member.common.MemberErrorCode;
 import com.sloway.app.member.dto.request.ChangeEmailRequestDto;
 import com.sloway.app.member.dto.request.UpdateUserRequestDto;
@@ -94,10 +95,9 @@ public class UserService {
      */
     public void changePassword(Long memberNo, ChangePasswordRequestDto request) {
 
-        // 1) 새 비번 길이 검증
-        if (request.getNewPassword() == null || request.getNewPassword().length() < 4) {
-            throw new CustomException(MemberErrorCode.PASSWORD_TOO_SHORT);
-        }
+        // 1) 새 비번  검증
+
+        PasswordValidator.validate(request.getNewPassword());
 
         // 2) UserEntity 조회 (비번 보유)
         UserEntity user = userRepository.findByMemberNo(memberNo)

@@ -71,3 +71,66 @@ export const restoreHost = async (hostId) => {
   const response = await api.post(`/admin/hosts/${hostId}/restore`);
   return response.data;
 };
+
+// ── 어드민 — 호스트 상세의 4번 도메인(정산/계좌/매출) 운영데이터 ──
+// 백엔드는 이미 구현돼 있음(SettleApiController/AccountApiController/StatsApiController 의 /admin/host/{hostNo}).
+
+/**
+ * 어드민 — 호스트 매출/월별 추이. GET /api/payment/stats/admin/host/{hostId}
+ * 응답(HostSalesStatsResDto): { totalAmt, payCount, refundAmt, avgAmt, trend:[{yearMonth, totalAmt}] }
+ */
+export const getAdminHostStats = async (hostId, year, month, months = 12) => {
+  const response = await api.get(`/payment/stats/admin/host/${hostId}`, {
+    params: { year, month, months },
+  });
+  return response.data;
+};
+
+/**
+ * 어드민 — 호스트 정산 목록(미정산 집계용). GET /api/payment/settlement/settle/admin/host/{hostId}
+ * 응답(List<SettleResDto>): status==='WAITING' 건의 payoutAmt 합 = 미정산액.
+ */
+export const getAdminHostSettleList = async (hostId) => {
+  const response = await api.get(
+    `/payment/settlement/settle/admin/host/${hostId}`
+  );
+  return response.data;
+};
+
+/**
+ * 어드민 — 호스트 계좌. GET /api/payment/account/admin/host/{hostId}
+ * 응답(AccountResDto): { bankName, accountNo, holder } (계좌 미등록이면 null)
+ */
+export const getAdminHostAccount = async (hostId) => {
+  const response = await api.get(`/payment/account/admin/host/${hostId}`);
+  return response.data;
+};
+
+/**
+ * 어드민 — 호스트 공간 목록(서현진 도메인). GET /api/reservation/admin/host/{hostId}/spaces
+ * 응답(List<HostSpaceResDto>): [{ placeNo, spaceName, spaceType }]
+ */
+export const getAdminHostSpaces = async (hostId) => {
+  const response = await api.get(`/reservation/admin/host/${hostId}/spaces`);
+  return response.data;
+};
+
+/**
+ * 어드민 — 호스트 예약 건수(보현 도메인). GET /api/reservation/admin/host/{hostId}/reservation-stats
+ * 응답: { ongoingReservationCount, completedReservationCount }
+ */
+export const getAdminHostReservationStats = async (hostId) => {
+  const response = await api.get(
+    `/reservation/admin/host/${hostId}/reservation-stats`
+  );
+  return response.data;
+};
+
+/**
+ * 어드민 — 호스트 리뷰 통계(보현 도메인). GET /api/admin/review/host/{hostId}/stats
+ * 응답: { averageRating, reviewCount }
+ */
+export const getAdminHostReviewStats = async (hostId) => {
+  const response = await api.get(`/admin/review/host/${hostId}/stats`);
+  return response.data;
+};

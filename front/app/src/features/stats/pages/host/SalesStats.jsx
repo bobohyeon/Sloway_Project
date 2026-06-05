@@ -6,33 +6,22 @@ import PageLayout from '../../../../app/layouts/page/PageLayout';
 import { StatCard } from '../../../pay_shared/components/StatCard';
 import { Card, Section } from '../../../pay_shared/components';
 import { VerticalBarChart } from '../../components/admin/VerticalBarChart';
-import { StatsTabs } from '../../components/admin/StatsTabs';
 import { DataTable } from '../../components/admin/DataTable';
 import { findHostSalesStats } from '../../api/statsApi';
-
-const YEAR_OPTIONS = [2024, 2025, 2026];
-const MONTH_OPTIONS = Array.from({ length: 12 }, (_, i) => i + 1);
-
-function getPrevMonth() {
-  const d = new Date();
-  d.setDate(1);
-  d.setMonth(d.getMonth() - 1);
-  return { year: d.getFullYear(), month: d.getMonth() + 1 };
-}
+import { StatsRangeTabs } from '../../components/admin/StatsRangeTabs';
+import { rangeLabel, getAnchorMonth } from '../../components/admin/statsRange';
 
 function formatMan(value) {
   return `${Math.floor(Number(value ?? 0) / 10000).toLocaleString()}만`;
 }
 
 export default function SalesStats() {
-  const init = useMemo(() => getPrevMonth(), []);
-  const [year, setYear] = useState(init.year);
-  const [month, setMonth] = useState(init.month);
+  const { year, month } = useMemo(() => getAnchorMonth(), []);
+  const [months, setMonths] = useState(1);
 
   const [stats, setStats] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
-  const [view, setView] = useState('chart');
 
   useEffect(() => {
     let alive = true;
@@ -40,7 +29,7 @@ export default function SalesStats() {
       setLoading(true);
       setError(null);
       try {
-        const data = await findHostSalesStats(year, month);
+        const data = await findHostSalesStats(year, month, months);
         if (alive) setStats(data);
       } catch (e) {
         if (alive)
@@ -52,7 +41,7 @@ export default function SalesStats() {
     return () => {
       alive = false;
     };
-  }, [year, month]);
+  }, [year, month, months]);
 
   const currentYm = `${year}-${String(month).padStart(2, '0')}`;
 
@@ -65,37 +54,18 @@ export default function SalesStats() {
   return (
     <PageLayout
       title="매출 통계"
-      description={`${year}년 ${month}월 내 공간 매출`}
+      description={`${rangeLabel(months)} 내 공간 매출`}
       maxWidth={1200}
     >
       <FilterBar>
-        <FilterGroup>
-          <FilterLabel>연도</FilterLabel>
-          <Select value={year} onChange={(e) => setYear(Number(e.target.value))}>
-            {YEAR_OPTIONS.map((y) => (
-              <option key={y} value={y}>
-                {y}년
-              </option>
-            ))}
-          </Select>
-        </FilterGroup>
-        <FilterGroup>
-          <FilterLabel>월</FilterLabel>
-          <Select value={month} onChange={(e) => setMonth(Number(e.target.value))}>
-            {MONTH_OPTIONS.map((m) => (
-              <option key={m} value={m}>
-                {m}월
-              </option>
-            ))}
-          </Select>
-        </FilterGroup>
+        <StatsRangeTabs value={months} onChange={setMonths} />
         {loading && <StatusText>불러오는 중...</StatusText>}
         {error && <ErrorText>{error}</ErrorText>}
       </FilterBar>
 
       <KPIGrid>
         <StatCard
-          label="이번 달 매출"
+          label="총 매출"
           value={Number(stats?.totalAmt ?? 0).toLocaleString()}
           unit="원"
           icon={<FaCoins />}
@@ -121,37 +91,28 @@ export default function SalesStats() {
         />
       </KPIGrid>
 
-      <StatsTabs
-        active={view}
-        onChange={setView}
-        tabs={[
-          { key: 'chart', label: '차트' },
-          { key: 'list', label: '리스트' },
-        ]}
-      />
-
-      {view === 'chart' ? (
-        trendChartData.length > 0 ? (
+      <ChartBlock>
+        {trendChartData.length > 0 ? (
           <VerticalBarChart
-            title="최근 6개월 매출 추이"
+            title={`${rangeLabel(months)} 매출 추이`}
             data={trendChartData}
             formatValue={formatMan}
           />
         ) : (
-          <Section title="최근 6개월 매출 추이">
+          <Section title={`${rangeLabel(months)} 매출 추이`}>
             <EmptyCard padded>표시할 매출 추이 데이터가 없습니다.</EmptyCard>
           </Section>
-        )
-      ) : (
-        <DataTable
-          title="최근 6개월 매출 추이"
-          columns={['월', '매출']}
-          rows={trendChartData.map((d) => [
-            `${d.label}월`,
-            `${Number(d.value).toLocaleString()}원`,
-          ])}
-        />
-      )}
+        )}
+      </ChartBlock>
+
+      <DataTable
+        title={`${rangeLabel(months)} 매출 추이`}
+        columns={['월', '매출']}
+        rows={trendChartData.map((d) => [
+          `${d.label}월`,
+          `${Number(d.value).toLocaleString()}원`,
+        ])}
+      />
     </PageLayout>
   );
 }
@@ -216,6 +177,10 @@ const KPIGrid = styled.div`
   @media (max-width: 480px) {
     grid-template-columns: 1fr;
   }
+`;
+
+const ChartBlock = styled.div`
+  margin-bottom: var(--space-5);
 `;
 
 const EmptyCard = styled(Card)`

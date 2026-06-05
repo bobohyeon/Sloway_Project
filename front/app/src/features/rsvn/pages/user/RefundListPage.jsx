@@ -1,5 +1,8 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../../../auth/hooks/useAuth';
+import { findMyRefunds } from '../../../refund/api/refundApi';
+import { Pagination } from '../../../pay_shared/components/Pagination';
 import styled, { keyframes } from 'styled-components';
 import PageLayout from '../../../../app/layouts/page/PageLayout';
 import RsvnStatusBadge from '../../components/user/RsvnStatusBadge';
@@ -21,48 +24,18 @@ const fadeInUp = keyframes`
   from { opacity: 0; transform: translateY(10px); }
   to   { opacity: 1; transform: translateY(0); }
 `;
-// status: '완료' | '환불 불가' 만 사용
 const TABS = [
   { label: '전체', status: null },
-  { label: '환불 완료', status: '완료' },
-  { label: '환불 불가', status: '환불 불가' },
+  { label: '환불 완료', status: 'COMPLETED' },
+  { label: '환불 요청', status: 'REQUESTED' },
 ];
 
-const DUMMY = [
-  {
-    id: 2,
-    status: '완료',
-    autoTag: null,
-    title: '남해 올리브 팜스테이',
-    code: 'RF-20260320-00612',
-    date: '신청 2026.03.20 · 완료 2026.03.24 · 개인 사정',
-    price: '165,000원',
-    penaltyNote: '위약금 165,000원',
-    icon: '✉️',
-  },
-  {
-    id: 3,
-    status: '완료',
-    autoTag: '💚 호스트 거절 · 자동환불',
-    title: '성수 브릭라운지',
-    code: 'RF-20260215-00344',
-    date: '신청 2026.02.15 · 완료 2026.02.15 · 호스트 거절',
-    price: '28,000원',
-    penaltyNote: null,
-    icon: '🧱',
-  },
-  {
-    id: 4,
-    status: '환불 불가',
-    autoTag: null,
-    title: '양양 파도소리 빌라',
-    code: 'RF-20260108-00122',
-    date: '신청 2026.01.08 · 이용일 당일 취소',
-    price: '0원',
-    penaltyNote: null,
-    icon: '🌅',
-  },
-];
+const STATUS_LABEL = { REQUESTED: '환불 요청', APPROVED: '환불 승인', COMPLETED: '환불 완료' };
+const REASON_LABEL = {
+  SCHEDULE: '일정 변경', SPACE: '공간 변경', HEALTH: '건강상의 이유',
+  PERSONAL: '개인 사정', PRICE: '가격 부담', ETC: '기타',
+};
+
 
 const PenaltyNote = styled.div`
   font-size: 12px;
@@ -98,18 +71,36 @@ const SumLbl = styled.div`
 
 function RefundListPage() {
   const [activeTab, setActiveTab] = useState(0);
+  const [refunds, setRefunds] = useState([]);
+  const [page, setPage] = useState(1);
   const navigate = useNavigate();
+  const { user } = useAuth();
+
+  useEffect(() => {
+    if (!user?.memberNo) return;
+    findMyRefunds(user.memberNo)
+      .then(setRefunds)
+      .catch(() => setRefunds([]));
+  }, [user?.memberNo]);
 
   const filtered =
     activeTab === 0
-      ? DUMMY
-      : DUMMY.filter((i) => i.status === TABS[activeTab].status);
+      ? refunds
+      : refunds.filter((i) => i.status === TABS[activeTab].status);
 
   const counts = TABS.map((tab, idx) =>
     idx === 0
-      ? DUMMY.length
-      : DUMMY.filter((i) => i.status === tab.status).length
+      ? refunds.length
+      : refunds.filter((i) => i.status === tab.status).length
   );
+
+  const totalAmt = refunds.reduce((sum, r) => sum + Number(r.refundAmt ?? 0), 0);
+  const totalPages = Math.ceil(filtered.length / 10);
+  const paged = filtered.slice((page - 1) * 10, page * 10);
+
+  const formatDate = (dt) => dt?.slice(0, 10).replaceAll('-', '.') ?? '';
+  const formatCode = (r) =>
+    `RF-${formatDate(r.requestedAt).replaceAll('.', '')}-${String(r.no).padStart(5, '0')}`;
 
   return (
     <PageLayout
@@ -122,51 +113,59 @@ function RefundListPage() {
           <TabBtn
             key={idx}
             $active={activeTab === idx}
-            onClick={() => setActiveTab(idx)}
+            onClick={() => { setActiveTab(idx); setPage(1); }}
           >
             {tab.label}
             <TabCount $active={activeTab === idx}>{counts[idx]}</TabCount>
           </TabBtn>
         ))}
       </TabBar>
-      {filtered.map((item) => (
-        <Card key={item.id} onClick={() => navigate('/user/refund/complete')}>
+      {filtered.length === 0 && (
+        <div style={{ textAlign: 'center', padding: '40px 0', color: COLOR.gray400, fontSize: 14 }}>
+          취소·환불 내역이 없어요
+        </div>
+      )}
+      {paged.map((item) => (
+        <Card key={item.no} style={{ cursor: 'default' }}>
           <CardRow>
-            <Thumb>{item.icon}</Thumb>
+            <Thumb>💳</Thumb>
             <CardBody>
               <TagRow>
-                <RsvnStatusBadge type="status" label={item.status} />
-                {item.autoTag && <AutoTag>{item.autoTag}</AutoTag>}
+                <RsvnStatusBadge type="status" label={STATUS_LABEL[item.status] ?? item.status} />
               </TagRow>
-              <CardTitle>{item.title}</CardTitle>
+              <CardTitle>예약 #{item.rsvnNo}</CardTitle>
               <CardMeta>
-                <span>{item.code}</span>
+                <span>{formatCode(item)}</span>
                 <span>·</span>
-                <span>{item.date}</span>
+                <span>신청 {formatDate(item.requestedAt)} · {REASON_LABEL[item.refundReason] ?? item.refundReason}</span>
               </CardMeta>
             </CardBody>
             <CardRight>
               <div style={{ fontSize: 11, color: COLOR.gray400 }}>환불</div>
-              <div style={{ fontSize: 15, fontWeight: 700 }}>{item.price}</div>
-              {item.penaltyNote && (
-                <PenaltyNote>{item.penaltyNote}</PenaltyNote>
-              )}
+              <div style={{ fontSize: 15, fontWeight: 700 }}>
+                {Number(item.refundAmt ?? 0).toLocaleString()}원
+              </div>
             </CardRight>
           </CardRow>
         </Card>
       ))}
 
+      <Pagination
+        currentPage={page}
+        totalPages={totalPages}
+        onChange={(p) => { setPage(p); window.scrollTo(0, 0); }}
+      />
       <SummaryBox>
         <div>
-          <SumVal>{DUMMY.length}</SumVal>
+          <SumVal>{refunds.length}</SumVal>
           <SumLbl>총 건수</SumLbl>
         </div>
         <div>
-          <SumVal>193,000원</SumVal>
+          <SumVal>{totalAmt.toLocaleString()}원</SumVal>
           <SumLbl>총 환불 금액</SumLbl>
         </div>
         <div>
-          <SumVal $red>165,000원</SumVal>
+          <SumVal $red>-</SumVal>
           <SumLbl>총 위약금</SumLbl>
         </div>
       </SummaryBox>

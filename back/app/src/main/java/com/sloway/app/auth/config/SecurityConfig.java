@@ -123,6 +123,9 @@ public class SecurityConfig {
                                 // ── ADMIN (나머지 결제 도메인 전부 — 반드시 위 구체 경로들 다음) ──
                                 .requestMatchers("/api/payment/**").hasRole("ADMIN")
 
+                                // ══ 예약 도메인 (/api/reservation) — 어드민 조회 전용 ══
+                                .requestMatchers(HttpMethod.GET, "/api/reservation/admin/**").hasRole("ADMIN")
+
                                 // ── 그 외 — 점진 도입 단계, 다른 담당자 API 진행 위해 일단 공개 ──
                                 .anyRequest().permitAll()
                 )

@@ -4,6 +4,7 @@ import com.sloway.app.auth.dto.request.ChangePasswordRequestDto;
 import com.sloway.app.auth.service.EmailService;
 import com.sloway.app.aws.service.S3Service;
 import com.sloway.app.common.exception.CustomException;
+import com.sloway.app.common.util.PasswordValidator;
 import com.sloway.app.host.common.HostErrorCode;
 import com.sloway.app.host.dto.request.UpdateHostRequestDto;
 import com.sloway.app.host.dto.response.HostApplicationResponseDto;
@@ -96,12 +97,11 @@ public class HostService {
      *
      * <p>비밀번호는 HostEntity에 BCrypt 해시로 저장.
      */
+    @Transactional
     public void changePassword(Long memberNo, ChangePasswordRequestDto request) {
 
-        // 1) 새 비번 길이 검증
-        if (request.getNewPassword() == null || request.getNewPassword().length() < 4) {
-            throw new CustomException(MemberErrorCode.PASSWORD_TOO_SHORT);
-        }
+        // 1) 새 비번 검증
+        PasswordValidator.validate(request.getNewPassword());
 
         // 2) 호스트 조회 (비번은 HostEntity)
         HostEntity host = hostRepository.findByMemberNo(memberNo)

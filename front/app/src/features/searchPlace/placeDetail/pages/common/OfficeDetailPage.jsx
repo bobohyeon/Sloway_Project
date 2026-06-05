@@ -1,11 +1,12 @@
 import { useState, useEffect } from 'react';
-import { useParams } from 'react-router-dom';
+import { useParams, useLocation } from 'react-router-dom';
 import DetailLayout from '../../layouts/DetailLayout';
 import DetailImageBox from '../../components/common/DetailImageBox';
 import DetailMainBox from '../../components/common/DetailMainBox';
 import DetailRsvnBox from '../../components/common/DetailRsvnBox';
 import { findReviewsByPlace } from '../../../../review/api/reviewApi';
 import { getOfficeDetail } from '../../../api/searchApi';
+import { saveRecentViewed } from '../../../recentPlace/api/recentApi';
 
 const RSVN_INFO = {
   checkIn: '5월 8일',
@@ -16,6 +17,8 @@ const RSVN_INFO = {
 
 function OfficeDetailPage() {
   const { id } = useParams();
+  const location = useLocation();
+  const selectedRoom = location.state?.selectedRoom ?? null;
   const [space, setSpace] = useState(null);
   const [reviews, setReviews] = useState([]);
 
@@ -24,10 +27,11 @@ function OfficeDetailPage() {
       try {
         const [spaceData, reviewData] = await Promise.all([
           getOfficeDetail(Number(id)),
-          findReviewsByPlace(Number(id)),
+          findReviewsByPlace(Number(id), 'OFFICE'),
         ]);
         setSpace(spaceData);
         setReviews(reviewData);
+        saveRecentViewed(spaceData.placeNo).catch(() => {});
       } catch (e) {
         console.error('데이터 조회 실패', e);
       }
@@ -49,13 +53,14 @@ function OfficeDetailPage() {
       rsvnBox={
         <DetailRsvnBox
           rsvnInfo={RSVN_INFO}
-          price={28000}
+          price={selectedRoom?.price ?? space?.basePrice ?? 28000}
           priceUnit="원/4시간"
+          roomName={selectedRoom?.name ?? null}
           serviceFee={12000}
           rsvnDto={{
             officeNo: space?.entityNo,
             count: 2,
-            amt: space?.basePrice ?? 28000,
+            amt: selectedRoom?.price ?? space?.basePrice ?? 28000,
             checkIn: '2026-06-10T09:00:00',
             checkOut: '2026-06-10T18:00:00',
             special: null,

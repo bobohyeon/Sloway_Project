@@ -10,6 +10,7 @@ import {
   COLOR,
 } from '../../components/user/RsvnStyled';
 import { findMyRsvns } from '../../api/rsvnApi';
+import { Pagination } from '../../../pay_shared/components/Pagination';
 
 const List = styled.div`
   display: flex;
@@ -56,9 +57,12 @@ const toCardItem = (rsvn) => {
   };
 };
 
+const PAGE_SIZE = 10;
+
 function RsvnListPage() {
   const [activeTab, setActiveTab] = useState(0);
   const [rsvns, setRsvns] = useState([]);
+  const [page, setPage] = useState(1);
 
   useEffect(() => {
     const fetch = async () => {
@@ -80,6 +84,9 @@ function RsvnListPage() {
     tab.statuses ? rsvns.filter((r) => tab.statuses.includes(r.status)).length : rsvns.length
   );
 
+  const totalPages = Math.ceil(filtered.length / PAGE_SIZE);
+  const paged = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
+
   return (
     <PageLayout
       title="예약 목록"
@@ -88,7 +95,7 @@ function RsvnListPage() {
     >
       <TabBar>
         {TABS.map((tab, idx) => (
-          <TabBtn key={idx} $active={activeTab === idx} onClick={() => setActiveTab(idx)}>
+          <TabBtn key={idx} $active={activeTab === idx} onClick={() => { setActiveTab(idx); setPage(1); }}>
             {tab.label}
             <TabCount $active={activeTab === idx}>{counts[idx]}</TabCount>
           </TabBtn>
@@ -102,10 +109,15 @@ function RsvnListPage() {
       )}
 
       <List>
-        {filtered.map((rsvn) => (
+        {paged.map((rsvn) => (
           <RsvnCard key={rsvn.no} item={toCardItem(rsvn)} />
         ))}
       </List>
+      <Pagination
+        currentPage={page}
+        totalPages={totalPages}
+        onChange={(p) => { setPage(p); window.scrollTo(0, 0); }}
+      />
     </PageLayout>
   );
 }

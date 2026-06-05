@@ -50,9 +50,9 @@ const EmptyBox = styled.div`
 
 // spaceType → 라우트 경로 매핑
 const SPACE_PATH = {
-  워크앤스테이: 'workstays',
-  오피스: 'coworking-offices',
-  숙소: 'accommodations',
+  WORK_STAY: 'workstays',
+  OFFICE: 'coworking-offices',
+  STATION: 'stations',
 };
 
 const TYPE_ICON = { 워크앤스테이: '🌿', 오피스: '💻', 숙소: '🛌' };
@@ -113,7 +113,7 @@ function RecentPlacePage() {
 
   const handleCardClick = (item) => {
     const path = SPACE_PATH[item.type] || 'workstays';
-    navigate(`/${path}/${item.placeNo}`);
+    navigate(`/${path}/${item.entityNo}`);
   };
 
   return (

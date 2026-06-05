@@ -22,6 +22,7 @@ import com.sloway.app.place.repository.station.StationRepository;
 import com.sloway.app.place.repository.workStay.WorkStayRepository;
 import com.sloway.app.reservation.RsvnErrorCode;
 import com.sloway.app.reservation.rsvn.dto.request.RsvnReqDto;
+import com.sloway.app.reservation.rsvn.dto.response.HostReservationStatsResDto;
 import com.sloway.app.reservation.rsvn.dto.response.HostSpaceResDto;
 import com.sloway.app.reservation.rsvn.dto.response.RsvnResDto;
 import com.sloway.app.reservation.rsvn.entity.RsvnEntity;
@@ -96,13 +97,12 @@ public class RsvnService {
                 new CustomException(RsvnErrorCode.MEMBER_NOT_FOUND)
         );
 
-        return rsvnRepository.findByMemberNo(member)
-                .stream()
-                .map(entity -> {
-                    Long payNo = findCompletePayNo(entity.getNo());
-                    return RsvnResDto.from(entity, payNo);
-                }
-                        )
+        List<RsvnEntity> list = rsvnRepository.findByMemberNo(member);
+        // 예약들의 payNo 를 한 번에 조회(N+1 제거)
+        java.util.Map<Long, Long> payNoMap =
+                findCompletePayNoMap(list.stream().map(RsvnEntity::getNo).toList());
+        return list.stream()
+                .map(entity -> RsvnResDto.from(entity, payNoMap.get(entity.getNo())))
                 .toList();
     }
 
@@ -132,38 +132,86 @@ public class RsvnService {
                 .toList();
     }
 
+    //어드민 — 특정 호스트의 공간 목록 조회 (hostNo 직접, 공간별 예약수 포함)
+    public List<HostSpaceResDto> findHostSpacesForAdmin(Long hostNo) {
+        List<RsvnEntity> rsvns = findRsvnsByHostNo(hostNo);
+
+        // 공간(office/station/work) 별 예약 건수 — 각 FK 의 PK(getNo, LAZY 안전) 기준 count
+        java.util.Map<Long, Long> officeCnt = rsvns.stream()
+                .filter(r -> r.getOfficeNo() != null)
+                .collect(java.util.stream.Collectors.groupingBy(
+                        r -> r.getOfficeNo().getNo(), java.util.stream.Collectors.counting()));
+        java.util.Map<Long, Long> stationCnt = rsvns.stream()
+                .filter(r -> r.getStationNo() != null)
+                .collect(java.util.stream.Collectors.groupingBy(
+                        r -> r.getStationNo().getNo(), java.util.stream.Collectors.counting()));
+        java.util.Map<Long, Long> workCnt = rsvns.stream()
+                .filter(r -> r.getWorkStayNo() != null)
+                .collect(java.util.stream.Collectors.groupingBy(
+                        r -> r.getWorkStayNo().getNo(), java.util.stream.Collectors.counting()));
+
+        return hostPlaceRepository.findByHostEntityNo(hostNo)
+                .stream()
+                .map(hp -> {
+                    long cnt = 0L;
+                    if (hp.getOfficeEntity() != null) {
+                        cnt = officeCnt.getOrDefault(hp.getOfficeEntity().getNo(), 0L);
+                    } else if (hp.getStationEntity() != null) {
+                        cnt = stationCnt.getOrDefault(hp.getStationEntity().getNo(), 0L);
+                    } else if (hp.getWorkStayEntity() != null) {
+                        cnt = workCnt.getOrDefault(hp.getWorkStayEntity().getNo(), 0L);
+                    }
+                    return HostSpaceResDto.from(hp, cnt);
+                })
+                .filter(dto -> dto.getPlaceNo() != null)
+                .distinct()
+                .toList();
+    }
+
     //호스트 — 내 공간의 예약 목록 조회
     public List<RsvnResDto> findAllByHost(Long memberNo) {
         HostEntity host = hostRepository.findByMemberNo(memberNo)
                 .orElseThrow(() -> new CustomException(ReviewErrorCode.HOST_NOT_FOUND));
 
-        List<HostPlaceEntity> hostPlaces = hostPlaceRepository.findByHostEntityNo(host.getNo());
+        List<RsvnEntity> sorted = findRsvnsByHostNo(host.getNo()).stream()
+                .sorted(java.util.Comparator.comparing(RsvnEntity::getCreatedAt).reversed())
+                .toList();
+        // 예약들의 payNo 를 한 번에 조회(N+1 제거)
+        java.util.Map<Long, Long> payNoMap =
+                findCompletePayNoMap(sorted.stream().map(RsvnEntity::getNo).toList());
+        return sorted.stream()
+                .map(entity -> RsvnResDto.from(entity, payNoMap.get(entity.getNo())))
+                .toList();
+    }
+
+    // 호스트 공간(office/station/work)의 예약 목록을 모아서 반환 (내부 헬퍼)
+    private List<RsvnEntity> findRsvnsByHostNo(Long hostNo) {
+        List<HostPlaceEntity> hostPlaces = hostPlaceRepository.findByHostEntityNo(hostNo);
 
         List<OfficeEntity> offices = hostPlaces.stream()
-                .map(hp -> hp.getOfficeEntity())
-                .filter(o -> o != null)
-                .toList();
+                .map(hp -> hp.getOfficeEntity()).filter(o -> o != null).toList();
         List<StationEntity> stations = hostPlaces.stream()
-                .map(hp -> hp.getStationEntity())
-                .filter(s -> s != null)
-                .toList();
+                .map(hp -> hp.getStationEntity()).filter(s -> s != null).toList();
         List<WorkStayEntity> workStays = hostPlaces.stream()
-                .map(hp -> hp.getWorkStayEntity())
-                .filter(w -> w != null)
-                .toList();
+                .map(hp -> hp.getWorkStayEntity()).filter(w -> w != null).toList();
 
         List<RsvnEntity> result = new java.util.ArrayList<>();
         if (!offices.isEmpty())  result.addAll(rsvnRepository.findByOfficeNoIn(offices));
         if (!stations.isEmpty()) result.addAll(rsvnRepository.findByStationNoIn(stations));
         if (!workStays.isEmpty()) result.addAll(rsvnRepository.findByWorkStayNoIn(workStays));
+        return result;
+    }
 
-        return result.stream()
-                .sorted(java.util.Comparator.comparing(RsvnEntity::getCreatedAt).reversed())
-                .map(entity -> {
-                    Long payNo = findCompletePayNo(entity.getNo());
-                    return RsvnResDto.from(entity, payNo);
-                })
-                .toList();
+    //어드민 — 특정 호스트의 예약 건수 통계 (진행중 P+S / 완료 E)
+    public HostReservationStatsResDto findHostReservationStatsForAdmin(Long hostNo) {
+        List<RsvnEntity> rsvns = findRsvnsByHostNo(hostNo);
+        long ongoing = rsvns.stream()
+                .filter(r -> r.getStatus() == RsvnStatus.P || r.getStatus() == RsvnStatus.S)
+                .count();
+        long completed = rsvns.stream()
+                .filter(r -> r.getStatus() == RsvnStatus.E)
+                .count();
+        return HostReservationStatsResDto.of(ongoing, completed);
     }
 
     //내 예약 취소
@@ -204,7 +252,7 @@ public class RsvnService {
         refundService.createRefund(refundCreateReqDto);
     }
 
-    //예약완료조회
+    //예약완료조회 (단건 — findOne 등에서 사용)
     public Long findCompletePayNo(Long rsvnNo){
         List<PayEntity> pay = payRepository.findByRsvn(rsvnNo);
 
@@ -214,6 +262,18 @@ public class RsvnService {
                 .findFirst()
                 .orElse(null);
         return completedPay;
+    }
+
+    // 여러 예약의 완료결제 payNo 를 한 번에 조회 → Map<rsvnNo, payNo> (목록 조회 N+1 제거용)
+    private java.util.Map<Long, Long> findCompletePayNoMap(List<Long> rsvnNos) {
+        if (rsvnNos.isEmpty()) return java.util.Map.of();
+        return payRepository.findByRsvnNoIn(rsvnNos).stream()
+                .filter(p -> p.getStatus() == PayStatus.COMPLETED)
+                .collect(java.util.stream.Collectors.toMap(
+                        p -> p.getRsvnNo().getNo(),   // 예약 FK 의 PK
+                        PayEntity::getNo,
+                        (a, b) -> a                    // 한 예약에 완료결제 여러 건이면 첫 건
+                ));
     }
 
 
@@ -263,15 +323,15 @@ public class RsvnService {
         MemberEntity member = memberRepository.findById(memberNo)
                 .orElseThrow(()-> new CustomException(RsvnErrorCode.MEMBER_NOT_FOUND));
 
-        List<RsvnEntity> reviewable = rsvnRepository.findByMemberNoAndStatus(member, RsvnStatus.E);
-        return reviewable
+        List<RsvnEntity> reviewable = rsvnRepository.findByMemberNoAndStatus(member, RsvnStatus.E)
                 .stream()
                 .filter(entity -> LocalDateTime.now().isBefore(entity.getCheckOut().plusDays(14)))
-                .map(entity -> {
-                    Long payNo = findCompletePayNo(entity.getNo());
-                    return RsvnResDto.from(entity, payNo);
-                })
-                .toList()
-                ;
+                .toList();
+        // 예약들의 payNo 를 한 번에 조회(N+1 제거)
+        java.util.Map<Long, Long> payNoMap =
+                findCompletePayNoMap(reviewable.stream().map(RsvnEntity::getNo).toList());
+        return reviewable.stream()
+                .map(entity -> RsvnResDto.from(entity, payNoMap.get(entity.getNo())))
+                .toList();
     }
 }

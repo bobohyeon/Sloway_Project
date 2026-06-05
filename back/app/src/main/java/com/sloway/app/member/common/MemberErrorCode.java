@@ -37,9 +37,8 @@ public enum MemberErrorCode implements ErrorCode {
     // ─── 비밀번호 변경 ─────────────────────── ← 새로 추가
     WRONG_CURRENT_PASSWORD(HttpStatus.BAD_REQUEST, "현재 비밀번호가 일치하지 않습니다"),
     SAME_AS_OLD_PASSWORD(HttpStatus.BAD_REQUEST, "새 비밀번호는 현재 비밀번호와 달라야 합니다"),
-    PASSWORD_TOO_SHORT(HttpStatus.BAD_REQUEST, "비밀번호는 4자 이상이어야 합니다");
-
+    PASSWORD_TOO_SHORT(HttpStatus.BAD_REQUEST, "비밀번호는 8자 이상이며 영문·숫자·특수문자를 포함해야 합니다");
 
     private final HttpStatus status;
     private final String msg;
-}
+    }

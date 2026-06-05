@@ -11,6 +11,7 @@ import {
 import PageLayout from '../../../../app/layouts/page/PageLayout';
 import { useHostApplyList } from '../../hooks/useHostApplyList';
 import * as S from './HostApplyListPage.styled';
+import { getPageNumbers } from '../../utils/pagination';
 
 const STATE_LABEL = {
   PENDING: '승인 대기',
@@ -174,31 +175,57 @@ function HostApplyListPage() {
         </S.TableWrap>
 
         {/* 페이지네이션 */}
-        {totalPages > 1 && (
-          <S.Pagination>
-            <S.PageBtn
-              disabled={currentPage === 1}
-              onClick={() => setPage(currentPage - 1)}
-            >
-              이전
-            </S.PageBtn>
-            {Array.from({ length: totalPages }, (_, i) => i + 1).map((p) => (
-              <S.PageBtn
-                key={p}
-                $active={p === currentPage}
-                onClick={() => setPage(p)}
-              >
-                {p}
-              </S.PageBtn>
-            ))}
-            <S.PageBtn
-              disabled={currentPage === totalPages}
-              onClick={() => setPage(currentPage + 1)}
-            >
-              다음
-            </S.PageBtn>
-          </S.Pagination>
-        )}
+        {totalPages > 1 &&
+          (() => {
+            const {
+              pages,
+              hasPrevBlock,
+              hasNextBlock,
+              prevBlockPage,
+              nextBlockPage,
+            } = getPageNumbers(currentPage, totalPages);
+            return (
+              <S.Pagination>
+                <S.PageBtn
+                  disabled={currentPage === 1}
+                  onClick={() => setPage(currentPage - 1)}
+                >
+                  이전
+                </S.PageBtn>
+
+                {/* 이전 묶음으로 점프 */}
+                {hasPrevBlock && (
+                  <S.PageBtn onClick={() => setPage(prevBlockPage)}>
+                    …
+                  </S.PageBtn>
+                )}
+
+                {pages.map((p) => (
+                  <S.PageBtn
+                    key={p}
+                    $active={p === currentPage}
+                    onClick={() => setPage(p)}
+                  >
+                    {p}
+                  </S.PageBtn>
+                ))}
+
+                {/* 다음 묶음으로 점프 */}
+                {hasNextBlock && (
+                  <S.PageBtn onClick={() => setPage(nextBlockPage)}>
+                    …
+                  </S.PageBtn>
+                )}
+
+                <S.PageBtn
+                  disabled={currentPage === totalPages}
+                  onClick={() => setPage(currentPage + 1)}
+                >
+                  다음
+                </S.PageBtn>
+              </S.Pagination>
+            );
+          })()}
       </PageLayout>
     </S.PageContainer>
   );

@@ -6,7 +6,7 @@ import { Button, EmptyState, Pagination } from '../../../pay_shared/components';
 import { SettlementStatCard } from '../../../settlement/components/host/SettlementStatCard';
 import { PaymentFilterBar } from '../../components/user/PaymentFilterBar';
 import { PaymentListItem } from '../../components/user/PaymentListItem';
-import { findPayAll } from '../../api/payApi';
+import { findPayAll, findPayStats } from '../../api/payApi';
 
 const StatGrid = styled.div`
   display: grid;
@@ -30,8 +30,6 @@ const List = styled.div`
   margin-bottom: var(--space-5);
 `;
 
-const PAGE_SIZE = 10;
-
 const STATUS_TO_UI = {
   READY: 'pending',
   COMPLETED: 'completed',
@@ -51,16 +49,6 @@ const TABS = [
   { value: 'refunded', label: '환불' },
   { value: 'failed', label: '결제 실패' },
 ];
-
-const periodToCutoffMs = (period) => {
-  const now = Date.now();
-  const day = 24 * 60 * 60 * 1000;
-  if (period === 'month') return now - 30 * day;
-  if (period === '3months') return now - 90 * day;
-  if (period === '6months') return now - 180 * day;
-  if (period === 'year') return now - 365 * day;
-  return 0;
-};
 
 const formatPaidAt = (iso) => {
   if (!iso) return '';
@@ -92,70 +80,68 @@ const toPaymentForUI = (resDto) => {
 export default function AdminPaymentList() {
   const navigate = useNavigate();
 
-  const [pays, setPays] = useState([]);
+  const [content, setContent] = useState([]); // 현재 페이지 결제 목록(서버가 잘라서 줌)
+  const [totalPages, setTotalPages] = useState(1); // 서버가 알려준 전체 페이지 수
+  const [stats, setStats] = useState({
+    total: 0,
+    completed: 0,
+    completedAmt: 0,
+    refunded: 0,
+    failed: 0,
+  });
   const [selectedTab, setSelectedTab] = useState('all');
   const [selectedPeriod, setSelectedPeriod] = useState('month');
-  const [page, setPage] = useState(1);
+  const [page, setPage] = useState(1); // UI는 1-base, 서버는 0-base
 
+  // 목록 — page/탭/기간 중 하나라도 바뀌면 서버에 재요청 (클라가 전체를 들고 있지 않음)
   useEffect(() => {
     const load = async () => {
       try {
-        const list = await findPayAll();
-        setPays(list);
+        const data = await findPayAll(page - 1, selectedTab, selectedPeriod);
+        setContent(data.content ?? []);
+        setTotalPages(data.totalPages ?? 1);
       } catch (err) {
         console.error('관리자 결제 목록 조회 실패', err);
       }
     };
     load();
-  }, []);
+  }, [page, selectedTab, selectedPeriod]);
 
-  const stats = useMemo(() => {
-    const s = {
-      total: pays.length,
-      completed: 0,
-      refunded: 0,
-      failed: 0,
-      totalAmt: 0,
-    };
-    pays.forEach((p) => {
-      const uiStatus = STATUS_TO_UI[p.status];
-      if (uiStatus === 'completed') {
-        s.completed += 1;
-        s.totalAmt += p.finalAmt ?? 0;
+  // 통계 — 기간만 의존(탭과 무관하게 항상 전체 상태별 집계라 카드 4개가 정확)
+  useEffect(() => {
+    const loadStats = async () => {
+      try {
+        const data = await findPayStats(selectedPeriod);
+        setStats(data);
+      } catch (err) {
+        console.error('결제 통계 조회 실패', err);
       }
-      if (uiStatus === 'refunded') s.refunded += 1;
-      if (uiStatus === 'failed') s.failed += 1;
-    });
-    return s;
-  }, [pays]);
+    };
+    loadStats();
+  }, [selectedPeriod]);
+
+  // 탭/기간 바꾸면 1페이지로 리셋(안 하면 5페이지에서 탭 바꿔 빈 결과 뜨는 버그)
+  const handleTabChange = (tab) => {
+    setSelectedTab(tab);
+    setPage(1);
+  };
+  const handlePeriodChange = (period) => {
+    setSelectedPeriod(period);
+    setPage(1);
+  };
 
   const tabsWithCount = useMemo(() => {
     const counts = {
-      all: pays.length,
+      all: stats.total,
       completed: stats.completed,
       refunded: stats.refunded,
       failed: stats.failed,
     };
     return TABS.map((t) => ({ ...t, count: counts[t.value] }));
-  }, [pays, stats]);
+  }, [stats]);
 
-  const filtered = useMemo(() => {
-    const cutoff = periodToCutoffMs(selectedPeriod);
-    return pays
-      .filter((p) => {
-        const uiStatus = STATUS_TO_UI[p.status];
-        if (selectedTab !== 'all' && uiStatus !== selectedTab) return false;
-        if (cutoff > 0) {
-          const created = new Date(p.createdAt).getTime();
-          if (created < cutoff) return false;
-        }
-        return true;
-      })
-      .map(toPaymentForUI);
-  }, [pays, selectedTab, selectedPeriod]);
-
-  const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
-  const pageItems = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
+  // 서버가 이미 필터·페이징한 결과라 클라에선 화면용 변환만
+  const pageItems = useMemo(() => content.map(toPaymentForUI), [content]);
 
   const handleItemClick = (payment) => {
     navigate(`/admin/payment/${payment.no}`);
@@ -192,7 +178,7 @@ export default function AdminPaymentList() {
           label="결제 완료"
           value={stats.completed.toLocaleString()}
           unit="건"
-          subText={`${stats.totalAmt.toLocaleString()}원`}
+          subText={`${stats.completedAmt.toLocaleString()}원`}
         />
         <SettlementStatCard
           icon="↩"
@@ -215,9 +201,9 @@ export default function AdminPaymentList() {
       <PaymentFilterBar
         tabs={tabsWithCount}
         selectedTab={selectedTab}
-        onTabChange={setSelectedTab}
+        onTabChange={handleTabChange}
         selectedPeriod={selectedPeriod}
-        onPeriodChange={setSelectedPeriod}
+        onPeriodChange={handlePeriodChange}
       />
 
       {pageItems.length === 0 ? (

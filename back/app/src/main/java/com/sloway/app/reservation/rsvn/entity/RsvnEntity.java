@@ -56,7 +56,7 @@ public class RsvnEntity {
     private LocalDateTime createdAt;
 
     @Enumerated(EnumType.STRING)
-    @Column(columnDefinition = "CHAR(1)", nullable = false, name = "status")
+    @Column(nullable = false, name = "status")
     private RsvnStatus status;
 
     @PrePersist

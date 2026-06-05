@@ -187,4 +187,10 @@ public class PlaceApiController {
 
         return ResponseEntity.ok(dto);
     }
+    // 어드민 — 특정 호스트 공간 목록 (SecurityConfig 에서 ADMIN 권한 필요) -오준호 요청사항 직접 수정
+    @GetMapping("/admin/host/{hostNo}")
+    public ResponseEntity<List<PlaceListRespDto>> placeListForAdmin(@PathVariable Long hostNo) {
+        return ResponseEntity.ok(placeService.placeListForAdmin(hostNo));
+    }
+
 }

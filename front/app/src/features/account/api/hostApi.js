@@ -43,3 +43,12 @@ export const getMyHostApplication = async () => {
 export const withdrawHost = async () => {
   await api.delete('/host/mypage');
 };
+
+/** 호스트 비밀번호 변경. PATCH /api/host/mypage/password */
+export const changeHostPassword = async (currentPassword, newPassword) => {
+  const response = await api.patch('/host/mypage/password', {
+    currentPassword,
+    newPassword,
+  });
+  return response.data;
+};

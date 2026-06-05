@@ -19,8 +19,16 @@ export async function confirmTossPay({ paymentKey, orderId, amount }) {
   return resp.data;
 }
 
-export async function findPayAll() {
-  const resp = await api.get(`/payment/pay`);
+// 서버 페이지네이션 + 필터 — pno(0-base), tab(상태), period(기간)을 쿼리로 전달
+// 응답: { content: [...], totalPages, totalElements, number, ... } (Spring Page)
+export async function findPayAll(pno = 0, tab = 'all', period = 'month') {
+  const resp = await api.get(`/payment/pay`, { params: { pno, tab, period } });
+  return resp.data;
+}
+
+// 통계 카드용 — 목록과 별개로 기간 내 전체 집계
+export async function findPayStats(period = 'month') {
+  const resp = await api.get(`/payment/pay/stats`, { params: { period } });
   return resp.data;
 }
 

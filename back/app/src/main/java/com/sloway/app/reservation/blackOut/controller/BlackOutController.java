@@ -20,15 +20,15 @@ public class BlackOutController {
     private final BlackOutService blackOutService;
 
     @PostMapping
-    public ResponseEntity<Void> save(@RequestBody BlackOutReqDto dto, @RequestParam Long placeNo){
+    public ResponseEntity<Void> save(@RequestBody BlackOutReqDto dto, @RequestParam Long entityNo){
 
-        blackOutService.save(placeNo, dto);
+        blackOutService.save(entityNo, dto);
         return ResponseEntity.status(HttpStatus.CREATED).build();
     }
 
     @GetMapping
-    public ResponseEntity<List<BlackOutResDto>> findAll(@RequestParam Long placeNo){
-        List<BlackOutResDto> dtoList = blackOutService.findAll(placeNo);
+    public ResponseEntity<List<BlackOutResDto>> findAll(@RequestParam Long entityNo){
+        List<BlackOutResDto> dtoList = blackOutService.findAll(entityNo);
         return ResponseEntity.ok(dtoList);
     }
 

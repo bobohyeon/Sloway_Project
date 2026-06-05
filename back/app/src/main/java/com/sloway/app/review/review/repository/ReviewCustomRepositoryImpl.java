@@ -1,5 +1,6 @@
 package com.sloway.app.review.review.repository;
 
+import com.querydsl.core.Tuple;
 import com.querydsl.core.types.OrderSpecifier;
 import com.querydsl.core.types.dsl.BooleanExpression;
 import com.querydsl.jpa.impl.JPAQueryFactory;
@@ -31,7 +32,7 @@ public class ReviewCustomRepositoryImpl implements ReviewCustomRepository {
     private static final QWorkStayEntity workStay = QWorkStayEntity.workStayEntity;
 
     @Override
-    public List<ReviewEntity> findByHostFilter(PlaceEntity placeNo, Integer minScore, PeriodType period) {
+    public List<ReviewEntity> findByHostFilter(PlaceEntity placeEntity, Integer minScore, PeriodType period) {
         return queryFactory
                 .selectFrom(review)
                 .join(review.rsvnNo, rsvn)
@@ -39,9 +40,9 @@ public class ReviewCustomRepositoryImpl implements ReviewCustomRepository {
                 .leftJoin(rsvn.stationNo, station)
                 .leftJoin(rsvn.workStayNo, workStay)
                 .where(
-                        office.placeEntity.no.eq(placeNo.getNo())
-                                .or(station.placeEntity.no.eq(placeNo.getNo()))
-                                .or(workStay.placeEntity.no.eq(placeNo.getNo()))
+                        office.placeEntity.no.eq(placeEntity.getNo())
+                                .or(station.placeEntity.no.eq(placeEntity.getNo()))
+                                .or(workStay.placeEntity.no.eq(placeEntity.getNo()))
                         ,review.delYn.eq("N")
                         ,min(minScore)
                         ,periodBoolean(period)
@@ -50,20 +51,40 @@ public class ReviewCustomRepositoryImpl implements ReviewCustomRepository {
     }
 
     @Override
-    public List<ReviewEntity> findByPlaceNo(PlaceEntity placeNo) {
+    public List<ReviewEntity> findByEntityNo(Long entityNo, String type) {
+        // type에 따라 해당 공간 테이블 FK만 비교 (OR 퉁치기 방지)
+        BooleanExpression cond = switch (type) {
+            case "OFFICE"    -> office.no.eq(entityNo);
+            case "WORK_STAY" -> workStay.no.eq(entityNo);
+            default          -> station.no.eq(entityNo);
+        };
         return queryFactory
                 .selectFrom(review)
                 .join(review.rsvnNo, rsvn)
                 .leftJoin(rsvn.officeNo, office)
                 .leftJoin(rsvn.stationNo, station)
                 .leftJoin(rsvn.workStayNo, workStay)
-                .where(
-                        office.placeEntity.no.eq(placeNo.getNo())
-                        .or(station.placeEntity.no.eq(placeNo.getNo()))
-                        .or(workStay.placeEntity.no.eq(placeNo.getNo()))
-                        ,review.delYn.eq("N")
-                )
+                .where(cond, review.delYn.eq("N"))
                 .fetch();
+    }
+
+    // 호스트 공간(placeNo 목록)의 리뷰 평균 평점·개수 — review→rsvn→office/station/work 조인
+    @Override
+    public Tuple findHostReviewStats(List<Long> placeNos) {
+        return queryFactory
+                .select(review.scoreTotal.avg(), review.count())
+                .from(review)
+                .join(review.rsvnNo, rsvn)
+                .leftJoin(rsvn.officeNo, office)
+                .leftJoin(rsvn.stationNo, station)
+                .leftJoin(rsvn.workStayNo, workStay)
+                .where(
+                        office.placeEntity.no.in(placeNos)
+                                .or(station.placeEntity.no.in(placeNos))
+                                .or(workStay.placeEntity.no.in(placeNos)),
+                        review.delYn.eq("N")
+                )
+                .fetchOne();
     }
 
     //최소 평점 필터

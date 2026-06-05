@@ -6,9 +6,10 @@ import PageLayout from '../../../../app/layouts/page/PageLayout';
 import { StatCard } from '../../../pay_shared/components/StatCard';
 import { Card, Section } from '../../../pay_shared/components';
 import { HorizontalBarChart } from '../../components/admin/HorizontalBarChart';
-import { StatsTabs } from '../../components/admin/StatsTabs';
 import { DataTable } from '../../components/admin/DataTable';
 import { findSpaceStats } from '../../api/statsApi';
+import { StatsRangeTabs } from '../../components/admin/StatsRangeTabs';
+import { rangeLabel, getAnchorMonth } from '../../components/admin/statsRange';
 
 const TYPE_META = {
   office: { label: '오피스', color: '#0064FF' },
@@ -16,32 +17,20 @@ const TYPE_META = {
   workStay: { label: '워크앤스테이', color: '#F5A623' },
 };
 
-const YEAR_OPTIONS = [2024, 2025, 2026];
-const MONTH_OPTIONS = Array.from({ length: 12 }, (_, i) => i + 1);
-
-function getPrevMonth() {
-  const d = new Date();
-  d.setDate(1);
-  d.setMonth(d.getMonth() - 1);
-  return { year: d.getFullYear(), month: d.getMonth() + 1 };
-}
-
 export default function SpaceStats() {
-  const init = useMemo(() => getPrevMonth(), []);
-  const [year, setYear] = useState(init.year);
-  const [month, setMonth] = useState(init.month);
+  const { year, month } = useMemo(() => getAnchorMonth(), []);
+  const [months, setMonths] = useState(1);
 
   const [stats, setStats] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
-  const [view, setView] = useState('chart');
 
   useEffect(() => {
     let alive = true;
     setLoading(true);
     setError(null);
 
-    findSpaceStats(year, month)
+    findSpaceStats(year, month, months)
       .then((data) => {
         if (alive) setStats(data);
       })
@@ -56,7 +45,7 @@ export default function SpaceStats() {
     return () => {
       alive = false;
     };
-  }, [year, month]);
+  }, [year, month, months]);
 
   const typeChartData = (stats?.byType ?? []).map((row) => {
     const meta = TYPE_META[row.type] ?? { label: row.type, color: 'var(--sage)' };
@@ -70,30 +59,11 @@ export default function SpaceStats() {
   return (
     <PageLayout
       title="공간 통계"
-      description={`${year}년 ${month}월 공간 등록·운영 현황`}
+      description={`${rangeLabel(months)} 공간 등록·운영 현황`}
       maxWidth={1200}
     >
       <FilterBar>
-        <FilterGroup>
-          <FilterLabel>연도</FilterLabel>
-          <Select value={year} onChange={(e) => setYear(Number(e.target.value))}>
-            {YEAR_OPTIONS.map((y) => (
-              <option key={y} value={y}>
-                {y}년
-              </option>
-            ))}
-          </Select>
-        </FilterGroup>
-        <FilterGroup>
-          <FilterLabel>월</FilterLabel>
-          <Select value={month} onChange={(e) => setMonth(Number(e.target.value))}>
-            {MONTH_OPTIONS.map((m) => (
-              <option key={m} value={m}>
-                {m}월
-              </option>
-            ))}
-          </Select>
-        </FilterGroup>
+        <StatsRangeTabs value={months} onChange={setMonths} />
         {loading && <StatusText>불러오는 중...</StatusText>}
         {error && <ErrorText>{error}</ErrorText>}
       </FilterBar>
@@ -126,17 +96,8 @@ export default function SpaceStats() {
         />
       </KPIGrid>
 
-      <StatsTabs
-        active={view}
-        onChange={setView}
-        tabs={[
-          { key: 'chart', label: '차트' },
-          { key: 'list', label: '리스트' },
-        ]}
-      />
-
-      {view === 'chart' ? (
-        typeChartData.length > 0 ? (
+      <ChartBlock>
+        {typeChartData.length > 0 ? (
           <HorizontalBarChart
             title="공간 타입별 분포"
             data={typeChartData}
@@ -146,17 +107,17 @@ export default function SpaceStats() {
           <Section title="공간 타입별 분포">
             <EmptyCard padded>표시할 공간 분포 데이터가 없습니다.</EmptyCard>
           </Section>
-        )
-      ) : (
-        <DataTable
-          title="공간 타입별 분포"
-          columns={['공간 타입', '개수']}
-          rows={typeChartData.map((d) => [
-            d.label,
-            `${Number(d.value).toLocaleString()}개`,
-          ])}
-        />
-      )}
+        )}
+      </ChartBlock>
+
+      <DataTable
+        title="공간 타입별 분포"
+        columns={['공간 타입', '개수']}
+        rows={typeChartData.map((d) => [
+          d.label,
+          `${Number(d.value).toLocaleString()}개`,
+        ])}
+      />
     </PageLayout>
   );
 }
@@ -221,6 +182,10 @@ const KPIGrid = styled.div`
   @media (max-width: 480px) {
     grid-template-columns: 1fr;
   }
+`;
+
+const ChartBlock = styled.div`
+  margin-bottom: var(--space-5);
 `;
 
 const EmptyCard = styled(Card)`

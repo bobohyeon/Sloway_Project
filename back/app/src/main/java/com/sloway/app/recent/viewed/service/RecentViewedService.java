@@ -4,7 +4,10 @@ import com.sloway.app.common.exception.CustomException;
 import com.sloway.app.member.entity.MemberEntity;
 import com.sloway.app.member.repository.MemberRepository;
 import com.sloway.app.place.entity.place.PlaceEntity;
+import com.sloway.app.place.repository.office.OfficeRepository;
 import com.sloway.app.place.repository.place.PlaceRepository;
+import com.sloway.app.place.repository.station.StationRepository;
+import com.sloway.app.place.repository.workStay.WorkStayRepository;
 import com.sloway.app.recent.viewed.dto.response.RecentViewedResDto;
 import com.sloway.app.recent.viewed.entity.RecentViewedEntity;
 import com.sloway.app.recent.viewed.repository.RecentViewedRepository;
@@ -25,6 +28,9 @@ public class RecentViewedService {
     private final RecentViewedRepository recentViewedRepository;
     private final MemberRepository memberRepository;
     private final PlaceRepository placeRepository;
+    private final OfficeRepository officeRepository;
+    private final WorkStayRepository workStayRepository;
+    private final StationRepository stationRepository;
 
     @Transactional
     public void save(Long memberNo, Long placeNo){
@@ -61,8 +67,20 @@ public class RecentViewedService {
                 .orElseThrow(()-> new CustomException(RsvnErrorCode.MEMBER_NOT_FOUND));
         return recentViewedRepository.findByMemberNoOrderByViewAtDesc(member)
                 .stream()
-                .map(RecentViewedResDto::from)
+                .map(entity -> RecentViewedResDto.from(entity, resolveEntityNo(entity.getPlaceNo())))
                 .toList();
+    }
+
+    // PlaceEntity → 해당 타입 엔티티의 PK(entityNo) 조회
+    private Long resolveEntityNo(PlaceEntity place) {
+        return switch (place.getType()) {
+            case "WORK_STAY" -> workStayRepository.findByPlaceNo(place.getNo())
+                    .map(w -> w.getNo()).orElse(null);
+            case "OFFICE"    -> officeRepository.findByPlaceNo(place.getNo())
+                    .map(o -> o.getNo()).orElse(null);
+            default          -> stationRepository.findByPlaceNo(place.getNo())
+                    .map(s -> s.getNo()).orElse(null);
+        };
     }
 
     //단건 삭제

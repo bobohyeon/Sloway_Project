@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import {
   FaSearch,
   FaBuilding,
@@ -9,6 +10,7 @@ import {
 import PageLayout from '../../../../app/layouts/page/PageLayout';
 import { useHostList } from '../../hooks/useHostList';
 import * as S from './HostListPage.styled';
+import { getPageNumbers } from '../../utils/pagination';
 
 const STATE_LABEL = {
   ACTIVE: '정상 운영',
@@ -16,6 +18,7 @@ const STATE_LABEL = {
 };
 
 function HostListPage() {
+  const navigate = useNavigate();
   const {
     loading,
     counts,
@@ -168,7 +171,14 @@ function HostListPage() {
                     <S.Td>{h.hostId}</S.Td>
                     <S.Td>
                       <S.HostCell>
-                        <S.HostName>{h.name}</S.HostName>
+                        <S.HostName
+                          onClick={() =>
+                            navigate(`/admin/host/list/${h.hostId}`)
+                          }
+                          style={{ cursor: 'pointer' }}
+                        >
+                          {h.name}
+                        </S.HostName>
                         <S.HostEmail>{h.email}</S.HostEmail>
                       </S.HostCell>
                     </S.Td>
@@ -206,31 +216,57 @@ function HostListPage() {
         </S.TableWrap>
 
         {/* 페이지네이션 */}
-        {totalPages > 1 && (
-          <S.Pagination>
-            <S.PageBtn
-              disabled={currentPage === 1}
-              onClick={() => setPage(currentPage - 1)}
-            >
-              이전
-            </S.PageBtn>
-            {Array.from({ length: totalPages }, (_, i) => i + 1).map((p) => (
-              <S.PageBtn
-                key={p}
-                $active={p === currentPage}
-                onClick={() => setPage(p)}
-              >
-                {p}
-              </S.PageBtn>
-            ))}
-            <S.PageBtn
-              disabled={currentPage === totalPages}
-              onClick={() => setPage(currentPage + 1)}
-            >
-              다음
-            </S.PageBtn>
-          </S.Pagination>
-        )}
+        {totalPages > 1 &&
+          (() => {
+            const {
+              pages,
+              hasPrevBlock,
+              hasNextBlock,
+              prevBlockPage,
+              nextBlockPage,
+            } = getPageNumbers(currentPage, totalPages);
+            return (
+              <S.Pagination>
+                <S.PageBtn
+                  disabled={currentPage === 1}
+                  onClick={() => setPage(currentPage - 1)}
+                >
+                  이전
+                </S.PageBtn>
+
+                {/* 이전 묶음으로 점프 */}
+                {hasPrevBlock && (
+                  <S.PageBtn onClick={() => setPage(prevBlockPage)}>
+                    …
+                  </S.PageBtn>
+                )}
+
+                {pages.map((p) => (
+                  <S.PageBtn
+                    key={p}
+                    $active={p === currentPage}
+                    onClick={() => setPage(p)}
+                  >
+                    {p}
+                  </S.PageBtn>
+                ))}
+
+                {/* 다음 묶음으로 점프 */}
+                {hasNextBlock && (
+                  <S.PageBtn onClick={() => setPage(nextBlockPage)}>
+                    …
+                  </S.PageBtn>
+                )}
+
+                <S.PageBtn
+                  disabled={currentPage === totalPages}
+                  onClick={() => setPage(currentPage + 1)}
+                >
+                  다음
+                </S.PageBtn>
+              </S.Pagination>
+            );
+          })()}
       </PageLayout>
 
       {/* 박탈 모달 */}

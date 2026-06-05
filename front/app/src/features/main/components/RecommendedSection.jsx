@@ -3,7 +3,7 @@ import { COLOR } from '../../rsvn/components/user/RsvnStyled';
 
 const RecommendedSection = ({
   RECOMMENDED = [],
-  onMore,
+  goSearch,
   goDetail,
   TYPE_MAP,
 }) => (
@@ -13,7 +13,7 @@ const RecommendedSection = ({
         <SectionTitle>이번 주 새싹 추천</SectionTitle>
         <SectionSub>평점과 인기도를 바탕으로 큐레이션했어요</SectionSub>
       </div>
-      <MoreLink onClick={onMore}>전체 보기 →</MoreLink>
+      <MoreLink onClick={goSearch}>전체 보기 →</MoreLink>
     </SectionRow>
     <RecoGrid>
       {RECOMMENDED.map((s, i) => (

@@ -28,3 +28,15 @@ export async function saveRsvn(dto) {
   const res = await api.post('/reservation', dto);
   return res.data;
 }
+
+export async function findReviewable() {
+  const res = await api.get('/reservation/reviewable');
+  return res.data;
+}
+
+export async function rejectRsvn(no, payNo) {
+  const res = await api.post(`/reservation/${no}/reject`, null, {
+    params: { payNo },
+  });
+  return res.data;
+}

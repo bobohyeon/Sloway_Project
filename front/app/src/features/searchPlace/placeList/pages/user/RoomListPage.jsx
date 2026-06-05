@@ -1,4 +1,6 @@
+import { useState, useEffect } from 'react';
 import { useNavigate, useParams, useLocation } from 'react-router-dom';
+import { findSpaceByEntityNo } from '../../../api/searchApi';
 import styled, { keyframes } from 'styled-components';
 import { COLOR } from '../../../../rsvn/components/user/RsvnStyled';
 import MainHeader from '../../../../main/layouts/MainHeader';
@@ -338,27 +340,27 @@ function RoomListPage() {
   const navigate = useNavigate();
   const { spaceId } = useParams();
   const { state } = useLocation();
+  const [space, setSpace] = useState(state?.space || null);
 
-  const space = state?.space || {
-    id: spaceId,
-    title: '공간명',
-    type: '워크앤스테이',
-    location: '위치 정보',
-    score: 4.9,
-    reviewCount: 0,
-    icon: '🏠',
-  };
+  useEffect(() => {
+    if (space) return; // state로 넘어온 경우 API 호출 불필요
+    findSpaceByEntityNo(spaceId)
+      .then(setSpace)
+      .catch(() => setSpace(null));
+  }, [spaceId]);
+
+  if (!space) return null;
 
   const rooms = ROOM_DATA[spaceId] || DEFAULT_ROOMS;
 
   // 방 선택 → 공간 유형에 따라 상세 페이지로 이동
   const goDetail = (room) => {
     const path =
-      space.type === 'office'
+      space.type === 'OFFICE'
         ? `/coworking-offices/${spaceId}`
-        : space.type === 'workstay'
+        : space.type === 'WORK_STAY'
           ? `/workstays/${spaceId}`
-          : `/accommodations/${spaceId}`;
+          : `/stations/${spaceId}`;
     navigate(path, { state: { selectedRoom: room, space } });
   };
 

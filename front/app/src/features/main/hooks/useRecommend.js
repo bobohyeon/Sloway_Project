@@ -13,9 +13,9 @@ export const useRecommend = () => {
   const [RANDOM_PLACE, setRANDOM_PLACE] = useState(null);
   const [loading, setLoading] = useState(true);
   const TYPE_MAP = {
-    STATION: '숙소',
-    OFFICE: '오피스',
-    WORK_STAY: '워크앤스테이',
+    station: '숙소',
+    office: '오피스',
+    workstay: '워크앤스테이',
   };
   useEffect(() => {
     const fetchAllData = async () => {
@@ -52,7 +52,7 @@ export const useRecommend = () => {
         ? `/coworking-offices/${id}`
         : type === 'WORK_STAY'
           ? `/workstays/${id}`
-          : `/accommodations/${id}`;
+          : `/stations/${id}`;
     navigate(path);
   };
 
@@ -64,7 +64,7 @@ export const useRecommend = () => {
     RANDOM_PLACE,
     goSearch,
     goDetail,
-    goBannerBook,
+
     navigate,
   };
 };

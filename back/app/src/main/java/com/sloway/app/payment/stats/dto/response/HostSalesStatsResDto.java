@@ -10,14 +10,15 @@ import java.util.List;
 @Builder
 public class HostSalesStatsResDto {
 
-    private Integer totalAmt;
+    private Long totalAmt;
     private Long payCount;
-    private Integer refundAmt;
-    private Integer avgAmt;
+    private Long refundAmt;
+    private Long avgAmt;
     private List<MonthlyTrendResDto> trend;
 
-    public static HostSalesStatsResDto of(Integer totalAmt, Long payCount, Integer refundAmt,List<MonthlyTrendResDto> trend) {
-        int avgAmt = payCount == 0 ? 0 : (int) (totalAmt / payCount);
+    // 금액 필드 Long — 공간별 월 매출이 int(약 21억)를 넘겨 음수 되는 것 방지
+    public static HostSalesStatsResDto of(Long totalAmt, Long payCount, Long refundAmt, List<MonthlyTrendResDto> trend) {
+        long avgAmt = payCount == 0 ? 0 : totalAmt / payCount;
 
         return HostSalesStatsResDto.builder()
                 .totalAmt(totalAmt)

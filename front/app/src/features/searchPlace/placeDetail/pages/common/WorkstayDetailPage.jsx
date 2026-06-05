@@ -1,11 +1,12 @@
 import { useState, useEffect } from 'react';
-import { useParams } from 'react-router-dom';
+import { useParams, useLocation } from 'react-router-dom';
 import DetailLayout from '../../layouts/DetailLayout';
 import DetailImageBox from '../../components/common/DetailImageBox';
 import DetailMainBox from '../../components/common/DetailMainBox';
 import DetailRsvnBox from '../../components/common/DetailRsvnBox';
 import { findReviewsByPlace } from '../../../../review/api/reviewApi';
 import { getWorkStayDetail } from '../../../api/searchApi';
+import { saveRecentViewed } from '../../../recentPlace/api/recentApi';
 
 const RSVN_INFO = {
   checkIn: '5월 8일',
@@ -16,6 +17,8 @@ const RSVN_INFO = {
 
 function WorkstayDetailPage() {
   const { id } = useParams();
+  const location = useLocation();
+  const selectedRoom = location.state?.selectedRoom ?? null;
   const [space, setSpace] = useState(null);
   const [reviews, setReviews] = useState([]);
 
@@ -24,10 +27,11 @@ function WorkstayDetailPage() {
       try {
         const [spaceData, reviewData] = await Promise.all([
           getWorkStayDetail(Number(id)),
-          findReviewsByPlace(Number(id)),
+          findReviewsByPlace(Number(id), 'WORK_STAY'),
         ]);
         setSpace(spaceData);
         setReviews(reviewData);
+        saveRecentViewed(spaceData.placeNo).catch(() => {});
       } catch (e) {
         console.error('데이터 조회 실패', e);
       }
@@ -49,12 +53,13 @@ function WorkstayDetailPage() {
       rsvnBox={
         <DetailRsvnBox
           rsvnInfo={RSVN_INFO}
-          price={185000}
+          price={selectedRoom?.price ?? space?.basePrice ?? 185000}
           priceUnit="원/박"
+          roomName={selectedRoom?.name ?? null}
           rsvnDto={{
             workStayNo: space?.entityNo,
             count: 2,
-            amt: space?.basePrice ?? 185000,
+            amt: selectedRoom?.price ?? space?.basePrice ?? 185000,
             checkIn: '2026-06-10T15:00:00',
             checkOut: '2026-06-12T11:00:00',
             special: null,

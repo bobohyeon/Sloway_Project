@@ -10,11 +10,11 @@ function Nav() {
   const { user, role } = useAuth();
   const path = location.pathname;
 
-  console.log(user);
   if (path.startsWith('/admin')) return <AdminNav />;
   if (path.startsWith('/host')) return <HostNav />;
   if (path.startsWith('/user')) return <UserNav />;
 
+  if (user?.role === 'A') return <AdminNav />;
   if (user?.role === 'H') return <HostNav />;
   if (user?.role === 'U') return <UserNav />;
 

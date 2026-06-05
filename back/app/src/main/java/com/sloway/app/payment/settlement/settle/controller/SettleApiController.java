@@ -46,6 +46,12 @@ public class SettleApiController {
         return ResponseEntity.ok(settleResDtoList);
     }
 
+    // 어드민 — 특정 호스트 정산 조회 (SecurityConfig 에서 ADMIN 권한 필요)
+    @GetMapping("/admin/host/{hostNo}")
+    public ResponseEntity<List<SettleResDto>> findSettleByHostNoForAdmin(@PathVariable Long hostNo) {
+        return ResponseEntity.ok(settleService.findSettleByHostNoForAdmin(hostNo));
+    }
+
 
     @PatchMapping("/{no}/complete")
     public ResponseEntity<SettleResDto> completeSettle(@PathVariable Long no) {

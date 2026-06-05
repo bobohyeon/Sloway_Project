@@ -10,6 +10,11 @@ export async function findRefundAll() {
   return resp.data;
 }
 
+export async function findMyRefunds(memberNo) {
+  const resp = await api.get(`/payment/refund/member/${memberNo}`);
+  return resp.data;
+}
+
 export async function findRefundByNo(no) {
   const resp = await api.get(`/payment/refund/${no}`);
   return resp.data;
