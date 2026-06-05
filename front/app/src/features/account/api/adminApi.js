@@ -105,3 +105,12 @@ export const getAdminHostAccount = async (hostId) => {
   const response = await api.get(`/payment/account/admin/host/${hostId}`);
   return response.data;
 };
+
+/**
+ * 어드민 — 호스트 공간 목록(서현진 도메인). GET /api/reservation/admin/host/{hostId}/spaces
+ * 응답(List<HostSpaceResDto>): [{ placeNo, spaceName, spaceType }]
+ */
+export const getAdminHostSpaces = async (hostId) => {
+  const response = await api.get(`/reservation/admin/host/${hostId}/spaces`);
+  return response.data;
+};

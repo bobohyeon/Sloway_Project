@@ -131,6 +131,16 @@ public class RsvnService {
                 .toList();
     }
 
+    //어드민 — 특정 호스트의 공간 목록 조회 (hostNo 직접)
+    public List<HostSpaceResDto> findHostSpacesForAdmin(Long hostNo) {
+        return hostPlaceRepository.findByHostEntityNo(hostNo)
+                .stream()
+                .map(HostSpaceResDto::from)
+                .filter(dto -> dto.getPlaceNo() != null)
+                .distinct()
+                .toList();
+    }
+
     //호스트 — 내 공간의 예약 목록 조회
     public List<RsvnResDto> findAllByHost(Long memberNo) {
         HostEntity host = hostRepository.findByMemberNo(memberNo)
