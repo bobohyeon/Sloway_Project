@@ -44,6 +44,13 @@ public class AccountService {
         if (accountEntity == null) return null;
         return AccountResDto.from(accountEntity);
     }
+
+    // 어드민 — hostNo 직접 조회 (호스트 본인 토큰용과 분리, ADMIN 권한 가정)
+    public AccountResDto findAccountByHostNoForAdmin(Long hostNo) {
+        AccountEntity accountEntity = accountRepository.findByHostNo(hostNo);
+        if (accountEntity == null) return null;
+        return AccountResDto.from(accountEntity);
+    }
 }
 
 

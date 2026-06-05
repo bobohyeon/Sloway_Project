@@ -216,6 +216,13 @@ public class StatsService {
         return HostSalesStatsResDto.of(totalAmt, payCount, refundAmt, trend);
     }
 
+    // 어드민 — hostNo 로 호스트 매출 통계 조회 (hostNo→memberNo 역변환 후 본인용 로직 재사용)
+    public HostSalesStatsResDto findHostSalesStatsForAdmin(Long hostNo, int year, int month, int months) {
+        HostEntity hostEntity = hostRepository.findById(hostNo)
+                .orElseThrow(() -> new CustomException(HostErrorCode.HOST_NOT_FOUND));
+        return findHostSalesStats(hostEntity.getMemberNo(), year, month, months);
+    }
+
     public SpaceStatsResDto findSpaceStats(int year, int month, int months) {
 
         YearMonth ym = YearMonth.of(year, month);
