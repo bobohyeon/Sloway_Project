@@ -60,6 +60,14 @@ public class RsvnController {
         return ResponseEntity.ok(dtoList);
     }
 
+    //어드민 — 특정 호스트의 공간 목록 조회
+    @GetMapping("/admin/host/{hostNo}/spaces")
+    public ResponseEntity<List<HostSpaceResDto>> findHostSpacesForAdmin(
+            @PathVariable Long hostNo
+    ){
+        return ResponseEntity.ok(rsvnService.findHostSpacesForAdmin(hostNo));
+    }
+
     //내 공간 예약 목록 조회 (호스트)
     @GetMapping("/host")
     public ResponseEntity<List<RsvnResDto>> findAllByHost(

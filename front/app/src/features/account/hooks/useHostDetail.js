@@ -6,10 +6,10 @@ import {
   getAdminHostStats, // 4번 — 매출/월별 추이
   getAdminHostSettleList, // 4번 — 정산목록(미정산 집계)
   getAdminHostAccount, // 4번 — 계좌
+  getAdminHostSpaces, // 서현진 — 공간 목록/개수
   // ── A안 운영데이터: 타 도메인 어드민 엔드포인트 회신되면 주석 해제 ──
   // getAdminHostReservationStats, // 보현 — 예약 건수
   // getAdminHostReviewStats,      // 보현 — 평점/리뷰수
-  // getAdminHostSpaces,           // 서현진 — 공간 목록/개수
 } from '../api/adminApi';
 
 // 백엔드 approvalState(P/A/R/V) → 화면 상태값 매핑 (useHostList와 동일)
@@ -46,17 +46,17 @@ export const useHostDetail = (hostId) => {
         statsRes, // 4번 — 매출/월별
         settleRes, // 4번 — 정산목록(미정산)
         accountRes, // 4번 — 계좌
+        spacesRes, // 서현진 — 공간 목록
         // reservationRes,  // 보현
         // reviewRes,       // 보현
-        // spacesRes,       // 서현진
       ] = await Promise.allSettled([
         getAdminHostDetail(hostId),
         getAdminHostStats(hostId, now.getFullYear(), now.getMonth() + 1, 12),
         getAdminHostSettleList(hostId),
         getAdminHostAccount(hostId),
+        getAdminHostSpaces(hostId),
         // getAdminHostReservationStats(hostId),
         // getAdminHostReviewStats(hostId),
-        // getAdminHostSpaces(hostId),
       ]);
 
       // 기본정보는 필수 — 실패하면 화면을 못 그리므로 에러로 처리
@@ -71,6 +71,8 @@ export const useHostDetail = (hostId) => {
         settleRes.status === 'fulfilled' ? settleRes.value ?? [] : [];
       const account =
         accountRes.status === 'fulfilled' ? accountRes.value : null;
+      const spaceList =
+        spacesRes.status === 'fulfilled' ? spacesRes.value ?? [] : [];
 
       // 미정산액 = 정산대기(WAITING) 건의 지급액(payoutAmt) 합
       const unsettledAmount = settleList
@@ -94,12 +96,13 @@ export const useHostDetail = (hostId) => {
         rejectReason: data.rejectReason,
 
         stats: {
-          // 타 도메인(보현/서현진) 미연동 — 회신되면 교체
+          // 보현(예약/리뷰) 미연동 — 회신되면 교체
           averageRating: 0,
           reviewCount: 0,
-          spaceCount: 0,
           ongoingReservationCount: 0,
           completedReservationCount: 0,
+          // 서현진(공간) 실데이터
+          spaceCount: spaceList.length,
           // 4번 도메인 실데이터
           totalRevenue: salesStats?.totalAmt ?? 0,
           unsettledAmount,
@@ -115,7 +118,14 @@ export const useHostDetail = (hostId) => {
           month: t.yearMonth,
           revenue: t.totalAmt,
         })),
-        spaces: [], // 서현진 공간 API 회신되면 연동
+        // 서현진 공간 목록: [{placeNo, spaceName, spaceType}] → 화면용
+        spaces: spaceList.map((s) => ({
+          id: s.placeNo,
+          name: s.spaceName,
+          type: s.spaceType,
+          reservationCount: 0, // 예약 도메인(보현) 연동 전
+          basePrice: 0, // 가격 정보 연동 전
+        })),
       });
     } catch (err) {
       setError(
