@@ -9,15 +9,14 @@ import { HorizontalBarChart } from '../../components/admin/HorizontalBarChart';
 import { StatsTabs } from '../../components/admin/StatsTabs';
 import { DataTable } from '../../components/admin/DataTable';
 import { findSpaceStats } from '../../api/statsApi';
+import { StatsRangeTabs } from '../../components/admin/StatsRangeTabs';
+import { rangeLabel } from '../../components/admin/statsRange';
 
 const TYPE_META = {
   office: { label: '오피스', color: '#0064FF' },
   station: { label: '숙소', color: 'var(--sage)' },
   workStay: { label: '워크앤스테이', color: '#F5A623' },
 };
-
-const YEAR_OPTIONS = [2024, 2025, 2026];
-const MONTH_OPTIONS = Array.from({ length: 12 }, (_, i) => i + 1);
 
 function getPrevMonth() {
   const d = new Date();
@@ -27,9 +26,8 @@ function getPrevMonth() {
 }
 
 export default function SpaceStats() {
-  const init = useMemo(() => getPrevMonth(), []);
-  const [year, setYear] = useState(init.year);
-  const [month, setMonth] = useState(init.month);
+  const { year, month } = useMemo(() => getPrevMonth(), []);
+  const [months, setMonths] = useState(1);
 
   const [stats, setStats] = useState(null);
   const [loading, setLoading] = useState(false);
@@ -41,7 +39,7 @@ export default function SpaceStats() {
     setLoading(true);
     setError(null);
 
-    findSpaceStats(year, month)
+    findSpaceStats(year, month, months)
       .then((data) => {
         if (alive) setStats(data);
       })
@@ -56,7 +54,7 @@ export default function SpaceStats() {
     return () => {
       alive = false;
     };
-  }, [year, month]);
+  }, [year, month, months]);
 
   const typeChartData = (stats?.byType ?? []).map((row) => {
     const meta = TYPE_META[row.type] ?? { label: row.type, color: 'var(--sage)' };
@@ -70,30 +68,11 @@ export default function SpaceStats() {
   return (
     <PageLayout
       title="공간 통계"
-      description={`${year}년 ${month}월 공간 등록·운영 현황`}
+      description={`${rangeLabel(months)} 공간 등록·운영 현황`}
       maxWidth={1200}
     >
       <FilterBar>
-        <FilterGroup>
-          <FilterLabel>연도</FilterLabel>
-          <Select value={year} onChange={(e) => setYear(Number(e.target.value))}>
-            {YEAR_OPTIONS.map((y) => (
-              <option key={y} value={y}>
-                {y}년
-              </option>
-            ))}
-          </Select>
-        </FilterGroup>
-        <FilterGroup>
-          <FilterLabel>월</FilterLabel>
-          <Select value={month} onChange={(e) => setMonth(Number(e.target.value))}>
-            {MONTH_OPTIONS.map((m) => (
-              <option key={m} value={m}>
-                {m}월
-              </option>
-            ))}
-          </Select>
-        </FilterGroup>
+        <StatsRangeTabs value={months} onChange={setMonths} />
         {loading && <StatusText>불러오는 중...</StatusText>}
         {error && <ErrorText>{error}</ErrorText>}
       </FilterBar>

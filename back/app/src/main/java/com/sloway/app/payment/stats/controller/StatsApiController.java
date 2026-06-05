@@ -21,51 +21,51 @@ public class StatsApiController {
     private final StatsService statsService;
 
     @GetMapping("/summary")
-    public ResponseEntity<MonthlySalesResDto> findStatsMonthlySales(@RequestParam int year, @RequestParam int month) {
-        MonthlySalesResDto resDto = statsService.findStatsMonthlySales(year, month);
+    public ResponseEntity<MonthlySalesResDto> findStatsMonthlySales(@RequestParam int year, @RequestParam int month, @RequestParam(defaultValue = "1") int months) {
+        MonthlySalesResDto resDto = statsService.findStatsMonthlySales(year, month, months);
         return ResponseEntity.ok(resDto);
     }
 
     @GetMapping("/methods")
-    public ResponseEntity<List<PayMethodStatResDto>> findStatsPayMethods(@RequestParam int year, @RequestParam int month) {
-        List<PayMethodStatResDto> resDtoList = statsService.findStatsPayMethods(year, month);
+    public ResponseEntity<List<PayMethodStatResDto>> findStatsPayMethods(@RequestParam int year, @RequestParam int month, @RequestParam(defaultValue = "1") int months) {
+        List<PayMethodStatResDto> resDtoList = statsService.findStatsPayMethods(year, month, months);
         return ResponseEntity.ok(resDtoList);
     }
 
     @GetMapping("/trend")
-    public ResponseEntity<List<MonthlyTrendResDto>> findStatsMonthlyTrend(@RequestParam int year, @RequestParam int month) {
-        List<MonthlyTrendResDto> resDtoList = statsService.findStatsMonthlyTrend(year, month);
+    public ResponseEntity<List<MonthlyTrendResDto>> findStatsMonthlyTrend(@RequestParam int year, @RequestParam int month, @RequestParam(defaultValue = "1") int months) {
+        List<MonthlyTrendResDto> resDtoList = statsService.findStatsMonthlyTrend(year, month, months);
         return ResponseEntity.ok(resDtoList);
     }
 
 
     @GetMapping("/refund")
-    public ResponseEntity<RefundStatResDto> findStatsRefund(@RequestParam int year, @RequestParam int month) {
-        RefundStatResDto resDto = statsService.findStatsRefund(year, month);
+    public ResponseEntity<RefundStatResDto> findStatsRefund(@RequestParam int year, @RequestParam int month, @RequestParam(defaultValue = "1") int months) {
+        RefundStatResDto resDto = statsService.findStatsRefund(year, month, months);
         return ResponseEntity.ok(resDto);
     }
 
     @GetMapping("/host")
-    public ResponseEntity<HostSalesStatsResDto> findHostSalesStats(@AuthenticationPrincipal CustomUserDetails host, @RequestParam int year, @RequestParam int month) {
-        HostSalesStatsResDto resDto = statsService.findHostSalesStats(host.getMemberNo(), year, month);
+    public ResponseEntity<HostSalesStatsResDto> findHostSalesStats(@AuthenticationPrincipal CustomUserDetails host, @RequestParam int year, @RequestParam int month, @RequestParam(defaultValue = "1") int months) {
+        HostSalesStatsResDto resDto = statsService.findHostSalesStats(host.getMemberNo(), year, month, months);
         return ResponseEntity.ok(resDto);
     }
 
     @GetMapping("/space")
-    public ResponseEntity<SpaceStatsResDto> findSpaceStat(@RequestParam int year, @RequestParam int month) {
-        SpaceStatsResDto resDto = statsService.findSpaceStats(year, month);
+    public ResponseEntity<SpaceStatsResDto> findSpaceStat(@RequestParam int year, @RequestParam int month, @RequestParam(defaultValue = "1") int months) {
+        SpaceStatsResDto resDto = statsService.findSpaceStats(year, month, months);
         return ResponseEntity.ok(resDto);
     }
 
     @GetMapping("/booking")
-    public ResponseEntity<BookingStatsResDto> findBookingStats(@RequestParam int year, @RequestParam int month) {
-        BookingStatsResDto resDto = statsService.findBookingStats(year, month);
+    public ResponseEntity<BookingStatsResDto> findBookingStats(@RequestParam int year, @RequestParam int month, @RequestParam(defaultValue = "1") int months) {
+        BookingStatsResDto resDto = statsService.findBookingStats(year, month, months);
         return ResponseEntity.ok(resDto);
     }
 
     @GetMapping("/member")
-    public ResponseEntity<MemberStatsResDto> findMemberStats(@RequestParam int year, @RequestParam int month) {
-        MemberStatsResDto resDto = statsService.findMemberStats(year, month);
+    public ResponseEntity<MemberStatsResDto> findMemberStats(@RequestParam int year, @RequestParam int month, @RequestParam(defaultValue = "1") int months) {
+        MemberStatsResDto resDto = statsService.findMemberStats(year, month, months);
         return ResponseEntity.ok(resDto);
     }
 
