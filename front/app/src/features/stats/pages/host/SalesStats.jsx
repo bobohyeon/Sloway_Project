@@ -6,7 +6,6 @@ import PageLayout from '../../../../app/layouts/page/PageLayout';
 import { StatCard } from '../../../pay_shared/components/StatCard';
 import { Card, Section } from '../../../pay_shared/components';
 import { VerticalBarChart } from '../../components/admin/VerticalBarChart';
-import { StatsTabs } from '../../components/admin/StatsTabs';
 import { DataTable } from '../../components/admin/DataTable';
 import { findHostSalesStats } from '../../api/statsApi';
 import { StatsRangeTabs } from '../../components/admin/StatsRangeTabs';
@@ -30,7 +29,6 @@ export default function SalesStats() {
   const [stats, setStats] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
-  const [view, setView] = useState('chart');
 
   useEffect(() => {
     let alive = true;
@@ -74,7 +72,7 @@ export default function SalesStats() {
 
       <KPIGrid>
         <StatCard
-          label="이번 달 매출"
+          label="총 매출"
           value={Number(stats?.totalAmt ?? 0).toLocaleString()}
           unit="원"
           icon={<FaCoins />}
@@ -100,17 +98,8 @@ export default function SalesStats() {
         />
       </KPIGrid>
 
-      <StatsTabs
-        active={view}
-        onChange={setView}
-        tabs={[
-          { key: 'chart', label: '차트' },
-          { key: 'list', label: '리스트' },
-        ]}
-      />
-
-      {view === 'chart' ? (
-        trendChartData.length > 0 ? (
+      <ChartBlock>
+        {trendChartData.length > 0 ? (
           <VerticalBarChart
             title={`${rangeLabel(months)} 매출 추이`}
             data={trendChartData}
@@ -120,17 +109,17 @@ export default function SalesStats() {
           <Section title={`${rangeLabel(months)} 매출 추이`}>
             <EmptyCard padded>표시할 매출 추이 데이터가 없습니다.</EmptyCard>
           </Section>
-        )
-      ) : (
-        <DataTable
-          title={`${rangeLabel(months)} 매출 추이`}
-          columns={['월', '매출']}
-          rows={trendChartData.map((d) => [
-            `${d.label}월`,
-            `${Number(d.value).toLocaleString()}원`,
-          ])}
-        />
-      )}
+        )}
+      </ChartBlock>
+
+      <DataTable
+        title={`${rangeLabel(months)} 매출 추이`}
+        columns={['월', '매출']}
+        rows={trendChartData.map((d) => [
+          `${d.label}월`,
+          `${Number(d.value).toLocaleString()}원`,
+        ])}
+      />
     </PageLayout>
   );
 }
@@ -195,6 +184,10 @@ const KPIGrid = styled.div`
   @media (max-width: 480px) {
     grid-template-columns: 1fr;
   }
+`;
+
+const ChartBlock = styled.div`
+  margin-bottom: var(--space-5);
 `;
 
 const EmptyCard = styled(Card)`

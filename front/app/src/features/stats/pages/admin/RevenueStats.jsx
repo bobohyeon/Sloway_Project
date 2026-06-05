@@ -7,7 +7,6 @@ import PageLayout from '../../../../app/layouts/page/PageLayout';
 import { StatCard } from '../../../pay_shared/components/StatCard';
 import { Card, Section, EmptyState } from '../../../pay_shared/components';
 import { VerticalBarChart } from '../../components/admin/VerticalBarChart';
-import { StatsTabs } from '../../components/admin/StatsTabs';
 import { DataTable } from '../../components/admin/DataTable';
 import {
   findStatsMonthlySales,
@@ -34,7 +33,6 @@ export default function RevenueStats() {
   const [refund, setRefund] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
-  const [view, setView] = useState('chart');
 
   useEffect(() => {
     let alive = true;
@@ -86,46 +84,35 @@ export default function RevenueStats() {
         <StatCard label="환불율" value={Number(refund?.refundRate ?? 0)} unit="%" icon={<FaUndo />} />
       </KPIGrid>
 
-      <StatsTabs
-        active={view}
-        onChange={setView}
-        tabs={[
-          { key: 'chart', label: '차트' },
-          { key: 'list', label: '리스트' },
-        ]}
-      />
+      <ChartBlock>
+        {trendData.length > 0 ? (
+          <VerticalBarChart
+            title={`${rangeLabel(months)} 매출 추이`}
+            data={trendData}
+            formatValue={(v) =>
+              `${Math.floor(Number(v) / 10000).toLocaleString()}만`
+            }
+          />
+        ) : (
+          <Section title={`${rangeLabel(months)} 매출 추이`}>
+            <EmptyCard padded>
+              <EmptyState
+                title="시계열 데이터가 없습니다"
+                description="배치 적재 진입 후 노출됩니다."
+              />
+            </EmptyCard>
+          </Section>
+        )}
+      </ChartBlock>
 
-      {view === 'chart' ? (
-        <ChartBlock>
-          {trendData.length > 0 ? (
-            <VerticalBarChart
-              title={`${rangeLabel(months)} 매출 추이`}
-              data={trendData}
-              formatValue={(v) =>
-                `${Math.floor(Number(v) / 10000).toLocaleString()}만`
-              }
-            />
-          ) : (
-            <Section title={`${rangeLabel(months)} 매출 추이`}>
-              <EmptyCard padded>
-                <EmptyState
-                  title="시계열 데이터가 없습니다"
-                  description="배치 적재 진입 후 노출됩니다."
-                />
-              </EmptyCard>
-            </Section>
-          )}
-        </ChartBlock>
-      ) : (
-        <DataTable
-          title={`${rangeLabel(months)} 매출 추이`}
-          columns={['월', '매출']}
-          rows={trendData.map((d) => [
-            `${d.label}월`,
-            `${Number(d.value).toLocaleString()}원`,
-          ])}
-        />
-      )}
+      <DataTable
+        title={`${rangeLabel(months)} 매출 추이`}
+        columns={['월', '매출']}
+        rows={trendData.map((d) => [
+          `${d.label}월`,
+          `${Number(d.value).toLocaleString()}원`,
+        ])}
+      />
     </PageLayout>
   );
 }
