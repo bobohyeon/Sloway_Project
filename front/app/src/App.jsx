@@ -12,7 +12,7 @@ import SignupPage from './features/auth/pages/user/SignupPage';
 import FindAccountPage from './features/auth/pages/user/FindAccountPage';
 import ResetPasswordPage from './features/auth/pages/user/ResetPasswordPage';
 import OAuthCallbackPage from './features/auth/pages/user/OAuthCallbackPage';
-
+import RoleRoute from './features/auth/components/RoleRoute';
 // ── 인증 (호스트) ─────────────────────────────────────────
 import HostSignupPage from './features/auth/pages/host/HostSignupPage';
 import HostLoginPage from './features/auth/pages/host/HostLoginPage';
@@ -271,234 +271,254 @@ function App() {
           공통 레이아웃 (헤더 + 사이드 Nav + 푸터)
           ════════════════════════════════════════════ */}
       <Route element={<DefaultLayouts />}>
-        {/* ══ USER ══ */}
-        {/* 내 정보 */}
-        <Route path="/user/mypage" element={<MyPage />} />
-        <Route path="/user/profile" element={<ProfilePage />} />
-        <Route path="/user/profile/edit" element={<ProfileEditPage />} />
-        <Route path="/user/password" element={<ChangePasswordPage />} />
-        <Route path="/user/withdraw" element={<WithdrawPage />} />
-        {/* 호스트 신청 */}
-        <Route path="/user/host/status" element={<HostStatusPage />} />
-        {/* 예약 */}
-        <Route path="/user/reservation" element={<RsvnListPage />} />
-        <Route
-          path="/user/reservation/calendar"
-          element={<RsvnCalendarPage />}
-        />
-        <Route path="/user/reservation/cancel" element={<RefundListPage />} />
-        <Route path="/user/reservation/:id" element={<RsvnDetailPage />} />
-        {/* 결제·지갑 */}
-        <Route path="/user/payment/receipt" element={<CashReceipt />} />
-        <Route path="/user/payment" element={<PaymentHistory />} />
-        <Route path="/user/payment/method" element={<PaymentMethods />} />
-        <Route path="/user/payment/:no" element={<PaymentDetail />} />
-        <Route path="/user/point" element={<PointHistory />} />
-        <Route path="/user/coupon/event" element={<CouponEvent />} />
-        <Route path="/user/coupon" element={<MyCoupons />} />
-        {/* 환불 */}
-        <Route path="/user/refund/request" element={<RefundRequest />} />
-        <Route path="/user/refund/complete" element={<RefundComplete />} />
-        {/* 활동 */}
-        <Route path="/user/wishlist" element={<WishListPage />} />
-        <Route path="/user/recent" element={<RecentPlacePage />} />
-        <Route path="/user/review" element={<MyReviewPage />} />
-        <Route path="/user/review/write" element={<ReviewWritePage />} />
-        <Route path="/user/review/edit/:id" element={<ReviewEditPage />} />
-        <Route path="/user/review/report" element={<ReviewReportPage />} />
-        <Route path="/review/:id" element={<ReviewDetailPage />} />
-        <Route path="/user/inquiry" element={<InquiryListPage />} />
-        <Route path="/user/inquiry/form" element={<InquiryFormPage />} />
-        <Route
-          path="/user/inquiry/form/:id"
-          element={<InquiryFormPage isEdit />}
-        />
-        <Route path="/user/inquiry/:id" element={<InquiryDetailPage />} />
-        {/* 소통 */}
-        <Route path="/user/chat" element={<UserChatListPage />} />
-        <Route path="/user/chat/:id" element={<UserChatDetailPage />} />
-        <Route path="/user/notification" element={<NotificationListPage />} />
-        <Route
-          path="/user/notification/setting"
-          element={<NotificationSettingsPage />}
-        />
-        {/* 공지·FAQ */}
+        {/* ══ 공통 (로그인 무관 — 가드 밖) ══ */}
         <Route path="/notice" element={<NoticeListPage />} />
         <Route path="/notice/:id" element={<NoticeDetailPage />} />
         <Route path="/faq" element={<FaqListPage />} />
-        {/* 챗봇 */}
-        <Route path="/chatbot" element={<Todo label="AI 챗봇" />} />
-        {/* ══ HOST ══ */}
-        {/* 운영 */}
-        <Route path="/host/dashboard" element={<HostDashboard />} />
-        <Route path="/host/profile" element={<HostProfilePage />} />
-        <Route path="/host/profile/edit" element={<HostProfileEditPage />} />
-        <Route path="/host/password" element={<HostChangePasswordPage />} />
-        <Route path="/host/withdraw" element={<HostWithdrawPage />} />
-        <Route path="/host/application" element={<HostStatusPage />} />
-        <Route
-          path="/host/license"
-          element={<Todo label="사업자등록증 인증" />}
-        />
-        {/* 공간 관리 */}
-        <Route path="/host/space/list" element={<SpaceListPage />} />
-        <Route path="/host/space" element={<InsertSpacePage />} />
-        <Route path="/host/space/:id" element={<SpaceDetailPage />} />
-        <Route path="/host/space/:id/edit" element={<SpaceUpdatePage />} />
-        <Route path="/host/space/:id/images" element={<ImageUpdatePage />} />
-        {/* 숙소 */}
-        <Route path="/host/lodging" element={<InsertStationPage />} />
-        <Route path="/host/lodging/:id" element={<StationDetailPage />} />
-        <Route path="/host/lodging/:id/edit" element={<UpdateStationPage />} />
-        <Route path="/host/lodging/:id/images" element={<ImageUpdatePage />} />
-        {/* 워크앤스테이 */}
-        <Route path="/host/workstay" element={<InsertWorkPage />} />
-        <Route path="/host/workstay/:id" element={<StationDetailPage />} />
-        <Route path="/host/workstay/:id/edit" element={<UpdateWorkPage />} />
-        <Route path="/host/workstay/:id/images" element={<ImageUpdatePage />} />
-        {/* 코워킹오피스 */}
-        <Route path="/host/coworking" element={<InsertCoworkingPage />} />
-        <Route path="/host/coworking/:id" element={<StationDetailPage />} />
-        <Route
-          path="/host/coworking/:id/edit"
-          element={<UpdateCoworkingPage />}
-        />
-        <Route
-          path="/host/coworking/:id/images"
-          element={<ImageUpdatePage />}
-        />
-        <Route
-          path="/host/coworking/:id/pricing"
-          element={<Todo label="코워킹오피스 요금 설정" />}
-        />
-        {/* 예약 관리 */}
-        <Route path="/host/reservation/list" element={<HostRsvnListPage />} />
-        <Route
-          path="/host/reservation/list/:id"
-          element={<HostRsvnDetailPage />}
-        />
-        <Route
-          path="/host/reservation/calendar"
-          element={<HostRsvnCalendarPage />}
-        />
-        <Route path="/host/reservation/block" element={<BlackoutPage />} />
-        <Route
-          path="/host/reservation/block/add"
-          element={<BlackoutAddPage />}
-        />
-        <Route
-          path="/host/reservation/block/edit/:id"
-          element={<BlackoutEditPage />}
-        />
-        {/* 정산·통계 */}
-        <Route
-          path="/host/settlement/dashboard"
-          element={<SettlementDashboard />}
-        />
-        <Route
-          path="/host/settlement/history"
-          element={<SettlementHistory />}
-        />
-        <Route
-          path="/host/settlement/history/:no"
-          element={<SettlementDetail />}
-        />
-        <Route
-          path="/host/settlement/account"
-          element={<SettlementAccount />}
-        />
-        <Route path="/host/settlement/fee" element={<CommissionPolicy />} />
-        <Route path="/host/settlement/tax" element={<TaxInvoice />} />
-        <Route path="/host/stats/sales" element={<SalesStats />} />
-        {/* 소통 */}
-        <Route path="/host/inquiry" element={<InquiryListPage />} />
-        <Route path="/host/inquiry/form" element={<InquiryFormPage />} />
-        <Route
-          path="/host/inquiry/form/:id"
-          element={<InquiryFormPage isEdit />}
-        />
-        <Route path="/host/inquiry/:id" element={<InquiryDetailPage />} />
-        <Route path="/host/review" element={<HostReviewPage />} />
-        <Route path="/host/chat" element={<HostChatListPage />} />
-        <Route path="/host/chat/:id" element={<HostChatDetailPage />} />
-        <Route
-          path="/host/notification"
-          element={<HostNotificationListPage />}
-        />
-        <Route
-          path="/host/notification/setting"
-          element={<HostNotificationSettingsPage />}
-        />
-        {/* ══ ADMIN ══ */}
-        {/* 대시보드 */}
-        <Route path="/admin/dashboard" element={<AdminDashboard />} />
-        {/* 회원 관리 */}
-        <Route path="/admin/members" element={<MemberListPage />} />
-        <Route path="/admin/members/:id" element={<MemberDetailPage />} />
-        {/* 호스트 관리 */}
-        <Route path="/admin/host/apply" element={<HostApplyListPage />} />
-        <Route path="/admin/host/apply/:id" element={<HostApplyDetailPage />} />
-        <Route path="/admin/host/list" element={<HostListPage />} />
-        <Route path="/admin/host/list/:hostId" element={<HostDetailPage />} />
-        {/* 공간 검수 */}
-        <Route path="/admin/space/review" element={<SpaceApprovalPage />} />
-        <Route
-          path="/admin/space/review/:type/:id"
-          element={<SpaceApprovalDetailPage />}
-        />
-        {/* 편의시설 관리 */}
-        <Route path="/admin/amenity" element={<AmenityPage />} />
-        {/* 예약·리뷰 */}
-        <Route path="/admin/reservation" element={<AdminRsvnListPage />} />
-        <Route
-          path="/admin/reservation/:id"
-          element={<AdminRsvnDetailPage />}
-        />
-        <Route path="/admin/review/report" element={<AdminReviewPage />} />
-        <Route
-          path="/admin/review/report/:id"
-          element={<AdminReviewReportPage />}
-        />
-        {/* 결제·환불 */}
-        <Route path="/admin/payment" element={<AdminPaymentList />} />
-        <Route path="/admin/payment/:no" element={<AdminPaymentDetail />} />
-        <Route path="/admin/refund" element={<RefundList />} />
-        <Route path="/admin/refund/:no" element={<RefundDetail />} />
-        {/* 정산·수수료 */}
-        <Route
-          path="/admin/settlement/host"
-          element={<AdminSettlementList />}
-        />
-        <Route
-          path="/admin/settlement/host/:no"
-          element={<AdminSettlementDetail />}
-        />
-        <Route
-          path="/admin/settlement/fee"
-          element={<AdminCommissionPolicy />}
-        />
-        {/* 쿠폰 게시 (어드민) */}
-        <Route path="/admin/coupon/event" element={<AdminCouponEvent />} />
-        {/* 통계 */}
-        <Route path="/admin/stats/sales" element={<StatsOverview />} />
-        <Route path="/admin/stats/revenue" element={<RevenueStats />} />
-        <Route path="/admin/stats/booking" element={<BookingStats />} />
-        <Route path="/admin/stats/member" element={<MemberStats />} />
-        <Route path="/admin/stats/space" element={<SpaceStats />} />
-        {/* 운영 */}
-        <Route path="/admin/inquiry" element={<InquiryManagePage />} />
-        <Route path="/admin/inquiry/:id" element={<InquiryDetailPage />} />
-        <Route path="/admin/notice" element={<NoticeManagePage />} />
-        <Route path="/admin/notice/form" element={<NoticeFormPage />} />
-        <Route
-          path="/admin/notice/form/:id"
-          element={<NoticeFormPage isEdit />}
-        />
-        <Route path="/admin/faq" element={<FaqManagePage />} />
-        <Route path="/admin/faq/form" element={<FaqFormPage />} />
-        <Route path="/admin/faq/form/:id" element={<FaqFormPage isEdit />} />
-      </Route>
+        <Route path="/review/:id" element={<ReviewDetailPage />} />
 
+        {/* ══ USER ══ */}
+        <Route element={<RoleRoute allow="USER" />}>
+          {/* 내 정보 */}
+          <Route path="/user/mypage" element={<MyPage />} />
+          <Route path="/user/profile" element={<ProfilePage />} />
+          <Route path="/user/profile/edit" element={<ProfileEditPage />} />
+          <Route path="/user/password" element={<ChangePasswordPage />} />
+          <Route path="/user/withdraw" element={<WithdrawPage />} />
+          {/* 호스트 신청 */}
+          <Route path="/user/host/status" element={<HostStatusPage />} />
+          {/* 예약 */}
+          <Route path="/user/reservation" element={<RsvnListPage />} />
+          <Route
+            path="/user/reservation/calendar"
+            element={<RsvnCalendarPage />}
+          />
+          <Route path="/user/reservation/cancel" element={<RefundListPage />} />
+          <Route path="/user/reservation/:id" element={<RsvnDetailPage />} />
+          {/* 결제·지갑 */}
+          <Route path="/user/payment/receipt" element={<CashReceipt />} />
+          <Route path="/user/payment" element={<PaymentHistory />} />
+          <Route path="/user/payment/method" element={<PaymentMethods />} />
+          <Route path="/user/payment/:no" element={<PaymentDetail />} />
+          <Route path="/user/point" element={<PointHistory />} />
+          <Route path="/user/coupon/event" element={<CouponEvent />} />
+          <Route path="/user/coupon" element={<MyCoupons />} />
+          {/* 환불 */}
+          <Route path="/user/refund/request" element={<RefundRequest />} />
+          <Route path="/user/refund/complete" element={<RefundComplete />} />
+          {/* 활동 */}
+          <Route path="/user/wishlist" element={<WishListPage />} />
+          <Route path="/user/recent" element={<RecentPlacePage />} />
+          <Route path="/user/review" element={<MyReviewPage />} />
+          <Route path="/user/review/write" element={<ReviewWritePage />} />
+          <Route path="/user/review/edit/:id" element={<ReviewEditPage />} />
+          <Route path="/user/review/report" element={<ReviewReportPage />} />
+          <Route path="/user/inquiry" element={<InquiryListPage />} />
+          <Route path="/user/inquiry/form" element={<InquiryFormPage />} />
+          <Route
+            path="/user/inquiry/form/:id"
+            element={<InquiryFormPage isEdit />}
+          />
+          <Route path="/user/inquiry/:id" element={<InquiryDetailPage />} />
+          {/* 소통 */}
+          <Route path="/user/chat" element={<UserChatListPage />} />
+          <Route path="/user/chat/:id" element={<UserChatDetailPage />} />
+          <Route path="/user/notification" element={<NotificationListPage />} />
+          <Route
+            path="/user/notification/setting"
+            element={<NotificationSettingsPage />}
+          />
+          {/* 챗봇 */}
+          <Route path="/chatbot" element={<Todo label="AI 챗봇" />} />
+        </Route>
+
+        {/* ══ HOST ══ */}
+        <Route element={<RoleRoute allow="HOST" />}>
+          {/* 운영 */}
+          <Route path="/host/dashboard" element={<HostDashboard />} />
+          <Route path="/host/profile" element={<HostProfilePage />} />
+          <Route path="/host/profile/edit" element={<HostProfileEditPage />} />
+          <Route path="/host/password" element={<HostChangePasswordPage />} />
+          <Route path="/host/withdraw" element={<HostWithdrawPage />} />
+          <Route path="/host/application" element={<HostStatusPage />} />
+          <Route
+            path="/host/license"
+            element={<Todo label="사업자등록증 인증" />}
+          />
+          {/* 공간 관리 */}
+          <Route path="/host/space/list" element={<SpaceListPage />} />
+          <Route path="/host/space" element={<InsertSpacePage />} />
+          <Route path="/host/space/:id" element={<SpaceDetailPage />} />
+          <Route path="/host/space/:id/edit" element={<SpaceUpdatePage />} />
+          <Route path="/host/space/:id/images" element={<ImageUpdatePage />} />
+          {/* 숙소 */}
+          <Route path="/host/lodging" element={<InsertStationPage />} />
+          <Route path="/host/lodging/:id" element={<StationDetailPage />} />
+          <Route
+            path="/host/lodging/:id/edit"
+            element={<UpdateStationPage />}
+          />
+          <Route
+            path="/host/lodging/:id/images"
+            element={<ImageUpdatePage />}
+          />
+          {/* 워크앤스테이 */}
+          <Route path="/host/workstay" element={<InsertWorkPage />} />
+          <Route path="/host/workstay/:id" element={<StationDetailPage />} />
+          <Route path="/host/workstay/:id/edit" element={<UpdateWorkPage />} />
+          <Route
+            path="/host/workstay/:id/images"
+            element={<ImageUpdatePage />}
+          />
+          {/* 코워킹오피스 */}
+          <Route path="/host/coworking" element={<InsertCoworkingPage />} />
+          <Route path="/host/coworking/:id" element={<StationDetailPage />} />
+          <Route
+            path="/host/coworking/:id/edit"
+            element={<UpdateCoworkingPage />}
+          />
+          <Route
+            path="/host/coworking/:id/images"
+            element={<ImageUpdatePage />}
+          />
+          <Route
+            path="/host/coworking/:id/pricing"
+            element={<Todo label="코워킹오피스 요금 설정" />}
+          />
+          {/* 예약 관리 */}
+          <Route path="/host/reservation/list" element={<HostRsvnListPage />} />
+          <Route
+            path="/host/reservation/list/:id"
+            element={<HostRsvnDetailPage />}
+          />
+          <Route
+            path="/host/reservation/calendar"
+            element={<HostRsvnCalendarPage />}
+          />
+          <Route path="/host/reservation/block" element={<BlackoutPage />} />
+          <Route
+            path="/host/reservation/block/add"
+            element={<BlackoutAddPage />}
+          />
+          <Route
+            path="/host/reservation/block/edit/:id"
+            element={<BlackoutEditPage />}
+          />
+          {/* 정산·통계 */}
+          <Route
+            path="/host/settlement/dashboard"
+            element={<SettlementDashboard />}
+          />
+          <Route
+            path="/host/settlement/history"
+            element={<SettlementHistory />}
+          />
+          <Route
+            path="/host/settlement/history/:no"
+            element={<SettlementDetail />}
+          />
+          <Route
+            path="/host/settlement/account"
+            element={<SettlementAccount />}
+          />
+          <Route path="/host/settlement/fee" element={<CommissionPolicy />} />
+          <Route path="/host/settlement/tax" element={<TaxInvoice />} />
+          <Route path="/host/stats/sales" element={<SalesStats />} />
+          {/* 소통 */}
+          <Route path="/host/inquiry" element={<InquiryListPage />} />
+          <Route path="/host/inquiry/form" element={<InquiryFormPage />} />
+          <Route
+            path="/host/inquiry/form/:id"
+            element={<InquiryFormPage isEdit />}
+          />
+          <Route path="/host/inquiry/:id" element={<InquiryDetailPage />} />
+          <Route path="/host/review" element={<HostReviewPage />} />
+          <Route path="/host/chat" element={<HostChatListPage />} />
+          <Route path="/host/chat/:id" element={<HostChatDetailPage />} />
+          <Route
+            path="/host/notification"
+            element={<HostNotificationListPage />}
+          />
+          <Route
+            path="/host/notification/setting"
+            element={<HostNotificationSettingsPage />}
+          />
+        </Route>
+
+        {/* ══ ADMIN ══ */}
+        <Route element={<RoleRoute allow="ADMIN" />}>
+          {/* 대시보드 */}
+          <Route path="/admin/dashboard" element={<AdminDashboard />} />
+          {/* 회원 관리 */}
+          <Route path="/admin/members" element={<MemberListPage />} />
+          <Route path="/admin/members/:id" element={<MemberDetailPage />} />
+          {/* 호스트 관리 */}
+          <Route path="/admin/host/apply" element={<HostApplyListPage />} />
+          <Route
+            path="/admin/host/apply/:id"
+            element={<HostApplyDetailPage />}
+          />
+          <Route path="/admin/host/list" element={<HostListPage />} />
+          <Route path="/admin/host/list/:hostId" element={<HostDetailPage />} />
+          {/* 공간 검수 */}
+          <Route path="/admin/space/review" element={<SpaceApprovalPage />} />
+          <Route
+            path="/admin/space/review/:type/:id"
+            element={<SpaceApprovalDetailPage />}
+          />
+          {/* 편의시설 관리 */}
+          <Route path="/admin/amenity" element={<AmenityPage />} />
+          {/* 예약·리뷰 */}
+          <Route path="/admin/reservation" element={<AdminRsvnListPage />} />
+          <Route
+            path="/admin/reservation/:id"
+            element={<AdminRsvnDetailPage />}
+          />
+          <Route path="/admin/review/report" element={<AdminReviewPage />} />
+          <Route
+            path="/admin/review/report/:id"
+            element={<AdminReviewReportPage />}
+          />
+          {/* 결제·환불 */}
+          <Route path="/admin/payment" element={<AdminPaymentList />} />
+          <Route path="/admin/payment/:no" element={<AdminPaymentDetail />} />
+          <Route path="/admin/refund" element={<RefundList />} />
+          <Route path="/admin/refund/:no" element={<RefundDetail />} />
+          {/* 정산·수수료 */}
+          <Route
+            path="/admin/settlement/host"
+            element={<AdminSettlementList />}
+          />
+          <Route
+            path="/admin/settlement/host/:no"
+            element={<AdminSettlementDetail />}
+          />
+          <Route
+            path="/admin/settlement/fee"
+            element={<AdminCommissionPolicy />}
+          />
+          {/* 쿠폰 게시 */}
+          <Route path="/admin/coupon/event" element={<AdminCouponEvent />} />
+          {/* 통계 */}
+          <Route path="/admin/stats/sales" element={<StatsOverview />} />
+          <Route path="/admin/stats/revenue" element={<RevenueStats />} />
+          <Route path="/admin/stats/booking" element={<BookingStats />} />
+          <Route path="/admin/stats/member" element={<MemberStats />} />
+          <Route path="/admin/stats/space" element={<SpaceStats />} />
+          {/* 운영 */}
+          <Route path="/admin/inquiry" element={<InquiryManagePage />} />
+          <Route path="/admin/inquiry/:id" element={<InquiryDetailPage />} />
+          <Route path="/admin/notice" element={<NoticeManagePage />} />
+          <Route path="/admin/notice/form" element={<NoticeFormPage />} />
+          <Route
+            path="/admin/notice/form/:id"
+            element={<NoticeFormPage isEdit />}
+          />
+          <Route path="/admin/faq" element={<FaqManagePage />} />
+          <Route path="/admin/faq/form" element={<FaqFormPage />} />
+          <Route path="/admin/faq/form/:id" element={<FaqFormPage isEdit />} />
+        </Route>
+      </Route>
       {/* 404 */}
       <Route
         path="*"
