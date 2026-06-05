@@ -1,5 +1,6 @@
 import { Navigate, Outlet } from 'react-router-dom';
 import { useSelector } from 'react-redux';
+import { normalizeRole } from '../utils/role';
 
 /**
  * 역할 기반 라우트 가드.
@@ -8,13 +9,9 @@ import { useSelector } from 'react-redux';
  *
  * 백엔드(SecurityConfig)가 데이터는 이미 막음. 이건 "화면 진입" 차단용.
  */
-
-// "ROLE_USER" / "USER" 둘 다 "USER"로 정규화 — JWT가 prefix를 붙였든 안 붙였든 안전
-const normalize = (role) => (role ?? '').replace(/^ROLE_/, '');
-
 const RoleRoute = ({ allow }) => {
   const { isAuthenticated, user } = useSelector((state) => state.auth);
-  const role = normalize(user?.role); // ← user 안에서 꺼냄
+  const role = normalizeRole(user?.role);
 
   // 1) 미인증 → 로그인으로 (allow에 맞는 로그인 화면으로)
   if (!isAuthenticated) {
