@@ -14,9 +14,8 @@ import { VerticalBarChart } from '../../components/admin/VerticalBarChart';
 import { StatsTabs } from '../../components/admin/StatsTabs';
 import { DataTable } from '../../components/admin/DataTable';
 import { findMemberStats } from '../../api/statsApi';
-
-const YEAR_OPTIONS = [2024, 2025, 2026];
-const MONTH_OPTIONS = Array.from({ length: 12 }, (_, i) => i + 1);
+import { StatsRangeTabs } from '../../components/admin/StatsRangeTabs';
+import { rangeLabel } from '../../components/admin/statsRange';
 
 function getPrevMonth() {
   const d = new Date();
@@ -26,9 +25,8 @@ function getPrevMonth() {
 }
 
 export default function MemberStats() {
-  const init = useMemo(() => getPrevMonth(), []);
-  const [year, setYear] = useState(init.year);
-  const [month, setMonth] = useState(init.month);
+  const { year, month } = useMemo(() => getPrevMonth(), []);
+  const [months, setMonths] = useState(1);
 
   const [stats, setStats] = useState(null);
   const [loading, setLoading] = useState(false);
@@ -40,7 +38,7 @@ export default function MemberStats() {
     setLoading(true);
     setError(null);
 
-    findMemberStats(year, month)
+    findMemberStats(year, month, months)
       .then((data) => {
         if (alive) setStats(data);
       })
@@ -55,7 +53,7 @@ export default function MemberStats() {
     return () => {
       alive = false;
     };
-  }, [year, month]);
+  }, [year, month, months]);
 
   const currentYm = `${year}-${String(month).padStart(2, '0')}`;
 
@@ -68,30 +66,11 @@ export default function MemberStats() {
   return (
     <PageLayout
       title="회원 통계"
-      description={`${year}년 ${month}월 회원 가입·활동 추이`}
+      description={`${rangeLabel(months)} 회원 가입·활동 추이`}
       maxWidth={1200}
     >
       <FilterBar>
-        <FilterGroup>
-          <FilterLabel>연도</FilterLabel>
-          <Select value={year} onChange={(e) => setYear(Number(e.target.value))}>
-            {YEAR_OPTIONS.map((y) => (
-              <option key={y} value={y}>
-                {y}년
-              </option>
-            ))}
-          </Select>
-        </FilterGroup>
-        <FilterGroup>
-          <FilterLabel>월</FilterLabel>
-          <Select value={month} onChange={(e) => setMonth(Number(e.target.value))}>
-            {MONTH_OPTIONS.map((m) => (
-              <option key={m} value={m}>
-                {m}월
-              </option>
-            ))}
-          </Select>
-        </FilterGroup>
+        <StatsRangeTabs value={months} onChange={setMonths} />
         {loading && <StatusText>불러오는 중...</StatusText>}
         {error && <ErrorText>{error}</ErrorText>}
       </FilterBar>
@@ -135,15 +114,15 @@ export default function MemberStats() {
 
       {view === 'chart' ? (
         trendChartData.length > 0 ? (
-          <VerticalBarChart title="최근 6개월 가입 추이" data={trendChartData} />
+          <VerticalBarChart title={`${rangeLabel(months)} 가입 추이`} data={trendChartData} />
         ) : (
-          <Section title="최근 6개월 가입 추이">
+          <Section title={`${rangeLabel(months)} 가입 추이`}>
             <EmptyCard padded>표시할 가입 추이 데이터가 없습니다.</EmptyCard>
           </Section>
         )
       ) : (
         <DataTable
-          title="최근 6개월 가입 추이"
+          title={`${rangeLabel(months)} 가입 추이`}
           columns={['월', '가입 수']}
           rows={trendChartData.map((d) => [
             `${d.label}월`,

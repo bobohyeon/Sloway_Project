@@ -5,6 +5,7 @@ import com.sloway.app.place.entity.hostPlace.ApprovalStatus;
 import com.sloway.app.reservation.rsvn.entity.RsvnStatus;
 
 import java.time.LocalDateTime;
+import java.util.Map;
 
 public interface StatsRepositoryCustom {
 
@@ -22,7 +23,8 @@ public interface StatsRepositoryCustom {
 
     Long countRsvnByCreatedAtBetween(LocalDateTime start, LocalDateTime end);
 
-    Long countRsvnByStatusAndCreatedAtBetween(RsvnStatus status, LocalDateTime start, LocalDateTime end);
+    // 기간 내 예약을 상태별로 한 번에 집계 (status별 count 4번 → group by 1번)
+    Map<RsvnStatus, Long> countRsvnGroupByStatus(LocalDateTime start, LocalDateTime end);
 
     Long countMember();
 
