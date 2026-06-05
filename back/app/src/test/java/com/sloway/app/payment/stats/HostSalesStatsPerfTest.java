@@ -177,9 +177,9 @@ class HostSalesStatsPerfTest {
                 .sumByMonthBetween(nos.office(), nos.station(), nos.workStay(), start, end)
                 .stream()
                 .collect(Collectors.toMap(
-                        t -> t.get(0, String.class),
-                        t -> {
-                            Long v = t.get(1, Long.class);
+                        m -> m.getMonth(),
+                        m -> {
+                            Long v = m.getSum();
                             return v == null ? 0L : v;
                         }));
         List<MonthlyTrendResDto> trend = new ArrayList<>();

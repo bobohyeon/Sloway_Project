@@ -1,10 +1,12 @@
 package com.sloway.app.payment.pay.repository;
 
 import com.querydsl.core.Tuple;
+import com.querydsl.core.types.Projections;
 import com.querydsl.core.types.dsl.BooleanExpression;
 import com.querydsl.core.types.dsl.NumberExpression;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import com.sloway.app.payment.pay.common.PayStatus;
+import com.sloway.app.payment.pay.dto.response.MonthlySumDto;
 import com.sloway.app.payment.pay.dto.response.PayResDto;
 import com.sloway.app.payment.pay.dto.response.PayStatsResDto;
 import com.sloway.app.payment.pay.entity.PayEntity;
@@ -115,11 +117,12 @@ public class PayRepositoryImpl implements PayRepositoryCustom {
     }
 
     @Override
-    public List<Tuple> sumByMonthBetween(List<Long> officeNos, List<Long> stationNos, List<Long> workStayNos, LocalDateTime start, LocalDateTime end) {
+    public List<MonthlySumDto> sumByMonthBetween(List<Long> officeNos, List<Long> stationNos, List<Long> workStayNos, LocalDateTime start, LocalDateTime end) {
         var month = com.querydsl.core.types.dsl.Expressions
                 .stringTemplate("to_char({0}, 'YYYY-MM')", qPayEntity.createdAt);
+        NumberExpression<Long> sum  = qPayEntity.finalAmt.sum().longValue();
         return jpaQueryFactory
-                .select(month, qPayEntity.finalAmt.sum().longValue())
+                .select(Projections.constructor(MonthlySumDto.class,month,sum))
                 .from(qPayEntity)
                 .where(
                         qPayEntity.status.eq(PayStatus.COMPLETED),

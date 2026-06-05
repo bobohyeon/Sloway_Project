@@ -215,26 +215,26 @@ public class StatsService {
         //          6개월 루프 × (office + station + workStay) 3쿼리 = 18쿼리.
         //          + KPI 9쿼리 = findHostSalesStats 한 번에 약 27쿼리.
         //
-         List<MonthlyTrendResDto> trend = buildTrend(ym, months, (s, e) ->
-                 payRepository.sumByOfficeIn(officeNos, s, e)
-               + payRepository.sumByStationIn(stationNos, s, e)
-               + payRepository.sumByWorkStayIn(workStayNos, s, e));
-        //
+//         List<MonthlyTrendResDto> trend = buildTrend(ym, months, (s, e) ->
+//                 payRepository.sumByOfficeIn(officeNos, s, e)
+//               + payRepository.sumByStationIn(stationNos, s, e)
+//               + payRepository.sumByWorkStayIn(workStayNos, s, e));
+//        //
         // [개선 후] sumByMonthBetween 으로 월별 합계를 GROUP BY 1쿼리에 받아 Map 에 담고,
         //          buildTrend 의 람다는 DB 대신 Map 만 읽는다. → 추이 18쿼리 → 1쿼리.
         //          (헬퍼 buildTrend 구조는 그대로, 람다의 "비용"만 DB→Map 으로 교체)
         // ───────────────────────────────────────────────────────────────────
-//        Map<String, Long> monthlySales = payRepository
-//                .sumByMonthBetween(officeNos, stationNos, workStayNos, start, end)
-//                .stream()
-//                .collect(Collectors.toMap(
-//                        t -> t.get(0, String.class),
-//                        t -> {
-//                            Long v = t.get(1, Long.class);
-//                            return v == null ? 0L : v;
-//                        }));
-//        List<MonthlyTrendResDto> trend = buildTrend(ym, months,
-//                (s, e) -> monthlySales.getOrDefault(YearMonth.from(s).toString(), 0L));
+        Map<String, Long> monthlySales = payRepository
+                .sumByMonthBetween(officeNos, stationNos, workStayNos, start, end)
+                .stream()
+                .collect(Collectors.toMap(
+                        m-> m.getMonth(),
+                        m -> {
+                            Long v = m.getSum();
+                            return v == null ? 0L : v;
+                        }));
+        List<MonthlyTrendResDto> trend = buildTrend(ym, months,
+                (s, e) -> monthlySales.getOrDefault(YearMonth.from(s).toString(), 0L));
 
         return HostSalesStatsResDto.of(totalAmt, payCount, refundAmt, trend);
     }
