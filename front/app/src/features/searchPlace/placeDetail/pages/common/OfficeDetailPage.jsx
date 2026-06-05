@@ -6,6 +6,7 @@ import DetailMainBox from '../../components/common/DetailMainBox';
 import DetailRsvnBox from '../../components/common/DetailRsvnBox';
 import { findReviewsByPlace } from '../../../../review/api/reviewApi';
 import { getOfficeDetail } from '../../../api/searchApi';
+import { saveRecentViewed } from '../../../recentPlace/api/recentApi';
 
 const RSVN_INFO = {
   checkIn: '5월 8일',
@@ -30,6 +31,7 @@ function OfficeDetailPage() {
         ]);
         setSpace(spaceData);
         setReviews(reviewData);
+        saveRecentViewed(spaceData.placeNo).catch(() => {});
       } catch (e) {
         console.error('데이터 조회 실패', e);
       }
