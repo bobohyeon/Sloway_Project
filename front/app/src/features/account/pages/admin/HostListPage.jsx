@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import {
   FaSearch,
   FaBuilding,
@@ -16,6 +17,7 @@ const STATE_LABEL = {
 };
 
 function HostListPage() {
+  const navigate = useNavigate();
   const {
     loading,
     counts,
@@ -168,7 +170,14 @@ function HostListPage() {
                     <S.Td>{h.hostId}</S.Td>
                     <S.Td>
                       <S.HostCell>
-                        <S.HostName>{h.name}</S.HostName>
+                        <S.HostName
+                          onClick={() =>
+                            navigate(`/admin/host/list/${h.hostId}`)
+                          }
+                          style={{ cursor: 'pointer' }}
+                        >
+                          {h.name}
+                        </S.HostName>
                         <S.HostEmail>{h.email}</S.HostEmail>
                       </S.HostCell>
                     </S.Td>
