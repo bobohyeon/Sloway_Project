@@ -205,5 +205,5 @@ public class PlaceService {
                 .orElseThrow(() -> new CustomException(HostErrorCode.HOST_NOT_FOUND));
         return placeList(host.getMemberNo());
     }
-    
+
 }
