@@ -478,7 +478,8 @@ public class PlaceRepositoryImpl implements PlaceRepositoryCustom {
                         placeEntity.address,
                         imgPlaceEntity.currentUrl,
                         workStayEntity.monPrice.coalesce(0),
-                        Expressions.stringTemplate("string_agg({0}, ',')", amenityEntity.name)
+                        Expressions.stringTemplate("string_agg({0}, ',')", amenityEntity.name),
+                        placeEntity.no //추가(보현)
                 )
                 .from(workStayEntity)
                 .join(placeEntity).on(workStayEntity.placeEntity.no.eq(placeEntity.no))
@@ -495,7 +496,8 @@ public class PlaceRepositoryImpl implements PlaceRepositoryCustom {
                         placeEntity.address,
                         placeEntity.createdAt,
                         imgPlaceEntity.currentUrl,
-                        workStayEntity.monPrice
+                        workStayEntity.monPrice,
+                        placeEntity.no // 추가(보현)
                 )
                 .orderBy(scoreDouble.desc())
                 .limit(5)
@@ -509,6 +511,7 @@ public class PlaceRepositoryImpl implements PlaceRepositoryCustom {
                 .mainImageUrl(tuple.get(3, String.class))
                 .price(tuple.get(4, Integer.class))
                 .amenities(tuple.get(5, String.class) != null ? Arrays.asList(tuple.get(5, String.class).split(",")) : null)
+                .placeNo(tuple.get(6, Long.class)) // 추가(보현)
                 .build()).toList();
 
         return candidates.isEmpty() ? null : candidates.get(new Random().nextInt(candidates.size()));
