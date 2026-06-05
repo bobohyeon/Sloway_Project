@@ -105,6 +105,7 @@ function DetailRsvnBox({
   serviceFee = 12000,
   cancelPolicy = '무료 취소 · 이용 7일 전까지',
   rsvnDto,
+  roomName = null,
 }) {
   const navigate = useNavigate();
 
@@ -137,6 +138,7 @@ function DetailRsvnBox({
       <PriceRow>
         <Price>{price.toLocaleString()}</Price>
         <PriceUnit>{priceUnit}</PriceUnit>
+        {roomName && <RoomNameTag>{roomName}</RoomNameTag>}
       </PriceRow>
 
       <InfoRow>
@@ -175,5 +177,15 @@ function DetailRsvnBox({
     </Box>
   );
 }
+
+const RoomNameTag = styled.span`
+  margin-left: auto;
+  font-size: 12px;
+  font-weight: 600;
+  padding: 3px 10px;
+  border-radius: 12px;
+  background: rgba(45, 106, 79, 0.1);
+  color: #2d6a4f;
+`;
 
 export default DetailRsvnBox;

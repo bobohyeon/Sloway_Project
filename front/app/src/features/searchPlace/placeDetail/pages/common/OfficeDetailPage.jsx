@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useParams } from 'react-router-dom';
+import { useParams, useLocation } from 'react-router-dom';
 import DetailLayout from '../../layouts/DetailLayout';
 import DetailImageBox from '../../components/common/DetailImageBox';
 import DetailMainBox from '../../components/common/DetailMainBox';
@@ -16,6 +16,8 @@ const RSVN_INFO = {
 
 function OfficeDetailPage() {
   const { id } = useParams();
+  const location = useLocation();
+  const selectedRoom = location.state?.selectedRoom ?? null;
   const [space, setSpace] = useState(null);
   const [reviews, setReviews] = useState([]);
 
@@ -49,13 +51,14 @@ function OfficeDetailPage() {
       rsvnBox={
         <DetailRsvnBox
           rsvnInfo={RSVN_INFO}
-          price={28000}
+          price={selectedRoom?.price ?? space?.basePrice ?? 28000}
           priceUnit="원/4시간"
+          roomName={selectedRoom?.name ?? null}
           serviceFee={12000}
           rsvnDto={{
             officeNo: space?.entityNo,
             count: 2,
-            amt: space?.basePrice ?? 28000,
+            amt: selectedRoom?.price ?? space?.basePrice ?? 28000,
             checkIn: '2026-06-10T09:00:00',
             checkOut: '2026-06-10T18:00:00',
             special: null,

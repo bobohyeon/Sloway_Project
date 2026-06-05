@@ -43,7 +43,7 @@ public class ReviewController {
     @GetMapping
     public ResponseEntity<List<ReviewResDto>> findAll(
             @RequestParam Long entityNo,
-            @RequestParam String type){
+            @RequestParam(required = false, defaultValue = "STATION") String type){
         List<ReviewResDto> dtoList = reviewService.findAll(entityNo, type);
         return ResponseEntity.ok(dtoList);
     }
