@@ -18,7 +18,4 @@ public class WorkStayCardDto {
     private String mainImageUrl;
     private Integer price;
     private List<String> amenities;
-
-    private Long placeNo; //추가(보현)
-
 }
