@@ -14,7 +14,7 @@ public class RefundStatResDto {
     private BigDecimal refundAmt;
     private Integer refundRate;
 
-    public static RefundStatResDto of(Integer refundCount, BigDecimal refundAmt, Integer finalAmt) {
+    public static RefundStatResDto of(Integer refundCount, BigDecimal refundAmt, Long finalAmt) {
         int refundRate = finalAmt == 0 ? 0 : refundAmt.multiply(BigDecimal.valueOf(100))
                                              .divide(BigDecimal.valueOf(finalAmt), 0, RoundingMode.DOWN)
                                              .intValue();

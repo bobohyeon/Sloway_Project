@@ -3,12 +3,15 @@ package com.sloway.app.payment.pay.controller;
 import com.sloway.app.payment.pay.dto.request.PayCreateReqDto;
 import com.sloway.app.payment.pay.dto.response.PayReadyResDto;
 import com.sloway.app.payment.pay.dto.response.PayResDto;
+import com.sloway.app.payment.pay.dto.response.PayStatsResDto;
 import com.sloway.app.payment.pay.dto.response.TossPrepareResDto;
 import com.sloway.app.payment.pay.pg.toss.dto.request.TossConfirmReqDto;
 import com.sloway.app.payment.pay.service.PayService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.data.domain.Page;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -35,9 +38,17 @@ public class PayApiController {
     }
 
     @GetMapping
-    public ResponseEntity<List<PayResDto>> findPayAll() {
-        List<PayResDto> payAll = payService.findPayAll();
-        return ResponseEntity.ok(payAll);
+    public ResponseEntity<Page<PayResDto>> findPayAll(
+            @RequestParam(defaultValue = "0") int pno,
+            @RequestParam(defaultValue = "all") String tab,
+            @RequestParam(defaultValue = "month") String period) {
+        return ResponseEntity.ok(payService.findPayAll(pno, tab, period));
+    }
+
+    @GetMapping("/stats")
+    public ResponseEntity<PayStatsResDto> findPayStats(
+            @RequestParam(defaultValue = "month") String period) {
+        return ResponseEntity.ok(payService.findPayStats(period));
     }
 
     @GetMapping("/{no}")

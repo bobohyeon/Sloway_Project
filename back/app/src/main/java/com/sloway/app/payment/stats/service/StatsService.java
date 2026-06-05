@@ -30,7 +30,7 @@ import java.time.LocalDateTime;
 import java.time.YearMonth;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.function.ToIntBiFunction;
+import java.util.function.ToLongBiFunction;
 import java.util.stream.Collectors;
 
 @Service
@@ -100,13 +100,13 @@ public class StatsService {
         LocalDate end = YearMonth.of(year, month).atEndOfMonth();
 
         List<DailyPayStatsEntity> payRows = dailyPayStatsRepository.findByStatDateBetween(start, end);
-        int totalAmt = payRows.stream().mapToInt(DailyPayStatsEntity::getTotalAmt).sum();
-        long payCount = payRows.stream().mapToInt(DailyPayStatsEntity::getPayCount).sum();
+        long totalAmt = payRows.stream().mapToLong(e -> e.getTotalAmt()).sum();
+        long payCount = payRows.stream().mapToLong(e -> e.getPayCount()).sum();
 
-        int refundAmt = dailyRefundStatsRepository.findByStatDateBetween(start, end).stream()
+        long refundAmt = dailyRefundStatsRepository.findByStatDateBetween(start, end).stream()
                 .map(DailyRefundStatsEntity::getRefundAmt)
                 .reduce(BigDecimal.ZERO, BigDecimal::add)
-                .intValue();
+                .longValue();
 
         return MonthlySalesResDto.of(ym.toString(), totalAmt, payCount, refundAmt);
     }
@@ -125,7 +125,7 @@ public class StatsService {
                     PayMethod method = entry.getKey();
                     List<DailyPayStatsEntity> rows = entry.getValue();
                     int count = rows.stream().mapToInt(DailyPayStatsEntity::getPayCount).sum();
-                    int amt = rows.stream().mapToInt(DailyPayStatsEntity::getTotalAmt).sum();
+                    long amt = rows.stream().mapToLong(e -> e.getTotalAmt()).sum();
                     return PayMethodStatResDto.of(method, count, amt);
                 })
                 .toList();
@@ -139,8 +139,8 @@ public class StatsService {
             YearMonth ym = base.minusMonths(i);
             LocalDate start = ym.atDay(1);
             LocalDate end = ym.atEndOfMonth();
-            int totalAmt = dailyPayStatsRepository.findByStatDateBetween(start, end).stream()
-                    .mapToInt(DailyPayStatsEntity::getTotalAmt)
+            long totalAmt = dailyPayStatsRepository.findByStatDateBetween(start, end).stream()
+                    .mapToLong(e -> e.getTotalAmt())
                     .sum();
             result.add(MonthlyTrendResDto.of(ym.toString(), totalAmt));
         }
@@ -157,8 +157,8 @@ public class StatsService {
         BigDecimal refundAmt = refundRows.stream()
                 .map(DailyRefundStatsEntity::getRefundAmt)
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
-        int finalAmt = dailyPayStatsRepository.findByStatDateBetween(start, end).stream()
-                .mapToInt(DailyPayStatsEntity::getTotalAmt)
+        long finalAmt = dailyPayStatsRepository.findByStatDateBetween(start, end).stream()
+                .mapToLong(e -> e.getTotalAmt())
                 .sum();
         return RefundStatResDto.of(refundCount, refundAmt, finalAmt);
     }
@@ -193,15 +193,15 @@ public class StatsService {
         LocalDateTime start = ym.atDay(1).atStartOfDay();
         LocalDateTime end = ym.atEndOfMonth().atTime(23, 59, 59);
 
-        int officeAmt = payRepository.sumByOfficeIn(officeNos, start, end);
-        int stationAmt = payRepository.sumByStationIn(stationNos, start, end);
-        int workStayAmt = payRepository.sumByWorkStayIn(workStayNos, start, end);
-        int totalAmt = officeAmt + stationAmt + workStayAmt;
+        long officeAmt = payRepository.sumByOfficeIn(officeNos, start, end);
+        long stationAmt = payRepository.sumByStationIn(stationNos, start, end);
+        long workStayAmt = payRepository.sumByWorkStayIn(workStayNos, start, end);
+        long totalAmt = officeAmt + stationAmt + workStayAmt;
 
-        int refundAmt = refundRepository.sumByOfficeIn(officeNos, start, end)
+        long refundAmt = refundRepository.sumByOfficeIn(officeNos, start, end)
                 .add(refundRepository.sumByStationIn(stationNos, start, end))
                 .add(refundRepository.sumByWorkStayIn(workStayNos, start, end))
-                .intValue();
+                .longValue();
 
         Long payCount = payRepository.sumSalesStatsByOfficeIn(officeNos, start, end)
                 + payRepository.sumSalesStatsByStationIn(stationNos, start, end)
@@ -245,7 +245,7 @@ public class StatsService {
         Long cancel = statsRepositoryCustom.countRsvnByStatusAndCreatedAtBetween(RsvnStatus.C, start, end);
 
         List<MonthlyTrendResDto> trend = buildTrend(ym, (s, e)
-                -> Math.toIntExact(statsRepositoryCustom.countRsvnByCreatedAtBetween(s, e)));
+                -> statsRepositoryCustom.countRsvnByCreatedAtBetween(s, e));
         return BookingStatsResDto.of(total, confirmed, cancel, complete, trend);
     }
 
@@ -260,19 +260,19 @@ public class StatsService {
         Long newSignup = statsRepositoryCustom.countMemberByCreatedAtBetween(start, end);
 
         List<MonthlyTrendResDto> trend = buildTrend(ym, (s, e)
-                -> Math.toIntExact(statsRepositoryCustom.countMemberByCreatedAtBetween(s, e)));
+                -> statsRepositoryCustom.countMemberByCreatedAtBetween(s, e));
         return MemberStatsResDto.of(total, newSignup, active, withdrawn, trend);
 
     }
 
-    private List<MonthlyTrendResDto> buildTrend(YearMonth base, ToIntBiFunction<LocalDateTime, LocalDateTime> valueFn) {
+    private List<MonthlyTrendResDto> buildTrend(YearMonth base, ToLongBiFunction<LocalDateTime, LocalDateTime> valueFn) {
         List<MonthlyTrendResDto> trend = new ArrayList<>();
         for (int i = 5; i >= 0; i--) {
             YearMonth ymMinus = base.minusMonths(i);
             LocalDateTime mStart = ymMinus.atDay(1).atStartOfDay();
             LocalDateTime mEnd = ymMinus.atEndOfMonth().atTime(23, 59, 59);
-            long mTotal = valueFn.applyAsInt(mStart, mEnd);
-            trend.add(MonthlyTrendResDto.of(ymMinus.toString(), (int) mTotal));
+            long mTotal = valueFn.applyAsLong(mStart, mEnd);
+            trend.add(MonthlyTrendResDto.of(ymMinus.toString(), mTotal));
         }
         return trend;
     }
