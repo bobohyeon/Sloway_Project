@@ -158,8 +158,8 @@ public class PlaceService {
         return new PlaceBriefRespDto(placeEntity.getNo(), placeEntity.getTitle(), placeEntity.getType());
     }
 
-    public List<PlaceListRespDto> placeList(Long hostNo) {
-        return placeRepository.findPlaceListByHostNo(hostNo);
+    public List<PlaceListRespDto> placeList(Long memberNo) {
+        return placeRepository.findPlaceListByMemberNo(memberNo);
     }
 
     public List<MasterPlaceRespDto> selectMasterPlaceList(String type, Long memberNo) {

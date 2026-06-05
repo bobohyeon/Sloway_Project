@@ -8,7 +8,7 @@ import java.util.List;
 public interface PlaceRepositoryCustom {
     List<PlaceDetailListRespDto> findPlaceDetailListByHostNo(Long placeNo, Long hostNo);
 
-    List<PlaceListRespDto> findPlaceListByHostNo(Long hostNo);
+    List<PlaceListRespDto> findPlaceListByMemberNo(Long memberNo);
 
     List<MasterPlaceRespDto> findMasterPlaceListByTypeAndMemberNo(String type, Long memberNo);
 
