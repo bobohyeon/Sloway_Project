@@ -132,11 +132,37 @@ public class RsvnService {
                 .toList();
     }
 
-    //어드민 — 특정 호스트의 공간 목록 조회 (hostNo 직접)
+    //어드민 — 특정 호스트의 공간 목록 조회 (hostNo 직접, 공간별 예약수 포함)
     public List<HostSpaceResDto> findHostSpacesForAdmin(Long hostNo) {
+        List<RsvnEntity> rsvns = findRsvnsByHostNo(hostNo);
+
+        // 공간(office/station/work) 별 예약 건수 — 각 FK 의 PK(getNo, LAZY 안전) 기준 count
+        java.util.Map<Long, Long> officeCnt = rsvns.stream()
+                .filter(r -> r.getOfficeNo() != null)
+                .collect(java.util.stream.Collectors.groupingBy(
+                        r -> r.getOfficeNo().getNo(), java.util.stream.Collectors.counting()));
+        java.util.Map<Long, Long> stationCnt = rsvns.stream()
+                .filter(r -> r.getStationNo() != null)
+                .collect(java.util.stream.Collectors.groupingBy(
+                        r -> r.getStationNo().getNo(), java.util.stream.Collectors.counting()));
+        java.util.Map<Long, Long> workCnt = rsvns.stream()
+                .filter(r -> r.getWorkStayNo() != null)
+                .collect(java.util.stream.Collectors.groupingBy(
+                        r -> r.getWorkStayNo().getNo(), java.util.stream.Collectors.counting()));
+
         return hostPlaceRepository.findByHostEntityNo(hostNo)
                 .stream()
-                .map(HostSpaceResDto::from)
+                .map(hp -> {
+                    long cnt = 0L;
+                    if (hp.getOfficeEntity() != null) {
+                        cnt = officeCnt.getOrDefault(hp.getOfficeEntity().getNo(), 0L);
+                    } else if (hp.getStationEntity() != null) {
+                        cnt = stationCnt.getOrDefault(hp.getStationEntity().getNo(), 0L);
+                    } else if (hp.getWorkStayEntity() != null) {
+                        cnt = workCnt.getOrDefault(hp.getWorkStayEntity().getNo(), 0L);
+                    }
+                    return HostSpaceResDto.from(hp, cnt);
+                })
                 .filter(dto -> dto.getPlaceNo() != null)
                 .distinct()
                 .toList();

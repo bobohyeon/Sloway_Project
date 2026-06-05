@@ -126,8 +126,8 @@ export const useHostDetail = (hostId) => {
           id: s.placeNo,
           name: s.spaceName,
           type: s.spaceType,
-          reservationCount: 0, // 예약 도메인(보현) 연동 전
-          basePrice: 0, // 가격 정보 연동 전
+          reservationCount: s.reservationCount ?? 0, // 공간별 예약수
+          basePrice: 0, // 기본가 — 서현진(가격 정의) 영역, 미연동
         })),
       });
     } catch (err) {
