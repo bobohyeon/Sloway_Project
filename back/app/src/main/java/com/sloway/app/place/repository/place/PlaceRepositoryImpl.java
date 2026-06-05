@@ -146,7 +146,7 @@ public class PlaceRepositoryImpl implements PlaceRepositoryCustom {
     }
 
     @Override
-    public List<PlaceListRespDto> findPlaceListByHostNo(Long memberNo) {
+    public List<PlaceListRespDto> findPlaceListByMemberNo(Long memberNo) {
         LocalDateTime now = LocalDateTime.now();
         LocalDateTime startOfMonth = now.with(TemporalAdjusters.firstDayOfMonth()).withHour(0).withMinute(0).withSecond(0).withNano(0);
         LocalDateTime endOfMonth = now.with(TemporalAdjusters.lastDayOfMonth()).withHour(23).withMinute(59).withSecond(59).withNano(999999999);
