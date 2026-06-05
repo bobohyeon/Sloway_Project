@@ -2,6 +2,7 @@ package com.sloway.app.payment.pay.repository;
 
 import com.querydsl.core.Tuple;
 import com.sloway.app.payment.pay.common.PayStatus;
+import com.sloway.app.payment.pay.dto.response.MonthlySumDto;
 import com.sloway.app.payment.pay.dto.response.PayResDto;
 import com.sloway.app.payment.pay.dto.response.PayStatsResDto;
 import com.sloway.app.payment.pay.entity.PayEntity;
@@ -26,7 +27,7 @@ public interface PayRepositoryCustom {
 
     Long sumByWorkStayIn(List<Long> workStayNos, LocalDateTime start, LocalDateTime end);
 
-    List<Tuple> sumByMonthBetween(List<Long> officeNos, List<Long> stationNos, List<Long> workStayNos, LocalDateTime start, LocalDateTime end);
+    List<MonthlySumDto> sumByMonthBetween(List<Long> officeNos, List<Long> stationNos, List<Long> workStayNos, LocalDateTime start, LocalDateTime end);
 
     Long sumSalesStatsByOfficeIn(List<Long> officeNos, LocalDateTime start, LocalDateTime end);
 
