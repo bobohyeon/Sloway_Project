@@ -22,6 +22,7 @@ import com.sloway.app.place.repository.station.StationRepository;
 import com.sloway.app.place.repository.workStay.WorkStayRepository;
 import com.sloway.app.reservation.RsvnErrorCode;
 import com.sloway.app.reservation.rsvn.dto.request.RsvnReqDto;
+import com.sloway.app.reservation.rsvn.dto.response.HostReservationStatsResDto;
 import com.sloway.app.reservation.rsvn.dto.response.HostSpaceResDto;
 import com.sloway.app.reservation.rsvn.dto.response.RsvnResDto;
 import com.sloway.app.reservation.rsvn.entity.RsvnEntity;
@@ -146,27 +147,7 @@ public class RsvnService {
         HostEntity host = hostRepository.findByMemberNo(memberNo)
                 .orElseThrow(() -> new CustomException(ReviewErrorCode.HOST_NOT_FOUND));
 
-        List<HostPlaceEntity> hostPlaces = hostPlaceRepository.findByHostEntityNo(host.getNo());
-
-        List<OfficeEntity> offices = hostPlaces.stream()
-                .map(hp -> hp.getOfficeEntity())
-                .filter(o -> o != null)
-                .toList();
-        List<StationEntity> stations = hostPlaces.stream()
-                .map(hp -> hp.getStationEntity())
-                .filter(s -> s != null)
-                .toList();
-        List<WorkStayEntity> workStays = hostPlaces.stream()
-                .map(hp -> hp.getWorkStayEntity())
-                .filter(w -> w != null)
-                .toList();
-
-        List<RsvnEntity> result = new java.util.ArrayList<>();
-        if (!offices.isEmpty())  result.addAll(rsvnRepository.findByOfficeNoIn(offices));
-        if (!stations.isEmpty()) result.addAll(rsvnRepository.findByStationNoIn(stations));
-        if (!workStays.isEmpty()) result.addAll(rsvnRepository.findByWorkStayNoIn(workStays));
-
-        List<RsvnEntity> sorted = result.stream()
+        List<RsvnEntity> sorted = findRsvnsByHostNo(host.getNo()).stream()
                 .sorted(java.util.Comparator.comparing(RsvnEntity::getCreatedAt).reversed())
                 .toList();
         // 예약들의 payNo 를 한 번에 조회(N+1 제거)
@@ -175,6 +156,36 @@ public class RsvnService {
         return sorted.stream()
                 .map(entity -> RsvnResDto.from(entity, payNoMap.get(entity.getNo())))
                 .toList();
+    }
+
+    // 호스트 공간(office/station/work)의 예약 목록을 모아서 반환 (내부 헬퍼)
+    private List<RsvnEntity> findRsvnsByHostNo(Long hostNo) {
+        List<HostPlaceEntity> hostPlaces = hostPlaceRepository.findByHostEntityNo(hostNo);
+
+        List<OfficeEntity> offices = hostPlaces.stream()
+                .map(hp -> hp.getOfficeEntity()).filter(o -> o != null).toList();
+        List<StationEntity> stations = hostPlaces.stream()
+                .map(hp -> hp.getStationEntity()).filter(s -> s != null).toList();
+        List<WorkStayEntity> workStays = hostPlaces.stream()
+                .map(hp -> hp.getWorkStayEntity()).filter(w -> w != null).toList();
+
+        List<RsvnEntity> result = new java.util.ArrayList<>();
+        if (!offices.isEmpty())  result.addAll(rsvnRepository.findByOfficeNoIn(offices));
+        if (!stations.isEmpty()) result.addAll(rsvnRepository.findByStationNoIn(stations));
+        if (!workStays.isEmpty()) result.addAll(rsvnRepository.findByWorkStayNoIn(workStays));
+        return result;
+    }
+
+    //어드민 — 특정 호스트의 예약 건수 통계 (진행중 P+S / 완료 E)
+    public HostReservationStatsResDto findHostReservationStatsForAdmin(Long hostNo) {
+        List<RsvnEntity> rsvns = findRsvnsByHostNo(hostNo);
+        long ongoing = rsvns.stream()
+                .filter(r -> r.getStatus() == RsvnStatus.P || r.getStatus() == RsvnStatus.S)
+                .count();
+        long completed = rsvns.stream()
+                .filter(r -> r.getStatus() == RsvnStatus.E)
+                .count();
+        return HostReservationStatsResDto.of(ongoing, completed);
     }
 
     //내 예약 취소

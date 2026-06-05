@@ -114,3 +114,23 @@ export const getAdminHostSpaces = async (hostId) => {
   const response = await api.get(`/reservation/admin/host/${hostId}/spaces`);
   return response.data;
 };
+
+/**
+ * 어드민 — 호스트 예약 건수(보현 도메인). GET /api/reservation/admin/host/{hostId}/reservation-stats
+ * 응답: { ongoingReservationCount, completedReservationCount }
+ */
+export const getAdminHostReservationStats = async (hostId) => {
+  const response = await api.get(
+    `/reservation/admin/host/${hostId}/reservation-stats`
+  );
+  return response.data;
+};
+
+/**
+ * 어드민 — 호스트 리뷰 통계(보현 도메인). GET /api/admin/review/host/{hostId}/stats
+ * 응답: { averageRating, reviewCount }
+ */
+export const getAdminHostReviewStats = async (hostId) => {
+  const response = await api.get(`/admin/review/host/${hostId}/stats`);
+  return response.data;
+};
