@@ -1,6 +1,8 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { userSignup, sendVerifyCode, verifyCode } from '../api/authApi';
+import { isValidPassword, PASSWORD_GUIDE } from '../utils/passwordValidator';
+// (경로는 파일 위치마다 다름 — 아래 참고)
 
 export function useSignupForm() {
   const navigate = useNavigate();
@@ -71,8 +73,8 @@ export function useSignupForm() {
       setError('이메일 인증을 완료해주세요.');
       return;
     }
-    if (form.password.length < 4) {
-      setError('비밀번호는 4자 이상이어야 합니다.');
+    if (!isValidPassword(form.password)) {
+      setError(PASSWORD_GUIDE);
       return;
     }
     if (form.password !== form.passwordConfirm) {
