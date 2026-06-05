@@ -65,7 +65,6 @@ const RsvnBtn = styled.button`
   }
 `;
 
-
 const CalcBox = styled.div`
   border-top: 1px solid #f2ede4;
   padding-top: 14px;
@@ -120,8 +119,17 @@ function DetailRsvnBox({
   const grandTotal = totalBase + serviceFee;
 
   async function handleRsvn() {
-    const rsvnNo = await saveRsvn(rsvnDto);
-    navigate(`/user/payment/checkout`, { state: { rsvnNo } });
+    try {
+      const rsvnNo = await saveRsvn(rsvnDto);
+      navigate(`/user/payment/checkout`, { state: { rsvnNo } });
+    } catch (err) {
+      if (err.response?.status === 401 || err.response?.status === 403) {
+        alert('로그인이 필요합니다');
+        navigate('/login');
+      } else {
+        alert('예약 할 수 없습니다.');
+      }
+    }
   }
 
   return (
