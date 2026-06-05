@@ -3,7 +3,8 @@ import { useNavigate } from 'react-router-dom';
 import styled from 'styled-components';
 import PageLayout from '../../../../app/layouts/page/PageLayout';
 import RsvnStatusBadge from '../../components/user/RsvnStatusBadge';
-import { findHostRsvns } from '../../api/rsvnApi';
+import { findHostRsvns, rejectRsvn } from '../../api/rsvnApi';
+import { Pagination } from '../../../pay_shared/components/Pagination';
 import {
   TabBar,
   TabBtn,
@@ -65,6 +66,18 @@ const MsgBtn = styled.button`
   &:hover { border-color: ${COLOR.sage}; }
 `;
 
+const RejectBtn = styled.button`
+  font-size: 12px;
+  padding: 5px 12px;
+  border-radius: 6px;
+  border: 1px solid #f0a0a0;
+  background: #fff;
+  color: #c0392b;
+  cursor: pointer;
+  margin-top: 4px;
+  &:hover { background: #fff0f0; }
+`;
+
 const TABS = [
   { label: '전체', status: null },
   { label: '확정', status: 'S' },
@@ -88,6 +101,7 @@ function HostRsvnListPage() {
   const [list, setList] = useState([]);
   const [activeTab, setActiveTab] = useState(0);
   const [keyword, setKeyword] = useState('');
+  const [page, setPage] = useState(1);
 
   useEffect(() => {
     async function load() {
@@ -104,6 +118,18 @@ function HostRsvnListPage() {
   // status 값이 enum 객체로 올 수 있으므로 문자열 변환
   const statusCode = (item) => (typeof item.status === 'object' ? item.status?.name ?? item.status : item.status);
 
+  const handleReject = async (e, item) => {
+    e.stopPropagation();
+    if (!window.confirm('예약을 거절하시겠어요?')) return;
+    try {
+      await rejectRsvn(item.no, item.payNo);
+      const data = await findHostRsvns();
+      setList(data);
+    } catch {
+      alert('거절 처리에 실패했습니다.');
+    }
+  };
+
   const filtered = list
     .filter((i) => activeTab === 0 || statusCode(i) === TABS[activeTab].status)
     .filter((i) => !keyword || (i.guestName ?? '').includes(keyword));
@@ -111,6 +137,9 @@ function HostRsvnListPage() {
   const counts = TABS.map((tab, idx) =>
     idx === 0 ? list.length : list.filter((i) => statusCode(i) === tab.status).length
   );
+
+  const totalPages = Math.ceil(filtered.length / 10);
+  const paged = filtered.slice((page - 1) * 10, page * 10);
 
   const formatDate = (checkIn, checkOut) => {
     if (!checkIn) return '';
@@ -149,7 +178,7 @@ function HostRsvnListPage() {
 
       <TabBar>
         {TABS.map((tab, idx) => (
-          <TabBtn key={idx} $active={activeTab === idx} onClick={() => setActiveTab(idx)}>
+          <TabBtn key={idx} $active={activeTab === idx} onClick={() => { setActiveTab(idx); setPage(1); }}>
             {tab.label}
             <TabCount $active={activeTab === idx}>{counts[idx]}</TabCount>
           </TabBtn>
@@ -171,7 +200,7 @@ function HostRsvnListPage() {
         </div>
       )}
 
-      {filtered.map((item) => {
+      {paged.map((item) => {
         const sc = statusCode(item);
         const st = STATUS_STYLE[sc] ?? { bg: '#f0f0f0', color: '#666' };
         const icon = SPACE_TYPE_ICON[item.spaceType] ?? '🏠';
@@ -203,11 +232,21 @@ function HostRsvnListPage() {
                 <MsgBtn onClick={(e) => { e.stopPropagation(); navigate('/host/chat'); }}>
                   💬 메시지
                 </MsgBtn>
+                {sc === 'S' && new Date(item.checkIn) > new Date() && (
+                  <RejectBtn onClick={(e) => handleReject(e, item)}>
+                    거절
+                  </RejectBtn>
+                )}
               </CardRight>
             </CardRow>
           </Card>
         );
       })}
+      <Pagination
+        currentPage={page}
+        totalPages={totalPages}
+        onChange={(p) => { setPage(p); window.scrollTo(0, 0); }}
+      />
     </PageLayout>
   );
 }

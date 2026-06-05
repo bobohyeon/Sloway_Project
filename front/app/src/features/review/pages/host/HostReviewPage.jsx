@@ -22,6 +22,7 @@ import {
   saveReply,
   updateReply,
 } from '../../api/reviewApi';
+import { Pagination } from '../../../pay_shared/components/Pagination';
 
 const fadeInUp = keyframes`
   from { opacity: 0; transform: translateY(10px); }
@@ -153,6 +154,7 @@ function HostReviewPage() {
   const [placeNo, setPlaceNo] = useState('');
   const [minScore, setMinScore] = useState('');
   const [period, setPeriod] = useState('');
+  const [page, setPage] = useState(1);
 
   useEffect(() => {
     if (!placeNo) return;
@@ -195,6 +197,9 @@ function HostReviewPage() {
         i.content.includes(keyword)
     );
 
+  const totalPages = Math.ceil(filtered.length / 10);
+  const paged = filtered.slice((page - 1) * 10, page * 10);
+
   const handleReplyChange = (id, val) =>
     setReplyTexts((prev) => ({ ...prev, [id]: val }));
 
@@ -225,7 +230,7 @@ function HostReviewPage() {
           <TabBtn
             key={idx}
             $active={activeTab === idx}
-            onClick={() => setActiveTab(idx)}
+            onClick={() => { setActiveTab(idx); setPage(1); }}
           >
             {tab.label}
             <TabCount $active={activeTab === idx}>{counts[idx]}</TabCount>
@@ -274,7 +279,7 @@ function HostReviewPage() {
         </div>
       )}
 
-      {filtered.map((item) => {
+      {paged.map((item) => {
         const existingReply = item.replies?.[0];
         const isEditing = editingId === item.no;
 
@@ -389,6 +394,11 @@ function HostReviewPage() {
           </Card>
         );
       })}
+      <Pagination
+        currentPage={page}
+        totalPages={totalPages}
+        onChange={(p) => { setPage(p); window.scrollTo(0, 0); }}
+      />
     </PageLayout>
   );
 }
