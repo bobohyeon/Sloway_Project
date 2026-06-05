@@ -360,7 +360,7 @@ function RoomListPage() {
         ? `/coworking-offices/${spaceId}`
         : space.type === 'WORK_STAY'
           ? `/workstays/${spaceId}`
-          : `/accommodations/${spaceId}`;
+          : `/stations/${spaceId}`;
     navigate(path, { state: { selectedRoom: room, space } });
   };
 

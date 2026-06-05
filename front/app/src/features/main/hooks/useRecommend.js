@@ -48,11 +48,11 @@ export const useRecommend = () => {
 
   const goDetail = (type, id) => {
     const path =
-      type === 'office'
+      type === 'OFFICE'
         ? `/coworking-offices/${id}`
-        : type === 'workstay'
+        : type === 'WORK_STAY'
           ? `/workstays/${id}`
-          : `/accommodations/${id}`;
+          : `/stations/${id}`;
     navigate(path);
   };
 
