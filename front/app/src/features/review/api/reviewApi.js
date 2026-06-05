@@ -6,8 +6,8 @@ export async function saveReview(formData) {
   await api.post('/review', formData);
 }
 
-export async function findReviewsByPlace(placeNo) {
-  const res = await api.get('/review', { params: { placeNo } });
+export async function findReviewsByPlace(entityNo, type) {
+  const res = await api.get('/review', { params: { entityNo, type } });
   return res.data;
 }
 

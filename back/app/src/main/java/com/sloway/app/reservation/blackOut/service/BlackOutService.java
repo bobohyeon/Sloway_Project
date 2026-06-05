@@ -3,9 +3,15 @@ package com.sloway.app.reservation.blackOut.service;
 import com.sloway.app.common.exception.CustomException;
 import com.sloway.app.host.entity.HostEntity;
 import com.sloway.app.host.repository.HostRepository;
+import com.sloway.app.place.entity.office.OfficeEntity;
 import com.sloway.app.place.entity.place.PlaceEntity;
+import com.sloway.app.place.entity.station.StationEntity;
+import com.sloway.app.place.entity.workStay.WorkStayEntity;
 import com.sloway.app.place.repository.hostPlace.HostPlaceRepository;
+import com.sloway.app.place.repository.office.OfficeRepository;
 import com.sloway.app.place.repository.place.PlaceRepository;
+import com.sloway.app.place.repository.station.StationRepository;
+import com.sloway.app.place.repository.workStay.WorkStayRepository;
 import com.sloway.app.reservation.RsvnErrorCode;
 import com.sloway.app.reservation.blackOut.dto.request.BlackOutReqDto;
 import com.sloway.app.reservation.blackOut.dto.response.BlackOutResDto;
@@ -29,27 +35,35 @@ public class BlackOutService {
     private final PlaceRepository placeRepository;
     private final HostRepository hostRepository;
     private final HostPlaceRepository hostPlaceRepository;
+    private final OfficeRepository officeRepository;
+    private final WorkStayRepository workStayRepository;
+    private final StationRepository stationRepository;
+
 
     @Transactional
-    public void save(Long placeNo, BlackOutReqDto dto){
-
-        PlaceEntity place = placeRepository.findByNo(placeNo)
-                .orElseThrow(()-> new CustomException(RsvnErrorCode.PLACE_NOT_FOUND));
-
-        BlackOutEntity entity = dto.toEntity(place);
-
-        blackOutRepository.save(entity);
+    public void save(Long entityNo, BlackOutReqDto dto){
+        PlaceEntity place = findPlaceByEntityNo(entityNo);
+        blackOutRepository.save(dto.toEntity(place));
     }
 
-    public List<BlackOutResDto> findAll(Long placeNo){
-
-        PlaceEntity place = placeRepository.findByNo(placeNo)
-                .orElseThrow(()-> new CustomException(RsvnErrorCode.PLACE_NOT_FOUND));
-
+    public List<BlackOutResDto> findAll(Long entityNo){
+        PlaceEntity place = findPlaceByEntityNo(entityNo);
         return blackOutRepository.findByPlaceNo(place)
                 .stream()
                 .map(BlackOutResDto::from)
                 .toList();
+    }
+
+    // entityNo(office/workStay/station PK) → PlaceEntity 변환 헬퍼
+    private PlaceEntity findPlaceByEntityNo(Long entityNo) {
+        return officeRepository.findById(entityNo)
+                .map(OfficeEntity::getPlaceEntity)
+                .<PlaceEntity>map(p -> p)
+                .or(() -> workStayRepository.findById(entityNo)
+                        .map(WorkStayEntity::getPlaceEntity))
+                .or(() -> stationRepository.findById(entityNo)
+                        .map(StationEntity::getPlaceEntity))
+                .orElseThrow(() -> new CustomException(RsvnErrorCode.PLACE_NOT_FOUND));
     }
 
     @Transactional
@@ -91,5 +105,8 @@ public class BlackOutService {
 
         blackOutRepository.delete(blackOutEntity);
     }
+
+
+
 
 }
