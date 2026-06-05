@@ -96,6 +96,7 @@ public class HostService {
      *
      * <p>비밀번호는 HostEntity에 BCrypt 해시로 저장.
      */
+    @Transactional
     public void changePassword(Long memberNo, ChangePasswordRequestDto request) {
 
         // 1) 새 비번 길이 검증

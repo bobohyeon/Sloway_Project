@@ -33,6 +33,7 @@ import HostProfilePage from './features/account/pages/host/HostProfilePage';
 import HostProfileEditPage from './features/account/pages/host/HostProfileEditPage';
 import HostWithdrawPage from './features/account/pages/host/HostWithdrawPage';
 import HostStatusPage from './features/account/pages/host/HostStatusPage';
+import HostChangePasswordPage from './features/account/pages/host/HostChangePasswordPage';
 
 // ── 관리자 — 회원 관리 ──────────────────────────
 import MemberListPage from './features/account/pages/admin/MemberListPage';
@@ -332,6 +333,7 @@ function App() {
         <Route path="/host/dashboard" element={<HostDashboard />} />
         <Route path="/host/profile" element={<HostProfilePage />} />
         <Route path="/host/profile/edit" element={<HostProfileEditPage />} />
+        <Route path="/host/password" element={<HostChangePasswordPage />} />
         <Route path="/host/withdraw" element={<HostWithdrawPage />} />
         <Route path="/host/application" element={<HostStatusPage />} />
         <Route

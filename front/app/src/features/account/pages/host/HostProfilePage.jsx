@@ -6,6 +6,7 @@ import {
   FaCheckCircle,
   FaExclamationTriangle,
   FaFileAlt,
+  FaLock,
 } from 'react-icons/fa';
 import PageLayout from '../../../../app/layouts/page/PageLayout';
 import { useHostMyPage } from '../../hooks/useHostMyPage';
@@ -195,6 +196,25 @@ const WithdrawBtn = styled.button`
     border-color: #d4a8a3;
   }
 `;
+const PasswordBtn = styled.button`
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 38px;
+  padding: 0 16px;
+  margin-bottom: 16px;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  border: 1px solid var(--gray-200);
+  background: #fff;
+  color: var(--gray-800);
+
+  &:hover {
+    border-color: var(--sage);
+  }
+`;
 
 // ─── 컴포넌트 ──────────────────────────────────────────────
 // ─── 컴포넌트 ──────────────────────────────────────────────
@@ -309,6 +329,9 @@ function HostProfilePage() {
         {/* 계정 관리 */}
         <Card>
           <SectionTitle>계정 관리</SectionTitle>
+          <PasswordBtn onClick={() => navigate('/host/password')}>
+            <FaLock size={11} /> 비밀번호 변경
+          </PasswordBtn>
           <DangerNotice>
             호스트 탈퇴 시 운영 중인 공간이 즉시 비공개되며, 진행 중인 예약이
             있는 경우 탈퇴가 제한돼요. 미정산 금액이 남아있는 경우 정산 완료 후
