@@ -372,16 +372,33 @@ function SearchResultPage() {
     setCheckOut('');
   };
 
-  // 가격 필터만 클라이언트 처리 (타입·지역·정렬·날짜는 서버)
+  // 가격 필터 + 정렬은 클라이언트에서 처리 (서버 정렬 백업)
   const filtered = useMemo(() => {
-    if (priceIdx === 0) return spaces;
-    const { min, max } = PRICE_RANGES[priceIdx];
-    return spaces.filter((s) => s.price >= min && s.price <= max);
-  }, [spaces, priceIdx]);
+    let result = priceIdx === 0
+      ? spaces
+      : spaces.filter((s) => {
+          const { min, max } = PRICE_RANGES[priceIdx];
+          return s.price >= min && s.price <= max;
+        });
+
+    switch (sort) {
+      case '가격 낮은순': return [...result].sort((a, b) => a.price - b.price);
+      case '가격 높은순': return [...result].sort((a, b) => b.price - a.price);
+      case '평점순':      return [...result].sort((a, b) => (b.score ?? 0) - (a.score ?? 0));
+      default:            return result; // 인기순은 서버 정렬 그대로 사용
+    }
+  }, [spaces, priceIdx, sort]);
 
   // 카드 클릭 → 방 리스트 페이지
   const handleCardClick = (item) => {
-    navigate(`/spaces/${item.id}/rooms`, { state: { space: item } });
+    navigate(`/spaces/${item.id}/rooms`, {
+      state: {
+        space: item,
+        checkIn,
+        checkOut,
+        guests,
+      },
+    });
   };
 
   return (

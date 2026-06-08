@@ -8,19 +8,19 @@ import { findReviewsByPlace } from '../../../../review/api/reviewApi';
 import { getOfficeDetail } from '../../../api/searchApi';
 import { saveRecentViewed } from '../../../recentPlace/api/recentApi';
 
-const RSVN_INFO = {
-  checkIn: '5월 8일',
-  checkOut: '5월 10일',
-  guests: '성인 2명',
-  nights: 2,
-};
-
 function OfficeDetailPage() {
   const { id } = useParams();
   const location = useLocation();
   const selectedRoom = location.state?.selectedRoom ?? null;
+  const [checkIn, setCheckIn] = useState(location.state?.checkIn ?? '');
+  const [checkOut, setCheckOut] = useState(location.state?.checkOut ?? '');
+  const [guests, setGuests] = useState(location.state?.guests ?? 2);
   const [space, setSpace] = useState(null);
   const [reviews, setReviews] = useState([]);
+
+  const nights = checkIn && checkOut
+    ? Math.max(1, Math.ceil((new Date(checkOut) - new Date(checkIn)) / (1000 * 60 * 60 * 24)))
+    : 1;
 
   useEffect(() => {
     const load = async () => {
@@ -52,17 +52,24 @@ function OfficeDetailPage() {
       }
       rsvnBox={
         <DetailRsvnBox
-          rsvnInfo={RSVN_INFO}
+          checkIn={checkIn}
+          checkOut={checkOut}
+          guests={guests}
+          nights={nights}
+          onCheckInChange={setCheckIn}
+          onCheckOutChange={setCheckOut}
+          onGuestsChange={setGuests}
           price={selectedRoom?.price ?? space?.basePrice ?? 28000}
           priceUnit="원/4시간"
           roomName={selectedRoom?.name ?? null}
           serviceFee={12000}
+          inputType="time"
           rsvnDto={{
             officeNo: space?.entityNo,
-            count: 2,
-            amt: selectedRoom?.price ?? space?.basePrice ?? 28000,
-            checkIn: '2026-06-10T09:00:00',
-            checkOut: '2026-06-10T18:00:00',
+            count: guests,
+            amt: (selectedRoom?.price ?? space?.basePrice ?? 0) * nights,
+            checkIn: checkIn || null,
+            checkOut: checkOut || null,
             special: null,
           }}
         />

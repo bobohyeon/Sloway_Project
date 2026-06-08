@@ -3,11 +3,13 @@ package com.sloway.app.search.dto.request;
 import com.sloway.app.search.dto.RegionType;
 import com.sloway.app.search.dto.SortType;
 import lombok.Getter;
+import lombok.Setter;
 
 import java.time.LocalDate;
 import java.util.List;
 
 @Getter
+@Setter
 public class SearchReqDto {
 
     // 지역 미선택 시 전체 검색 가능. null 허용

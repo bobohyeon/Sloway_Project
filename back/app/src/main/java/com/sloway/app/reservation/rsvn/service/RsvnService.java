@@ -337,7 +337,9 @@ public class RsvnService {
         validateHostOwnership(host, entity);
 
         entity.reject();
-        refundService.createRefundByHost(payNo);
+        if (payNo != null) {
+            refundService.createRefundByHost(payNo);
+        }
     }
 
     // 호스트 소유 공간 검증 (내부 헬퍼)
