@@ -28,7 +28,7 @@ public class PointEntity extends BaseEntity {
     @ManyToOne(fetch = FetchType.LAZY)
     private MemberEntity memberNo;
 
-    @JoinColumn(name = "PAY_NO", nullable = false)
+    @JoinColumn(name = "PAY_NO")
     @ManyToOne(fetch = FetchType.LAZY)
     private PayEntity payNo;
 

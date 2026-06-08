@@ -137,6 +137,20 @@ public class PointService {
         pointRepository.save(pointEntity);
     }
 
+    @Transactional
+    public void earnSignupPoint(Long memberNo){
+        MemberEntity memberEntity = findMember(memberNo);
+        LocalDateTime expiredAt = LocalDateTime.now().plusYears(1);
+        PointEntity pointEntity = PointEntity.builder()
+                .memberNo(memberEntity)
+                .amount(5000)
+                .dealType(PointDealType.EARN)
+                .expiredAt(expiredAt)
+                .status(PointStatus.WAIT)
+                .build();
+        pointRepository.save(pointEntity);
+    }
+
     public PointBalanceResDto findPointBalanceByMemberNo(Long memberNo) {
         MemberEntity memberEntity = findMember(memberNo);
         int balance = calcBalance(memberNo);
