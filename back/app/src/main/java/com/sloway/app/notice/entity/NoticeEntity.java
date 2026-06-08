@@ -2,7 +2,6 @@ package com.sloway.app.notice.entity;
 
 import com.sloway.app.common.entity.BaseEntity;
 import com.sloway.app.notice.enums.NoticeCategory;
-import com.sloway.app.notice.enums.NoticeStatus;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -28,21 +27,15 @@ public class NoticeEntity extends BaseEntity {
     @Column(nullable = false, length = 20)
     private NoticeCategory category;
 
-    @Enumerated(EnumType.STRING)
-    @Column(nullable = false, length = 20)
-    @Builder.Default
-    private NoticeStatus status = NoticeStatus.ACTIVE;
-
     @Column(nullable = false)
     @Builder.Default
     private Long viewCount = 0L;
 
 
-    public void update(String title, String content, NoticeCategory category, NoticeStatus status) {
+    public void update(String title, String content, NoticeCategory category) {
         this.title = title;
         this.content = content;
         this.category = category;
-        this.status = status;
     }
     
     public void increaseViewCount() {

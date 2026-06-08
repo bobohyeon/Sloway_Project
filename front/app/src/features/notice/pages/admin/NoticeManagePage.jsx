@@ -7,7 +7,6 @@ import {
   Modal,
   Pagination,
   EmptyState,
-  Tabs,
   Card,
 } from '../../../pay_shared/components';
 import { useNavigate } from 'react-router-dom';
@@ -21,17 +20,11 @@ const CATEGORY_OPTIONS = [
   { label: '점검', value: 'INSPECTION' },
   { label: '기타', value: 'OTHER' },
 ];
-const TAB_ITEMS = [
-  { label: '전체', value: 'ALL' },
-  { label: '게시중', value: 'ACTIVE' },
-  { label: '미게시', value: 'INACTIVE' },
-];
 const fmtDate = (iso) => (iso ? iso.slice(0, 10).replace(/-/g, '.') : '');
 
 export default function NoticeManagePage() {
   const navigate = useNavigate();
 
-  const [tab, setTab] = useState('ALL');
   const [category, setCategory] = useState('');
   const [keyword, setKeyword] = useState('');
   const [inputKeyword, setInputKeyword] = useState('');
@@ -49,7 +42,6 @@ export default function NoticeManagePage() {
         page: page - 1,
         size: 10,
         sort: 'createdAt,DESC',
-        status: tab,
         category: category || undefined,
         keyword: keyword || undefined,
       },
@@ -57,7 +49,7 @@ export default function NoticeManagePage() {
     setNotices(data.content);
     setTotalPages(data.totalPages);
     setTotalElements(data.totalElements);
-  }, [tab, category, keyword, page]);
+  }, [category, keyword, page]);
 
   useEffect(() => {
     fetchNotices();
@@ -107,18 +99,6 @@ export default function NoticeManagePage() {
         </Button>
       }
     >
-      {/* 탭 */}
-      <TabWrap>
-        <Tabs
-          items={TAB_ITEMS}
-          value={tab}
-          onChange={(v) => {
-            setTab(v);
-            setPage(1);
-          }}
-        />
-      </TabWrap>
-
       {/* 검색/필터 영역 */}
       <FilterCard padded>
         <FilterRow>
@@ -205,9 +185,6 @@ export default function NoticeManagePage() {
                       카테고리
                     </Th>
                     <Th>제목</Th>
-                    <Th $w="80px" $center>
-                      상태
-                    </Th>
                     <Th $w="70px" $center>
                       조회수
                     </Th>
@@ -247,17 +224,6 @@ export default function NoticeManagePage() {
                             {notice.title}
                           </TitleText>
                         </TitleCell>
-                      </Td>
-                      <Td $center>
-                        <Badge
-                          size="sm"
-                          variant={
-                            notice.status === 'ACTIVE' ? 'success' : 'muted'
-                          }
-                        >
-                          {TAB_ITEMS.find((t) => t.value === notice.status)
-                            ?.label ?? notice.status}
-                        </Badge>
                       </Td>
                       <Td $center $muted>
                         {notice.viewCount}
@@ -308,10 +274,6 @@ export default function NoticeManagePage() {
 }
 
 // ─── Styled Components ───────────────────────────────────────────────────────
-const TabWrap = styled.div`
-  margin-bottom: var(--space-4);
-`;
-
 const FilterCard = styled(Card)`
   margin-bottom: var(--space-4);
 `;

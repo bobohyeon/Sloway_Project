@@ -6,7 +6,6 @@ import com.querydsl.core.types.dsl.BooleanExpression;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import com.sloway.app.notice.enums.NoticeCategory;
 import com.sloway.app.notice.entity.NoticeEntity;
-import com.sloway.app.notice.enums.NoticeStatus;
 import com.sloway.app.notice.entity.QNoticeEntity;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -25,13 +24,13 @@ public class NoticeRepositoryImpl implements NoticeRepositoryCustom {
 
     @Override
     public Page<NoticeEntity> findAllByCondition(
-            NoticeCategory category, String keyword, NoticeStatus status, Pageable pageable) {
+            NoticeCategory category, String keyword, Pageable pageable) {
 
         OrderSpecifier<?>[] orders = buildOrderSpecifiers(pageable.getSort());
 
         List<NoticeEntity> content = queryFactory
                 .selectFrom(q)
-                .where(categoryEq(category), keywordContains(keyword), statusEq(status))
+                .where(categoryEq(category), keywordContains(keyword))
                 .orderBy(orders)
                 .offset(pageable.getOffset())
                 .limit(pageable.getPageSize())
@@ -40,7 +39,7 @@ public class NoticeRepositoryImpl implements NoticeRepositoryCustom {
         Long total = queryFactory
                 .select(q.count())
                 .from(q)
-                .where(categoryEq(category), keywordContains(keyword), statusEq(status))
+                .where(categoryEq(category), keywordContains(keyword))
                 .fetchOne();
 
         return new PageImpl<>(content, pageable, total == null ? 0 : total);
@@ -68,9 +67,5 @@ public class NoticeRepositoryImpl implements NoticeRepositoryCustom {
 
     private BooleanExpression keywordContains(String keyword) {
         return StringUtils.hasText(keyword) ? q.title.containsIgnoreCase(keyword) : null;
-    }
-
-    private BooleanExpression statusEq(NoticeStatus status) {
-        return status != null ? q.status.eq(status) : null;
     }
 }
