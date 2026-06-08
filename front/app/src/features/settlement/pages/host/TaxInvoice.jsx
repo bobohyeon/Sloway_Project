@@ -5,8 +5,11 @@ import html2pdf from 'html2pdf.js';
 
 import PageLayout from '../../../../app/layouts/page/PageLayout';
 import { Card, Section, EmptyState } from '../../../pay_shared/components';
+import { Pagination } from '../../../pay_shared/components/Pagination';
 import TaxInvoiceDoc from '../../components/host/TaxInvoiceDoc';
 import { findSettleByHostNo } from '../../api/settlementApi';
+
+const PAGE_SIZE = 10;
 
 const POLICY_ITEMS = [
   { title: '발행 주기', description: '정산 회차마다 4일 단위로 자동 발행됩니다.' },
@@ -27,7 +30,14 @@ export default function TaxInvoice() {
   const nav = useNavigate();
   const [invoices, setInvoices] = useState([]);
   const [target, setTarget] = useState(null); // PDF로 내려받을 정산 1건
+  const [page, setPage] = useState(1);
   const docRef = useRef(null);
+
+  const totalPages = Math.ceil(invoices.length / PAGE_SIZE);
+  const pagedInvoices = invoices.slice(
+    (page - 1) * PAGE_SIZE,
+    page * PAGE_SIZE
+  );
 
   useEffect(() => {
     // 정산 중 세금계산서 발행(INVOICE) 상태만 추림
@@ -93,7 +103,7 @@ export default function TaxInvoice() {
               />
             </EmptyWrap>
           ) : (
-            invoices.map((s) => (
+            pagedInvoices.map((s) => (
               <RowItem
                 key={s.no}
                 onClick={() => nav(`/host/settlement/history/${s.no}`)}
@@ -124,6 +134,15 @@ export default function TaxInvoice() {
             ))
           )}
         </ListCard>
+
+        <Pagination
+          currentPage={page}
+          totalPages={totalPages}
+          onChange={(p) => {
+            setPage(p);
+            window.scrollTo(0, 0);
+          }}
+        />
       </Section>
 
       {/* PDF 캡처 전용 숨김 영역 — 화면 밖에 양식을 렌더해 html2pdf가 캡처 */}

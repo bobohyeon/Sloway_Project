@@ -4,7 +4,10 @@ import styled from 'styled-components';
 
 import PageLayout from '../../../../app/layouts/page/PageLayout';
 import { Card, EmptyState } from '../../../pay_shared/components';
+import { Pagination } from '../../../pay_shared/components/Pagination';
 import { findSettleByHostNo } from '../../api/settlementApi';
+
+const PAGE_SIZE = 10;
 
 const STATUS_META = {
   WAITING: { label: '정산 대기', color: 'var(--gray-400)' },
@@ -28,6 +31,7 @@ export default function SettlementHistory() {
   const nav = useNavigate();
   const [settles, setSettles] = useState([]);
   const [filter, setFilter] = useState('all');
+  const [page, setPage] = useState(1);
 
   useEffect(() => {
     findSettleByHostNo()
@@ -39,6 +43,9 @@ export default function SettlementHistory() {
     if (filter === 'all') return settles;
     return settles.filter((s) => s.status === filter);
   }, [settles, filter]);
+
+  const totalPages = Math.ceil(filtered.length / PAGE_SIZE);
+  const paged = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
 
   return (
     <PageLayout
@@ -53,7 +60,10 @@ export default function SettlementHistory() {
           <FilterBtn
             key={tab.value}
             $active={filter === tab.value}
-            onClick={() => setFilter(tab.value)}
+            onClick={() => {
+              setFilter(tab.value);
+              setPage(1);
+            }}
           >
             {tab.label}
           </FilterBtn>
@@ -78,7 +88,7 @@ export default function SettlementHistory() {
             />
           </EmptyWrap>
         ) : (
-          filtered.map((s) => (
+          paged.map((s) => (
             <RowItem
               key={s.no}
               onClick={() => nav(`/host/settlement/history/${s.no}`)}
@@ -101,6 +111,15 @@ export default function SettlementHistory() {
           ))
         )}
       </ListCard>
+
+      <Pagination
+        currentPage={page}
+        totalPages={totalPages}
+        onChange={(p) => {
+          setPage(p);
+          window.scrollTo(0, 0);
+        }}
+      />
     </PageLayout>
   );
 }

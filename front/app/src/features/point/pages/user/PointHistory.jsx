@@ -8,6 +8,9 @@ import {
   findPointsByMemberNo,
 } from '../../api/pointApi';
 import { useAuth } from '../../../auth/hooks/useAuth';
+import { Pagination } from '../../../pay_shared/components/Pagination';
+
+const PAGE_SIZE = 10;
 
 const POLICIES = [
   { label: '적립률', value: '결제 금액의 1%' },
@@ -47,6 +50,13 @@ export default function PointHistory() {
   const [history, setHistory] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [page, setPage] = useState(1);
+
+  const totalPages = Math.ceil(history.length / PAGE_SIZE);
+  const pagedHistory = history.slice(
+    (page - 1) * PAGE_SIZE,
+    page * PAGE_SIZE
+  );
 
   useEffect(() => {
     if (!memberNo) {
@@ -121,8 +131,9 @@ export default function PointHistory() {
             </EmptyDesc>
           </EmptyBox>
         ) : (
+          <>
           <HistoryList>
-            {history.map((item) => (
+            {pagedHistory.map((item) => (
               <HistoryRow key={item.no}>
                 <HistoryLeft>
                   <DealBadge $deal={item.dealType}>
@@ -142,6 +153,15 @@ export default function PointHistory() {
               </HistoryRow>
             ))}
           </HistoryList>
+          <Pagination
+            currentPage={page}
+            totalPages={totalPages}
+            onChange={(p) => {
+              setPage(p);
+              window.scrollTo(0, 0);
+            }}
+          />
+          </>
         )}
       </Section>
     </PageLayout>
