@@ -280,10 +280,17 @@ function MainPage() {
     '제주',
   ];
 
+  // 메인 검색 버튼
+  const handleSearch = () => {
+    navigate('/spaces/search', {
+      state: { type: spaceType, region, guests },
+    });
+  };
+
   // 공간 유형 클릭 → 유형 필터 적용해서 검색
   const goSearchByType = (type) => {
     navigate('/spaces/search', {
-      state: { type, region: location || '전체', guests },
+      state: { type, region, guests },
     });
   };
 
@@ -412,7 +419,7 @@ function MainPage() {
               </button>
             </div>
           </SearchField>
-          <SearchBtn onClick={goSearch}>검색</SearchBtn>
+          <SearchBtn onClick={handleSearch}>검색</SearchBtn>
         </SearchBox>
       </Hero>
 

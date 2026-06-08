@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import dayjs from 'dayjs';
 import styled from 'styled-components';
 import PageLayout from '../../../../app/layouts/page/PageLayout';
@@ -18,14 +19,30 @@ const List = styled.div`
   gap: 0;
 `;
 
+const PayBtn = styled.button`
+  display: block;
+  width: 100%;
+  padding: 12px;
+  margin-bottom: 12px;
+  background: #2d6a4f;
+  color: #fff;
+  border: none;
+  border-radius: 0 0 10px 10px;
+  font-size: 15px;
+  font-weight: 700;
+  cursor: pointer;
+  &:hover { background: #1a3a2a; }
+`;
+
 const TABS = [
   { label: '전체', statuses: null },
+  { label: '결제대기', statuses: ['P'] },
   { label: '이용 예정', statuses: ['S'] },
   { label: '이용 완료', statuses: ['E'] },
   { label: '취소/거절', statuses: ['C', 'R'] },
 ];
 
-const STATUS_LABEL = { S: '예약확정', E: '이용완료', C: '예약취소', R: '예약거절' };
+const STATUS_LABEL = { P: '결제대기', S: '예약확정', E: '이용완료', C: '예약취소', R: '예약거절' };
 const ACTION_MAP = { S: '취소/환불', E: '리뷰 작성', C: null, R: null };
 const SPACE_ROUTE = { office: 'coworking-offices', workstay: 'workstays', station: 'stations' };
 
@@ -60,6 +77,7 @@ const toCardItem = (rsvn) => {
 const PAGE_SIZE = 10;
 
 function RsvnListPage() {
+  const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState(0);
   const [rsvns, setRsvns] = useState([]);
   const [page, setPage] = useState(1);
@@ -110,7 +128,14 @@ function RsvnListPage() {
 
       <List>
         {paged.map((rsvn) => (
-          <RsvnCard key={rsvn.no} item={toCardItem(rsvn)} />
+          <div key={rsvn.no}>
+            <RsvnCard item={toCardItem(rsvn)} />
+            {rsvn.status === 'P' && (
+              <PayBtn onClick={() => navigate('/user/payment/checkout', { state: { rsvnNo: rsvn.no } })}>
+                결제하기
+              </PayBtn>
+            )}
+          </div>
         ))}
       </List>
       <Pagination

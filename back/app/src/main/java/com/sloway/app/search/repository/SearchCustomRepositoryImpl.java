@@ -276,7 +276,7 @@ public class SearchCustomRepositoryImpl implements SearchCustomRepository{
             case POPULAR -> p.viewCnt.desc();
             case PRICE_ASC -> basePriceExpr().asc();
             case PRICE_DESC -> basePriceExpr().desc();
-            case SCORE -> new OrderSpecifier<>(Order.DESC,avgExpr());
+            case SCORE -> new OrderSpecifier<>(Order.DESC, avgExpr(), OrderSpecifier.NullHandling.NullsLast);
         };
     }
 }

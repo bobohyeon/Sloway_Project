@@ -8,19 +8,19 @@ import { findReviewsByPlace } from '../../../../review/api/reviewApi';
 import { getWorkStayDetail } from '../../../api/searchApi';
 import { saveRecentViewed } from '../../../recentPlace/api/recentApi';
 
-const RSVN_INFO = {
-  checkIn: '5월 8일',
-  checkOut: '5월 10일',
-  guests: '성인 2명',
-  nights: 2,
-};
-
 function WorkstayDetailPage() {
   const { id } = useParams();
   const location = useLocation();
   const selectedRoom = location.state?.selectedRoom ?? null;
+  const [checkIn, setCheckIn] = useState(location.state?.checkIn ?? '');
+  const [checkOut, setCheckOut] = useState(location.state?.checkOut ?? '');
+  const [guests, setGuests] = useState(location.state?.guests ?? 2);
   const [space, setSpace] = useState(null);
   const [reviews, setReviews] = useState([]);
+
+  const nights = checkIn && checkOut
+    ? Math.max(1, Math.ceil((new Date(checkOut) - new Date(checkIn)) / (1000 * 60 * 60 * 24)))
+    : 1;
 
   useEffect(() => {
     const load = async () => {
@@ -52,16 +52,22 @@ function WorkstayDetailPage() {
       }
       rsvnBox={
         <DetailRsvnBox
-          rsvnInfo={RSVN_INFO}
+          checkIn={checkIn}
+          checkOut={checkOut}
+          guests={guests}
+          nights={nights}
+          onCheckInChange={setCheckIn}
+          onCheckOutChange={setCheckOut}
+          onGuestsChange={setGuests}
           price={selectedRoom?.price ?? space?.basePrice ?? 185000}
           priceUnit="원/박"
           roomName={selectedRoom?.name ?? null}
           rsvnDto={{
             workStayNo: space?.entityNo,
-            count: 2,
-            amt: selectedRoom?.price ?? space?.basePrice ?? 185000,
-            checkIn: '2026-06-10T15:00:00',
-            checkOut: '2026-06-12T11:00:00',
+            count: guests,
+            amt: (selectedRoom?.price ?? space?.basePrice ?? 0) * nights,
+            checkIn: checkIn ? new Date(checkIn).toISOString().slice(0, 19) : null,
+            checkOut: checkOut ? new Date(checkOut).toISOString().slice(0, 19) : null,
             special: null,
           }}
         />
