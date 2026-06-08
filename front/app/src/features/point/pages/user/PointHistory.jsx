@@ -52,8 +52,13 @@ export default function PointHistory() {
   const [error, setError] = useState(null);
   const [page, setPage] = useState(1);
 
-  const totalPages = Math.ceil(history.length / PAGE_SIZE);
-  const pagedHistory = history.slice(
+  // 취소(CANCEL)·만료(EXPIRATION)된 내역은 잔액에 반영되지 않으므로 목록에서 제외
+  const visibleHistory = history.filter(
+    (h) => h.status !== 'CANCEL' && h.status !== 'EXPIRATION'
+  );
+
+  const totalPages = Math.ceil(visibleHistory.length / PAGE_SIZE);
+  const pagedHistory = visibleHistory.slice(
     (page - 1) * PAGE_SIZE,
     page * PAGE_SIZE
   );
@@ -121,7 +126,7 @@ export default function PointHistory() {
 
       <Section>
         <SectionTitle>적립·사용 내역</SectionTitle>
-        {history.length === 0 ? (
+        {visibleHistory.length === 0 ? (
           <EmptyBox>
             <EmptyIcon>📋</EmptyIcon>
             <EmptyTitle>아직 표시할 내역이 없어요</EmptyTitle>
