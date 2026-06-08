@@ -100,7 +100,7 @@ public class RsvnController {
     public ResponseEntity<Void> delete(
             @AuthenticationPrincipal CustomUserDetails userDetails
             , @PathVariable Long no
-            , @RequestParam RefundReason refundReason
+            , @RequestParam(required = false) RefundReason refundReason
             ){
         rsvnService.cancel(userDetails.getMemberNo(), no, refundReason);
         return ResponseEntity.status(HttpStatus.NO_CONTENT).build();
@@ -110,7 +110,7 @@ public class RsvnController {
     @PostMapping("/{no}/reject")
     public ResponseEntity<Void> rejectByHost(
             @AuthenticationPrincipal CustomUserDetails userDetails,
-            @PathVariable Long no, @RequestParam Long payNo)
+            @PathVariable Long no, @RequestParam(required = false) Long payNo)
     {
         if(userDetails.getRole() != MemberRole.H){
             throw new CustomException(RsvnErrorCode.UNAUTHORIZED_ACCESS);

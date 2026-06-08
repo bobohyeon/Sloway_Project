@@ -5,6 +5,43 @@ import { COLOR } from '../../../../rsvn/components/user/RsvnStyled';
 
 const TABS = ['공간 정보', '편의시설', '리뷰', '위치·주변'];
 
+const AVATAR_COLORS = ['#A8B89F', '#7B9EA8', '#8B7BA8', '#A87B6B', '#6B8B7B', '#8B9EA8'];
+
+function toDateStr(dt) {
+  if (!dt) return '';
+  return String(dt).slice(0, 10).replace(/-/g, '.');
+}
+
+// 백엔드 ReviewResDto → ReviewItem이 기대하는 형태로 변환
+function toReviewItem(dto) {
+  return {
+    id: dto.no,
+    name: dto.memberName ?? '익명',
+    avatar: (dto.memberName ?? '?')[0],
+    avatarColor: AVATAR_COLORS[dto.no % AVATAR_COLORS.length],
+    date: toDateStr(dto.createdAt),
+    usedDate: toDateStr(dto.checkIn) || null,
+    scores: [
+      { label: '종합 만족도', val: dto.scoreTotal ?? 0 },
+      { label: '업무 환경',  val: dto.scoreOffice ?? 0 },
+      { label: '편의시설',   val: dto.scoreAmenity ?? 0 },
+      { label: '집중도',     val: dto.scoreFocus ?? 0 },
+    ].filter((s) => s.val > 0),
+    text: dto.content ?? '',
+    helpful: 0,
+    imgs: 0,
+    reply: dto.replies?.[0]
+      ? {
+          hostName: '호스트',
+          date: toDateStr(dto.replies[0].createdAt),
+          text: dto.replies[0].content,
+        }
+      : null,
+    space: dto.spaceName,
+    spaceType: dto.spaceType,
+  };
+}
+
 const fadeIn = keyframes`
   from { opacity: 0; transform: translateY(6px); }
   to   { opacity: 1; transform: translateY(0); }
@@ -300,9 +337,10 @@ function DetailMainBox({ space = {}, reviews = [] }) {
             <EmptyReview>아직 작성된 리뷰가 없어요</EmptyReview>
           ) : (
             <ReviewList>
-              {reviews.map((review) => (
-                <ReviewItem key={review.id} review={review} />
-              ))}
+              {reviews.map((dto) => {
+                const review = toReviewItem(dto);
+                return <ReviewItem key={review.id} review={review} />;
+              })}
             </ReviewList>
           )}
         </TabContent>
