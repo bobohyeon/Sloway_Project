@@ -138,6 +138,12 @@ const ActionButton = styled.button`
   cursor: pointer;
   transition: all 0.2s;
 
+  /* 비활성화 시 공통 스타일 */
+  &:disabled {
+    cursor: not-allowed;
+    opacity: 0.7; /* 약간 흐리게 */
+  }
+
   &.manage-btn {
     background: white;
     border: 1px solid #ddd;
@@ -145,6 +151,12 @@ const ActionButton = styled.button`
     &:hover {
       background: #f9f9f9;
       border-color: #ccc;
+    }
+    /* 비활성화 시 관리 버튼 색상 */
+    &:disabled {
+      background: #f3f3f3;
+      color: #ccc;
+      border-color: #e0e0e0;
     }
   }
 
@@ -155,6 +167,11 @@ const ActionButton = styled.button`
     &:hover {
       background: #627254;
       border-color: #627254;
+    }
+    /* 비활성화 시 이미지 버튼 색상 */
+    &:disabled {
+      background: #8e9e90;
+      border-color: #ccc;
     }
   }
 `;
@@ -261,6 +278,7 @@ function SpaceListComponent({ data = [] }) {
               <div className="button-group">
                 <ActionButton
                   className="image-btn"
+                  disabled={space.status === 'P'}
                   onClick={(evt) => {
                     evt.stopPropagation();
                     navigate(`/host/space/${space.id}/images`);
@@ -270,6 +288,7 @@ function SpaceListComponent({ data = [] }) {
                 </ActionButton>
                 <ActionButton
                   className="manage-btn"
+                  disabled={space.status === 'P'}
                   onClick={(evt) => {
                     evt.stopPropagation();
                     navigate(`/host/space/${space.id}/edit`);

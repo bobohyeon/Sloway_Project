@@ -257,8 +257,32 @@ function InsertFeeComponent({
   // 예외 기간 내부 값 변경 함수
   const handleExceptionChange = (index, field, value) => {
     const updated = [...formData.exceptionPeriods];
-    updated[index][field] = value;
+
+    // 월요일(monPrice) 입력 시 해당 예외 기간의 모든 요일/공휴일 업데이트
+    if (field === 'monPrice') {
+      dayList.forEach((day) => {
+        updated[index][day.key] = value;
+      });
+    } else {
+      updated[index][field] = value;
+    }
     setFormData({ ...formData, exceptionPeriods: updated });
+  };
+
+  const handleRegularChange = (e) => {
+    const { name, value } = e.target;
+
+    // 월요일(monPrice) 입력 시 모든 요일/공휴일 업데이트
+    if (name === 'monPrice') {
+      const allPrices = {};
+      dayList.forEach((day) => {
+        allPrices[day.key] = value;
+      });
+      setFormData({ ...formData, ...allPrices });
+    } else {
+      // 기존 handleChange 로직 수행
+      handleChange(e);
+    }
   };
 
   return (
@@ -281,7 +305,7 @@ function InsertFeeComponent({
                 name={day.key}
                 placeholder="150,000"
                 value={formData[day.key] || ''}
-                onChange={handleChange}
+                onChange={handleRegularChange}
               />
             </PriceInputWrapper>
           </FormGroup>

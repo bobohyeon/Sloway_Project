@@ -12,9 +12,8 @@ const PageWrapper = styled.div`
 
 const Container = styled.div`
   width: 100%;
-  height: 100%;
-  margin-bottom: 250px;
-  max-width: 1100px;
+  margin-bottom: 100px;
+  max-width: 1200px;
 `;
 
 // Layout 컴포넌트는 타이틀, 서브타이틀, 그리고 내부 컨텐츠(children)를 인자로 받습니다.

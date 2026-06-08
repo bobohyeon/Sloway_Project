@@ -70,7 +70,7 @@ const adminMenuGroups = [
     title: '결제 · 환불',
     items: [
       { url: '/admin/payment', str: '전체 결제', icon: <FaCreditCard /> },
-      { url: '/admin/refund', str: '환불 요청', icon: <FaMoneyBillWave /> },
+      { url: '/admin/refund', str: '환불 관리', icon: <FaMoneyBillWave /> },
     ],
   },
   {
