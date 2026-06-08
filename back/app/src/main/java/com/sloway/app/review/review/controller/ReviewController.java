@@ -3,6 +3,7 @@ package com.sloway.app.review.review.controller;
 import com.sloway.app.auth.user.CustomUserDetails;
 import com.sloway.app.review.review.dto.request.ReviewCreateReqDto;
 import com.sloway.app.review.review.dto.request.ReviewEditReqDto;
+import com.sloway.app.review.review.dto.response.HostReviewStatsResDto;
 import com.sloway.app.review.review.dto.response.ReviewResDto;
 import com.sloway.app.review.review.service.ReviewService;
 import lombok.RequiredArgsConstructor;
@@ -62,6 +63,12 @@ public class ReviewController {
     ){
         reviewService.editReview(userDetails.getMemberNo(), no, dto);
         return ResponseEntity.status(HttpStatus.NO_CONTENT).build();
+    }
+
+    @GetMapping("/host/stats")
+    public ResponseEntity<HostReviewStatsResDto> findMyHostReviewStats(
+            @AuthenticationPrincipal CustomUserDetails userDetails) {
+        return ResponseEntity.ok(reviewService.findMyHostReviewStats(userDetails.getMemberNo()));
     }
 
     @DeleteMapping("/{no}")
