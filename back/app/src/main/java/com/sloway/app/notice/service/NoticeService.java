@@ -5,7 +5,6 @@ import com.sloway.app.notice.dto.response.NoticeDetailResDto;
 import com.sloway.app.notice.dto.response.NoticeListResDto;
 import com.sloway.app.notice.enums.NoticeCategory;
 import com.sloway.app.notice.entity.NoticeEntity;
-import com.sloway.app.notice.enums.NoticeStatus;
 import com.sloway.app.notice.repository.NoticeRepository;
 import org.springframework.util.StringUtils;
 import lombok.RequiredArgsConstructor;
@@ -27,15 +26,13 @@ public class NoticeService {
 
 
     public Page<NoticeListResDto> findAll(
-            String category, String keyword, String status, Pageable pageable) {
+            String category, String keyword, Pageable pageable) {
 
         NoticeCategory categoryEnum = StringUtils.hasText(category)
                 ? NoticeCategory.from(category) : null;
-        NoticeStatus statusEnum = StringUtils.hasText(status) && !"all".equalsIgnoreCase(status)
-                ? NoticeStatus.from(status) : null;
 
         return noticeRepository
-                .findAllByCondition(categoryEnum, keyword, statusEnum, pageable)
+                .findAllByCondition(categoryEnum, keyword, pageable)
                 .map(NoticeListResDto::from);
     }
 
@@ -62,8 +59,7 @@ public class NoticeService {
         NoticeEntity noticeEntity = noticeRepository.findByIdAndDelYn(id , "N")
                 .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 공지사항입니다. id=" + id));
 
-        noticeEntity.update(reqDto.getTitle(), reqDto.getContent(),
-                reqDto.getCategory(), reqDto.getStatus());
+        noticeEntity.update(reqDto.getTitle(), reqDto.getContent(), reqDto.getCategory());
         log.info("[공지사항 수정] id={}", id);
     }
 

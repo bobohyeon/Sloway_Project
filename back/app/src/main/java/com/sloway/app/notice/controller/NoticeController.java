@@ -28,11 +28,10 @@ public class NoticeController {
     public ResponseEntity<Page<NoticeListResDto>> findAll(
             @RequestParam(required = false) String category,
             @RequestParam(required = false) String keyword,
-            @RequestParam(defaultValue = "all") String status,
             @PageableDefault(size = 10, sort = "createdAt",
                     direction = Sort.Direction.DESC) Pageable pageable) {
 
-        return ResponseEntity.ok(noticeService.findAll(category, keyword, status, pageable));
+        return ResponseEntity.ok(noticeService.findAll(category, keyword, pageable));
     }
 
     @GetMapping("{id}")

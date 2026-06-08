@@ -12,7 +12,7 @@ const CATEGORY_OPTIONS = [
   { label: '기타', value: 'OTHER' },
 ];
 
-const EMPTY_FORM = { title: '', category: 'SERVICE', content: '', status: 'ACTIVE' };
+const EMPTY_FORM = { title: '', category: 'SERVICE', content: '' };
 
 export default function NoticeFormPage({ isEdit = false }) {
   const navigate = useNavigate();
@@ -28,7 +28,7 @@ export default function NoticeFormPage({ isEdit = false }) {
     if (!isEdit || !id) return;
     const fetch = async () => {
       const { data } = await api.get(`/notice/${id}`);
-      setForm({ title: data.title, category: data.category, content: data.content, status: data.status });
+      setForm({ title: data.title, category: data.category, content: data.content });
     };
     fetch();
   }, [isEdit, id]);
@@ -61,7 +61,7 @@ export default function NoticeFormPage({ isEdit = false }) {
     }
     setIsSaving(true);
     try {
-      const payload = { title: form.title, content: form.content, category: form.category, status: form.status };
+      const payload = { title: form.title, content: form.content, category: form.category };
       if (isEdit) {
         await api.put(`/notice/${id}`, payload);
       } else {
@@ -155,32 +155,6 @@ export default function NoticeFormPage({ isEdit = false }) {
               </Select>
             </Field>
 
-            {/* 게시 상태 */}
-            <Field>
-              <Label required>게시 상태</Label>
-              <RadioGroup role="radiogroup" aria-label="게시 상태">
-                <RadioLabel>
-                  <Radio
-                    type="radio"
-                    name="status"
-                    value="ACTIVE"
-                    checked={form.status === 'ACTIVE'}
-                    onChange={() => handleChange('status', 'ACTIVE')}
-                  />
-                  <span>게시</span>
-                </RadioLabel>
-                <RadioLabel>
-                  <Radio
-                    type="radio"
-                    name="status"
-                    value="INACTIVE"
-                    checked={form.status === 'INACTIVE'}
-                    onChange={() => handleChange('status', 'INACTIVE')}
-                  />
-                  <span>미게시</span>
-                </RadioLabel>
-              </RadioGroup>
-            </Field>
           </FormCard>
 
           {/* 하단 버튼 */}
@@ -344,27 +318,6 @@ const Select = styled.select`
   background-repeat: no-repeat;
   background-position: right 12px center;
   padding-right: 36px;
-`;
-
-const RadioGroup = styled.div`
-  display: flex;
-  gap: var(--space-4);
-`;
-
-const RadioLabel = styled.label`
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  cursor: pointer;
-  font-size: 0.88rem;
-  color: var(--gray-700);
-`;
-
-const Radio = styled.input`
-  width: 16px;
-  height: 16px;
-  accent-color: var(--sage);
-  cursor: pointer;
 `;
 
 const FieldBottom = styled.div`
