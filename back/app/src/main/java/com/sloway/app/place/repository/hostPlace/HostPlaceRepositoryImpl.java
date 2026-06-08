@@ -392,26 +392,15 @@ public class HostPlaceRepositoryImpl implements HostPlaceRepositoryCustom {
 
     @Override
     public HostPlaceEntity findHostPlaceLatest(Long no, Long hostNo) {
-        // 1. 해당 장소(place) + 호스트 + 대기중인 상태의 가장 최신 ID 조회
-        Long latestNo = queryFactory
-                .select(hostPlaceEntity.no.max())
-                .from(hostPlaceEntity)
+        return queryFactory
+                .selectFrom(hostPlaceEntity)
                 .where(
                         hostPlaceEntity.placeEntity.no.eq(no),
                         hostPlaceEntity.hostEntity.memberNo.eq(hostNo),
                         hostPlaceEntity.status.eq(ApprovalStatus.P)
                 )
-                .fetchOne();
-
-        // 2. 해당 ID로 실제 엔티티 조회 (latestNo가 없을 경우 null 반환)
-        if (latestNo == null) {
-            return null;
-        }
-
-        return queryFactory
-                .selectFrom(hostPlaceEntity)
-                .where(hostPlaceEntity.no.eq(latestNo))
-                .fetchOne();
+                .orderBy(hostPlaceEntity.no.desc())
+                .fetchFirst();
     }
 
     @Override

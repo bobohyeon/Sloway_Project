@@ -9,6 +9,7 @@ import com.querydsl.jpa.impl.JPAQueryFactory;
 import com.sloway.app.place.dto.request.place.PlaceUpdateReqDto;
 import com.sloway.app.place.dto.response.place.*;
 import com.sloway.app.place.entity.cashing.PlaceSummary;
+import com.sloway.app.place.entity.hostPlace.QHostPlaceEntity;
 import com.sloway.app.place.entity.place.PlaceStatus;
 import lombok.RequiredArgsConstructor;
 
@@ -149,50 +150,58 @@ public class PlaceRepositoryImpl implements PlaceRepositoryCustom {
 
     @Override
     public List<PlaceListRespDto> findPlaceListByMemberNo(Long memberNo) {
+        QHostPlaceEntity subHp = new QHostPlaceEntity("subHp");
+
         return queryFactory
                 .select(Projections.constructor(PlaceListRespDto.class,
                         placeEntity.no,
                         placeEntity.type,
-                        hostPlaceEntity.status.stringValue(),
+                        hostPlaceEntity.status.stringValue().max(),
                         placeEntity.title,
                         placeEntity.address,
-                        placeSummary.avgScore.coalesce(0.0),            // avg_review_score
-                        placeSummary.rsvnCount.coalesce(0).intValue(), // review_count
-                        placeSummary.rsvnCount.coalesce(0).intValue(), // monthly_bookings
-                        // 가격 케이스 문
+                        placeSummary.avgScore.avg().coalesce(0.0),
+                        placeSummary.rsvnCount.avg().intValue().coalesce(0),
+                        placeSummary.rsvnCount.avg().intValue().coalesce(0),
                         new CaseBuilder()
-                                .when(placeEntity.type.eq("WORK_STAY")).then(workStayEntity.monPrice)
-                                .when(placeEntity.type.eq("STATION")).then(stationEntity.monPrice)
+                                .when(placeEntity.type.eq("WORK_STAY")).then(workStayEntity.monPrice.min())
+                                .when(placeEntity.type.eq("STATION")).then(stationEntity.monPrice.min())
                                 .when(placeEntity.type.eq("OFFICE")).then(
                                         JPAExpressions.select(officePeriodEntity.price.min())
                                                 .from(officePeriodEntity)
-                                                .where(officePeriodEntity.officeEntity.no.eq(officeEntity.no))
+                                                .where(officePeriodEntity.officeEntity.eq(officeEntity))
                                 )
                                 .otherwise(0),
-                        imgPlaceEntity.currentUrl
+                        imgPlaceEntity.currentUrl.min()
                 ))
                 .from(placeEntity)
-                // 1. LATERAL JOIN 대신 가장 최신 ID를 서브쿼리로 필터링 (가장 안전한 방식)
-                .innerJoin(hostPlaceEntity).on(hostPlaceEntity.placeEntity.no.eq(placeEntity.no)
+                // 1. 최신 이력 조인 (서브쿼리 방식)
+                .innerJoin(hostPlaceEntity).on(hostPlaceEntity.placeEntity.eq(placeEntity)
                         .and(hostPlaceEntity.no.eq(
-                                JPAExpressions.select(hostPlaceEntity.no.max())
-                                        .from(hostPlaceEntity)
-                                        .where(hostPlaceEntity.placeEntity.no.eq(placeEntity.no))
+                                JPAExpressions.select(subHp.no.max())
+                                        .from(subHp)
+                                        .where(subHp.placeEntity.eq(placeEntity))
                         )))
-                .innerJoin(hostEntity).on(hostPlaceEntity.hostEntity.no.eq(hostEntity.no))
-                // 2. 통계 테이블 조인
+                // 2. 호스트 정보 조인
+                .innerJoin(hostEntity).on(hostPlaceEntity.hostEntity.eq(hostEntity))
+                // 3. 통계 및 기타 테이블 Left Join
                 .leftJoin(placeSummary).on(placeSummary.placeNo.eq(placeEntity.no)
                         .and(placeSummary.type.eq(placeEntity.type)))
-                // 3. 기타 테이블 조인
-                .leftJoin(workStayEntity).on(workStayEntity.placeEntity.no.eq(placeEntity.no))
-                .leftJoin(officeEntity).on(officeEntity.placeEntity.no.eq(placeEntity.no))
-                .leftJoin(stationEntity).on(stationEntity.placeEntity.no.eq(placeEntity.no))
-                .leftJoin(imgPlaceEntity).on(imgPlaceEntity.placeEntity.no.eq(placeEntity.no).and(imgPlaceEntity.sort.eq(1)))
+                .leftJoin(workStayEntity).on(workStayEntity.placeEntity.eq(placeEntity))
+                .leftJoin(officeEntity).on(officeEntity.placeEntity.eq(placeEntity))
+                .leftJoin(stationEntity).on(stationEntity.placeEntity.eq(placeEntity))
+                .leftJoin(imgPlaceEntity).on(imgPlaceEntity.placeEntity.eq(placeEntity).and(imgPlaceEntity.sort.eq(1)))
                 .where(
                         placeEntity.delYn.eq("N"),
                         hostEntity.memberNo.eq(memberNo)
                 )
-                .orderBy(hostPlaceEntity.no.desc())
+                .groupBy(
+                        placeEntity.no,
+                        placeEntity.type,
+                        placeEntity.title,
+                        placeEntity.address,
+                        officeEntity.no
+                )
+                .orderBy(hostPlaceEntity.no.max().desc())
                 .fetch();
     }
 

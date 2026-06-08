@@ -18,8 +18,7 @@ const RecommendedSection = ({
     <RecoGrid>
       {RECOMMENDED.map((s, i) => (
         <RecoCard key={i} onClick={() => goDetail(s.type, s.placeNo)}>
-          <RecoImg>
-            {s.mainImageUrl}
+          <RecoImg url={s.mainImageUrl}>
             {s.new && <RecoBadge>새싹</RecoBadge>}
           </RecoImg>
           <RecoBody>
