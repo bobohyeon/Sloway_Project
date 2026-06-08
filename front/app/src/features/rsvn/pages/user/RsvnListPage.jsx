@@ -131,11 +131,17 @@ function RsvnListPage() {
   const handleCancelP = async (rsvnNo) => {
     if (!window.confirm('결제대기 예약을 취소하시겠어요?')) return;
     try {
-      await cancelRsvn(rsvnNo, 'USER_CANCEL');
+      await cancelRsvn(rsvnNo, null);
+    } catch (e) {
+      console.error('취소 API 실패:', e.response?.status, e.response?.data);
+      alert(`취소에 실패했습니다. (${e.response?.status ?? '네트워크 오류'})`);
+      return;
+    }
+    try {
       const data = await findMyRsvns();
       setRsvns(data);
     } catch {
-      alert('취소 처리에 실패했습니다.');
+      window.location.reload();
     }
   };
 

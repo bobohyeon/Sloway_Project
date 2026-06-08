@@ -22,6 +22,7 @@ import {
   saveReply,
   updateReply,
 } from '../../api/reviewApi';
+import { findHostSpaces } from '../../../rsvn/api/rsvnApi';
 import { Pagination } from '../../../pay_shared/components/Pagination';
 
 const fadeInUp = keyframes`
@@ -151,10 +152,21 @@ function HostReviewPage() {
   const [editingId, setEditingId] = useState(null);
 
   const [reviews, setReviews] = useState([]);
+  const [spaces, setSpaces] = useState([]);
   const [placeNo, setPlaceNo] = useState('');
   const [minScore, setMinScore] = useState('');
   const [period, setPeriod] = useState('');
   const [page, setPage] = useState(1);
+
+  // 마운트 시 호스트 공간 목록 로드 → 첫 번째 공간 자동 선택
+  useEffect(() => {
+    findHostSpaces()
+      .then((data) => {
+        setSpaces(data);
+        if (data.length > 0) setPlaceNo(String(data[0].placeNo));
+      })
+      .catch(() => {});
+  }, []);
 
   useEffect(() => {
     if (!placeNo) return;
@@ -239,13 +251,12 @@ function HostReviewPage() {
       </TabBar>
 
       <FilterRow>
-        <SearchInput
-          type="number"
-          placeholder="공간 번호 입력"
-          value={placeNo}
-          onChange={(e) => setPlaceNo(e.target.value)}
-          style={{ maxWidth: 140 }}
-        />
+        <Select value={placeNo} onChange={(e) => { setPlaceNo(e.target.value); setPage(1); }}>
+          {spaces.length === 0 && <option value="">공간 없음</option>}
+          {spaces.map((s) => (
+            <option key={s.placeNo} value={s.placeNo}>{s.spaceName}</option>
+          ))}
+        </Select>
         <Select value={period} onChange={(e) => setPeriod(e.target.value)}>
           <option value={''}>전체 기간</option>
           <option value={'THIS_MONTH'}>이번 달</option>
