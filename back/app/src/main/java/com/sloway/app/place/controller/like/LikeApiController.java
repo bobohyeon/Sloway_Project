@@ -21,13 +21,14 @@ public class LikeApiController {
 
     private final LikeService likeService;
 
-    @PostMapping("/{no}")
+    @PostMapping("/{placeNo}")
     public ResponseEntity<Object> saveLike(@PathVariable Long placeNo, @AuthenticationPrincipal CustomUserDetails userDetails){
         if (userDetails == null) {
             throw new RuntimeException("로그인이 필요합니다.");
         }
         Long memberNo = userDetails.getMemberNo();
 
+        System.out.println("placeNo = " + placeNo);
         likeService.saveLike(placeNo, memberNo);
 
         return ResponseEntity

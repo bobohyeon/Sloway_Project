@@ -1,4 +1,5 @@
 import { useNavigate } from 'react-router-dom';
+import dayjs from 'dayjs';
 import styled from 'styled-components';
 import { COLOR } from '../../../../rsvn/components/user/RsvnStyled';
 import { saveRsvn } from '../../../../rsvn/api/rsvnApi';
@@ -146,6 +147,7 @@ function DetailRsvnBox({
         <DateInput
           type={inputType}
           value={checkIn}
+          min={inputType === 'date' ? dayjs().format('YYYY-MM-DD') : undefined}
           onChange={(e) => onCheckInChange?.(e.target.value)}
         />
       </InfoRow>
@@ -154,6 +156,7 @@ function DetailRsvnBox({
         <DateInput
           type={inputType}
           value={checkOut}
+          min={inputType === 'date' ? (checkIn || dayjs().format('YYYY-MM-DD')) : undefined}
           onChange={(e) => onCheckOutChange?.(e.target.value)}
         />
       </InfoRow>

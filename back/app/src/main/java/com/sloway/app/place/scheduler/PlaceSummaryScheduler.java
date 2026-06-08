@@ -12,7 +12,7 @@ public class PlaceSummaryScheduler {
     private final JdbcTemplate jdbcTemplate;
 
     @Scheduled(cron = "0 */10 * * * *") // 10분마다 실행
-    @Transactional
+//    @TransacXtional
     public void refreshPlaceSummary() {
         jdbcTemplate.execute("TRUNCATE TABLE place_summary");
 

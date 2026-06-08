@@ -108,10 +108,12 @@ function HostRsvnCalendarPage() {
     load();
   }, []);
 
-  // checkIn 날짜(일)를 키로 예약 이벤트 맵 생성
+  // checkIn 날짜(일)를 키로 예약 이벤트 맵 생성 (취소·거절 제외)
   const eventMap = {};
   list.forEach((item) => {
     if (!item.checkIn) return;
+    const s = typeof item.status === 'object' ? item.status?.name : item.status;
+    if (s === 'R' || s === 'C') return;
     const d = dayjs(item.checkIn);
     if (d.year() === current.year() && d.month() === current.month()) {
       const day = d.date();
@@ -119,6 +121,15 @@ function HostRsvnCalendarPage() {
       eventMap[day].push({ title: `${item.guestName} · ${item.spaceName}`, no: item.no, rsvn: item });
     }
   });
+
+  // 주별 뷰에서 특정 날짜의 유효 예약 목록 반환
+  const getWeekEvents = (day) =>
+    list.filter((item) => {
+      if (!item.checkIn) return false;
+      const s = typeof item.status === 'object' ? item.status?.name : item.status;
+      if (s === 'R' || s === 'C') return false;
+      return dayjs(item.checkIn).isSame(day, 'day');
+    });
 
   const thisMonthRsvns = list.filter((item) => {
     if (!item.checkIn) return false;
@@ -218,13 +229,25 @@ function HostRsvnCalendarPage() {
           </>
         ) : (
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: 4 }}>
-            {weekDays.map((day, i) => (
-              <div key={i} style={{ minHeight: 120, borderRadius: 8, border: `1px solid ${COLOR.gray200}`, overflow: 'hidden' }}>
-                <div style={{ padding: 6, textAlign: 'center', fontSize: 12, fontWeight: 600, background: COLOR.gray100, color: i === 0 ? COLOR.red : COLOR.black, borderBottom: `1px solid ${COLOR.gray200}` }}>
-                  {DAYS[day.day()]} {day.date()}
+            {weekDays.map((day, i) => {
+              const evs = getWeekEvents(day);
+              const isToday = day.isSame(dayjs(), 'day');
+              return (
+                <div key={i} style={{ minHeight: 120, borderRadius: 8, border: `1px solid ${isToday ? COLOR.green : COLOR.gray200}`, overflow: 'hidden' }}>
+                  <div style={{ padding: 6, textAlign: 'center', fontSize: 12, fontWeight: 600, background: isToday ? COLOR.greenLight : COLOR.gray100, color: i === 0 ? COLOR.red : COLOR.black, borderBottom: `1px solid ${COLOR.gray200}` }}>
+                    {DAYS[day.day()]} {day.date()}
+                  </div>
+                  <div style={{ padding: 4 }}>
+                    {evs.map((ev, j) => (
+                      <CalEvent key={j} style={{ cursor: 'pointer' }}
+                        onClick={() => navigate(`/host/reservation/list/${ev.no}`, { state: { rsvn: ev } })}>
+                        {ev.guestName} · {ev.spaceName}
+                      </CalEvent>
+                    ))}
+                  </div>
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         )}
 

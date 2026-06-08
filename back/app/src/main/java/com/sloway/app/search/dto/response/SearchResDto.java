@@ -12,6 +12,7 @@ import lombok.NoArgsConstructor;
 public class SearchResDto {
 
     private Long entityNo;
+    private Long placeNo;
     private String title;
     private String type;
     private String address;
