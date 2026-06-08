@@ -97,6 +97,7 @@ public class AuthService {
                 .build();
         //가입완료
         userRepository.save(user);
+        
         //회원가입 포인트 적립
         pointService.earnSignupPoint(saveMember.getNo());
 
