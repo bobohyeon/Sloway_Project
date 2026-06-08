@@ -88,6 +88,7 @@ public class SearchCustomRepositoryImpl implements SearchCustomRepository{
                 )
                 .from(p)
                 .where(typeEq(dto.getPlaceType()), regionContains(dto.getRegion()), amenitiesFilter(dto.getAmenities()))
+
                 .orderBy(sortOrder((dto.getSort())))
                 .fetch()
                 ;
