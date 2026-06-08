@@ -3,8 +3,10 @@ package com.sloway.app.notice.dto.request;
 import com.sloway.app.notice.enums.NoticeCategory;
 import com.sloway.app.notice.entity.NoticeEntity;
 import lombok.Getter;
+import lombok.Setter;
 
 @Getter
+@Setter
 public class NoticeWriteReqDto {
 
     private String title;
