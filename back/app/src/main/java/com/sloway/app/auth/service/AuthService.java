@@ -95,12 +95,14 @@ public class AuthService {
                 .password(encoded)
                 .authType(AuthType.L)
                 .build();
-
-        pointService.earnSignupPoint(saveMember.getNo());
+        //가입완료
         userRepository.save(user);
+        
+        //회원가입 포인트 적립
+        pointService.earnSignupPoint(saveMember.getNo());
 
-        log.info("회원가입 완료 : {} (memberNo = {})", saveMember.getEmail(), saveMember.getNo());
-
+        log.info("회원가입 완료 : {} (memberNo = {}, 가입포인트 적립)",
+                saveMember.getEmail(), saveMember.getNo());
     }
 
     /**
