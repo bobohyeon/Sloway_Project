@@ -110,6 +110,8 @@ public class SecurityConfig {
                                 .requestMatchers(HttpMethod.GET, "/api/payment/stats/host").hasRole("HOST")
                                 .requestMatchers(HttpMethod.POST, "/api/payment/account").hasRole("HOST")
                                 .requestMatchers(HttpMethod.GET, "/api/payment/account/host").hasRole("HOST")
+                                // 수수료 정책 조회 — host(조회) + admin 둘 다 (등록 POST 는 catch-all 로 ADMIN)
+                                .requestMatchers(HttpMethod.GET, "/api/payment/settlement/fee", "/api/payment/settlement/fee/**").hasAnyRole("HOST", "ADMIN")
 
                                 // ── USER (결제·쿠폰·포인트·환불) ──
                                 // 결제 상세 — user(본인) + admin 둘 다 (approve(permitAll)보다 아래)
