@@ -1,5 +1,10 @@
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import styled from 'styled-components';
+import {
+  addLikePlace,
+  deleteLikePlace,
+} from '../../../../wishList/api/wishListApi';
 import { COLOR } from '../../../../rsvn/components/user/RsvnStyled';
 
 const Card = styled.div`
@@ -153,6 +158,8 @@ const ArrowBtn = styled.div`
 
 function SpaceCard({ item, onClick }) {
   const navigate = useNavigate();
+  const [liked, setLiked] = useState(item.liked ?? false);
+  const [likeNo, setLikeNo] = useState(item.likeNo ?? null);
 
   const handleClick = () => {
     if (onClick) {
@@ -162,11 +169,34 @@ function SpaceCard({ item, onClick }) {
     }
   };
 
+  const handleWish = async (e) => {
+    e.stopPropagation();
+    try {
+      if (liked) {
+        await deleteLikePlace(likeNo);
+        setLiked(false);
+        setLikeNo(null);
+      } else {
+        const res = await addLikePlace(item.placeNo);
+        setLiked(true);
+        setLikeNo(res.data?.no ?? res.data?.likeNo ?? null);
+      }
+    } catch {
+      // 찜 실패 시 조용히 무시
+      console.error('찜 실패:', e.response?.status, e.response?.data);
+    }
+  };
+
   return (
     <Card onClick={handleClick}>
       <ImgBox>
         {item.icon}
-        <WishBtn onClick={(e) => e.stopPropagation()}>♡</WishBtn>
+        <WishBtn
+          onClick={handleWish}
+          style={{ color: liked ? '#e74c3c' : '#999' }}
+        >
+          {liked ? '♥' : '♡'}
+        </WishBtn>
         {item.roomLeft > 0 && <RoomBadge>{item.roomLeft}개 남음</RoomBadge>}
         {item.soldOut && (
           <SoldOutOverlay>

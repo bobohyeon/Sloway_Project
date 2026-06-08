@@ -73,6 +73,7 @@ function toRecentCard(dto) {
   return {
     id: dto.no,           // 삭제 시 사용하는 키
     placeNo: dto.placeNo,
+    entityNo: dto.entityNo, // 공간 상세 페이지 이동에 사용
     type: dto.type,
     title: dto.title,
     location: dto.address,

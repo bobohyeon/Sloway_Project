@@ -9,5 +9,5 @@ export async function deleteLikePlace(likeNo) {
 }
 
 export async function fetchLikePlaceList() {
-  return await api.get(`like`);
+  return await api.get(`/like`);
 }

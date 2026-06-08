@@ -17,6 +17,7 @@ const TAB_TO_TYPE = { '워크앤스테이': 'WORK_STAY', '오피스': 'OFFICE', 
 function toSpaceCard(dto) {
   return {
     id: dto.entityNo,
+    placeNo: dto.placeNo,
     type: dto.type,
     title: dto.title,
     location: dto.address,

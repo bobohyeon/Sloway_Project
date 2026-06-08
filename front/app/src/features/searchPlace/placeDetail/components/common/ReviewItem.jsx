@@ -100,7 +100,7 @@ function ReviewItem({ review, showSpaceChip = false }) {
             <ReportBtn
               onClick={(e) => {
                 e.stopPropagation();
-                navigate('/user/review/report');
+                navigate('/user/review/report', { state: { reviewNo: review.no ?? review.id } });
               }}
             >
               🚩 신고

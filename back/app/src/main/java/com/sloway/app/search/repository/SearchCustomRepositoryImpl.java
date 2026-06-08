@@ -66,6 +66,7 @@ public class SearchCustomRepositoryImpl implements SearchCustomRepository{
                             JPAExpressions.select(ws.no).from(ws).where(ws.placeEntity.eq(p)),
                             JPAExpressions.select(st.no).from(st).where(st.placeEntity.eq(p))
                         ),
+                        p.no,
                         p.title,
                         p.type,
                         p.address,
