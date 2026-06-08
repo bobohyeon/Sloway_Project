@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useLocation } from 'react-router-dom';
 import { findPointBalanceByMemberNo } from '../../point/api/pointApi';
 import { findCouponsByMemberNo } from '../../coupon/api/couponApi';
 
@@ -12,6 +13,8 @@ export function useMyPageSummary(memberNo) {
   const [point, setPoint] = useState(0);
   const [couponCount, setCouponCount] = useState(0);
   const [loading, setLoading] = useState(true);
+  // 페이지 이동마다 재조회 — 네브바는 레이아웃 상주라 pathname 변화를 갱신 트리거로 사용
+  const { pathname } = useLocation();
 
   useEffect(() => {
     if (!memberNo) return; // 토큰 준비 전엔 호출 안 함
@@ -35,7 +38,7 @@ export function useMyPageSummary(memberNo) {
     return () => {
       alive = false;
     };
-  }, [memberNo]);
+  }, [memberNo, pathname]);
 
   return { point, couponCount, loading };
 }

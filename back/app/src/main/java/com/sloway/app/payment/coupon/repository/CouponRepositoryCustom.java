@@ -8,4 +8,6 @@ import java.util.List;
 public interface CouponRepositoryCustom {
 
      List<CouponEntity> findByMemberAndStatus(Long memberNo, CouponStatus status);
+
+     List<CouponEntity> findByCouponEventAndStatus(Long couponEventNo, CouponStatus status);
 }

@@ -28,4 +28,15 @@ public class CouponRepositoryImpl implements CouponRepositoryCustom {
         return couponList;
     }
 
+    @Override
+    public List<CouponEntity> findByCouponEventAndStatus(Long couponEventNo, CouponStatus status) {
+        return jpaQueryFactory
+                .selectFrom(qCouponEntity)
+                .where(
+                        qCouponEntity.couponEventNo.no.eq(couponEventNo),
+                        qCouponEntity.status.eq(status)
+                )
+                .fetch();
+    }
+
 }
