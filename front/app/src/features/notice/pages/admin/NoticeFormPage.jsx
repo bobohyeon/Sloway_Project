@@ -68,6 +68,8 @@ export default function NoticeFormPage({ isEdit = false }) {
         await api.post('/notice', payload);
       }
       navigate('/admin/notice');
+    } catch (e) {
+      alert(isEdit ? '수정 중 오류가 발생했습니다.' : '등록 중 오류가 발생했습니다.');
     } finally {
       setIsSaving(false);
     }
