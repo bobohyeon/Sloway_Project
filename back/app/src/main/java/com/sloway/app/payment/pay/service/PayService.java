@@ -3,6 +3,7 @@ package com.sloway.app.payment.pay.service;
 import com.sloway.app.common.exception.CustomException;
 import com.sloway.app.payment.coupon.common.CouponDcType;
 import com.sloway.app.payment.coupon.common.CouponErrorCode;
+import com.sloway.app.payment.coupon.common.CouponStatus;
 import com.sloway.app.payment.coupon.entity.CouponEntity;
 import com.sloway.app.payment.coupon.repository.CouponRepository;
 import com.sloway.app.payment.pay.common.PayErrorCode;
@@ -230,6 +231,15 @@ public class PayService {
         }
     }
 
+    private void validCoupon(CouponEntity coupon) {
+        if (coupon.getStatus() != CouponStatus.AVAILABLE) {
+            throw new CustomException(CouponErrorCode.COUPON_NOT_AVAILABLE);
+        }
+        if (coupon.getExpiredAt() != null && coupon.getExpiredAt().isBefore(LocalDateTime.now())) {
+            throw new CustomException(CouponErrorCode.COUPON_EXPIRED);
+        }
+    }
+
     private void validDuplicate(Long rsvnNo) {
         for (PayEntity entity : payRepository.findByRsvn(rsvnNo)) {
             if (entity.getStatus() == PayStatus.COMPLETED) {
@@ -247,6 +257,9 @@ public class PayService {
         if (payCreateReqDto.getUcNo() != null) {
             coupon = couponRepository.findById(payCreateReqDto.getUcNo())
                     .orElseThrow(() -> new CustomException(CouponErrorCode.COUPON_NOT_FOUND));
+            // PG 호출 전(결제 준비 시점)에 쿠폰 사용가능·만료를 검증한다.
+            // approvePay(PG 승인 후)에서 막으면 카카오는 결제됐는데 DB만 롤백돼 정합성이 깨진다.
+            validCoupon(coupon);
         }
 
         int dcAmt = calculateDcAmt(coupon, payCreateReqDto.getBaseAmt());

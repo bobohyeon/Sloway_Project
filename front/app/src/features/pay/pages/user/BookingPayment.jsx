@@ -61,20 +61,25 @@ const CenterText = styled.div`
   font-size: 0.95rem;
 `;
 
-const toCouponForUI = (resDto) => ({
-  no: resDto.no,
-  id: resDto.no,
-  name: resDto.couponName,
-  discount: resDto.dcValue,
-  type: resDto.dcType === 'RATE' ? 'percent' : 'amount',
-  minAmount: 0,
-  expiresIn: Math.max(
-    0,
-    Math.ceil((new Date(resDto.expiredAt) - new Date()) / 86400000)
-  ),
-  available: resDto.status === 'AVAILABLE',
-  scope: '전체',
-});
+const toCouponForUI = (resDto) => {
+  const daysLeft = resDto.expiredAt
+    ? Math.ceil((new Date(resDto.expiredAt) - new Date()) / 86400000)
+    : null;
+  // 유효기간이 지나면(daysLeft < 0) 만료 처리 — status가 AVAILABLE이어도 선택 불가
+  const expired = daysLeft !== null && daysLeft < 0;
+  return {
+    no: resDto.no,
+    id: resDto.no,
+    name: resDto.couponName,
+    discount: resDto.dcValue,
+    type: resDto.dcType === 'RATE' ? 'percent' : 'amount',
+    minAmount: 0,
+    expiresIn: Math.max(0, daysLeft ?? 0),
+    expired,
+    available: resDto.status === 'AVAILABLE' && !expired,
+    scope: '전체',
+  };
+};
 
 export default function BookingPaymentPage() {
   const nav = useNavigate();
