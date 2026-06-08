@@ -53,7 +53,7 @@ public class WorkStayRepositoryImpl implements WorkStayRepositoryCustom {
                         hostEntity.memberNo.eq(memberNo)
                 )
                 .orderBy(imgWorkStayEntity.sort.asc())
-                .fetch();
+                .distinct().fetch();
 
         // 워크앤스테이 내 오피스 이미지 리스트 조회
         List<WorkStayImageListRespDto.ImageInfo> officeList = queryFactory
@@ -71,7 +71,7 @@ public class WorkStayRepositoryImpl implements WorkStayRepositoryCustom {
                         hostEntity.memberNo.eq(memberNo)
                 )
                 .orderBy(imgWorkStayOfficeEntity.sort.asc())
-                .fetch();
+                .distinct().fetch();
 
         return WorkStayImageListRespDto.builder()
                 .workStayImages(stayList != null ? stayList : List.of())

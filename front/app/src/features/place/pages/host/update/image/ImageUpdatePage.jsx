@@ -51,6 +51,7 @@ function ImageUpdatePage() {
           images={officeImages}
           setImages={setOfficeImages}
           title={'워크앤스테이 내 오피스의 '}
+          namespace="workOffice"
         />
       )}
 

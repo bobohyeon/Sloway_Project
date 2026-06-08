@@ -48,7 +48,7 @@ public class OfficeRepositoryImpl implements OfficeRepositoryCustom {
                         hostEntity.memberNo.eq(memberNo)
                 )
                 .orderBy(imgOfficeEntity.sort.asc())
-                .fetch();
+                .distinct().fetch();
 
         return PlaceImgListRespDto.builder()
                 .placeImages(officeList != null ? officeList : List.of())
