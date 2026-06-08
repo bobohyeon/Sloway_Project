@@ -51,7 +51,7 @@ public class StationRepositoryImpl implements StationRepositoryCustom{
                             hostEntity.memberNo.eq(memberNo)
                     )
                     .orderBy(imgStationEntity.sort.asc())
-                    .fetch();
+                    .distinct().fetch();
 
             return PlaceImgListRespDto.builder()
                     .placeImages(stationList != null ? stationList : List.of())
