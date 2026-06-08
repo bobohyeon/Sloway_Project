@@ -13,7 +13,6 @@ import {
   FaCalendarDay,
   FaUndoAlt,
   FaCreditCard,
-  FaWallet,
   FaReceipt,
   FaCoins,
   FaTicketAlt,
@@ -72,7 +71,6 @@ const userMenuGroups = [
     title: '결제 · 지갑',
     items: [
       { url: '/user/payment', str: '결제 내역', icon: <FaCreditCard /> },
-      { url: '/user/payment/method', str: '결제 수단', icon: <FaWallet /> },
       { url: '/user/point', str: '포인트', icon: <FaCoins /> },
       { url: '/user/coupon', str: '쿠폰함', icon: <FaTicketAlt /> },
       { url: '/user/coupon/event', str: '쿠폰 발급', icon: <FaGift /> },
