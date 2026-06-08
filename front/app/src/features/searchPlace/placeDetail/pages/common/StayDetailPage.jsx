@@ -29,7 +29,10 @@ function StayDetailPage() {
           getStationDetail(Number(id)),
           findReviewsByPlace(Number(id), 'STATION'),
         ]);
-        setSpace(spaceData);
+        const avgScore = reviewData.length > 0
+          ? Math.round(reviewData.reduce((sum, r) => sum + (r.scoreTotal ?? 0), 0) / reviewData.length)
+          : 0;
+        setSpace({ ...spaceData, score: avgScore, reviewCount: reviewData.length });
         setReviews(reviewData);
         saveRecentViewed(spaceData.placeNo).catch(() => {});
       } catch (e) {
