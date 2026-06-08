@@ -106,17 +106,17 @@ function ReviewItem({ review, showSpaceChip = false }) {
               🚩 신고
             </ReportBtn>
           </MetaRow>
-
-          {/* 호스트 답글 */}
-          {review.reply && (
-            <ReplyBox>
-              <ReplyLabel>
-                🏠 {review.reply.hostName} · {review.reply.date}
-              </ReplyLabel>
-              <ReplyText>{review.reply.text}</ReplyText>
-            </ReplyBox>
-          )}
         </>
+      )}
+
+      {/* 호스트 답글 — 항상 표시 */}
+      {review.reply && (
+        <ReplyBox>
+          <ReplyLabel>
+            🏠 {review.reply.hostName} · {review.reply.date}
+          </ReplyLabel>
+          <ReplyText>{review.reply.text}</ReplyText>
+        </ReplyBox>
       )}
 
       {/* 더보기 / 접기 토글 */}

@@ -341,6 +341,9 @@ function RoomListPage() {
   const { spaceId } = useParams();
   const { state } = useLocation();
   const [space, setSpace] = useState(state?.space || null);
+  const checkIn = state?.checkIn ?? '';
+  const checkOut = state?.checkOut ?? '';
+  const guests = state?.guests ?? 2;
 
   useEffect(() => {
     if (space) return; // state로 넘어온 경우 API 호출 불필요
@@ -361,7 +364,7 @@ function RoomListPage() {
         : space.type === 'WORK_STAY'
           ? `/workstays/${spaceId}`
           : `/stations/${spaceId}`;
-    navigate(path, { state: { selectedRoom: room, space } });
+    navigate(path, { state: { selectedRoom: room, space, checkIn, checkOut, guests } });
   };
 
   return (
