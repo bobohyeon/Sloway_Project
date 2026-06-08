@@ -110,8 +110,8 @@ public class RefundService {
             payEntity.getUcNo().returnCoupon();
         }
 
-        pointService.refundUsedPoint(payEntity);
         pointService.cancelEarnedPoint(payEntity);
+        pointService.refundUsedPoint(payEntity);
 
         PayMethod method = payEntity.getMethod();
         if (method == PayMethod.KAKAOPAY) {

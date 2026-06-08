@@ -61,6 +61,9 @@ public class CouponEntity extends BaseEntity {
         if (this.status != CouponStatus.AVAILABLE) {
             throw new CustomException(CouponErrorCode.COUPON_NOT_AVAILABLE);
         }
+        if (this.expiredAt != null && this.expiredAt.isBefore(LocalDateTime.now())) {
+            throw new CustomException(CouponErrorCode.COUPON_EXPIRED);
+        }
         this.usedAt = LocalDateTime.now();
         this.payNo = payEntity;
         this.status = CouponStatus.USED;
@@ -77,8 +80,6 @@ public class CouponEntity extends BaseEntity {
         if (this.status != CouponStatus.USED) {
             throw new CustomException(CouponErrorCode.COUPON_NOT_USED);
         }
-        // 환불 시 쿠폰을 다시 사용 가능 상태로 되돌린다 (재사용 가능)
-        // 결제 연결(payNo/usedAt)을 끊고, 이미 유효기간이 지났으면 만료 처리
         this.payNo = null;
         this.usedAt = null;
         if (this.expiredAt != null && this.expiredAt.isBefore(LocalDateTime.now())) {
