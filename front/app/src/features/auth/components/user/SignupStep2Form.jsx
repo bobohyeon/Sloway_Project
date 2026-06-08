@@ -152,7 +152,7 @@ function SignupStep2Form({
         </FormLabel>
         <FormInput
           type="password"
-          placeholder="4자 이상"
+          placeholder="영문·숫자·특수문자 8자 이상"
           value={form.password}
           onChange={(e) => updateForm('password', e.target.value)}
         />
