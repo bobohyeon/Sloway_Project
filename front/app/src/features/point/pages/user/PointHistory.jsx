@@ -55,19 +55,28 @@ export default function PointHistory() {
     }
     const load = async () => {
       setLoading(true);
-      try {
-        const [balanceResDto, historyResDto] = await Promise.all([
-          findPointBalanceByMemberNo(memberNo),
-          findPointsByMemberNo(memberNo),
-        ]);
-        setBalance(balanceResDto.balance ?? 0);
-        setHistory(historyResDto ?? []);
-      } catch (err) {
-        console.error('포인트 조회 실패', err);
-        setError(err?.response?.data?.msg ?? err.message);
-      } finally {
-        setLoading(false);
+      // 잔액·내역을 독립 처리 — 한쪽이 실패해도 다른 쪽은 표시 (allSettled)
+      const [balanceR, historyR] = await Promise.allSettled([
+        findPointBalanceByMemberNo(memberNo),
+        findPointsByMemberNo(memberNo),
+      ]);
+
+      if (balanceR.status === 'fulfilled') {
+        setBalance(balanceR.value?.balance ?? 0);
       }
+
+      if (historyR.status === 'fulfilled') {
+        setHistory(historyR.value ?? []);
+        setError(null);
+      } else {
+        console.error('포인트 내역 조회 실패', historyR.reason);
+        setError(
+          historyR.reason?.response?.data?.msg ??
+            '포인트 내역을 불러오지 못했습니다.'
+        );
+      }
+
+      setLoading(false);
     };
     load();
   }, [memberNo, navigate]);
@@ -82,7 +91,9 @@ export default function PointHistory() {
         <BalanceAmount>
           {loading ? '불러오는 중…' : `${Number(balance).toLocaleString()}P`}
         </BalanceAmount>
-        {error && <BalanceError>잔액을 불러오지 못했습니다 — {error}</BalanceError>}
+        {error && (
+          <BalanceError>잔액을 불러오지 못했습니다 — {error}</BalanceError>
+        )}
         <BalanceHint>1P = 1원으로 결제 시 사용할 수 있어요</BalanceHint>
       </BalanceCard>
 
@@ -105,8 +116,8 @@ export default function PointHistory() {
             <EmptyIcon>📋</EmptyIcon>
             <EmptyTitle>아직 표시할 내역이 없어요</EmptyTitle>
             <EmptyDesc>
-              결제 후 적립이 시작되면 이 영역에서 적립·사용·만료 내역을 확인할 수
-              있어요.
+              결제 후 적립이 시작되면 이 영역에서 적립·사용·만료 내역을 확인할
+              수 있어요.
             </EmptyDesc>
           </EmptyBox>
         ) : (
