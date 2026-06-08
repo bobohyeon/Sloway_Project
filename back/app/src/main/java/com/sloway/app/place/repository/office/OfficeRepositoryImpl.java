@@ -20,6 +20,7 @@ import static com.sloway.app.place.entity.office.QImgOfficeEntity.imgOfficeEntit
 import static com.sloway.app.place.entity.office.QOfficeEntity.officeEntity;
 import static com.sloway.app.place.entity.office.QOfficePeriodEntity.officePeriodEntity;
 import static com.sloway.app.place.entity.place.QPlaceEntity.placeEntity;
+import static com.sloway.app.place.entity.station.QImgStationEntity.imgStationEntity;
 import static com.sloway.app.reservation.rsvn.entity.QRsvnEntity.rsvnEntity;
 import static com.sloway.app.review.review.entity.QReviewEntity.reviewEntity;
 import static com.sloway.app.place.entity.amenity.office.QOfficeAmenityEntity.officeAmenityEntity;
@@ -195,11 +196,22 @@ public class OfficeRepositoryImpl implements OfficeRepositoryCustom {
     }
 
     private StationDetailRespDto.HeaderInfo buildHeaderInfo(Tuple tuple, StationDetailRespDto.SummaryCard summary) {
+        // 운영 상태 및 타입 한글 변환
+        Object statusObj = tuple.get(hostPlaceEntity.status);
+        String operationStatus = statusObj != null ? statusObj.toString() : "운영 대기";
+        if ("A".equals(operationStatus)) operationStatus = "운영중";
+        else if ("P".equals(operationStatus)) operationStatus = "승인대기";
+        else if ("R".equals(operationStatus)) operationStatus = "승인반려";
+
+        Object typeObj = tuple.get(placeEntity.type);
+        String placeType = typeObj != null ? typeObj.toString() : "";
+        if ("STATION".equals(placeType)) placeType = "숙소";
+
         return StationDetailRespDto.HeaderInfo.builder()
-                .imageUrl(tuple.get(imgOfficeEntity.currentUrl))
-                .type("오피스")
-                .status("운영중")
-                .title(tuple.get(placeEntity.title))
+                .imageUrl(tuple.get(imgStationEntity.currentUrl))
+                .type(placeType)
+                .status(operationStatus)
+                .title(tuple.get(placeEntity.title)) // ✨ 이제 쿼리에서 placeEntity.title을 조회했으므로 정상적으로 값이 들어옵니다!
                 .location(tuple.get(placeEntity.address))
                 .rating(summary.getAverageRating())
                 .reviewCount(summary.getTotalReviews())
