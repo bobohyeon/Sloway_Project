@@ -66,6 +66,7 @@ public class LikeRespositoryImpl implements LikeRespositoryCustom {
         return queryFactory
                 .select(Projections.constructor(LikeRespDto.class,
                         likeEntity.no,
+                        placeEntity.no,
                         placeEntity.title,
                         imgPlaceEntity.currentUrl,
                         placeEntity.type,
@@ -76,7 +77,7 @@ public class LikeRespositoryImpl implements LikeRespositoryCustom {
                 ))
                 .from(likeEntity)
                 .join(likeEntity.placeEntity, placeEntity)
-                .join(imgPlaceEntity).on(imgPlaceEntity.placeEntity.eq(placeEntity).and(imgPlaceEntity.sort.eq(1)))
+                .leftJoin(imgPlaceEntity).on(imgPlaceEntity.placeEntity.eq(placeEntity).and(imgPlaceEntity.sort.eq(0)))
                 .join(likeEntity.userEntity, userEntity)
                 .where(userEntity.memberNo.eq(memberNo))
                 .orderBy(likeEntity.no.desc())

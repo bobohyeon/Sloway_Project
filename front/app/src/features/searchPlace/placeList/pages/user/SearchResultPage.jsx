@@ -17,10 +17,11 @@ const TAB_TO_TYPE = { '워크앤스테이': 'WORK_STAY', '오피스': 'OFFICE', 
 function toSpaceCard(dto) {
   return {
     id: dto.entityNo,
+    placeNo: dto.placeNo,
     type: dto.type,
     title: dto.title,
     location: dto.address,
-    score: dto.avgScore ?? 0,
+    score: Math.round(dto.avgScore ?? 0),
     reviewCount: 0,
     price: dto.basePrice ?? 0,
     priceUnit: TYPE_UNIT[dto.type] ?? '원~',
@@ -372,16 +373,41 @@ function SearchResultPage() {
     setCheckOut('');
   };
 
-  // 가격 필터만 클라이언트 처리 (타입·지역·정렬·날짜는 서버)
+  // 타입·가격 필터 + 정렬을 클라이언트에서 처리 (서버 필터 백업)
   const filtered = useMemo(() => {
-    if (priceIdx === 0) return spaces;
-    const { min, max } = PRICE_RANGES[priceIdx];
-    return spaces.filter((s) => s.price >= min && s.price <= max);
-  }, [spaces, priceIdx]);
+    let result = spaces;
+
+    // 타입 필터 (서버 필터 백업 — 오피스 선택 시 오피스만)
+    if (activeTab > 0) {
+      const targetType = TAB_TO_TYPE[TYPE_TABS[activeTab]];
+      result = result.filter((s) => s.type === targetType);
+    }
+
+    // 가격 필터
+    if (priceIdx > 0) {
+      const { min, max } = PRICE_RANGES[priceIdx];
+      result = result.filter((s) => s.price >= min && s.price <= max);
+    }
+
+    // 정렬
+    switch (sort) {
+      case '가격 낮은순': return [...result].sort((a, b) => a.price - b.price);
+      case '가격 높은순': return [...result].sort((a, b) => b.price - a.price);
+      case '평점순':      return [...result].sort((a, b) => (b.score ?? 0) - (a.score ?? 0));
+      default:            return result;
+    }
+  }, [spaces, activeTab, priceIdx, sort]);
 
   // 카드 클릭 → 방 리스트 페이지
   const handleCardClick = (item) => {
-    navigate(`/spaces/${item.id}/rooms`, { state: { space: item } });
+    navigate(`/spaces/${item.id}/rooms`, {
+      state: {
+        space: item,
+        checkIn,
+        checkOut,
+        guests,
+      },
+    });
   };
 
   return (

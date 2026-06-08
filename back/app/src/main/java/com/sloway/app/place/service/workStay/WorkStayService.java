@@ -209,7 +209,6 @@ public class WorkStayService {
 
         WorkOfficeEntity workOffice = workOfficeRepository.findByWorkStayEntityNo(no)
                 .orElseThrow(() -> new EntityNotFoundException("[WORKOFFICE-316] WorkOffice Not Found"));
-
         // 검수 처리
         HostPlaceEntity hostPlaceEntity = hostPlaceRepository.findHostWorkLatest(no, memberNo);
         if (hostPlaceEntity != null) {

@@ -2,7 +2,6 @@ package com.sloway.app.notice.dto.response;
 
 import com.sloway.app.notice.enums.NoticeCategory;
 import com.sloway.app.notice.entity.NoticeEntity;
-import com.sloway.app.notice.enums.NoticeStatus;
 import lombok.Getter;
 
 import java.time.LocalDateTime;
@@ -14,7 +13,6 @@ public class NoticeDetailResDto {
     private final String title;
     private final String content;
     private final NoticeCategory category;
-    private final NoticeStatus status;
     private final Long viewCount;
     private final LocalDateTime createdAt;
     private final LocalDateTime modifiedAt;
@@ -24,7 +22,6 @@ public class NoticeDetailResDto {
         this.title = e.getTitle();
         this.content = e.getContent();
         this.category = e.getCategory();
-        this.status = e.getStatus();
         this.viewCount = e.getViewCount();
         this.createdAt = e.getCreatedAt();
         this.modifiedAt = e.getModifiedAt();

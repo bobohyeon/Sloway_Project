@@ -45,7 +45,6 @@ export default function NoticeListPage() {
           sort: SORT_MAP[sortKey],
           category: category || undefined,
           keyword: keyword || undefined,
-          status: 'ACTIVE',
         },
       });
       setNotices(data.content);

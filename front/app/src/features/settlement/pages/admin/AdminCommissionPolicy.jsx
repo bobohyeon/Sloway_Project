@@ -7,8 +7,6 @@ import { CommissionPolicyTable } from '../../components/host/CommissionPolicyTab
 
 import { createFee, findFeeAll } from '../../api/feeApi';
 
-// 사용자 노출 명칭 SSOT — station=숙소 / workStay=워크앤스테이 / office=오피스
-// 백엔드 PlaceType enum 영영 camelCase 소문자
 const PLACE_TYPE_INFO = {
   station: {
     icon: '🏠',
@@ -79,7 +77,6 @@ export default function AdminCommissionPolicy() {
     loadFees();
   }, []);
 
-  // 적용 중 정책만 노출 — startAt <= NOW <= endAt (endAt null 영영 무기한)
   const policies = useMemo(() => {
     const now = Date.now();
     return fees
@@ -124,7 +121,6 @@ export default function AdminCommissionPolicy() {
 
     setSubmitting(true);
     try {
-      // datetime-local → ISO 변환 (백엔드 LocalDateTime 매핑)
       const reqDto = {
         placeType: formPlaceType,
         rate: rateNum,
@@ -171,11 +167,6 @@ export default function AdminCommissionPolicy() {
         <CommissionPolicyTable policies={policies} />
       )}
 
-      <Notice>
-        ⓘ 본 화면은 신규 등록만 지원합니다. 정책 변경 시 신규 정책 등록으로
-        이전 정책이 자동 대체됩니다. (명세서 기준 CRU — Delete 미지원)
-      </Notice>
-
       <Modal
         open={modalOpen}
         onClose={handleCloseModal}
@@ -183,10 +174,18 @@ export default function AdminCommissionPolicy() {
         maxWidth="520px"
         footer={
           <>
-            <Button variant="secondary" onClick={handleCloseModal} disabled={submitting}>
+            <Button
+              variant="secondary"
+              onClick={handleCloseModal}
+              disabled={submitting}
+            >
               취소
             </Button>
-            <Button variant="primary" onClick={handleSubmit} disabled={submitting}>
+            <Button
+              variant="primary"
+              onClick={handleSubmit}
+              disabled={submitting}
+            >
               {submitting ? '등록 중...' : '등록하기'}
             </Button>
           </>
@@ -217,7 +216,9 @@ export default function AdminCommissionPolicy() {
               value={formRate}
               onChange={(e) => setFormRate(e.target.value)}
             />
-            <FormHelp>0 ~ 100 사이 숫자. 예) 숙소 10%, 워크앤스테이 12%</FormHelp>
+            <FormHelp>
+              0 ~ 100 사이 숫자. 예) 숙소 10%, 워크앤스테이 12%
+            </FormHelp>
           </FormRow>
 
           <FormRow>

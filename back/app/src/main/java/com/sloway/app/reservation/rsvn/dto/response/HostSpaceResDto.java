@@ -1,6 +1,7 @@
 package com.sloway.app.reservation.rsvn.dto.response;
 
 import com.sloway.app.place.entity.hostPlace.HostPlaceEntity;
+import com.sloway.app.place.entity.place.ImgPlaceEntity;
 import lombok.Builder;
 import lombok.Getter;
 
@@ -9,16 +10,17 @@ import lombok.Getter;
 public class HostSpaceResDto {
 
     private Long placeNo;
+    private String placeImg;
     private String spaceName;
     private String spaceType;
     private long reservationCount; // 해당 공간의 예약 건수 (어드민 호스트 상세용)
 
     // 기존 호출 호환 — 예약수 미사용(호스트 본인 공간 선택 등)
-    public static HostSpaceResDto from(HostPlaceEntity hp) {
-        return from(hp, 0L);
+    public static HostSpaceResDto from(HostPlaceEntity hp, String placeImg) {
+        return from(hp, 0L, placeImg);
     }
 
-    public static HostSpaceResDto from(HostPlaceEntity hp, long reservationCount) {
+    public static HostSpaceResDto from(HostPlaceEntity hp, long reservationCount, String placeImg) {
         Long placeNo = null;
         String spaceName = null;
         String spaceType = null;
@@ -43,6 +45,7 @@ public class HostSpaceResDto {
 
         return HostSpaceResDto.builder()
                 .placeNo(placeNo)
+                .placeImg(placeImg)
                 .spaceName(spaceName)
                 .spaceType(spaceType)
                 .reservationCount(reservationCount)

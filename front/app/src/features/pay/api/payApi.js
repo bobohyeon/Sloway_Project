@@ -41,3 +41,13 @@ export async function findPaysByMemberNo(memberNo) {
   const resp = await api.get(`/payment/pay/member/${memberNo}`);
   return resp.data;
 }
+
+// 예약→환불 바로가기용: 내 결제 목록에서 해당 예약의 '완료된' 결제를 찾아 반환
+// (백엔드에 rsvnNo 단건 조회 API가 없어 회원 결제 목록을 재활용 — 시연 규모에선 충분)
+export async function findCompletedPayByRsvnNo(memberNo, rsvnNo) {
+  const list = await findPaysByMemberNo(memberNo);
+  return (
+    list.find((p) => p.rsvnNo === Number(rsvnNo) && p.status === 'COMPLETED') ??
+    null
+  );
+}

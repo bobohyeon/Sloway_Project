@@ -166,9 +166,15 @@ export function CouponModal({ coupons, selectedId, onSelect, onClose }) {
                   {c.minAmount > 0 && <span> · </span>}
                   <span>적용 · {c.scope}</span>
                 </Meta>
-                <Expires>D-{c.expiresIn} · 곧 만료</Expires>
+                {c.expired ? (
+                  <Unavailable>기간 만료됨</Unavailable>
+                ) : (
+                  <Expires>D-{c.expiresIn}</Expires>
+                )}
               </Info>
-              {!c.available && <Unavailable>사용 조건 불충족</Unavailable>}
+              {!c.available && !c.expired && (
+                <Unavailable>사용 조건 불충족</Unavailable>
+              )}
             </CouponItem>
           ))}
         </Body>

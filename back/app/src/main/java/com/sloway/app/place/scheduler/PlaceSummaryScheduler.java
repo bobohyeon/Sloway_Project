@@ -1,4 +1,5 @@
 package com.sloway.app.place.scheduler;
+
 import lombok.RequiredArgsConstructor;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.scheduling.annotation.Scheduled;
@@ -10,51 +11,8 @@ import org.springframework.transaction.annotation.Transactional;
 public class PlaceSummaryScheduler {
     private final JdbcTemplate jdbcTemplate;
 
-    @Scheduled(cron = "0 * * * * *")
-    @Transactional
+    @Scheduled(cron = "0 */10 * * * *") // 10분마다 실행
     public void refreshPlaceSummary() {
-        jdbcTemplate.execute("TRUNCATE TABLE place_summary");
-
-        String sql = """
-            INSERT INTO place_summary (
-                place_no, type, target_no, title, address, current_url, price, 
-                final_score, rsvn_count, avg_score, amenities, status, updated_at
-            )
-            WITH RsvnStats AS (
-                -- 장소 고유 번호와 타입을 기준으로 예약 통계 산출
-                SELECT p.no as place_no, p.type,
-                       COUNT(DISTINCT r.no) AS rsvn_cnt, 
-                       AVG(rev.score_total) AS avg_score
-                FROM place p
-                LEFT JOIN rsvn r ON (r.station_no = p.no OR r.office_no = p.no OR r.work_stay_no = p.no)
-                LEFT JOIN review rev ON rev.rsvn_no = r.no
-                GROUP BY p.no, p.type
-            )
-            SELECT 
-                p.no, p.type,
-                CASE WHEN p.type = 'STATION' THEN s.no WHEN p.type = 'OFFICE' THEN o.no ELSE w.no END,
-                p.title || ' ' || COALESCE(s.title, o.title, w.title),
-                p.address, i.current_url,
-                COALESCE(s.mon_price, 
-                         (SELECT MIN(op.price) FROM office_period op WHERE op.office_no = o.no AND op.exception_start_date IS NULL), 
-                         w.mon_price, 0),
-                ROUND(CASE WHEN COALESCE(rs.rsvn_cnt, 0) = 0 THEN 0.0 ELSE ((rs.rsvn_cnt * 0.7) + (rs.avg_score * 0.3)) * 100 END)::int,
-                COALESCE(rs.rsvn_cnt, 0),
-                COALESCE(rs.avg_score, 0.0),
-                amenity_agg.names,
-                p.status, NOW()
-            FROM place p
-            LEFT JOIN station s ON s.place_no = p.no
-            LEFT JOIN office o ON o.place_no = p.no
-            LEFT JOIN work_stay w ON w.place_no = p.no
-            LEFT JOIN RsvnStats rs ON rs.place_no = p.no AND rs.type = p.type
-            LEFT JOIN img_place i ON i.place_no = p.no AND i.sort = 1
-            LEFT JOIN (
-                SELECT wa.work_no, STRING_AGG(a.name, ',') as names
-                FROM work_amenity wa JOIN amenity a ON a.no = wa.amenity_no GROUP BY wa.work_no
-            ) amenity_agg ON amenity_agg.work_no = w.no
-            WHERE p.status = 'I'
-        """;
-        jdbcTemplate.update(sql);
+        jdbcTemplate.execute("REFRESH MATERIALIZED VIEW CONCURRENTLY place_summary");
     }
 }

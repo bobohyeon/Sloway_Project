@@ -1,6 +1,8 @@
 import { useNavigate } from 'react-router-dom';
 import styled from 'styled-components';
 import RsvnStatusBadge from './RsvnStatusBadge';
+import { useAuth } from '../../../auth/hooks/useAuth';
+import { findCompletedPayByRsvnNo } from '../../../pay/api/payApi';
 import {
   Card,
   CardRow,
@@ -28,11 +30,30 @@ const ActionBtn = styled(BtnSm)`
 
 function RsvnCard({ item }) {
   const navigate = useNavigate();
+  const { user } = useAuth();
 
-  const handleAction = (e) => {
+  const handleAction = async (e) => {
     e.stopPropagation();
     if (item.action === '취소/환불') {
-      navigate('/user/refund/request');
+      // 예약에 해당하는 결제(payNo)를 찾아 바로 환불 신청 페이지로 이동
+      const memberNo = user?.memberNo;
+      if (!memberNo) {
+        navigate('/login');
+        return;
+      }
+      try {
+        const pay = await findCompletedPayByRsvnNo(memberNo, item.id);
+        if (pay) {
+          navigate(`/user/refund/request?payNo=${pay.no}`);
+        } else {
+          // 결제건을 못 찾으면 기존처럼 결제 목록에서 직접 선택하도록 안내
+          alert('환불 가능한 결제 내역을 찾을 수 없어요. 결제 내역에서 확인해주세요.');
+          navigate('/user/payment');
+        }
+      } catch (err) {
+        console.error('결제 조회 실패', err);
+        navigate('/user/payment');
+      }
     } else if (item.action === '리뷰 작성') {
       navigate('/user/review/write', { state: { rsvnNo: item.id } });
     }

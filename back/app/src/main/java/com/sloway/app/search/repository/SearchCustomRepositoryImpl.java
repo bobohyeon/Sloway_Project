@@ -66,6 +66,7 @@ public class SearchCustomRepositoryImpl implements SearchCustomRepository{
                             JPAExpressions.select(ws.no).from(ws).where(ws.placeEntity.eq(p)),
                             JPAExpressions.select(st.no).from(st).where(st.placeEntity.eq(p))
                         ),
+                        p.no,
                         p.title,
                         p.type,
                         p.address,
@@ -87,6 +88,7 @@ public class SearchCustomRepositoryImpl implements SearchCustomRepository{
                 )
                 .from(p)
                 .where(typeEq(dto.getPlaceType()), regionContains(dto.getRegion()), amenitiesFilter(dto.getAmenities()))
+
                 .orderBy(sortOrder((dto.getSort())))
                 .fetch()
                 ;
@@ -276,7 +278,7 @@ public class SearchCustomRepositoryImpl implements SearchCustomRepository{
             case POPULAR -> p.viewCnt.desc();
             case PRICE_ASC -> basePriceExpr().asc();
             case PRICE_DESC -> basePriceExpr().desc();
-            case SCORE -> new OrderSpecifier<>(Order.DESC,avgExpr());
+            case SCORE -> new OrderSpecifier<>(Order.DESC, avgExpr(), OrderSpecifier.NullHandling.NullsLast);
         };
     }
 }

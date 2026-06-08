@@ -1,4 +1,5 @@
 import { useNavigate } from 'react-router-dom';
+import dayjs from 'dayjs';
 import styled from 'styled-components';
 import { COLOR } from '../../../../rsvn/components/user/RsvnStyled';
 import { saveRsvn } from '../../../../rsvn/api/rsvnApi';
@@ -99,22 +100,22 @@ const CancelPolicy = styled.p`
 `;
 
 function DetailRsvnBox({
-  rsvnInfo = {},
+  checkIn = '',
+  checkOut = '',
+  guests = 2,
+  nights = 1,
+  onCheckInChange,
+  onCheckOutChange,
+  onGuestsChange,
   price = 0,
   priceUnit = '원/박',
   serviceFee = 12000,
   cancelPolicy = '무료 취소 · 이용 7일 전까지',
   rsvnDto,
   roomName = null,
+  inputType = 'date',
 }) {
   const navigate = useNavigate();
-
-  const {
-    checkIn = '5월 8일',
-    checkOut = '5월 10일',
-    guests = '성인 2명',
-    nights = 2,
-  } = rsvnInfo;
 
   const totalBase = price * nights;
   const grandTotal = totalBase + serviceFee;
@@ -142,14 +143,33 @@ function DetailRsvnBox({
       </PriceRow>
 
       <InfoRow>
-        <InfoLabel>날짜</InfoLabel>
-        <InfoValue>
-          {checkIn} → {checkOut}
-        </InfoValue>
+        <InfoLabel>체크인</InfoLabel>
+        <DateInput
+          type={inputType}
+          value={checkIn}
+          min={inputType === 'date' ? dayjs().format('YYYY-MM-DD') : undefined}
+          onChange={(e) => onCheckInChange?.(e.target.value)}
+        />
+      </InfoRow>
+      <InfoRow>
+        <InfoLabel>체크아웃</InfoLabel>
+        <DateInput
+          type={inputType}
+          value={checkOut}
+          min={inputType === 'date' ? (checkIn || dayjs().format('YYYY-MM-DD')) : undefined}
+          onChange={(e) => onCheckOutChange?.(e.target.value)}
+        />
       </InfoRow>
       <InfoRow>
         <InfoLabel>인원</InfoLabel>
-        <InfoValue>{guests}</InfoValue>
+        <GuestSelect
+          value={guests}
+          onChange={(e) => onGuestsChange?.(Number(e.target.value))}
+        >
+          {[1, 2, 3, 4, 5, 6, 7, 8].map((n) => (
+            <option key={n} value={n}>{n}명</option>
+          ))}
+        </GuestSelect>
       </InfoRow>
 
       <RsvnBtn onClick={handleRsvn}>예약하기</RsvnBtn>
@@ -177,6 +197,29 @@ function DetailRsvnBox({
     </Box>
   );
 }
+
+const DateInput = styled.input`
+  border: none;
+  border-bottom: 1px solid #e8dfd0;
+  font-size: 14px;
+  font-weight: 600;
+  color: #2c2c2a;
+  background: transparent;
+  cursor: pointer;
+  &:focus {
+    outline: none;
+    border-bottom-color: #2d6a4f;
+  }
+`;
+
+const GuestSelect = styled.select`
+  border: none;
+  border-bottom: 1px solid #e8dfd0;
+  font-size: 14px;
+  font-weight: 600;
+  background: transparent;
+  cursor: pointer;
+`;
 
 const RoomNameTag = styled.span`
   margin-left: auto;

@@ -4,8 +4,10 @@ import com.sloway.app.admin.entity.AdminEntity;
 import com.sloway.app.faq.entity.FaqEntity;
 import com.sloway.app.faq.enums.FaqCategory;
 import lombok.Getter;
+import lombok.Setter;
 
 @Getter
+@Setter
 public class FaqWriteReqDto {
 
     private String title;

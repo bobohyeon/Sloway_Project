@@ -17,6 +17,7 @@ import com.sloway.app.member.entity.MemberEntity;
 import com.sloway.app.member.entity.UserEntity;
 import com.sloway.app.member.repository.MemberRepository;
 import com.sloway.app.member.repository.UserRepository;
+import com.sloway.app.payment.point.service.PointService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -49,6 +50,8 @@ public class AuthService {
     private final PasswordEncoder passwordEncoder;
     private final EmailService emailService;
     private final HostRepository hostRepository;
+    private final PointService pointService;
+
 
     @Transactional
     public void userJoin(JoinRequestDto request) {
@@ -92,10 +95,14 @@ public class AuthService {
                 .password(encoded)
                 .authType(AuthType.L)
                 .build();
+        //가입완료
         userRepository.save(user);
+        
+        //회원가입 포인트 적립
+        pointService.earnSignupPoint(saveMember.getNo());
 
-        log.info("회원가입 완료 : {} (memberNo = {})", saveMember.getEmail(), saveMember.getNo());
-
+        log.info("회원가입 완료 : {} (memberNo = {}, 가입포인트 적립)",
+                saveMember.getEmail(), saveMember.getNo());
     }
 
     /**
@@ -115,6 +122,7 @@ public class AuthService {
                 ? EmailCheckResponseDto.unavailable()
                 : EmailCheckResponseDto.available();
     }
+
     /**
      * 아이디(이메일) 찾기.
      * 이름 + 전화번호로 회원을 조회해 이메일을 마스킹하여 반환.
@@ -154,6 +162,7 @@ public class AuthService {
 
         return masked + domain;
     }
+
     /**
      * 비밀번호 찾기(재설정) — 비로그인 상태.
      *

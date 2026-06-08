@@ -80,23 +80,33 @@ const Tag = styled.span`
 
 /////////////////////////////////////////////모달
 const ModalOverlay = styled.div`
-  position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-  background: rgba(0,0,0,0.8);
-  display: flex; justify-content: center; align-items: center;
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.8);
+  display: flex;
+  justify-content: center;
+  align-items: center;
   z-index: 1000;
 `;
 
 const SlideContainer = styled.div`
   position: relative;
-  img { max-width: 90vw; max-height: 80vh; border-radius: 8px; }
+  img {
+    max-width: 90vw;
+    max-height: 80vh;
+    border-radius: 8px;
+  }
 `;
 
 const ArrowButton = styled.button`
   position: absolute;
   top: 50%;
   transform: translateY(-50%);
-  ${props => props.left ? 'left: 20px;' : 'right: 20px;'}
-  
+  ${(props) => (props.left ? 'left: 20px;' : 'right: 20px;')}
+
   width: 50px;
   height: 50px;
   background: rgba(255, 255, 255, 0.2);
@@ -129,6 +139,29 @@ const AnimatedImage = styled.img`
   animation: ${zoomIn} 0.6s ease-out;
 `;
 
+const DetailActionButton = styled.button`
+  border: none;
+  background: none;
+  cursor: pointer;
+  display: block;
+  margin-bottom: 10px;
+  font-size: 14px;
+  color: #333;
+  transition: all 0.2s;
+
+  &:disabled {
+    color: #ccc;
+    cursor: not-allowed;
+  }
+
+  &.image-edit {
+    color: #4a6fa5;
+    &:disabled {
+      color: #ccc;
+    }
+  }
+`;
+
 // --- 레이아웃 컴포넌트 ---
 function StationDetailLayout({
   data,
@@ -153,10 +186,12 @@ function StationDetailLayout({
           {/* 프로필 배너 섹션 */}
           <Banner>
             <ProfileInfo $imageUrl={data.header.imageUrl}>
-              <div className="icon"
-                onClick={() => openModal(0)} 
-                style={{ cursor: 'pointer' }}>
-                {!data.header.imageUrl && "🌲"}
+              <div
+                className="icon"
+                onClick={() => openModal(0)}
+                style={{ cursor: 'pointer' }}
+              >
+                {!data.header.imageUrl && '🌲'}
               </div>
               <div className="text">
                 <div className="tags">
@@ -171,29 +206,20 @@ function StationDetailLayout({
               </div>
             </ProfileInfo>
             <div style={{ textAlign: 'right' }}>
-              <button
-                style={{
-                  border: 'none',
-                  background: 'none',
-                  cursor: 'pointer',
-                  display: 'block',
-                  marginBottom: '10px',
-                }}
+              <DetailActionButton
+                disabled={data.header.status === '승인대기'} // 여기에 비활성화 조건 입력
                 onClick={handleUpdateDetail}
               >
                 정보 수정
-              </button>
-              <button
-                style={{
-                  border: 'none',
-                  background: 'none',
-                  cursor: 'pointer',
-                  color: '#4a6fa5',
-                }}
+              </DetailActionButton>
+
+              <DetailActionButton
+                className="image-edit"
+                disabled={data.header.status === '승인대기'} // 여기에 비활성화 조건 입력
                 onClick={handleImageUpdate}
               >
                 이미지 수정
-              </button>
+              </DetailActionButton>
             </div>
           </Banner>
 
@@ -210,29 +236,60 @@ function StationDetailLayout({
           <RecentBookings bookings={data.recentBookings} />
         </PageLayout>
       </Container>
-    {isModalOpen && (
-      <ModalOverlay onClick={() => closeModal()}>
-        <SlideContainer onClick={(e) => e.stopPropagation()}>
-          <AnimatedImage 
-            key={currentIdx} 
-            src={sortedImages[currentIdx].preview} 
-            alt="detail" 
-          />       
-          <ArrowButton left onClick={() => setCurrentIdx((prev) => (prev === 0 ? sortedImages.length - 1 : prev - 1))}>
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <polyline points="15 18 9 12 15 6"></polyline>
-            </svg>
-          </ArrowButton>
+      {isModalOpen && (
+        <ModalOverlay onClick={() => closeModal()}>
+          <SlideContainer onClick={(e) => e.stopPropagation()}>
+            <AnimatedImage
+              key={currentIdx}
+              src={sortedImages[currentIdx].preview}
+              alt="detail"
+            />
+            <ArrowButton
+              left
+              onClick={() =>
+                setCurrentIdx((prev) =>
+                  prev === 0 ? sortedImages.length - 1 : prev - 1
+                )
+              }
+            >
+              <svg
+                width="24"
+                height="24"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              >
+                <polyline points="15 18 9 12 15 6"></polyline>
+              </svg>
+            </ArrowButton>
 
-          <ArrowButton onClick={() => setCurrentIdx((prev) => (prev === sortedImages.length - 1 ? 0 : prev + 1))}>
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <polyline points="9 6 15 12 9 18"></polyline>
-            </svg>
-          </ArrowButton>
-        </SlideContainer>
-      </ModalOverlay>
-    )}
-    </PageWrapper>  
+            <ArrowButton
+              onClick={() =>
+                setCurrentIdx((prev) =>
+                  prev === sortedImages.length - 1 ? 0 : prev + 1
+                )
+              }
+            >
+              <svg
+                width="24"
+                height="24"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              >
+                <polyline points="9 6 15 12 9 18"></polyline>
+              </svg>
+            </ArrowButton>
+          </SlideContainer>
+        </ModalOverlay>
+      )}
+    </PageWrapper>
   );
 }
 

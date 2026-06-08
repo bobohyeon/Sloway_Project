@@ -5,7 +5,11 @@ import PageLayout from '../../../../app/layouts/page/PageLayout';
 import { EmptyState } from '../../../pay_shared/components';
 import { PaymentFilterBar } from '../../components/user/PaymentFilterBar';
 import { PaymentListItem } from '../../components/user/PaymentListItem';
+import { ReceiptModal } from '../../components/user/ReceiptModal';
+import { Pagination } from '../../../pay_shared/components/Pagination';
 import { findPaysByMemberNo } from '../../api/payApi';
+
+const PAGE_SIZE = 10;
 import { useAuth } from '../../../auth/hooks/useAuth';
 
 const emptyTitleByTab = (tab) => {
@@ -89,6 +93,8 @@ export default function PaymentHistory() {
   const [error, setError] = useState(null);
   const [selectedTab, setSelectedTab] = useState('all');
   const [selectedPeriod, setSelectedPeriod] = useState('3months');
+  const [receiptPay, setReceiptPay] = useState(null);
+  const [page, setPage] = useState(1);
 
   useEffect(() => {
     if (!memberNo) {
@@ -135,14 +141,19 @@ export default function PaymentHistory() {
       .map(toPaymentForUI);
   }, [pays, selectedTab, selectedPeriod]);
 
+  const totalPages = Math.ceil(filteredPayments.length / PAGE_SIZE);
+  const paged = filteredPayments.slice(
+    (page - 1) * PAGE_SIZE,
+    page * PAGE_SIZE
+  );
+
   const handleItemClick = (payment) => {
     navigate(`/user/payment/${payment.no}`);
   };
 
   const handleReceiptClick = (payment) => {
-    alert(
-      `영수증 — PAY ${payment.no}\n(현금영수증/세금계산서 기능 통합 단계 진입 예정)`
-    );
+    const original = pays.find((p) => p.no === payment.no);
+    if (original) setReceiptPay(original);
   };
 
   return (
@@ -155,9 +166,15 @@ export default function PaymentHistory() {
       <PaymentFilterBar
         tabs={tabsWithCount}
         selectedTab={selectedTab}
-        onTabChange={setSelectedTab}
+        onTabChange={(v) => {
+          setSelectedTab(v);
+          setPage(1);
+        }}
         selectedPeriod={selectedPeriod}
-        onPeriodChange={setSelectedPeriod}
+        onPeriodChange={(v) => {
+          setSelectedPeriod(v);
+          setPage(1);
+        }}
       />
 
       {loading ? (
@@ -175,16 +192,30 @@ export default function PaymentHistory() {
           description="다른 기간을 선택하거나 새로운 예약을 진행해보세요"
         />
       ) : (
-        <List>
-          {filteredPayments.map((payment) => (
-            <PaymentListItem
-              key={payment.no}
-              payment={payment}
-              onClick={handleItemClick}
-              onReceiptClick={handleReceiptClick}
-            />
-          ))}
-        </List>
+        <>
+          <List>
+            {paged.map((payment) => (
+              <PaymentListItem
+                key={payment.no}
+                payment={payment}
+                onClick={handleItemClick}
+                onReceiptClick={handleReceiptClick}
+              />
+            ))}
+          </List>
+          <Pagination
+            currentPage={page}
+            totalPages={totalPages}
+            onChange={(p) => {
+              setPage(p);
+              window.scrollTo(0, 0);
+            }}
+          />
+        </>
+      )}
+
+      {receiptPay && (
+        <ReceiptModal pay={receiptPay} onClose={() => setReceiptPay(null)} />
       )}
     </PageLayout>
   );

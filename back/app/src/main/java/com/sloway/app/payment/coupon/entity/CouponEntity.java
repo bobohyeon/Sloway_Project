@@ -61,6 +61,9 @@ public class CouponEntity extends BaseEntity {
         if (this.status != CouponStatus.AVAILABLE) {
             throw new CustomException(CouponErrorCode.COUPON_NOT_AVAILABLE);
         }
+        if (this.expiredAt != null && this.expiredAt.isBefore(LocalDateTime.now())) {
+            throw new CustomException(CouponErrorCode.COUPON_EXPIRED);
+        }
         this.usedAt = LocalDateTime.now();
         this.payNo = payEntity;
         this.status = CouponStatus.USED;
@@ -77,6 +80,12 @@ public class CouponEntity extends BaseEntity {
         if (this.status != CouponStatus.USED) {
             throw new CustomException(CouponErrorCode.COUPON_NOT_USED);
         }
-        this.status = CouponStatus.RETURNED;
+        this.payNo = null;
+        this.usedAt = null;
+        if (this.expiredAt != null && this.expiredAt.isBefore(LocalDateTime.now())) {
+            this.status = CouponStatus.EXPIRED;
+        } else {
+            this.status = CouponStatus.AVAILABLE;
+        }
     }
 }

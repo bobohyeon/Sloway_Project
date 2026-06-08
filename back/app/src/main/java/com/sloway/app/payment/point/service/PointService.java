@@ -104,7 +104,7 @@ public class PointService {
             throw new CustomException(PointErrorCode.POINT_EXCEED_LIMIT);
         }
         MemberEntity memberEntity = findMember(memberNo);
-        Integer currentPoint = pointRepository.sumByMemberAndStatus(memberNo, PointStatus.SAVE);
+        int currentPoint = calcBalance(memberNo);
         if (currentPoint < amount) {
             throw new CustomException(PointErrorCode.POINT_INSUFFICIENT);
         }
@@ -137,10 +137,30 @@ public class PointService {
         pointRepository.save(pointEntity);
     }
 
+    @Transactional
+    public void earnSignupPoint(Long memberNo){
+        MemberEntity memberEntity = findMember(memberNo);
+        LocalDateTime expiredAt = LocalDateTime.now().plusYears(1);
+        PointEntity pointEntity = PointEntity.builder()
+                .memberNo(memberEntity)
+                .amount(5000)
+                .dealType(PointDealType.EARN)
+                .expiredAt(expiredAt)
+                .status(PointStatus.SAVE)
+                .build();
+        pointRepository.save(pointEntity);
+    }
+
     public PointBalanceResDto findPointBalanceByMemberNo(Long memberNo) {
         MemberEntity memberEntity = findMember(memberNo);
-        Integer balance = pointRepository.sumByMemberAndStatus(memberNo, PointStatus.SAVE);
+        int balance = calcBalance(memberNo);
         return PointBalanceResDto.from(memberEntity, balance);
+    }
+
+    private int calcBalance(Long memberNo) {
+        int saveSum = pointRepository.sumByMemberAndStatus(memberNo, PointStatus.SAVE);
+        int usedSum = pointRepository.sumByMemberAndStatus(memberNo, PointStatus.USED);
+        return saveSum + usedSum;
     }
 
     @Transactional

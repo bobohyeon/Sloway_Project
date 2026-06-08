@@ -16,6 +16,8 @@ import {
   COLOR,
 } from '../../components/user/RsvnStyled';
 import { findOneRsvn } from '../../api/rsvnApi';
+import { useAuth } from '../../../../features/auth/hooks/useAuth';
+import { findCompletedPayByRsvnNo } from '../../../../features/pay/api/payApi';
 
 const StatusBanner = styled.div`
   background: ${COLOR.gray100};
@@ -74,7 +76,29 @@ const STATUS_LABEL = { S: '예약확정', E: '이용완료', C: '예약취소', 
 function RsvnDetailPage() {
   const navigate = useNavigate();
   const { id } = useParams();
+  const { user } = useAuth();
   const [rsvn, setRsvn] = useState(null);
+
+  // 예약에 해당하는 결제(payNo)를 찾아 바로 환불 신청 페이지로 이동
+  const handleRefund = async () => {
+    const memberNo = user?.memberNo;
+    if (!memberNo) {
+      navigate('/login');
+      return;
+    }
+    try {
+      const pay = await findCompletedPayByRsvnNo(memberNo, rsvn.no);
+      if (pay) {
+        navigate(`/user/refund/request?payNo=${pay.no}`);
+      } else {
+        alert('환불 가능한 결제 내역을 찾을 수 없어요. 결제 내역에서 확인해주세요.');
+        navigate('/user/payment');
+      }
+    } catch (err) {
+      console.error('결제 조회 실패', err);
+      navigate('/user/payment');
+    }
+  };
 
   useEffect(() => {
     const fetch = async () => {
@@ -198,7 +222,7 @@ function RsvnDetailPage() {
       {/* 하단 버튼 — 예약확정 상태일 때만 */}
       {rsvn.status === 'S' && (
         <BottomBar>
-          <RefundBtn onClick={() => navigate('/user/refund/request')}>
+          <RefundBtn onClick={handleRefund}>
             예약 취소 / 환불 신청
           </RefundBtn>
         </BottomBar>

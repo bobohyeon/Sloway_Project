@@ -114,7 +114,6 @@ import PaymentFail from './features/pay/pages/user/PaymentFail';
 import TossSuccess from './features/pay/pages/user/TossSuccess';
 import PaymentHistory from './features/pay/pages/user/PaymentHistory';
 import PaymentDetail from './features/pay/pages/user/PaymentDetail';
-import PaymentMethods from './features/pay/pages/user/PaymentMethods';
 import CashReceipt from './features/pay/pages/user/CashReceipt';
 import PointHistory from './features/point/pages/user/PointHistory';
 
@@ -298,7 +297,6 @@ function App() {
           {/* 결제·지갑 */}
           <Route path="/user/payment/receipt" element={<CashReceipt />} />
           <Route path="/user/payment" element={<PaymentHistory />} />
-          <Route path="/user/payment/method" element={<PaymentMethods />} />
           <Route path="/user/payment/:no" element={<PaymentDetail />} />
           <Route path="/user/point" element={<PointHistory />} />
           <Route path="/user/coupon/event" element={<CouponEvent />} />

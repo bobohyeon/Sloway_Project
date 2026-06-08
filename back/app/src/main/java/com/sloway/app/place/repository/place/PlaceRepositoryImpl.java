@@ -8,6 +8,8 @@ import com.querydsl.jpa.JPQLQuery;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import com.sloway.app.place.dto.request.place.PlaceUpdateReqDto;
 import com.sloway.app.place.dto.response.place.*;
+import com.sloway.app.place.entity.cashing.PlaceSummary;
+import com.sloway.app.place.entity.hostPlace.QHostPlaceEntity;
 import com.sloway.app.place.entity.place.PlaceStatus;
 import lombok.RequiredArgsConstructor;
 
@@ -32,6 +34,7 @@ import static com.sloway.app.review.review.entity.QReviewEntity.reviewEntity;
 import static com.sloway.app.place.entity.office.QOfficePeriodEntity.officePeriodEntity;
 import static com.sloway.app.place.entity.amenity.QAmenityEntity.amenityEntity;
 import static com.sloway.app.place.entity.amenity.workStay.QWorkAmenityEntity.workAmenityEntity;
+import static com.sloway.app.place.entity.cashing.QPlaceSummary.placeSummary;
 
 @RequiredArgsConstructor
 public class PlaceRepositoryImpl implements PlaceRepositoryCustom {
@@ -147,90 +150,56 @@ public class PlaceRepositoryImpl implements PlaceRepositoryCustom {
 
     @Override
     public List<PlaceListRespDto> findPlaceListByMemberNo(Long memberNo) {
-        LocalDateTime now = LocalDateTime.now();
-        LocalDateTime startOfMonth = now.with(TemporalAdjusters.firstDayOfMonth()).withHour(0).withMinute(0).withSecond(0).withNano(0);
-        LocalDateTime endOfMonth = now.with(TemporalAdjusters.lastDayOfMonth()).withHour(23).withMinute(59).withSecond(59).withNano(999999999);
+        QHostPlaceEntity subHp = new QHostPlaceEntity("subHp");
 
-        // 1. PLACE별 가장 최신 HOST_PLACE ID를 구하는 서브쿼리 (PK인 no 사용)
-        var latestHostPlaceIdSubQuery = JPAExpressions
-                .select(hostPlaceEntity.no.max())
-                .from(hostPlaceEntity)
-                .groupBy(hostPlaceEntity.placeEntity.no);
-
-        // 2. 리뷰 평점 서브쿼리
-        var subQueryReviewAvg = JPAExpressions
-                .select(reviewEntity.scoreTotal.avg())
-                .from(reviewEntity)
-                .join(rsvnEntity).on(reviewEntity.rsvnNo.no.eq(rsvnEntity.no))
-                .where(
-                        rsvnEntity.workStayNo.placeEntity.no.eq(placeEntity.no)
-                                .or(rsvnEntity.officeNo.placeEntity.no.eq(placeEntity.no))
-                                .or(rsvnEntity.stationNo.placeEntity.no.eq(placeEntity.no))
-                );
-
-        // 공간별 누적 리뷰 개수
-        var subQueryReviewCount = JPAExpressions
-                .select(reviewEntity.count().intValue())
-                .from(reviewEntity)
-                .join(rsvnEntity).on(reviewEntity.rsvnNo.no.eq(rsvnEntity.no))
-                .where(
-                        rsvnEntity.workStayNo.placeEntity.no.eq(placeEntity.no)
-                                .or(rsvnEntity.officeNo.placeEntity.no.eq(placeEntity.no))
-                                .or(rsvnEntity.stationNo.placeEntity.no.eq(placeEntity.no))
-                );
-
-        // 공간별 당월 예약 건수
-        var subQueryMonthlyBookings = JPAExpressions
-                .select(rsvnEntity.count().intValue())
-                .from(rsvnEntity)
-                .where(
-                        rsvnEntity.workStayNo.placeEntity.no.eq(placeEntity.no)
-                                .or(rsvnEntity.officeNo.placeEntity.no.eq(placeEntity.no))
-                                .or(rsvnEntity.stationNo.placeEntity.no.eq(placeEntity.no)),
-                        rsvnEntity.createdAt.between(startOfMonth, endOfMonth)
-                );
-
-        // 메인 쿼리
         return queryFactory
                 .select(Projections.constructor(PlaceListRespDto.class,
-                        placeEntity.no.as("id"),
+                        placeEntity.no,
                         placeEntity.type,
-                        hostPlaceEntity.status.stringValue(),
+                        hostPlaceEntity.status.stringValue().max(),
                         placeEntity.title,
                         placeEntity.address,
-                        Expressions.numberTemplate(Double.class, "COALESCE(ROUND({0}, 1), 0.0)", subQueryReviewAvg),
-                        Expressions.numberTemplate(Integer.class, "COALESCE({0}, 0)", subQueryReviewCount),
-                        Expressions.numberTemplate(Integer.class, "COALESCE({0}, 0)", subQueryMonthlyBookings),
+                        placeSummary.avgScore.avg().coalesce(0.0),
+                        placeSummary.rsvnCount.avg().intValue().coalesce(0),
+                        placeSummary.rsvnCount.avg().intValue().coalesce(0),
                         new CaseBuilder()
                                 .when(placeEntity.type.eq("WORK_STAY")).then(workStayEntity.monPrice.min())
-                                .when(placeEntity.type.eq("OFFICE")).then(officePeriodEntity.price.min())
                                 .when(placeEntity.type.eq("STATION")).then(stationEntity.monPrice.min())
-                                .otherwise(0).intValue(),
-                        imgPlaceEntity.currentUrl
+                                .when(placeEntity.type.eq("OFFICE")).then(
+                                        JPAExpressions.select(officePeriodEntity.price.min())
+                                                .from(officePeriodEntity)
+                                                .where(officePeriodEntity.officeEntity.eq(officeEntity))
+                                )
+                                .otherwise(0),
+                        imgPlaceEntity.currentUrl.min()
                 ))
                 .from(placeEntity)
-                // 최신 상태값(hostPlaceEntity) 조인
-                .join(hostPlaceEntity).on(
-                        hostPlaceEntity.placeEntity.eq(placeEntity)
-                                .and(hostPlaceEntity.no.in(latestHostPlaceIdSubQuery))
-                )
-                .join(hostEntity).on(hostPlaceEntity.hostEntity.eq(hostEntity))
+                // 1. 최신 이력 조인 (서브쿼리 방식)
+                .innerJoin(hostPlaceEntity).on(hostPlaceEntity.placeEntity.eq(placeEntity)
+                        .and(hostPlaceEntity.no.eq(
+                                JPAExpressions.select(subHp.no.max())
+                                        .from(subHp)
+                                        .where(subHp.placeEntity.eq(placeEntity))
+                        )))
+                // 2. 호스트 정보 조인
+                .innerJoin(hostEntity).on(hostPlaceEntity.hostEntity.eq(hostEntity))
+                // 3. 통계 및 기타 테이블 Left Join
+                .leftJoin(placeSummary).on(placeSummary.placeNo.eq(placeEntity.no)
+                        .and(placeSummary.type.eq(placeEntity.type)))
                 .leftJoin(workStayEntity).on(workStayEntity.placeEntity.eq(placeEntity))
                 .leftJoin(officeEntity).on(officeEntity.placeEntity.eq(placeEntity))
-                .leftJoin(officePeriodEntity).on(officePeriodEntity.officeEntity.eq(officeEntity))
                 .leftJoin(stationEntity).on(stationEntity.placeEntity.eq(placeEntity))
                 .leftJoin(imgPlaceEntity).on(imgPlaceEntity.placeEntity.eq(placeEntity).and(imgPlaceEntity.sort.eq(1)))
                 .where(
                         placeEntity.delYn.eq("N"),
-                        memberNo != null ? hostEntity.memberNo.eq(memberNo) : null
+                        hostEntity.memberNo.eq(memberNo)
                 )
                 .groupBy(
                         placeEntity.no,
                         placeEntity.type,
-                        hostPlaceEntity.status,
                         placeEntity.title,
                         placeEntity.address,
-                        imgPlaceEntity.currentUrl
+                        officeEntity.no
                 )
                 .orderBy(hostPlaceEntity.no.max().desc())
                 .fetch();
@@ -328,203 +297,73 @@ public class PlaceRepositoryImpl implements PlaceRepositoryCustom {
 
     @Override
     public List<PlaceCardDto> getTop4PlacesByType() {
-        LocalDateTime oneWeekAgo = LocalDateTime.now().minusDays(7);
-
-        // 1. 점수 로직 정의
-        NumberExpression<Integer> finalScore = new CaseBuilder()
-                .when(rsvnEntity.no.countDistinct().eq(0L))
-                .then(new CaseBuilder().when(placeEntity.createdAt.goe(oneWeekAgo)).then(0.5).otherwise(0.0))
-                .otherwise(
-                        (rsvnEntity.no.countDistinct().doubleValue().multiply(0.7)
-                                .add(reviewEntity.scoreTotal.avg().coalesce(0.0).multiply(0.3)))
-                                .multiply(new CaseBuilder().when(placeEntity.createdAt.goe(oneWeekAgo)).then(0.5).otherwise(1.0))
-                )
-                .multiply(100)
-                .round()
-                .intValue();
-
-        // 2. 재사용 가능한 식 정의 (SELECT와 GROUP BY에서 동일하게 사용)
-        NumberExpression<Long> targetNo = new CaseBuilder()
-                .when(placeEntity.type.eq("STATION")).then(stationEntity.no)
-                .when(placeEntity.type.eq("OFFICE")).then(officeEntity.no)
-                .when(placeEntity.type.eq("WORK_STAY")).then(workStayEntity.no)
-                .otherwise(0L);
-        StringExpression combinedTitle = placeEntity.title.concat(" ").concat(
-                stationEntity.title.coalesce(officeEntity.title).coalesce(workStayEntity.title)
-        );
-
         return queryFactory
-                .select(Projections.constructor(PlaceCardDto.class,
-                        placeEntity.no,
-                        targetNo,
-                        combinedTitle,
-                        placeEntity.type,
-                        imgPlaceEntity.currentUrl,
-                        placeEntity.address,
-                        Expressions.asNumber(0),
-                        finalScore,
-                        rsvnEntity.no.countDistinct().intValue(),
-                        reviewEntity.scoreTotal.avg().coalesce(0.0),
-                        placeEntity.createdAt.goe(oneWeekAgo),
-                        placeEntity.status.stringValue()
+                .select(Projections.fields(PlaceCardDto.class,
+                        placeSummary.placeNo.as("masterNo"),
+                        placeSummary.targetNo.as("placeNo"),
+                        placeSummary.title,
+                        placeSummary.type,
+                        placeSummary.currentUrl.as("mainImageUrl"),
+                        placeSummary.address,
+                        placeSummary.price,
+                        placeSummary.finalScore,
+                        placeSummary.rsvnCount.as("totalReservations"),
+                        placeSummary.avgScore.as("avgReviewScore"),
+                        placeSummary.status
                 ))
-                .from(placeEntity)
-                .leftJoin(stationEntity).on(stationEntity.placeEntity.no.eq(placeEntity.no))
-                .leftJoin(officeEntity).on(officeEntity.placeEntity.no.eq(placeEntity.no))
-                .leftJoin(workStayEntity).on(workStayEntity.placeEntity.no.eq(placeEntity.no))
-                .leftJoin(rsvnEntity).on(rsvnEntity.stationNo.eq(stationEntity)
-                        .or(rsvnEntity.officeNo.eq(officeEntity))
-                        .or(rsvnEntity.workStayNo.eq(workStayEntity)))
-                .leftJoin(reviewEntity).on(reviewEntity.rsvnNo.eq(rsvnEntity))
-                .leftJoin(imgPlaceEntity).on(imgPlaceEntity.placeEntity.no.eq(placeEntity.no).and(imgPlaceEntity.sort.eq(1)))
-                .where(placeEntity.status.eq(PlaceStatus.I))
-                // 핵심: SELECT 절에 사용된 연산식을 그대로 GROUP BY에 삽입
-                .groupBy(
-                        stationEntity.no, officeEntity.no, workStayEntity.no,
-                        placeEntity.title, stationEntity.title, officeEntity.title, workStayEntity.title,
-                        placeEntity.type,
-                        placeEntity.address,
-                        placeEntity.status,
-                        imgPlaceEntity.currentUrl,
-                        placeEntity.no,
-                        placeEntity.createdAt
-                )
-                .orderBy(finalScore.desc())
+                .from(placeSummary)
+                .where(placeSummary.status.eq("I"))
+                .orderBy(placeSummary.finalScore.desc())
                 .limit(4)
                 .fetch();
     }
 
     @Override
     public List<PlaceCardDto> getRecommendPlace() {
-        LocalDateTime oneWeekAgo = LocalDateTime.now().minusDays(7);
-
-        // 1. Office 최소 가격 서브쿼리
-        JPQLQuery<Integer> subQuery = JPAExpressions
-                .select(officePeriodEntity.price.min())
-                .from(officePeriodEntity)
-                .where(officePeriodEntity.officeEntity.eq(officeEntity)
-                        .and(officePeriodEntity.exceptionStartDate.isNull()));
-        NumberExpression<Integer> minOfficePrice = Expressions.asNumber(subQuery);
-
-        // 2. 가격 병합 로직 복구
-        NumberExpression<Integer> combinedPrice = stationEntity.monPrice
-                .coalesce(minOfficePrice)
-                .coalesce(workStayEntity.monPrice)
-                .coalesce(0);
-
-        // 3. 점수 로직
-        String scoreLogic = "ROUND((CASE WHEN COUNT(DISTINCT {1}) = 0 " +
-                "THEN (CASE WHEN {2} >= {0} THEN 0.5 ELSE 0.0 END) " +
-                "ELSE ((COUNT(DISTINCT {1}) * 0.7) + (COALESCE(AVG({3}), 0) * 0.3)) * (CASE WHEN {2} >= {0} THEN 0.5 ELSE 1.0 END) " +
-                "END) * 100, 0)";
-        NumberExpression<Double> scoreDouble = Expressions.numberTemplate(Double.class, scoreLogic,
-                oneWeekAgo, rsvnEntity.no, placeEntity.createdAt, reviewEntity.scoreTotal);
-
         return queryFactory
-                .select(Projections.constructor(PlaceCardDto.class,
-                        placeEntity.no,
-                        new CaseBuilder()
-                                .when(placeEntity.type.eq("STATION")).then(stationEntity.no)
-                                .when(placeEntity.type.eq("OFFICE")).then(officeEntity.no)
-                                .when(placeEntity.type.eq("WORK_STAY")).then(workStayEntity.no)
-                                .otherwise(0L),
-                        placeEntity.title.concat(" - ").concat(stationEntity.title.coalesce(officeEntity.title).coalesce(workStayEntity.title)), // combinedTitle
-                        placeEntity.type,
-                        imgPlaceEntity.currentUrl,
-                        placeEntity.address,
-                        combinedPrice, // 가격 정보 복구 완료
-                        scoreDouble.intValue(),
-                        rsvnEntity.no.countDistinct().intValue(),
-                        reviewEntity.scoreTotal.avg().coalesce(0.0),
-                        placeEntity.createdAt.goe(oneWeekAgo),
-                        placeEntity.status.stringValue()
+                .select(Projections.fields(PlaceCardDto.class,
+                        placeSummary.placeNo.as("masterNo"),
+                        placeSummary.targetNo.as("placeNo"),
+                        placeSummary.title,
+                        placeSummary.type,
+                        placeSummary.currentUrl.as("mainImageUrl"),
+                        placeSummary.address,
+                        placeSummary.price,
+                        placeSummary.finalScore,
+                        placeSummary.rsvnCount.as("totalReservations"),
+                        placeSummary.avgScore.as("avgReviewScore"),
+                        placeSummary.status
                 ))
-                .from(placeEntity)
-                .leftJoin(stationEntity).on(stationEntity.placeEntity.no.eq(placeEntity.no))
-                .leftJoin(officeEntity).on(officeEntity.placeEntity.no.eq(placeEntity.no))
-                .leftJoin(workStayEntity).on(workStayEntity.placeEntity.no.eq(placeEntity.no))
-                .leftJoin(rsvnEntity).on(rsvnEntity.stationNo.eq(stationEntity)
-                        .or(rsvnEntity.officeNo.eq(officeEntity))
-                        .or(rsvnEntity.workStayNo.eq(workStayEntity)))
-                .leftJoin(reviewEntity).on(reviewEntity.rsvnNo.eq(rsvnEntity))
-                .leftJoin(imgPlaceEntity).on(imgPlaceEntity.placeEntity.no.eq(placeEntity.no).and(imgPlaceEntity.sort.eq(1)))
-                .where(placeEntity.status.eq(PlaceStatus.I))
-                // 에러 방지: SELECT 절의 모든 원본 컬럼과 가격 로직 포함
-                .groupBy(
-                        placeEntity.no,
-                        stationEntity.no, officeEntity.no, workStayEntity.no,
-                        placeEntity.title, stationEntity.title, officeEntity.title, workStayEntity.title,
-                        placeEntity.type,
-                        imgPlaceEntity.currentUrl,
-                        placeEntity.address,
-                        placeEntity.createdAt,
-                        placeEntity.status,
-                        stationEntity.monPrice,
-                        workStayEntity.monPrice // 그룹핑에 가격 관련 원본 컬럼 추가
-                )
-                .orderBy(scoreDouble.desc())
+                .from(placeSummary)
+                .where(placeSummary.status.eq("I"))
+                .orderBy(placeSummary.finalScore.desc())
                 .limit(3)
                 .fetch();
     }
 
     @Override
     public WorkStayCardDto getRandomWorkStay() {
-        LocalDateTime oneWeekAgo = LocalDateTime.now().minusDays(7);
-
-        // 1. 점수 로직 (WorkStay 기준 예약/리뷰)
-        String scoreLogic = "ROUND((CASE WHEN COUNT(DISTINCT {1}) = 0 " +
-                "THEN (CASE WHEN {2} >= {0} THEN 0.5 ELSE 0.0 END) " +
-                "ELSE ((COUNT(DISTINCT {1}) * 0.7) + (COALESCE(AVG({3}), 0) * 0.3)) * (CASE WHEN {2} >= {0} THEN 0.5 ELSE 1.0 END) " +
-                "END) * 100, 0)";
-
-        NumberExpression<Double> scoreDouble = Expressions.numberTemplate(Double.class, scoreLogic,
-                oneWeekAgo, rsvnEntity.no, placeEntity.createdAt, reviewEntity.scoreTotal);
-
-        // 2. 쿼리 구성 (WorkStay 중심)
-        List<Tuple> results = queryFactory
-                .select(
-                        workStayEntity.placeEntity.no,
-                        workStayEntity.no,
-                        placeEntity.title.concat(" ").concat(workStayEntity.title),
-                        placeEntity.address,
-                        imgPlaceEntity.currentUrl,
-                        workStayEntity.monPrice.coalesce(0),
-                        Expressions.stringTemplate("string_agg({0}, ',')", amenityEntity.name)
-                )
-                .from(workStayEntity)
-                .join(placeEntity).on(workStayEntity.placeEntity.no.eq(placeEntity.no))
-                .leftJoin(imgPlaceEntity).on(imgPlaceEntity.placeEntity.no.eq(placeEntity.no).and(imgPlaceEntity.sort.eq(1)))
-                .leftJoin(rsvnEntity).on(rsvnEntity.workStayNo.eq(workStayEntity)) // station/office 관련 조인 제거
-                .leftJoin(reviewEntity).on(reviewEntity.rsvnNo.eq(rsvnEntity))
-                .leftJoin(workAmenityEntity).on(workAmenityEntity.workStayEntity.no.eq(workStayEntity.no))
-                .leftJoin(amenityEntity).on(amenityEntity.no.eq(workAmenityEntity.amenityEntity.no))
-                .where(placeEntity.status.eq(PlaceStatus.I))
-                .groupBy(
-                        workStayEntity.placeEntity.no,
-                        workStayEntity.no,
-                        placeEntity.title,
-                        workStayEntity.title,
-                        placeEntity.address,
-                        placeEntity.createdAt,
-                        imgPlaceEntity.currentUrl,
-                        workStayEntity.monPrice
-                )
-                .orderBy(scoreDouble.desc())
+        List<PlaceSummary> list = queryFactory
+                .selectFrom(placeSummary)
+                .where(placeSummary.type.eq("WORK_STAY").and(placeSummary.status.eq("I")))
+                .orderBy(placeSummary.finalScore.desc())
                 .limit(5)
                 .fetch();
 
-        // 3. 변환 (DTO 매핑 및 랜덤 선택)
-        List<WorkStayCardDto> candidates = results.stream().map(tuple -> WorkStayCardDto.builder()
-                .masterNo(tuple.get(0, Long.class))
-                .workStayNo(tuple.get(1, Long.class))
-                .title(tuple.get(2, String.class))
-                .address(tuple.get(3, String.class))
-                .mainImageUrl(tuple.get(4, String.class))
-                .price(tuple.get(5, Integer.class))
-                .amenities(tuple.get(6, String.class) != null ? Arrays.asList(tuple.get(5, String.class).split(",")) : null)
-                .build()).toList();
+        if (list.isEmpty()) return null;
 
-        return candidates.isEmpty() ? null : candidates.get(new Random().nextInt(candidates.size()));
+        PlaceSummary s = list.get(new Random().nextInt(list.size()));
+
+        // 데이터 변환 후 리턴
+        return WorkStayCardDto.builder()
+                .masterNo(s.getPlaceNo())
+                .workStayNo(s.getTargetNo())
+                .title(s.getTitle())
+                .address(s.getAddress())
+                .mainImageUrl(s.getCurrentUrl())
+                .price(s.getPrice())
+                .amenities(s.getAmenities() != null ? Arrays.asList(s.getAmenities().split(",")) : null)
+                .build();
     }
 
 }

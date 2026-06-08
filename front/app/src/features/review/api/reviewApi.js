@@ -64,6 +64,13 @@ export async function processReport(no, status) {
   await api.put(`/review/report/${no}?status=${status}`);
 }
 
+// ─── 호스트 평점 통계 ────────────────────────────────────────
+
+export async function fetchHostReviewStats() {
+  const res = await api.get('/review/host/stats');
+  return res.data; // { averageRating: number, reviewCount: number }
+}
+
 // ─── 호스트 답글 (기존) ──────────────────────────────────────
 
 export async function findReviewsByHost(placeNo, minScore, period) {

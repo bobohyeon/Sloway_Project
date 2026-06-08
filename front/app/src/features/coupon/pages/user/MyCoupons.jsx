@@ -6,6 +6,9 @@ import { Tabs, EmptyState } from '../../../pay_shared/components';
 import { CouponTicket } from '../../components/user/CouponTicket';
 import { findCouponsByMemberNo } from '../../api/couponApi';
 import { useAuth } from '../../../auth/hooks/useAuth';
+import { Pagination } from '../../../pay_shared/components/Pagination';
+
+const PAGE_SIZE = 10;
 
 const emptyTitleByFilter = (filter) => {
   if (filter === 'available') return '사용 가능한 쿠폰이 없어요';
@@ -66,6 +69,7 @@ export default function MyCoupons() {
 
   const [coupons, setCoupons] = useState([]);
   const [filter, setFilter] = useState('available');
+  const [page, setPage] = useState(1);
 
   useEffect(() => {
     if (!memberNo) {
@@ -100,6 +104,12 @@ export default function MyCoupons() {
     [coupons, filter]
   );
 
+  const totalPages = Math.ceil(filteredCoupons.length / PAGE_SIZE);
+  const pagedCoupons = filteredCoupons.slice(
+    (page - 1) * PAGE_SIZE,
+    page * PAGE_SIZE
+  );
+
   const tabItems = [
     { value: 'available', label: '사용 가능', count: counts.available },
     { value: 'used', label: '사용 완료', count: counts.used },
@@ -114,7 +124,14 @@ export default function MyCoupons() {
       backLabel="마이페이지"
     >
       <TabsRow>
-        <Tabs items={tabItems} value={filter} onChange={setFilter} />
+        <Tabs
+          items={tabItems}
+          value={filter}
+          onChange={(v) => {
+            setFilter(v);
+            setPage(1);
+          }}
+        />
       </TabsRow>
 
       {filteredCoupons.length === 0 ? (
@@ -124,11 +141,21 @@ export default function MyCoupons() {
           description={emptyDescByFilter(filter)}
         />
       ) : (
-        <CouponList>
-          {filteredCoupons.map((coupon) => (
-            <CouponTicket key={coupon.no} coupon={coupon} status={filter} />
-          ))}
-        </CouponList>
+        <>
+          <CouponList>
+            {pagedCoupons.map((coupon) => (
+              <CouponTicket key={coupon.no} coupon={coupon} status={filter} />
+            ))}
+          </CouponList>
+          <Pagination
+            currentPage={page}
+            totalPages={totalPages}
+            onChange={(p) => {
+              setPage(p);
+              window.scrollTo(0, 0);
+            }}
+          />
+        </>
       )}
     </PageLayout>
   );

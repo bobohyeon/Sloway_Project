@@ -1,9 +1,12 @@
 import styled, { css } from 'styled-components'
+import { getPageNumbers } from '../../account/utils/pagination'
 
+// 회원/호스트 목록과 동일한 페이징 UI (이전/다음 + ◀▶ 블록 점프)
 export function Pagination({ currentPage = 1, totalPages = 1, onChange }) {
   if (totalPages <= 1) return null
 
-  const pages = getPageNumbers(currentPage, totalPages)
+  const { pages, hasPrev, hasNext, prevBlockPage, nextBlockPage } =
+    getPageNumbers(currentPage, totalPages)
 
   return (
     <Wrap>
@@ -11,47 +14,27 @@ export function Pagination({ currentPage = 1, totalPages = 1, onChange }) {
         disabled={currentPage === 1}
         onClick={() => onChange(currentPage - 1)}
       >
-        ‹
+        이전
       </Btn>
 
-      {pages.map((p, i) =>
-        p === '...' ? (
-          <Ellipsis key={`ellipsis-${i}`}>···</Ellipsis>
-        ) : (
-          <Btn
-            key={p}
-            $active={p === currentPage}
-            onClick={() => onChange(p)}
-          >
-            {p}
-          </Btn>
-        )
-      )}
+      {hasPrev && <Btn onClick={() => onChange(prevBlockPage)}>◀</Btn>}
+
+      {pages.map((p) => (
+        <Btn key={p} $active={p === currentPage} onClick={() => onChange(p)}>
+          {p}
+        </Btn>
+      ))}
+
+      {hasNext && <Btn onClick={() => onChange(nextBlockPage)}>▶</Btn>}
 
       <Btn
         disabled={currentPage === totalPages}
         onClick={() => onChange(currentPage + 1)}
       >
-        ›
+        다음
       </Btn>
     </Wrap>
   )
-}
-
-function getPageNumbers(current, total) {
-  if (total <= 7) {
-    return Array.from({ length: total }, (_, i) => i + 1)
-  }
-
-  const pages = []
-  if (current <= 4) {
-    pages.push(1, 2, 3, 4, 5, '...', total)
-  } else if (current >= total - 3) {
-    pages.push(1, '...', total - 4, total - 3, total - 2, total - 1, total)
-  } else {
-    pages.push(1, '...', current - 1, current, current + 1, '...', total)
-  }
-  return pages
 }
 
 const Wrap = styled.div`

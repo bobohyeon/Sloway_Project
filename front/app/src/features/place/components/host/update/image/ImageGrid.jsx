@@ -140,7 +140,7 @@ const AddCard = styled.div`
 `;
 
 // 💡 부모 페이지와 부모 훅에서 이미지를 완전히 제어할 수 있도록 Props 수신 구조로 변경
-function ImageGrid({ images = [], setImages, title }) {
+function ImageGrid({ images = [], setImages, title, namespace = 'grid' }) {
   const fileInputRef = useRef(null);
   const [draggedIndex, setDraggedIndex] = useState(null);
 
@@ -189,7 +189,7 @@ function ImageGrid({ images = [], setImages, title }) {
     <GridWrapper>
       <GridHeader>
         <h3>
-          {title ? title : ''}업로드된 이미지 ({images.length}/10)
+          {title ? title : ''}업로드 된 이미지 ({images.length}/10)
         </h3>
         <span>드래그하여 순서를 변경하실 수 있어요</span>
       </GridHeader>
@@ -206,8 +206,8 @@ function ImageGrid({ images = [], setImages, title }) {
       <ListGrid>
         {images.map((img, index) => (
           <ImageBox
-            key={img.id}
-            isMain={index === 0}
+            key={`${namespace}-${img.id}`}
+            $isMain={index === 0}
             draggable
             onDragStart={() => onDragStart(index)}
             onDragEnter={() => onDragEnter(index)}

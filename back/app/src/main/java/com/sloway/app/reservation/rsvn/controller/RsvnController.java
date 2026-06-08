@@ -100,7 +100,7 @@ public class RsvnController {
     public ResponseEntity<Void> delete(
             @AuthenticationPrincipal CustomUserDetails userDetails
             , @PathVariable Long no
-            , @RequestParam RefundReason refundReason
+            , @RequestParam(required = false) RefundReason refundReason
             ){
         rsvnService.cancel(userDetails.getMemberNo(), no, refundReason);
         return ResponseEntity.status(HttpStatus.NO_CONTENT).build();
@@ -110,12 +110,18 @@ public class RsvnController {
     @PostMapping("/{no}/reject")
     public ResponseEntity<Void> rejectByHost(
             @AuthenticationPrincipal CustomUserDetails userDetails,
-            @PathVariable Long no, @RequestParam Long payNo)
+            @PathVariable Long no, @RequestParam(required = false) Long payNo)
     {
         if(userDetails.getRole() != MemberRole.H){
             throw new CustomException(RsvnErrorCode.UNAUTHORIZED_ACCESS);
         }
         rsvnService.rejectByHost(userDetails.getMemberNo(), no,payNo);
         return ResponseEntity.status(HttpStatus.NO_CONTENT).build();
+    }
+
+    // 어드민 — 특정 호스트 예약 목록 (SecurityConfig 에서 ADMIN 권한 필요)
+    @GetMapping("/admin/host/{hostNo}")
+    public ResponseEntity<List<RsvnResDto>> findAllByHostForAdmin(@PathVariable Long hostNo) {
+        return ResponseEntity.ok(rsvnService.findAllByHostForAdmin(hostNo));
     }
 }

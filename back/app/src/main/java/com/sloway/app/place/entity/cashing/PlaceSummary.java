@@ -32,13 +32,12 @@ public class PlaceSummary {
 
     @Embeddable
     @Getter
+    @Data
     @NoArgsConstructor
     @AllArgsConstructor
     @EqualsAndHashCode
-    public class PlaceSummaryId implements Serializable {
+    public static class PlaceSummaryId implements Serializable {
         private Long placeNo;
         private String type;
-
-
     }
 }
