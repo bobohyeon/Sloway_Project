@@ -7,6 +7,7 @@ import { Button, Card, EmptyState } from '../../../pay_shared/components';
 import { PaymentDetailCard } from '../../components/user/PaymentDetailCard';
 import { PaymentStatusBadge } from '../../components/user/PaymentStatusBadge';
 import { PriceBreakdown } from '../../components/user/PriceBreakdown';
+import { ReceiptModal } from '../../components/user/ReceiptModal';
 
 import { findPayByNo } from '../../api/payApi';
 import { useAuth } from '../../../auth/hooks/useAuth';
@@ -75,6 +76,7 @@ export default function PaymentDetail() {
 
   const [pay, setPay] = useState(null);
   const [error, setError] = useState(null);
+  const [receiptOpen, setReceiptOpen] = useState(false);
 
   useEffect(() => {
     if (!memberNo) {
@@ -119,9 +121,7 @@ export default function PaymentDetail() {
   };
 
   const handleReceiptClick = () => {
-    alert(
-      `영수증 — PAY ${pay.no}\n승인번호: ${pay.tid ?? '-'}\n(현금영수증/세금계산서 통합 단계 진입 예정)`
-    );
+    setReceiptOpen(true);
   };
 
   return (
@@ -155,6 +155,10 @@ export default function PaymentDetail() {
           영수증 보기
         </Button>
       </Actions>
+
+      {receiptOpen && (
+        <ReceiptModal pay={pay} onClose={() => setReceiptOpen(false)} />
+      )}
     </PageLayout>
   );
 }

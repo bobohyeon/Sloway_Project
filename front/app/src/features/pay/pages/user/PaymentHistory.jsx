@@ -5,6 +5,7 @@ import PageLayout from '../../../../app/layouts/page/PageLayout';
 import { EmptyState } from '../../../pay_shared/components';
 import { PaymentFilterBar } from '../../components/user/PaymentFilterBar';
 import { PaymentListItem } from '../../components/user/PaymentListItem';
+import { ReceiptModal } from '../../components/user/ReceiptModal';
 import { findPaysByMemberNo } from '../../api/payApi';
 import { useAuth } from '../../../auth/hooks/useAuth';
 
@@ -89,6 +90,7 @@ export default function PaymentHistory() {
   const [error, setError] = useState(null);
   const [selectedTab, setSelectedTab] = useState('all');
   const [selectedPeriod, setSelectedPeriod] = useState('3months');
+  const [receiptPay, setReceiptPay] = useState(null);
 
   useEffect(() => {
     if (!memberNo) {
@@ -140,9 +142,8 @@ export default function PaymentHistory() {
   };
 
   const handleReceiptClick = (payment) => {
-    alert(
-      `영수증 — PAY ${payment.no}\n(현금영수증/세금계산서 기능 통합 단계 진입 예정)`
-    );
+    const original = pays.find((p) => p.no === payment.no);
+    if (original) setReceiptPay(original);
   };
 
   return (
@@ -185,6 +186,10 @@ export default function PaymentHistory() {
             />
           ))}
         </List>
+      )}
+
+      {receiptPay && (
+        <ReceiptModal pay={receiptPay} onClose={() => setReceiptPay(null)} />
       )}
     </PageLayout>
   );
