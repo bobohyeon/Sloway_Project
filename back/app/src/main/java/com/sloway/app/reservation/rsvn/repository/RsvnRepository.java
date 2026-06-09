@@ -7,6 +7,8 @@ import com.sloway.app.place.entity.workStay.WorkStayEntity;
 import com.sloway.app.reservation.rsvn.entity.RsvnEntity;
 import com.sloway.app.reservation.rsvn.entity.RsvnStatus;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -30,4 +32,23 @@ public interface RsvnRepository extends JpaRepository<RsvnEntity, Long> {
 
     //이용완료 스케줄러
     List<RsvnEntity> findByStatusAndCheckOutBefore(RsvnStatus status, LocalDateTime dateTime);
+
+    // 블랙아웃 등록 시 확정 예약 겹침 검증
+    @Query("""
+        SELECT COUNT(r) FROM RsvnEntity r
+        WHERE r.status = :status
+        AND (
+            (:officeNo IS NOT NULL AND r.officeNo = :officeNo) OR
+            (:stationNo IS NOT NULL AND r.stationNo = :stationNo) OR
+            (:workStayNo IS NOT NULL AND r.workStayNo = :workStayNo)
+        )
+        AND r.checkIn < :endDate AND r.checkOut > :startDate
+        """)
+    long countOverlappingRsvn(
+            @Param("officeNo") OfficeEntity officeNo,
+            @Param("stationNo") StationEntity stationNo,
+            @Param("workStayNo") WorkStayEntity workStayNo,
+            @Param("startDate") LocalDateTime startDate,
+            @Param("endDate") LocalDateTime endDate,
+            @Param("status") RsvnStatus status);
 }

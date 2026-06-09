@@ -3,6 +3,7 @@ package com.sloway.app.reservation.blackOut.service;
 import com.sloway.app.common.exception.CustomException;
 import com.sloway.app.host.entity.HostEntity;
 import com.sloway.app.host.repository.HostRepository;
+import com.sloway.app.place.entity.hostPlace.HostPlaceEntity;
 import com.sloway.app.place.entity.office.OfficeEntity;
 import com.sloway.app.place.entity.station.StationEntity;
 import com.sloway.app.place.entity.workStay.WorkStayEntity;
@@ -15,12 +16,15 @@ import com.sloway.app.reservation.blackOut.dto.request.BlackOutReqDto;
 import com.sloway.app.reservation.blackOut.dto.response.BlackOutResDto;
 import com.sloway.app.reservation.blackOut.entity.BlackOutEntity;
 import com.sloway.app.reservation.blackOut.repository.BlackOutRepository;
+import com.sloway.app.reservation.rsvn.entity.RsvnStatus;
+import com.sloway.app.reservation.rsvn.repository.RsvnRepository;
 import com.sloway.app.review.ReviewErrorCode;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.ArrayList;
 import java.util.List;
 
 @Slf4j
@@ -35,6 +39,7 @@ public class BlackOutService {
     private final OfficeRepository officeRepository;
     private final WorkStayRepository workStayRepository;
     private final StationRepository stationRepository;
+    private final RsvnRepository rsvnRepository;
 
 
     @Transactional
@@ -52,6 +57,16 @@ public class BlackOutService {
         }
 
         validateHostOwnership(host, office, station, workStay);
+
+        // 해당 기간에 확정 예약이 있으면 블랙아웃 등록 불가
+        long overlapping = rsvnRepository.countOverlappingRsvn(
+                office, station, workStay,
+                dto.getStartDate(), dto.getEndDate(),
+                RsvnStatus.S);
+        if (overlapping > 0) {
+            throw new CustomException(RsvnErrorCode.RSVN_EXISTS_IN_PERIOD);
+        }
+
         blackOutRepository.save(dto.toEntity(office, station, workStay));
     }
 
@@ -73,6 +88,27 @@ public class BlackOutService {
         }
 
         return list.stream().map(BlackOutResDto::from).toList();
+    }
+
+    // 호스트 달력용 — 내 모든 공간의 블랙아웃 한번에 조회
+    public List<BlackOutResDto> findAllByHost(Long memberNo){
+        HostEntity host = hostRepository.findByMemberNo(memberNo)
+                .orElseThrow(() -> new CustomException(ReviewErrorCode.HOST_NOT_FOUND));
+
+        List<HostPlaceEntity> hostPlaces = hostPlaceRepository.findByHostEntityNo(host.getNo());
+
+        List<BlackOutEntity> result = new ArrayList<>();
+        for (HostPlaceEntity hp : hostPlaces) {
+            if (hp.getOfficeEntity() != null) {
+                result.addAll(blackOutRepository.findByOfficeNo(hp.getOfficeEntity()));
+            } else if (hp.getStationEntity() != null) {
+                result.addAll(blackOutRepository.findByStationNo(hp.getStationEntity()));
+            } else if (hp.getWorkStayEntity() != null) {
+                result.addAll(blackOutRepository.findByWorkStayNo(hp.getWorkStayEntity()));
+            }
+        }
+
+        return result.stream().map(BlackOutResDto::from).toList();
     }
 
 
@@ -108,31 +144,22 @@ public class BlackOutService {
         blackOutRepository.delete(entity);
     }
 
-    // 호스트 소유 공간 검증 (내부 헬퍼)
     private void validateHostOwnership(HostEntity host, OfficeEntity office, StationEntity station, WorkStayEntity workStay) {
-
         if(office != null){
             boolean isOfficeOwner = hostPlaceRepository.existsByHostEntityNoAndOfficeEntityNo(host.getNo(), office.getNo());
-            if(!isOfficeOwner){
-                throw new CustomException(RsvnErrorCode.UNAUTHORIZED_ACCESS);
-            }
+            if(!isOfficeOwner) throw new CustomException(RsvnErrorCode.UNAUTHORIZED_ACCESS);
         }
         if(station != null) {
             boolean isStationOwner = hostPlaceRepository.existsByHostEntityNoAndStationEntityNo(host.getNo(), station.getNo());
-            if(!isStationOwner) {
-                throw new CustomException(RsvnErrorCode.UNAUTHORIZED_ACCESS);
-            }
+            if(!isStationOwner) throw new CustomException(RsvnErrorCode.UNAUTHORIZED_ACCESS);
         }
         if(workStay != null) {
             boolean isWorkStayOwner = hostPlaceRepository.existsByHostEntityNoAndWorkStayEntityNo(host.getNo(), workStay.getNo());
-            if (!isWorkStayOwner) {
-                throw new CustomException(RsvnErrorCode.UNAUTHORIZED_ACCESS);
-            }
+            if (!isWorkStayOwner) throw new CustomException(RsvnErrorCode.UNAUTHORIZED_ACCESS);
         }
     }
 
     private void validateHostOwnershipByBlackOut(HostEntity host, BlackOutEntity entity){
         validateHostOwnership(host, entity.getOfficeNo(), entity.getStationNo(), entity.getWorkStayNo());
     }
-
 }

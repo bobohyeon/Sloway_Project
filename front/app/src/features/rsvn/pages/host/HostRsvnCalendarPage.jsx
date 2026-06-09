@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import styled, { css, keyframes } from 'styled-components';
 import PageLayout from '../../../../app/layouts/page/PageLayout';
 import { findHostRsvns } from '../../api/rsvnApi';
+import { findHostBlackouts } from '../../api/blackoutApi';
 import {
   SectionBox,
   StatCards,
@@ -70,10 +71,19 @@ const CalDate = styled.div`
   margin-bottom: 3px;
 `;
 
+// 예약: 초록 / 블랙아웃: 주황
 const CalEvent = styled.div`
   font-size: 10px; font-weight: 600; padding: 2px 5px; border-radius: 3px; margin-bottom: 2px;
-  background: #EEF5EE; color: ${COLOR.green};
+  background: ${({ $type }) => $type === 'blackout' ? '#FFF3E0' : '#EEF5EE'};
+  color: ${({ $type }) => $type === 'blackout' ? '#E65100' : COLOR.green};
   overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+`;
+
+const MoreBtn = styled.div`
+  font-size: 10px; padding: 2px 5px; border-radius: 3px; margin-top: 1px;
+  background: ${COLOR.gray100}; color: ${COLOR.gray600};
+  cursor: pointer; text-align: center;
+  &:hover { background: ${COLOR.gray200}; }
 `;
 
 const Legend = styled.div`display: flex; justify-content: center; gap: 20px; margin-top: 14px;`;
@@ -86,21 +96,57 @@ const LegendDot = styled.div`
   width: 10px; height: 10px; border-radius: 2px; background: ${({ $color }) => $color};
 `;
 
+// 모달
+const ModalOverlay = styled.div`
+  position: fixed; inset: 0; background: rgba(0,0,0,0.4); z-index: 1000;
+  display: flex; align-items: center; justify-content: center;
+`;
+
+const ModalBox = styled.div`
+  background: #fff; border-radius: 16px; padding: 24px;
+  min-width: 280px; max-width: 360px; width: 90%;
+  max-height: 70vh; overflow-y: auto;
+`;
+
+const ModalTitle = styled.div`
+  font-size: 15px; font-weight: 700; margin-bottom: 16px; color: #333;
+`;
+
+const ModalItem = styled.div`
+  padding: 10px 14px; margin-bottom: 8px; border-radius: 8px; font-size: 13px;
+  background: ${({ $type }) => $type === 'blackout' ? '#FFF3E0' : '#EEF5EE'};
+  color: ${({ $type }) => $type === 'blackout' ? '#E65100' : COLOR.green};
+  cursor: ${({ $type }) => $type === 'rsvn' ? 'pointer' : 'default'};
+  font-weight: 600;
+  &:hover { opacity: ${({ $type }) => $type === 'rsvn' ? 0.75 : 1}; }
+`;
+
+const ModalClose = styled.button`
+  display: block; width: 100%; margin-top: 12px;
+  padding: 8px; border-radius: 8px; border: 1px solid ${COLOR.gray200};
+  background: #fff; font-size: 13px; cursor: pointer;
+  &:hover { background: ${COLOR.gray100}; }
+`;
+
 const DAYS = ['일', '월', '화', '수', '목', '금', '토'];
+const REASON_LABEL = { M: '정비·보수', C: '청소', P: '개인이용', E: '기타' };
 
 function HostRsvnCalendarPage() {
   const navigate = useNavigate();
   const [list, setList] = useState([]);
+  const [blackouts, setBlackouts] = useState([]);
   const [view, setView] = useState('month');
   const [current, setCurrent] = useState(dayjs().startOf('month'));
   const [weekStart, setWeekStart] = useState(dayjs().startOf('week'));
   const [slideDir, setSlideDir] = useState('none');
+  const [modalInfo, setModalInfo] = useState(null); // { dateLabel, evs }
 
   useEffect(() => {
     async function load() {
       try {
-        const data = await findHostRsvns();
-        setList(data);
+        const [rsvns, bos] = await Promise.all([findHostRsvns(), findHostBlackouts()]);
+        setList(rsvns);
+        setBlackouts(bos);
       } catch (e) {
         console.error(e);
       }
@@ -108,28 +154,65 @@ function HostRsvnCalendarPage() {
     load();
   }, []);
 
-  // checkIn 날짜(일)를 키로 예약 이벤트 맵 생성 (취소·거절 제외)
-  const eventMap = {};
-  list.forEach((item) => {
-    if (!item.checkIn) return;
-    const s = typeof item.status === 'object' ? item.status?.name : item.status;
-    if (s === 'R' || s === 'C') return;
-    const d = dayjs(item.checkIn);
-    if (d.year() === current.year() && d.month() === current.month()) {
-      const day = d.date();
-      if (!eventMap[day]) eventMap[day] = [];
-      eventMap[day].push({ title: `${item.guestName} · ${item.spaceName}`, no: item.no, rsvn: item });
-    }
-  });
+  // 예약 + 블랙아웃을 날짜별로 합쳐 이벤트 맵 생성
+  const buildEventMap = () => {
+    const map = {};
 
-  // 주별 뷰에서 특정 날짜의 유효 예약 목록 반환
-  const getWeekEvents = (day) =>
-    list.filter((item) => {
-      if (!item.checkIn) return false;
+    list.forEach((item) => {
+      if (!item.checkIn) return;
       const s = typeof item.status === 'object' ? item.status?.name : item.status;
-      if (s === 'R' || s === 'C') return false;
-      return dayjs(item.checkIn).isSame(day, 'day');
+      if (s === 'R' || s === 'C') return;
+      const d = dayjs(item.checkIn);
+      if (d.year() === current.year() && d.month() === current.month()) {
+        const day = d.date();
+        if (!map[day]) map[day] = [];
+        map[day].push({ type: 'rsvn', title: `${item.guestName} · ${item.spaceName}`, no: item.no, data: item });
+      }
     });
+
+    // 블랙아웃은 startDate~endDate 범위의 모든 날에 표시
+    blackouts.forEach((b) => {
+      if (!b.startDate) return;
+      let d = dayjs(b.startDate).startOf('day');
+      const end = dayjs(b.endDate).startOf('day');
+      while (!d.isAfter(end)) {
+        if (d.year() === current.year() && d.month() === current.month()) {
+          const day = d.date();
+          if (!map[day]) map[day] = [];
+          map[day].push({ type: 'blackout', title: `🚫 ${b.title} (${REASON_LABEL[b.reasonType] ?? b.reasonType})`, no: b.no, data: b });
+        }
+        d = d.add(1, 'day');
+      }
+    });
+
+    return map;
+  };
+
+  const eventMap = buildEventMap();
+
+  // 주별 뷰: 특정 날짜의 예약 + 블랙아웃 합쳐서 반환
+  const getWeekEvents = (day) => {
+    const rsvnEvs = list
+      .filter((item) => {
+        if (!item.checkIn) return false;
+        const s = typeof item.status === 'object' ? item.status?.name : item.status;
+        if (s === 'R' || s === 'C') return false;
+        return dayjs(item.checkIn).isSame(day, 'day');
+      })
+      .map((item) => ({ type: 'rsvn', title: `${item.guestName} · ${item.spaceName}`, no: item.no, data: item }));
+
+    const blackoutEvs = blackouts
+      .filter((b) => {
+        if (!b.startDate) return false;
+        const start = dayjs(b.startDate).startOf('day');
+        const end = dayjs(b.endDate).startOf('day');
+        const d = day.startOf('day');
+        return !d.isBefore(start) && !d.isAfter(end);
+      })
+      .map((b) => ({ type: 'blackout', title: `🚫 ${b.title}`, no: b.no, data: b }));
+
+    return [...rsvnEvs, ...blackoutEvs];
+  };
 
   const thisMonthRsvns = list.filter((item) => {
     if (!item.checkIn) return false;
@@ -145,7 +228,6 @@ function HostRsvnCalendarPage() {
     return s === 'E';
   }).length;
 
-  // 가장 가까운 확정 예약
   const now = dayjs();
   const upcoming = list
     .filter((i) => {
@@ -162,6 +244,11 @@ function HostRsvnCalendarPage() {
   const goWeek = (dir) => {
     setSlideDir(dir > 0 ? 'left' : 'right');
     setTimeout(() => { setWeekStart((w) => w.add(dir * 7, 'day')); setSlideDir('none'); }, 50);
+  };
+
+  const openModal = (e, dateLabel, evs) => {
+    e.stopPropagation();
+    setModalInfo({ dateLabel, evs });
   };
 
   const firstDow = current.day();
@@ -213,13 +300,23 @@ function HostRsvnCalendarPage() {
               {cells.map((date, idx) => {
                 const evs = date ? (eventMap[date] ?? []) : [];
                 const isToday = date && current.date(date).isSame(dayjs(), 'day');
+                const dateLabel = date ? current.date(date).format('M월 D일') : '';
+                const visible = evs.slice(0, 4);
+                const hiddenCount = evs.length - 4;
                 return (
                   <CalCell key={idx} $hasEvent={evs.length > 0}
-                    onClick={() => evs.length > 0 && navigate(`/host/reservation/list/${evs[0].no}`, { state: { rsvn: evs[0].rsvn } })}>
+                    onClick={(e) => evs.length > 0 && openModal(e, dateLabel, evs)}>
                     {date && (
                       <>
                         <CalDate $col={idx % 7} $today={isToday}>{date}</CalDate>
-                        {evs.map((ev, i) => <CalEvent key={i}>{ev.title}</CalEvent>)}
+                        {visible.map((ev, i) => (
+                          <CalEvent key={i} $type={ev.type}>{ev.title}</CalEvent>
+                        ))}
+                        {hiddenCount > 0 && (
+                          <MoreBtn onClick={(e) => openModal(e, dateLabel, evs)}>
+                            +{hiddenCount} 더보기
+                          </MoreBtn>
+                        )}
                       </>
                     )}
                   </CalCell>
@@ -232,18 +329,31 @@ function HostRsvnCalendarPage() {
             {weekDays.map((day, i) => {
               const evs = getWeekEvents(day);
               const isToday = day.isSame(dayjs(), 'day');
+              const dateLabel = day.format('M월 D일');
+              const visible = evs.slice(0, 4);
+              const hiddenCount = evs.length - 4;
               return (
                 <div key={i} style={{ minHeight: 120, borderRadius: 8, border: `1px solid ${isToday ? COLOR.green : COLOR.gray200}`, overflow: 'hidden' }}>
                   <div style={{ padding: 6, textAlign: 'center', fontSize: 12, fontWeight: 600, background: isToday ? COLOR.greenLight : COLOR.gray100, color: i === 0 ? COLOR.red : COLOR.black, borderBottom: `1px solid ${COLOR.gray200}` }}>
                     {DAYS[day.day()]} {day.date()}
                   </div>
                   <div style={{ padding: 4 }}>
-                    {evs.map((ev, j) => (
-                      <CalEvent key={j} style={{ cursor: 'pointer' }}
-                        onClick={() => navigate(`/host/reservation/list/${ev.no}`, { state: { rsvn: ev } })}>
-                        {ev.guestName} · {ev.spaceName}
+                    {visible.map((ev, j) => (
+                      <CalEvent key={j} $type={ev.type} style={{ cursor: ev.type === 'rsvn' ? 'pointer' : 'default' }}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          ev.type === 'rsvn'
+                            ? navigate(`/host/reservation/list/${ev.no}`, { state: { rsvn: ev.data } })
+                            : openModal(e, dateLabel, evs);
+                        }}>
+                        {ev.title}
                       </CalEvent>
                     ))}
+                    {hiddenCount > 0 && (
+                      <MoreBtn onClick={(e) => openModal(e, dateLabel, evs)}>
+                        +{hiddenCount} 더보기
+                      </MoreBtn>
+                    )}
                   </div>
                 </div>
               );
@@ -252,10 +362,32 @@ function HostRsvnCalendarPage() {
         )}
 
         <Legend>
-          <LegendItem><LegendDot $color={COLOR.green} />확정</LegendItem>
-          <LegendItem><LegendDot $color={COLOR.gray400} />완료</LegendItem>
+          <LegendItem><LegendDot $color={COLOR.green} />예약</LegendItem>
+          <LegendItem><LegendDot $color="#E65100" />이용불가</LegendItem>
         </Legend>
       </SectionBox>
+
+      {/* 날짜별 상세 모달 */}
+      {modalInfo && (
+        <ModalOverlay onClick={() => setModalInfo(null)}>
+          <ModalBox onClick={(e) => e.stopPropagation()}>
+            <ModalTitle>📅 {modalInfo.dateLabel}</ModalTitle>
+            {modalInfo.evs.map((ev, i) => (
+              <ModalItem key={i} $type={ev.type}
+                onClick={() => {
+                  if (ev.type === 'rsvn') {
+                    navigate(`/host/reservation/list/${ev.no}`, { state: { rsvn: ev.data } });
+                    setModalInfo(null);
+                  }
+                }}>
+                {ev.type === 'rsvn' ? '📋 ' : ''}{ev.title}
+                {ev.type === 'rsvn' && <span style={{ fontWeight: 400, marginLeft: 6, fontSize: 11 }}>→ 상세보기</span>}
+              </ModalItem>
+            ))}
+            <ModalClose onClick={() => setModalInfo(null)}>닫기</ModalClose>
+          </ModalBox>
+        </ModalOverlay>
+      )}
     </PageLayout>
   );
 }
