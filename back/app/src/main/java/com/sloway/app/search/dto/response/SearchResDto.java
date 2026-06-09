@@ -26,6 +26,9 @@ public class SearchResDto {
     // 평점은 화면에서 별(5개)로 표시, 1~5점 까지 선택가능.
     private Double avgScore;
 
+    // 리뷰 갯수
+    private Long reviewCount;
+
     // 대표 가격 = 최소 가격
     private Integer basePrice;
 

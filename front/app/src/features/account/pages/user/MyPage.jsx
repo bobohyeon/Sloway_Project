@@ -16,6 +16,7 @@ import { useMyPage } from '../../hooks/useMyPage';
 import { useMyPageSummary } from '../../hooks/useMyPageSummary';
 import { useAuth } from '../../../auth/hooks/useAuth';
 import { findMyRsvns } from '../../../rsvn/api/rsvnApi';
+import { findMyReviews } from '../../../review/api/reviewApi';
 
 const STATUS_LABEL = { S: '확정', E: '이용완료', C: '취소', R: '거절' };
 const STATUS_COLOR = { S: '#5a7a42', E: '#A8B89F', C: '#e24b4a', R: '#e24b4a' };
@@ -301,16 +302,28 @@ function MyPage() {
   const { user } = useAuth(); // 토큰 정보 (memberNo)
   const { point, couponCount } = useMyPageSummary(user?.memberNo);
 
-  // 예약 조회 (예약 도메인 API 호출 — 조회만)
+  // 예약 조회
   const [reservations, setReservations] = useState([]);
+  // 내 리뷰 갯수
+  const [reviewCount, setReviewCount] = useState(0);
+
   useEffect(() => {
     let alive = true;
     (async () => {
       try {
-        const data = await findMyRsvns();
-        if (alive) setReservations(data);
+        const [rsvnData, reviewData] = await Promise.all([
+          findMyRsvns(),
+          findMyReviews(),
+        ]);
+        if (alive) {
+          setReservations(rsvnData);
+          setReviewCount(reviewData?.length ?? 0);
+        }
       } catch {
-        if (alive) setReservations([]);
+        if (alive) {
+          setReservations([]);
+          setReviewCount(0);
+        }
       }
     })();
     return () => {
@@ -405,6 +418,17 @@ function MyPage() {
             </QuickMenuItem>
             <QuickMenuItem onClick={() => navigate('/user/review')}>
               ⭐ 내 리뷰
+              {reviewCount > 0 && (
+                <span
+                  style={{
+                    fontSize: '14px',
+                    color: 'var(--sage)',
+                    fontWeight: 600,
+                  }}
+                >
+                  {reviewCount}개
+                </span>
+              )}
             </QuickMenuItem>
             <QuickMenuItem onClick={() => navigate('/user/inquiry')}>
               💬 내 문의
