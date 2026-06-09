@@ -27,7 +27,7 @@ public class PointResDto {
         return PointResDto.builder()
                 .no(entity.getNo())
                 .memberNo(entity.getMemberNo().getNo())
-                .payNo(entity.getPayNo().getNo())
+                .payNo(entity.getPayNo() == null ? null : entity.getPayNo().getNo())
                 .amount(entity.getAmount())
                 .dealType(entity.getDealType())
                 .expiredAt(entity.getExpiredAt())

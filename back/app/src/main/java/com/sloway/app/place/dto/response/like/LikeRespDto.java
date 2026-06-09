@@ -15,6 +15,7 @@ import java.time.LocalDateTime;
 public class LikeRespDto {
 
     private Long no;
+    private Long placeNo;
     private String placeTitle;
     private String thumbnail;
     private String type;

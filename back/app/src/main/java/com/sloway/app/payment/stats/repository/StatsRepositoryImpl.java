@@ -30,6 +30,7 @@ public class StatsRepositoryImpl implements StatsRepositoryCustom {
         return jpaQueryFactory
                 .select(qHostPlaceEntity.count())
                 .from(qHostPlaceEntity)
+                .where(qHostPlaceEntity.placeEntity.isNotNull())
                 .fetchOne();
     }
 
@@ -73,7 +74,8 @@ public class StatsRepositoryImpl implements StatsRepositoryCustom {
                 .select(qHostPlaceEntity.count())
                 .from(qHostPlaceEntity)
                 .where(
-                        qHostPlaceEntity.status.eq(status)
+                        qHostPlaceEntity.status.eq(status),
+                        qHostPlaceEntity.placeEntity.isNotNull()
                 )
                 .fetchOne();
     }
@@ -84,7 +86,8 @@ public class StatsRepositoryImpl implements StatsRepositoryCustom {
                 .select(qHostPlaceEntity.count())
                 .from(qHostPlaceEntity)
                 .where(
-                        qHostPlaceEntity.createdAt.between(start, end)
+                        qHostPlaceEntity.createdAt.between(start, end),
+                        qHostPlaceEntity.placeEntity.isNotNull()
                 )
                 .fetchOne();
     }
@@ -102,7 +105,6 @@ public class StatsRepositoryImpl implements StatsRepositoryCustom {
 
     @Override
     public Map<RsvnStatus, Long> countRsvnGroupByStatus(LocalDateTime start, LocalDateTime end) {
-        // status별 count 를 한 번의 group by 로 — DB 왕복 4번 → 1번
         List<Tuple> rows = jpaQueryFactory
                 .select(qRsvnEntity.status, qRsvnEntity.count())
                 .from(qRsvnEntity)
@@ -110,7 +112,6 @@ public class StatsRepositoryImpl implements StatsRepositoryCustom {
                 .groupBy(qRsvnEntity.status)
                 .fetch();
 
-        // EnumMap — 키가 enum 이라 가볍고 빠름. 결과에 없는 상태는 Service 에서 기본값 0 처리
         Map<RsvnStatus, Long> result = new EnumMap<>(RsvnStatus.class);
         for (Tuple row : rows) {
             result.put(row.get(qRsvnEntity.status), row.get(qRsvnEntity.count()));

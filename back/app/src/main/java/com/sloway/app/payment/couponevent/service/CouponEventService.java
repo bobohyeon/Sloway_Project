@@ -47,6 +47,11 @@ public class CouponEventService {
         CouponEventEntity couponEventEntity = couponEventRepository.findById(no)
                 .orElseThrow(() -> new CustomException(CouponEventErrorCode.COUPONEVENT_NOT_FOUND));
         couponEventEntity.close();
+
+        List<CouponEntity> issuedCoupons =
+                couponRepository.findByCouponEventAndStatus(no, CouponStatus.AVAILABLE);
+        issuedCoupons.forEach(CouponEntity::expireCoupon);
+
         return CouponEventResDto.from(couponEventEntity);
     }
 

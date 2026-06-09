@@ -12,6 +12,8 @@ import com.sloway.app.review.reply.repository.ReviewReplyRepository;
 import com.sloway.app.review.review.dto.request.ReviewCreateReqDto;
 import com.sloway.app.review.review.dto.request.ReviewEditReqDto;
 import com.querydsl.core.Tuple;
+import com.sloway.app.host.entity.HostEntity;
+import com.sloway.app.host.repository.HostRepository;
 import com.sloway.app.place.entity.hostPlace.HostPlaceEntity;
 import com.sloway.app.place.repository.hostPlace.HostPlaceRepository;
 import com.sloway.app.review.review.dto.response.HostReviewStatsResDto;
@@ -42,7 +44,8 @@ public class ReviewService {
     private final ReviewReplyRepository reviewReplyRepository;
     private final S3Service s3Service;
     private final ReviewImgRepository reviewImgRepository;
-    private final HostPlaceRepository hostPlaceRepository; // 어드민 호스트 리뷰 통계 — 호스트 공간 placeNo 추출용
+    private final HostPlaceRepository hostPlaceRepository;
+    private final HostRepository hostRepository;
 
     //리뷰 작성
     @Transactional
@@ -155,6 +158,13 @@ public class ReviewService {
         }
 
         entity.delete();
+    }
+
+    // 호스트 본인 — 내 공간들의 리뷰 통계 (평균 평점·개수)
+    public HostReviewStatsResDto findMyHostReviewStats(Long memberNo) {
+        HostEntity host = hostRepository.findByMemberNo(memberNo)
+                .orElseThrow(() -> new CustomException(ReviewErrorCode.HOST_NOT_FOUND));
+        return findHostReviewStatsForAdmin(host.getNo());
     }
 
     //어드민 — 특정 호스트의 리뷰 통계 (평균 평점·개수)

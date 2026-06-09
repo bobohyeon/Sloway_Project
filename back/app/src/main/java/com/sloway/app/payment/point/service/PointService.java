@@ -146,7 +146,7 @@ public class PointService {
                 .amount(5000)
                 .dealType(PointDealType.EARN)
                 .expiredAt(expiredAt)
-                .status(PointStatus.WAIT)
+                .status(PointStatus.SAVE)
                 .build();
         pointRepository.save(pointEntity);
     }

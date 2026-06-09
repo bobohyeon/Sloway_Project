@@ -381,4 +381,12 @@ public class RsvnService {
                 .map(entity -> RsvnResDto.from(entity, payNoMap.get(entity.getNo())))
                 .toList();
     }
+
+    //이용완료 스케줄러
+    @Transactional
+    public void completeRsvns(){
+        List<RsvnEntity> complete = rsvnRepository
+                .findByStatusAndCheckOutBefore(RsvnStatus.S, LocalDateTime.now());
+        complete.forEach(RsvnEntity::complete);
+    }
 }

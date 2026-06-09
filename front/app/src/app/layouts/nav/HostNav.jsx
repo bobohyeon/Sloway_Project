@@ -1,9 +1,10 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import styled from 'styled-components';
 import NavItem from './NavItem';
 import ProfileBox from './ProfileBox';
 import { useAuth } from '../../../features/auth/hooks/useAuth';
 import { useHostMyPage } from '../../../features/account/hooks/useHostMyPage';
+import { fetchHostReviewStats } from '../../../features/review/api/reviewApi';
 import {
   FaHome,
   FaUserCircle,
@@ -141,6 +142,14 @@ const hostMenuGroups = [
 function HostNav() {
   const { user } = useAuth();
   const { data } = useHostMyPage();
+  const [avgRating, setAvgRating] = useState(null);
+
+  useEffect(() => {
+    fetchHostReviewStats()
+      .then((res) => setAvgRating(res.averageRating?.toFixed(1) ?? '-'))
+      .catch(() => setAvgRating('-'));
+  }, []);
+
   return (
     <Wrapper>
       <ProfileBox
@@ -155,7 +164,7 @@ function HostNav() {
         }`}
         stats={[
           { value: '3', label: '운영 공간' },
-          { value: '4.9', label: '평균 평점' },
+          { value: avgRating ?? '...', label: '평균 평점' },
         ]}
       />
       {hostMenuGroups.map((group) => (

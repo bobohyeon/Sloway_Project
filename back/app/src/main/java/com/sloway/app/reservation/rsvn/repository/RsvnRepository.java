@@ -8,6 +8,7 @@ import com.sloway.app.reservation.rsvn.entity.RsvnEntity;
 import com.sloway.app.reservation.rsvn.entity.RsvnStatus;
 import org.springframework.data.jpa.repository.JpaRepository;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
@@ -26,4 +27,7 @@ public interface RsvnRepository extends JpaRepository<RsvnEntity, Long> {
 
     //이용완료 목록 조회
     List<RsvnEntity> findByMemberNoAndStatus(MemberEntity memberNo, RsvnStatus status);
+
+    //이용완료 스케줄러
+    List<RsvnEntity> findByStatusAndCheckOutBefore(RsvnStatus status, LocalDateTime dateTime);
 }
