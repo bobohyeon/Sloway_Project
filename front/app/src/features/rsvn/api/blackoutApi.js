@@ -22,3 +22,9 @@ export async function findHostBlackouts() {
   const res = await api.get('/host/blackout/host');
   return res.data;
 }
+
+// 공개 — 사용자 예약 화면에서 이용불가 날짜 조회
+export async function findBlackoutsByEntity(entityNo) {
+  const res = await api.get(`/spaces/${entityNo}/blackout`);
+  return res.data;
+}

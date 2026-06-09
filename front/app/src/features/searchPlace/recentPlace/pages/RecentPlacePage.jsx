@@ -55,7 +55,7 @@ const SPACE_PATH = {
   STATION: 'stations',
 };
 
-const TYPE_ICON = { 워크앤스테이: '🌿', 오피스: '💻', 숙소: '🛌' };
+const TYPE_ICON = { WORK_STAY: '🌿', OFFICE: '💻', STATION: '🛌' };
 
 // viewAt(LocalDateTime) → "방금 전", "5분 전" 등 상대 시간 문자열
 function timeAgo(viewAt) {
