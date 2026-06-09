@@ -27,21 +27,3 @@ export async function findSettleByHostNo() {
   const resp = await api.get(`/payment/settlement/settle/host`);
   return resp.data;
 }
-
-// 정산 수동 생성 (hostNo + 기간) — 매출 0이면 백엔드가 null 반환(스킵)
-export async function createSettle(reqDto) {
-  const resp = await api.post('/payment/settlement/settle', reqDto);
-  return resp.data;
-}
-
-// 정산 확정 (WAITING → COMPLETE)
-export async function completeSettle(no) {
-  const resp = await api.patch(`/payment/settlement/settle/${no}/complete`);
-  return resp.data;
-}
-
-// 세금계산서 발행 (COMPLETE → INVOICE)
-export async function issueTaxInvoice(no) {
-  const resp = await api.patch(`/payment/settlement/settle/${no}/invoice`);
-  return resp.data;
-}

@@ -1,15 +1,9 @@
 import { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import styled from 'styled-components';
-import { FaCheckCircle, FaFileInvoice } from 'react-icons/fa';
-
 import PageLayout from '../../../../app/layouts/page/PageLayout';
 import { Card, Section } from '../../../pay_shared/components';
-import {
-  findSettleByNo,
-  completeSettle,
-  issueTaxInvoice,
-} from '../../api/settlementApi';
+import { findSettleByNo } from '../../api/settlementApi';
 
 const STATUS_META = {
   WAITING: { label: '정산 대기', color: 'var(--gray-400)' },
@@ -31,7 +25,6 @@ const fmtDateTime = (iso) => {
 export default function AdminSettlementDetail() {
   const { no } = useParams();
   const [settle, setSettle] = useState(null);
-  const [working, setWorking] = useState(false);
 
   const load = async () => {
     try {
@@ -47,32 +40,6 @@ export default function AdminSettlementDetail() {
     load();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [no]);
-
-  const handleComplete = async () => {
-    setWorking(true);
-    try {
-      await completeSettle(no);
-      await load(); // 상태 갱신 (WAITING → COMPLETE)
-    } catch (err) {
-      console.error('정산 완료 처리 실패', err);
-      alert('정산 완료 처리에 실패했습니다.');
-    } finally {
-      setWorking(false);
-    }
-  };
-
-  const handleInvoice = async () => {
-    setWorking(true);
-    try {
-      await issueTaxInvoice(no);
-      await load(); // 상태 갱신 (COMPLETE → INVOICE)
-    } catch (err) {
-      console.error('세금계산서 발행 실패', err);
-      alert('세금계산서 발행에 실패했습니다.');
-    } finally {
-      setWorking(false);
-    }
-  };
 
   if (!settle) {
     return (
@@ -156,22 +123,6 @@ export default function AdminSettlementDetail() {
         </TimelineCard>
       </Section>
 
-      <ActionRow>
-        <ActionBtn
-          onClick={handleComplete}
-          disabled={settle.status !== 'WAITING' || working}
-          $enabled={settle.status === 'WAITING'}
-        >
-          <FaCheckCircle /> 정산 완료 처리
-        </ActionBtn>
-        <ActionBtn
-          onClick={handleInvoice}
-          disabled={settle.status !== 'COMPLETE' || working}
-          $enabled={settle.status === 'COMPLETE'}
-        >
-          <FaFileInvoice /> 세금계산서 발행
-        </ActionBtn>
-      </ActionRow>
     </PageLayout>
   );
 }
@@ -273,28 +224,3 @@ const TimelineStatus = styled.span`
   color: var(--gray-400);
 `;
 
-const ActionRow = styled.div`
-  display: flex;
-  align-items: center;
-  gap: var(--space-2);
-  margin-top: var(--space-5);
-  flex-wrap: wrap;
-`;
-
-const ActionBtn = styled.button`
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  padding: 8px 14px;
-  background: ${(p) => (p.$enabled ? 'var(--sage)' : 'var(--white)')};
-  border: 1px solid ${(p) => (p.$enabled ? 'var(--sage)' : 'var(--gray-200)')};
-  border-radius: var(--radius-md);
-  font-size: 0.85rem;
-  color: ${(p) => (p.$enabled ? 'var(--white)' : 'var(--gray-400)')};
-  cursor: ${(p) => (p.$enabled ? 'pointer' : 'not-allowed')};
-  font-family: 'Noto Sans KR', sans-serif;
-
-  &:disabled {
-    cursor: not-allowed;
-  }
-`;
