@@ -178,7 +178,7 @@ public class PayRepositoryImpl implements PayRepositoryCustom {
     public Page<PayResDto> findPayAll(PageRequest pageRequest, PayStatus status, LocalDateTime from) {
         List<PayEntity> payEntityList = jpaQueryFactory
                 .selectFrom(qPayEntity)
-                .where(statusEq(status), createdAfter(from))
+                .where(statusEq(status), createdAfter(from), qPayEntity.status.ne(PayStatus.READY))
                 .orderBy(qPayEntity.no.desc())
                 .offset(pageRequest.getOffset())
                 .limit(pageRequest.getPageSize())
@@ -187,7 +187,7 @@ public class PayRepositoryImpl implements PayRepositoryCustom {
         Long total = jpaQueryFactory
                 .select(qPayEntity.count())
                 .from(qPayEntity)
-                .where(statusEq(status), createdAfter(from))
+                .where(statusEq(status), createdAfter(from), qPayEntity.status.ne(PayStatus.READY))
                 .fetchOne();
 
         List<PayResDto> list = payEntityList.stream().map(PayResDto::from).toList();
@@ -206,7 +206,8 @@ public class PayRepositoryImpl implements PayRepositoryCustom {
                         amtSum
                 )
                 .from(qPayEntity)
-                .where(createdAfter(from))
+                // 결제 도중 이탈(READY)은 통계 집계에서 제외 — 어드민은 완료/취소만 집계
+                .where(createdAfter(from), qPayEntity.status.ne(PayStatus.READY))
                 .groupBy(qPayEntity.status)
                 .fetch();
 

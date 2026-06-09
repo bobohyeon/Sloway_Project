@@ -26,7 +26,6 @@ import { getAnchorMonth } from '../../../stats/components/admin/statsRange';
 const PAY_METHOD_META = {
   KAKAOPAY: { label: '카카오페이', color: '#FEE500' },
   TOSSPAY: { label: '토스페이', color: '#0064FF' },
-  NAVERPAY: { label: '네이버페이', color: '#03C75A' },
 };
 
 const QUICK_ACTIONS = [
@@ -81,13 +80,11 @@ export default function AdminDashboard() {
   const [summary, setSummary] = useState(null);
   const [methods, setMethods] = useState([]);
   const [refund, setRefund] = useState(null);
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
   useEffect(() => {
     let alive = true;
-    setLoading(true);
-    setError(null);
 
     Promise.all([
       findStatsMonthlySales(year, month),
@@ -99,6 +96,7 @@ export default function AdminDashboard() {
         setSummary(s);
         setMethods(m ?? []);
         setRefund(r);
+        setError(null);
       })
       .catch((e) => {
         if (!alive) return;

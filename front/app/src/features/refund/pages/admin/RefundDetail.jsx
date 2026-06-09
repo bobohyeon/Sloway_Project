@@ -32,7 +32,6 @@ const RATE_VALUE = {
 const METHOD_INFO = {
   KAKAOPAY: { label: '카카오페이', icon: '💬', pg: '카카오페이' },
   TOSSPAY: { label: '토스페이', icon: '🅣', pg: '토스페이' },
-  NAVERPAY: { label: '네이버페이', icon: '🇳', pg: '네이버페이' },
 };
 
 const formatDate = (iso) => {

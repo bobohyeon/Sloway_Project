@@ -10,7 +10,6 @@ import { RefundInfoCard } from '../../components/user/RefundInfoCard';
 const METHOD_INFO = {
   KAKAOPAY: { name: '카카오페이', icon: '💬' },
   TOSSPAY: { name: '토스페이', icon: '🅣' },
-  NAVERPAY: { name: '네이버페이', icon: '🇳' },
 };
 
 // 백엔드 RefundReason enum.label 과 동기화 — 변경 시 양쪽 일치 필요

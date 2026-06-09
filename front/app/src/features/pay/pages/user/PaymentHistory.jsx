@@ -15,7 +15,6 @@ import { useAuth } from '../../../auth/hooks/useAuth';
 const emptyTitleByTab = (tab) => {
   if (tab === 'completed') return '결제 완료된 내역이 없어요';
   if (tab === 'refunded') return '환불된 내역이 없어요';
-  if (tab === 'failed') return '결제 실패 내역이 없어요';
   return '결제 내역이 없어요';
 };
 
@@ -29,21 +28,18 @@ const List = styled.div`
 const STATUS_TO_UI = {
   READY: 'pending',
   COMPLETED: 'completed',
-  FAILED: 'failed',
   CANCELED: 'refunded',
 };
 
 const METHOD_INFO = {
   KAKAOPAY: { label: '카카오페이', icon: '💛' },
   TOSSPAY: { label: '토스페이', icon: '💙' },
-  NAVERPAY: { label: '네이버페이', icon: '💚' },
 };
 
 const TABS = [
   { value: 'all', label: '전체' },
   { value: 'completed', label: '결제 완료' },
   { value: 'refunded', label: '환불' },
-  { value: 'failed', label: '결제 실패' },
 ];
 
 const periodToCutoffMs = (period) => {
@@ -120,7 +116,7 @@ export default function PaymentHistory() {
   }, [memberNo, navigate]);
 
   const tabsWithCount = useMemo(() => {
-    const counts = { all: pays.length, completed: 0, refunded: 0, failed: 0 };
+    const counts = { all: pays.length, completed: 0, refunded: 0 };
     pays.forEach((p) => {
       const key = STATUS_TO_UI[p.status];
       if (key && counts[key] !== undefined) counts[key] += 1;
