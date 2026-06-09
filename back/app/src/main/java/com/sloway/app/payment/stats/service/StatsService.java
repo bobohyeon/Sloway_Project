@@ -212,7 +212,7 @@ public class StatsService {
                 .sumByMonthBetween(officeNos, stationNos, workStayNos, start, end)
                 .stream()
                 .collect(Collectors.toMap(
-                        m-> m.getMonth(),
+                        m -> m.getMonth(),
                         m -> {
                             Long v = m.getSum();
                             return v == null ? 0L : v;
@@ -235,14 +235,17 @@ public class StatsService {
         LocalDateTime start = ym.minusMonths(months - 1).atDay(1).atStartOfDay();
         LocalDateTime end = ym.atEndOfMonth().atTime(23, 59, 59);
 
-        Long total = statsRepositoryCustom.countHostPlace();
         Long active = statsRepositoryCustom.countHostPlaceByStatus(ApprovalStatus.A);
         Long pending = statsRepositoryCustom.countHostPlaceByStatus(ApprovalStatus.P);
         Long newReg = statsRepositoryCustom.countHostPlaceByCreatedAtBetween(start, end);
+        Long officeCount = statsRepositoryCustom.countHostPlaceByOffice();
+        Long stationCount = statsRepositoryCustom.countHostPlaceByStation();
+        Long workStayCount = statsRepositoryCustom.countHostPlaceByWorkStay();
+        Long total = officeCount + stationCount + workStayCount;
 
-        SpaceTypeCountResDto officeResDto = SpaceTypeCountResDto.of("office", statsRepositoryCustom.countHostPlaceByOffice());
-        SpaceTypeCountResDto stationResDto = SpaceTypeCountResDto.of("station", statsRepositoryCustom.countHostPlaceByStation());
-        SpaceTypeCountResDto workStayResDto = SpaceTypeCountResDto.of("workStay", statsRepositoryCustom.countHostPlaceByWorkStay());
+        SpaceTypeCountResDto officeResDto = SpaceTypeCountResDto.of("office", officeCount);
+        SpaceTypeCountResDto stationResDto = SpaceTypeCountResDto.of("station", stationCount);
+        SpaceTypeCountResDto workStayResDto = SpaceTypeCountResDto.of("workStay",workStayCount);
 
         List<SpaceTypeCountResDto> byType = List.of(officeResDto, stationResDto, workStayResDto);
         return SpaceStatsResDto.of(total, newReg, active, pending, byType);
