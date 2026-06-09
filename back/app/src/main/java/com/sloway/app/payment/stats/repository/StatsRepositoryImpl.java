@@ -73,13 +73,11 @@ public class StatsRepositoryImpl implements StatsRepositoryCustom {
         return jpaQueryFactory
                 .select(qHostPlaceEntity.count())
                 .from(qHostPlaceEntity)
-                // TODO(KPI 일관화): 등록공간(total)이 타입합(상세 row)이 됐으니 운영중/대기도 상세 row 기준으로
-                //  - 아래 placeEntity.isNotNull()(=place 전용 row) 를 상세 row 기준으로 교체. 두 방법 중 택1:
-                //     ① qHostPlaceEntity.placeEntity.isNull()  (place 안 가진 row = 600구조의 상세 row, 간단)
-                //     ② officeEntity.isNotNull().or(stationEntity.isNotNull()).or(workStayEntity.isNotNull())  (상세타입 명시)
                 .where(
                         qHostPlaceEntity.status.eq(status),
-                        qHostPlaceEntity.placeEntity.isNotNull()
+                        qHostPlaceEntity.officeEntity.isNotNull()
+                                .or(qHostPlaceEntity.stationEntity.isNotNull())
+                                .or(qHostPlaceEntity.workStayEntity.isNotNull())
                 )
                 .fetchOne();
     }
@@ -89,11 +87,11 @@ public class StatsRepositoryImpl implements StatsRepositoryCustom {
         return jpaQueryFactory
                 .select(qHostPlaceEntity.count())
                 .from(qHostPlaceEntity)
-                // TODO(KPI 일관화): 신규 등록도 상세 row 기준으로 (위 countHostPlaceByStatus 와 동일 방식)
-                //  - placeEntity.isNotNull() → ① placeEntity.isNull() 또는 ② 상세타입 OR isNotNull
                 .where(
                         qHostPlaceEntity.createdAt.between(start, end),
-                        qHostPlaceEntity.placeEntity.isNotNull()
+                        qHostPlaceEntity.officeEntity.isNotNull()
+                                .or(qHostPlaceEntity.stationEntity.isNotNull())
+                                .or(qHostPlaceEntity.workStayEntity.isNotNull())
                 )
                 .fetchOne();
     }
