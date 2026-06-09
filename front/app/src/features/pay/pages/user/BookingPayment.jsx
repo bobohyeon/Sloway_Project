@@ -175,7 +175,7 @@ export default function BookingPaymentPage() {
 
   const onPayClick = async () => {
     if (!canPay || paying) return;
-    // 프론트 'kakao'/'toss'/'naver' → 백엔드 PayMethod enum(KAKAOPAY 등) 변환
+    // 프론트 'kakao'/'toss' → 백엔드 PayMethod enum(KAKAOPAY 등) 변환
     const method = toPayMethod(paymentMethod);
     if (!method) return;
     setPaying(true);
