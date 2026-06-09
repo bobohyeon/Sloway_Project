@@ -21,17 +21,19 @@ export default function BookingStats() {
   const [months, setMonths] = useState(3); // 디폴트 3개월
 
   const [stats, setStats] = useState(null);
-  const [loading, setLoading] = useState(false);
+  // 초기값 true — effect 동기 본문에서 setLoading(true) 호출 금지(set-state-in-effect)
+  const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
   useEffect(() => {
     let alive = true;
-    setLoading(true);
-    setError(null);
 
     findBookingStats(year, month, months)
       .then((data) => {
-        if (alive) setStats(data);
+        if (alive) {
+          setStats(data);
+          setError(null);
+        }
       })
       .catch((e) => {
         if (alive)

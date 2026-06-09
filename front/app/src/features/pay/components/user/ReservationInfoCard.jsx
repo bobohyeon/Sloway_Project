@@ -19,11 +19,13 @@ export function ReservationInfoCard({ reservation }) {
       <SpaceRow>
         <Image>{reservation.emoji}</Image>
         <SpaceInfo>
-          <Badge variant="sage" size="sm">
-            {reservation.type}
-          </Badge>
+          {reservation.type && (
+            <Badge variant="sage" size="sm">
+              {reservation.type}
+            </Badge>
+          )}
           <SpaceName>{reservation.name}</SpaceName>
-          <Loc>📍 {reservation.loc}</Loc>
+          {reservation.loc && <Loc>📍 {reservation.loc}</Loc>}
         </SpaceInfo>
       </SpaceRow>
 
@@ -36,10 +38,12 @@ export function ReservationInfoCard({ reservation }) {
             <span>일정</span>
             <strong>{reservation.dates}</strong>
           </InfoRow>
-          <InfoRow>
-            <span>인원</span>
-            <strong>{reservation.guests}</strong>
-          </InfoRow>
+          {reservation.guests && (
+            <InfoRow>
+              <span>인원</span>
+              <strong>{reservation.guests}</strong>
+            </InfoRow>
+          )}
           <InfoRow>
             <span>체크인</span>
             <strong>{reservation.checkIn}</strong>
