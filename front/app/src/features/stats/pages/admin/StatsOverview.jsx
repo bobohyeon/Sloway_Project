@@ -34,7 +34,7 @@ function formatMan(value) {
 
 export default function StatsOverview() {
   const { year, month } = useMemo(() => getAnchorMonth(), []);
-  const [months, setMonths] = useState(1);
+  const [months, setMonths] = useState(3); // 디폴트 3개월
 
   const [summary, setSummary] = useState(null);
   const [methods, setMethods] = useState([]);

@@ -3,12 +3,11 @@ import { useNavigate } from 'react-router-dom';
 import styled from 'styled-components';
 import PageLayout from '../../../../app/layouts/page/PageLayout';
 import { Tabs, EmptyState } from '../../../pay_shared/components';
-import { CouponTicket } from '../../components/user/CouponTicket';
 import { findCouponsByMemberNo } from '../../api/couponApi';
 import { useAuth } from '../../../auth/hooks/useAuth';
 import { Pagination } from '../../../pay_shared/components/Pagination';
 
-const PAGE_SIZE = 10;
+const PAGE_SIZE = 12; // 카드 그리드라 한 페이지 12장
 
 const emptyTitleByFilter = (filter) => {
   if (filter === 'available') return '사용 가능한 쿠폰이 없어요';
@@ -21,22 +20,17 @@ const emptyDescByFilter = (filter) => {
   return '';
 };
 
-const TabsRow = styled.div`
-  margin-bottom: var(--space-5);
-`;
-
-const CouponList = styled.div`
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-3);
-  margin-bottom: var(--space-6);
-`;
-
 const STATUS_TO_UI = {
   AVAILABLE: 'available',
   USED: 'used',
   EXPIRED: 'expired',
   RETURNED: 'expired',
+};
+
+const STATUS_META = {
+  available: { label: '사용 가능', color: 'var(--sage)' },
+  used: { label: '사용 완료', color: 'var(--gray-400)' },
+  expired: { label: '만료', color: 'var(--gray-400)' },
 };
 
 const formatDate = (date) =>
@@ -61,6 +55,12 @@ const toCouponForUI = (resDto) => {
     daysLeft,
   };
 };
+
+// 할인값 표기 — 정률은 %, 정액은 천단위 콤마 + 원 (10,000원)
+const formatDiscount = (c) =>
+  c.discountType === 'percent'
+    ? `${c.discountValue}%`
+    : `${Number(c.discountValue ?? 0).toLocaleString()}원`;
 
 export default function MyCoupons() {
   const navigate = useNavigate();
@@ -142,11 +142,45 @@ export default function MyCoupons() {
         />
       ) : (
         <>
-          <CouponList>
-            {pagedCoupons.map((coupon) => (
-              <CouponTicket key={coupon.no} coupon={coupon} status={filter} />
-            ))}
-          </CouponList>
+          <CouponGrid>
+            {pagedCoupons.map((coupon) => {
+              const meta = STATUS_META[filter] ?? STATUS_META.expired;
+              const isAvailable = filter === 'available';
+              return (
+                <CouponCard key={coupon.no} $dim={!isAvailable}>
+                  <CardHeader>
+                    <CardTitle>{coupon.title}</CardTitle>
+                    <StatusBadge $color={meta.color}>{meta.label}</StatusBadge>
+                  </CardHeader>
+
+                  <Discount $dim={!isAvailable}>{formatDiscount(coupon)}</Discount>
+                  <DiscountLabel>
+                    {coupon.discountType === 'percent' ? '할인' : '즉시 할인'}
+                  </DiscountLabel>
+
+                  <CardBody>
+                    <InfoRow>
+                      <InfoLabel>유효기간</InfoLabel>
+                      <InfoValue>{coupon.expireDate}까지</InfoValue>
+                    </InfoRow>
+                    {filter === 'used' && coupon.usedAt && (
+                      <InfoRow>
+                        <InfoLabel>사용일</InfoLabel>
+                        <InfoValue>{coupon.usedAt}</InfoValue>
+                      </InfoRow>
+                    )}
+                  </CardBody>
+
+                  {isAvailable &&
+                    coupon.daysLeft <= 7 &&
+                    coupon.daysLeft > 0 && (
+                      <FootTag>⏰ D-{coupon.daysLeft} 만료 임박</FootTag>
+                    )}
+                  {filter === 'expired' && <FootText>만료된 쿠폰이에요</FootText>}
+                </CouponCard>
+              );
+            })}
+          </CouponGrid>
           <Pagination
             currentPage={page}
             totalPages={totalPages}
@@ -160,3 +194,115 @@ export default function MyCoupons() {
     </PageLayout>
   );
 }
+
+const TabsRow = styled.div`
+  margin-bottom: var(--space-5);
+`;
+
+const CouponGrid = styled.div`
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: var(--space-4);
+  margin-bottom: var(--space-6);
+`;
+
+const CouponCard = styled.div`
+  display: flex;
+  flex-direction: column;
+  background: var(--white);
+  border: 1px solid var(--gray-200);
+  border-radius: var(--radius-md);
+  padding: var(--space-4);
+  gap: var(--space-2);
+  transition: all 200ms ease;
+  opacity: ${({ $dim }) => ($dim ? 0.7 : 1)};
+
+  &:hover {
+    border-color: ${({ $dim }) => ($dim ? 'var(--gray-200)' : 'var(--sage)')};
+    transform: ${({ $dim }) => ($dim ? 'none' : 'translateY(-1px)')};
+  }
+`;
+
+const CardHeader = styled.div`
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: var(--space-2);
+`;
+
+const CardTitle = styled.h3`
+  font-size: 0.98rem;
+  font-weight: 600;
+  color: var(--gray-900);
+  margin: 0;
+  flex: 1;
+  word-break: keep-all;
+`;
+
+const StatusBadge = styled.span`
+  padding: 3px 10px;
+  border-radius: 999px;
+  background: ${({ $color }) => $color};
+  color: var(--white);
+  font-size: 0.72rem;
+  font-weight: 600;
+  white-space: nowrap;
+  flex-shrink: 0;
+`;
+
+const Discount = styled.div`
+  font-family: var(--font-display);
+  font-size: 1.8rem;
+  font-weight: 600;
+  color: ${({ $dim }) => ($dim ? 'var(--gray-500)' : 'var(--sage)')};
+  padding-top: var(--space-2);
+`;
+
+const DiscountLabel = styled.div`
+  font-size: 0.76rem;
+  color: var(--gray-400);
+  margin-top: -4px;
+`;
+
+const CardBody = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-top: var(--space-2);
+  padding-top: var(--space-2);
+  border-top: 1px solid var(--gray-100);
+`;
+
+const InfoRow = styled.div`
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 0.82rem;
+`;
+
+const InfoLabel = styled.span`
+  color: var(--gray-500);
+`;
+
+const InfoValue = styled.span`
+  color: var(--gray-800);
+  font-weight: 500;
+`;
+
+const FootTag = styled.div`
+  margin-top: var(--space-2);
+  align-self: flex-start;
+  padding: 3px 10px;
+  background: rgba(184, 90, 78, 0.1);
+  color: #a04c42;
+  border-radius: var(--radius-full);
+  font-size: 0.74rem;
+  font-weight: 600;
+  font-family: var(--font-mono);
+`;
+
+const FootText = styled.div`
+  margin-top: var(--space-2);
+  font-size: 0.78rem;
+  color: var(--gray-400);
+`;

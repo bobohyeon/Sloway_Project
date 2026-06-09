@@ -8,14 +8,7 @@ export function PaymentMethodOption({ method, selected, onSelect }) {
         {method.icon}
       </Icon>
       <Body>
-        <Name>
-          {method.name}
-          {method.primary && (
-            <Badge variant="sage" size="sm">
-              실제 API 연동
-            </Badge>
-          )}
-        </Name>
+        <Name>{method.name}</Name>
         <Desc>{method.desc}</Desc>
       </Body>
       <Radio $selected={selected} />

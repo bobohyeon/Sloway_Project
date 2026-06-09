@@ -18,7 +18,7 @@ import { rangeLabel, getAnchorMonth } from '../../components/admin/statsRange';
 
 export default function MemberStats() {
   const { year, month } = useMemo(() => getAnchorMonth(), []);
-  const [months, setMonths] = useState(1);
+  const [months, setMonths] = useState(3); // 디폴트 3개월
 
   const [stats, setStats] = useState(null);
   const [loading, setLoading] = useState(false);

@@ -14,6 +14,7 @@ public class CouponResDto {
 
     private Long no;
     private Long payNo;
+    private Long couponEventNo;
     private CouponStatus status;
     private String couponName;
     private CouponDcType dcType;
@@ -37,6 +38,7 @@ public class CouponResDto {
                 .expiredAt(entity.getExpiredAt())
                 .usedAt(entity.getUsedAt())
                 .payNo(entity.getPayNo() == null ? null : entity.getPayNo().getNo())
+                .couponEventNo(entity.getCouponEventNo() == null ? null : entity.getCouponEventNo().getNo())
                 .createdAt(entity.getCreatedAt())
                 .modifiedAt(entity.getModifiedAt())
                 .delYn(entity.getDelYn())
