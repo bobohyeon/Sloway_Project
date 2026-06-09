@@ -48,10 +48,10 @@ public class BlackOutEntity {
     @Column(nullable = false, name = "end_date")
     private LocalDateTime endDate;
 
-    @Column(nullable = false, name = "start_time")
+    @Column(name = "start_time")
     private LocalDateTime startTime;
 
-    @Column(nullable = false, name = "end_time")
+    @Column(name = "end_time")
     private LocalDateTime endTime;
 
     @Column(nullable = false, name = "created_at")

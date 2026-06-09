@@ -20,7 +20,8 @@ public enum RsvnErrorCode implements ErrorCode {
     BLACKOUT_CONFLICT(HttpStatus.BAD_REQUEST, "이미 예약 불가 설정된 기간입니다."),
     INVALID_DATE_RANGE(HttpStatus.BAD_REQUEST, "체크아웃 날짜는 체크인 날짜보다 이후여야 합니다."),
 
-    UNAUTHORIZED_ACCESS(HttpStatus.FORBIDDEN, "해당 기능에 대한 접근권한이 없습니다.");
+    UNAUTHORIZED_ACCESS(HttpStatus.FORBIDDEN, "해당 기능에 대한 접근권한이 없습니다."),
+    RSVN_EXISTS_IN_PERIOD(HttpStatus.CONFLICT, "해당 기간에 이미 확정된 예약이 존재합니다.");
 
     private final HttpStatus status;
     private final String msg;

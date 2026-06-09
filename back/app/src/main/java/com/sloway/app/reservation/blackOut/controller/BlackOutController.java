@@ -35,6 +35,13 @@ public class BlackOutController {
         return ResponseEntity.ok(dtoList);
     }
 
+    // 호스트 달력용 — 내 모든 공간 블랙아웃 조회
+    @GetMapping("/host")
+    public ResponseEntity<List<BlackOutResDto>> findAllByHost(
+            @AuthenticationPrincipal CustomUserDetails userDetails){
+        return ResponseEntity.ok(blackOutService.findAllByHost(userDetails.getMemberNo()));
+    }
+
     @PutMapping("/{no}")
     public ResponseEntity<Void> editBlackOut(
             @AuthenticationPrincipal CustomUserDetails userDetails,

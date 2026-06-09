@@ -70,6 +70,8 @@ public class SearchCustomRepositoryImpl implements SearchCustomRepository{
                         p.title,
                         p.type,
                         p.address,
+                        p.latitude,
+                        p.longitude,
                         //썸네일
                         thumbnailExpr(),
                         //평균평점

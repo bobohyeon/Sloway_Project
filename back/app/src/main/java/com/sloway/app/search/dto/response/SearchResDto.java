@@ -17,6 +17,9 @@ public class SearchResDto {
     private String type;
     private String address;
 
+    private String latitude;
+    private String longitude;
+
     // 썸네일 이미지 URL - ImgPlaceEntity에 SORT가 있어서, SORT = 0 인걸로 꺼내와야 할듯?
     private String thumbnailUrl;
 
