@@ -4,8 +4,6 @@ import com.sloway.app.common.exception.CustomException;
 import com.sloway.app.host.common.HostErrorCode;
 import com.sloway.app.host.entity.HostEntity;
 import com.sloway.app.host.repository.HostRepository;
-import com.sloway.app.payment.pay.common.PayStatus;
-import com.sloway.app.payment.pay.dto.response.PayStatsResDto;
 import com.sloway.app.payment.pay.repository.PayRepository;
 import com.sloway.app.payment.refund.repository.RefundRepository;
 import com.sloway.app.payment.settlement.fee.common.FeeErrorCode;
@@ -81,9 +79,9 @@ public class SettleService {
         int workStayAmt = payRepository.sumByWorkStayIn(workStayNos, start, end).intValue();
         int totalAmt = officeAmt + stationAmt + workStayAmt;
 
-        int feeAmt = calcFee(officeAmt, PlaceType.office)
-                + calcFee(stationAmt, PlaceType.station)
-                + calcFee(workStayAmt, PlaceType.workStay);
+        int feeAmt = calcFee(officeAmt, PlaceType.office,start)
+                + calcFee(stationAmt, PlaceType.station,start)
+                + calcFee(workStayAmt, PlaceType.workStay,start);
 
         int refundAmt = refundRepository.sumByOfficeIn(officeNos, start, end)
                 .add(refundRepository.sumByStationIn(stationNos, start, end))
@@ -107,9 +105,9 @@ public class SettleService {
         return SettleResDto.from(settleRepository.save(entity));
     }
 
-    private int calcFee(int amt, PlaceType placeType) {
-        if (amt == 0) return 0;
-        int rate = feeRepository.findByPlaceTypeAndDelYn(placeType, "N")
+    private int calcFee(int amt, PlaceType placeType,LocalDateTime date) {
+                if (amt == 0) return 0;
+        int rate = feeRepository.findValidFee(placeType, date)
                 .orElseThrow(() -> new CustomException(FeeErrorCode.FEE_NOT_FOUND))
                 .getRate();
         return amt * rate / 100;
