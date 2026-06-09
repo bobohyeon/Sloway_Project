@@ -299,7 +299,7 @@ public class RsvnService {
                 .refundReason(refundReason)
                 .build();
 
-        refundService.createRefund(refundCreateReqDto);
+        refundService.createRefund(refundCreateReqDto, memberNo);
     }
 
     //예약완료조회 (단건 — findOne 등에서 사용)

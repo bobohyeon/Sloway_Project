@@ -22,6 +22,7 @@ import com.sloway.app.payment.pay.pg.toss.client.TossPayClient;
 import com.sloway.app.payment.pay.pg.toss.dto.request.TossConfirmReqDto;
 import com.sloway.app.payment.pay.pg.toss.dto.response.TossConfirmResDto;
 import com.sloway.app.payment.pay.repository.PayRepository;
+import com.sloway.app.payment.point.common.PointErrorCode;
 import com.sloway.app.payment.point.service.PointService;
 import com.sloway.app.reservation.RsvnErrorCode;
 import com.sloway.app.reservation.rsvn.entity.RsvnEntity;
@@ -36,6 +37,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Objects;
 
 @Service
 @Transactional(readOnly = true)
@@ -57,8 +59,8 @@ public class PayService {
     private String frontendUrl;
 
     @Transactional
-    public PayReadyResDto readyPay(PayCreateReqDto payCreateReqDto) {
-        PayEntity payEntity = buildReadyPay(payCreateReqDto);
+    public PayReadyResDto readyPay(PayCreateReqDto payCreateReqDto, Long loginMemberNo) {
+        PayEntity payEntity = buildReadyPay(payCreateReqDto, loginMemberNo);
 
         KakaoReadyReqDto reqDto = KakaoReadyReqDto.builder()
                 .partnerOrderId(payEntity.getNo().toString())
@@ -116,8 +118,8 @@ public class PayService {
     }
 
     @Transactional
-    public TossPrepareResDto prepareTossPay(PayCreateReqDto payCreateReqDto) {
-        PayEntity payEntity = buildReadyPay(payCreateReqDto);
+    public TossPrepareResDto prepareTossPay(PayCreateReqDto payCreateReqDto, Long loginMemberNo) {
+        PayEntity payEntity = buildReadyPay(payCreateReqDto, loginMemberNo);
 
         String orderId = "SLOWAY_" + payEntity.getNo();
         return TossPrepareResDto.of(payEntity, orderId);
@@ -231,12 +233,47 @@ public class PayService {
         }
     }
 
-    private void validCoupon(CouponEntity coupon) {
+    private void validCoupon(CouponEntity coupon, Long loginMemberNo) {
+        // ③ 쿠폰 본인 소유 검증 — 남의 쿠폰으로 할인받는 것 차단
+        if (!Objects.equals(coupon.getMemberNo().getNo(), loginMemberNo)) {
+            log.warn("타인 쿠폰 사용 시도 ucNo={}, owner={}, login={}",
+                    coupon.getNo(), coupon.getMemberNo().getNo(), loginMemberNo);
+            throw new CustomException(CouponErrorCode.COUPON_FORBIDDEN);
+        }
         if (coupon.getStatus() != CouponStatus.AVAILABLE) {
             throw new CustomException(CouponErrorCode.COUPON_NOT_AVAILABLE);
         }
         if (coupon.getExpiredAt() != null && coupon.getExpiredAt().isBefore(LocalDateTime.now())) {
             throw new CustomException(CouponErrorCode.COUPON_EXPIRED);
+        }
+    }
+
+    // ② 결제자 == 예약 소유자 검증 — 남의 예약을 대신 결제하는 것 차단
+    private void validRsvnOwner(RsvnEntity rsvn, Long loginMemberNo) {
+        Long ownerNo = rsvn.getMemberNo().getNo();
+        if (!Objects.equals(ownerNo, loginMemberNo)) {
+            log.warn("타인 예약 결제 시도 rsvnNo={}, owner={}, login={}",
+                    rsvn.getNo(), ownerNo, loginMemberNo);
+            throw new CustomException(PayErrorCode.PAY_FORBIDDEN);
+        }
+    }
+
+    // ① 결제 금액 위변조 검증 — 클라가 보낸 결제 총액(baseAmt+addAmt)이
+    //    서버가 아는 예약 금액(rsvn.amt)과 일치하는지 대조. 토스(confirmTossPay)와 대칭.
+    private void validAmtMatchesRsvn(PayCreateReqDto payCreateReqDto, RsvnEntity rsvn) {
+        int reqTotal = payCreateReqDto.getBaseAmt() + payCreateReqDto.getAddAmt();
+        if (rsvn.getAmt() == null || reqTotal != rsvn.getAmt()) {
+            log.warn("결제 금액 위변조 의심 rsvnNo={}, 요청총액={}, 예약금액={}",
+                    rsvn.getNo(), reqTotal, rsvn.getAmt());
+            throw new CustomException(PayErrorCode.PAY_AMOUNT_INVALID);
+        }
+    }
+
+    // ⑤ 포인트 음수 입력 방어 — 음수면 finalAmt가 거꾸로 증가하는 우회 차단
+    private void validUsedPoint(int usedPoint) {
+        if (usedPoint < 0) {
+            log.warn("포인트 음수 입력 시도 usedPoint={}", usedPoint);
+            throw new CustomException(PointErrorCode.POINT_AMOUNT_INVALID);
         }
     }
 
@@ -248,23 +285,24 @@ public class PayService {
         }
     }
 
-    private PayEntity buildReadyPay(PayCreateReqDto payCreateReqDto){
+    private PayEntity buildReadyPay(PayCreateReqDto payCreateReqDto, Long loginMemberNo){
         validAmt(payCreateReqDto);
         RsvnEntity rsvn = validRsvn(payCreateReqDto);
+        validRsvnOwner(rsvn, loginMemberNo);           // ② 본인 예약만 결제
+        validAmtMatchesRsvn(payCreateReqDto, rsvn);    // ① 결제 금액 위변조
         validDuplicate(rsvn.getNo());
 
         CouponEntity coupon = null;
         if (payCreateReqDto.getUcNo() != null) {
             coupon = couponRepository.findById(payCreateReqDto.getUcNo())
                     .orElseThrow(() -> new CustomException(CouponErrorCode.COUPON_NOT_FOUND));
-            // PG 호출 전(결제 준비 시점)에 쿠폰 사용가능·만료를 검증한다.
-            // approvePay(PG 승인 후)에서 막으면 카카오는 결제됐는데 DB만 롤백돼 정합성이 깨진다.
-            validCoupon(coupon);
+            validCoupon(coupon, loginMemberNo);        // ③ 본인 쿠폰만 사용
         }
 
         int dcAmt = calculateDcAmt(coupon, payCreateReqDto.getBaseAmt());
         int usedPoint = payCreateReqDto.getUsedPoint() == null
                 ? 0 : payCreateReqDto.getUsedPoint();
+        validUsedPoint(usedPoint);                     // ⑤ 포인트 음수 방어
 
         int finalAmt = payCreateReqDto.getBaseAmt() + payCreateReqDto.getAddAmt()
                 - dcAmt - usedPoint;

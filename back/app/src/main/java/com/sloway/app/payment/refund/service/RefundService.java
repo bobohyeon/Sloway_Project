@@ -30,6 +30,7 @@ import java.math.RoundingMode;
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
+import java.util.Objects;
 
 @Service
 @Transactional(readOnly = true)
@@ -45,8 +46,9 @@ public class RefundService {
     private final TossPayClient tossPayClient;
 
     @Transactional
-    public RefundResDto createRefund(RefundCreateReqDto refundCreateReqDto) {
+    public RefundResDto createRefund(RefundCreateReqDto refundCreateReqDto, Long loginMemberNo) {
         PayEntity payEntity = validRefundablePay(refundCreateReqDto.getPayNo());
+        validRefundOwner(payEntity, loginMemberNo);   // ④ 본인 결제만 환불
 
         RsvnEntity rsvn = rsvnRepository.findById(refundCreateReqDto.getRsvnNo())
                 .orElseThrow(() -> new CustomException(RsvnErrorCode.RESERVATION_NOT_FOUND));
@@ -159,6 +161,17 @@ public class RefundService {
             return RefundRate.ONEDAY;
         } else {
             return RefundRate.DDAY;
+        }
+    }
+
+    // ④ 환불 요청자 == 결제 소유자 검증 — 남의 결제번호로 환불하는 것 차단.
+    //    호스트 거절(createRefundByHost)은 소유자가 아니라 호스트가 호출하므로 적용하지 않는다.
+    private void validRefundOwner(PayEntity payEntity, Long loginMemberNo) {
+        Long ownerNo = payEntity.getRsvnNo().getMemberNo().getNo();
+        if (!Objects.equals(ownerNo, loginMemberNo)) {
+            log.warn("타인 결제 환불 시도 payNo={}, owner={}, login={}",
+                    payEntity.getNo(), ownerNo, loginMemberNo);
+            throw new CustomException(RefundErrorCode.REFUND_FORBIDDEN);
         }
     }
 
