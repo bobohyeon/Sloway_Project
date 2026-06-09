@@ -6,13 +6,11 @@ import html2pdf from 'html2pdf.js';
 const METHOD_LABEL = {
   KAKAOPAY: '카카오페이',
   TOSSPAY: '토스페이',
-  NAVERPAY: '네이버페이',
 };
 
 const STATUS_LABEL = {
   READY: '결제 대기',
   COMPLETED: '결제 완료',
-  FAILED: '결제 실패',
   CANCELED: '환불 완료',
 };
 

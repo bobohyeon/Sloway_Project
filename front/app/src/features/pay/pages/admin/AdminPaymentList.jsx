@@ -10,15 +10,11 @@ import { findPayAll, findPayStats } from '../../api/payApi';
 
 const StatGrid = styled.div`
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
+  grid-template-columns: repeat(3, 1fr);
   gap: var(--space-3);
   margin-bottom: var(--space-5);
 
-  @media (max-width: 960px) {
-    grid-template-columns: repeat(2, 1fr);
-  }
-
-  @media (max-width: 480px) {
+  @media (max-width: 720px) {
     grid-template-columns: 1fr;
   }
 `;
@@ -33,21 +29,18 @@ const List = styled.div`
 const STATUS_TO_UI = {
   READY: 'pending',
   COMPLETED: 'completed',
-  FAILED: 'failed',
   CANCELED: 'refunded',
 };
 
 const METHOD_INFO = {
   KAKAOPAY: { label: '카카오페이', icon: '💛' },
   TOSSPAY: { label: '토스페이', icon: '💙' },
-  NAVERPAY: { label: '네이버페이', icon: '💚' },
 };
 
 const TABS = [
   { value: 'all', label: '전체' },
   { value: 'completed', label: '결제 완료' },
   { value: 'refunded', label: '환불' },
-  { value: 'failed', label: '결제 실패' },
 ];
 
 const formatPaidAt = (iso) => {
@@ -135,7 +128,6 @@ export default function AdminPaymentList() {
       all: stats.total,
       completed: stats.completed,
       refunded: stats.refunded,
-      failed: stats.failed,
     };
     return TABS.map((t) => ({ ...t, count: counts[t.value] }));
   }, [stats]);
@@ -187,14 +179,6 @@ export default function AdminPaymentList() {
           unit="건"
           subText="취소된 결제"
           highlight={stats.refunded > 0}
-        />
-        <SettlementStatCard
-          icon="⚠️"
-          label="결제 실패"
-          value={stats.failed.toLocaleString()}
-          unit="건"
-          subText="실패 영역"
-          highlight={stats.failed > 0}
         />
       </StatGrid>
 

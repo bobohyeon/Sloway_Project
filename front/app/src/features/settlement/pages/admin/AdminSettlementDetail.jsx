@@ -26,19 +26,16 @@ export default function AdminSettlementDetail() {
   const { no } = useParams();
   const [settle, setSettle] = useState(null);
 
-  const load = async () => {
-    try {
-      const data = await findSettleByNo(no);
-      setSettle(data);
-    } catch (err) {
-      console.error('정산 상세 조회 실패', err);
-    }
-  };
-
   useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect
+    const load = async () => {
+      try {
+        const data = await findSettleByNo(no);
+        setSettle(data);
+      } catch (err) {
+        console.error('정산 상세 조회 실패', err);
+      }
+    };
     load();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [no]);
 
   if (!settle) {

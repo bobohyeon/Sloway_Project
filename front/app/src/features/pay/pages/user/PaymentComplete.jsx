@@ -40,7 +40,6 @@ const BackLink = styled.button`
 const PAY_METHOD_LABEL = {
   KAKAOPAY: '카카오페이',
   TOSSPAY: '토스페이',
-  NAVERPAY: '네이버페이',
 };
 
 const formatPaidAt = (iso) => {

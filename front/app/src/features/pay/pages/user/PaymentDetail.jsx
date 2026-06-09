@@ -15,14 +15,12 @@ import { useAuth } from '../../../auth/hooks/useAuth';
 const STATUS_TO_UI = {
   READY: 'pending',
   COMPLETED: 'completed',
-  FAILED: 'failed',
   CANCELED: 'refunded',
 };
 
 const METHOD_INFO = {
   KAKAOPAY: { label: '카카오페이', icon: '💛', pg: '카카오페이' },
   TOSSPAY: { label: '토스페이', icon: '💙', pg: '토스페이' },
-  NAVERPAY: { label: '네이버페이', icon: '💚', pg: '네이버페이' },
 };
 
 const formatPaidAt = (iso) => {

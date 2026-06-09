@@ -59,8 +59,18 @@ const toRefundCardItem = (refund) => {
       refund.status === 'COMPLETED' ? formatDate(refund.modifiedAt) : null,
     status: STATUS_TO_UI[refund.status] ?? 'processing',
     isHostRejected: isHostRejectedRefund(refund),
-    alertMessage: null,
   };
+};
+
+// RefundFilterBar 기간값(today/week/month/3months/all) → 컷오프(ms). 'all'은 0(필터 안 함)
+const periodToCutoffMs = (period) => {
+  const now = Date.now();
+  const day = 24 * 60 * 60 * 1000;
+  if (period === 'today') return now - day;
+  if (period === 'week') return now - 7 * day;
+  if (period === 'month') return now - 30 * day;
+  if (period === '3months') return now - 90 * day;
+  return 0;
 };
 
 export default function RefundList() {
@@ -108,11 +118,18 @@ export default function RefundList() {
   ];
 
   const filtered = useMemo(() => {
+    const cutoff = periodToCutoffMs(period);
     return refunds
       .filter((r) => {
         const uiStatus = STATUS_TO_UI[r.status];
         if (tab === 'host_rejected') return isHostRejectedRefund(r);
         if (tab !== 'all' && uiStatus !== tab) return false;
+        if (
+          cutoff > 0 &&
+          r.createdAt &&
+          new Date(r.createdAt).getTime() < cutoff
+        )
+          return false;
         if (search) {
           const refundId = `RFD-${String(r.no).padStart(6, '0')}`;
           if (!refundId.includes(search.toUpperCase())) return false;
@@ -120,7 +137,7 @@ export default function RefundList() {
         return true;
       })
       .map(toRefundCardItem);
-  }, [refunds, tab, search]);
+  }, [refunds, tab, period, search]);
 
   const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
   const pageItems = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
