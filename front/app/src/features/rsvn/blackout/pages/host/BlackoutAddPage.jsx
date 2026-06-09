@@ -160,6 +160,10 @@ function BlackoutAddPage() {
       alert('날짜를 입력해주세요');
       return;
     }
+    if (endDate < startDate) {
+      alert('종료 날짜는 시작 날짜 이후여야 해요');
+      return;
+    }
 
     try {
       await saveBlackout(entityNo, {
