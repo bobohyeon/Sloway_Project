@@ -1,5 +1,7 @@
 -- 기존에 테이블이 있다면 삭제 (이미 엔티티가 있다면 이 부분은 상황에 맞게 조정하세요)
 DROP TABLE IF EXISTS place_summary;
+DROP MATERIALIZED VIEW IF EXISTS place_summary;
+
 
 -- Materialized View 생성
 CREATE MATERIALIZED VIEW place_summary AS

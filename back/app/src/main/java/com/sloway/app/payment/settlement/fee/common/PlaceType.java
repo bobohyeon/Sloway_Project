@@ -9,7 +9,7 @@ public enum PlaceType {
 
     station("숙소", 10),
     workStay("워크앤스테이", 12),
-    office("오피스", 10);
+    office("오피스", 8);
 
     private final String name;
     private final Integer rate;

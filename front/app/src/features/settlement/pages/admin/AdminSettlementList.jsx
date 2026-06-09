@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import styled from 'styled-components';
 import {
@@ -11,8 +11,12 @@ import {
 
 import PageLayout from '../../../../app/layouts/page/PageLayout';
 import { StatCard } from '../../../pay_shared/components/StatCard';
-import { Card, EmptyState } from '../../../pay_shared/components';
-import { findSettleAll, createSettle } from '../../api/settlementApi';
+import { Card, EmptyState, Pagination } from '../../../pay_shared/components';
+import {
+  findSettleAll,
+  findSettleStats,
+  createSettle,
+} from '../../api/settlementApi';
 
 const STATUS_META = {
   WAITING: { label: '정산 대기', color: 'var(--gray-400)' },
@@ -32,8 +36,16 @@ const fmtDate = (d) => (d ? String(d) : '—');
 
 export default function AdminSettlementList() {
   const nav = useNavigate();
-  const [settles, setSettles] = useState([]);
+  const [content, setContent] = useState([]); // 현재 페이지 정산 목록(서버가 잘라서 줌)
+  const [totalPages, setTotalPages] = useState(1); // 서버가 알려준 전체 페이지 수
+  const [stats, setStats] = useState({
+    waiting: 0,
+    complete: 0,
+    invoice: 0,
+    totalPayout: 0,
+  });
   const [filter, setFilter] = useState('all');
+  const [page, setPage] = useState(1); // UI는 1-base, 서버는 0-base
   const [modalOpen, setModalOpen] = useState(false);
   const [form, setForm] = useState({
     hostNo: '',
@@ -42,37 +54,40 @@ export default function AdminSettlementList() {
   });
   const [submitting, setSubmitting] = useState(false);
 
-  const load = async () => {
+  // 목록 — page/필터 중 하나라도 바뀌면 서버에 재요청(클라가 전체를 들고 있지 않음)
+  useEffect(() => {
+    const load = async () => {
+      try {
+        const data = await findSettleAll(page - 1, filter);
+        setContent(data.content ?? []);
+        setTotalPages(data.totalPages ?? 1);
+      } catch (err) {
+        console.error('정산 목록 조회 실패', err);
+      }
+    };
+    load();
+  }, [page, filter]);
+
+  // 통계 카드 — 목록과 별개로 전체 상태별 집계(탭/페이지와 무관하게 항상 전체)
+  const loadStats = async () => {
     try {
-      const list = await findSettleAll();
-      setSettles(list);
+      setStats(await findSettleStats());
     } catch (err) {
-      console.error('정산 목록 조회 실패', err);
+      console.error('정산 통계 조회 실패', err);
     }
   };
-
   useEffect(() => {
+    // async IIFE — effect 본문에서 setState 동기 호출 회피(react-hooks/set-state-in-effect)
     (async () => {
-      await load();
+      await loadStats();
     })();
   }, []);
 
-  // 상태별 건수 + 총 정산액 집계 (클라이언트 사이드)
-  const kpi = useMemo(() => {
-    const k = { waiting: 0, complete: 0, invoice: 0, totalPayout: 0 };
-    settles.forEach((s) => {
-      if (s.status === 'WAITING') k.waiting += 1;
-      if (s.status === 'COMPLETE') k.complete += 1;
-      if (s.status === 'INVOICE') k.invoice += 1;
-      k.totalPayout += s.payoutAmt ?? 0;
-    });
-    return k;
-  }, [settles]);
-
-  const filtered = useMemo(() => {
-    if (filter === 'all') return settles;
-    return settles.filter((s) => s.status === filter);
-  }, [settles, filter]);
+  // 필터 바꾸면 1페이지로 리셋(안 하면 뒷페이지에서 필터 바꿔 빈 결과 뜨는 버그)
+  const handleFilterChange = (value) => {
+    setFilter(value);
+    setPage(1);
+  };
 
   const handleCreate = async () => {
     if (!form.hostNo || !form.settleStartDate || !form.settleEndDate) {
@@ -92,7 +107,13 @@ export default function AdminSettlementList() {
       }
       setModalOpen(false);
       setForm({ hostNo: '', settleStartDate: '', settleEndDate: '' });
-      await load();
+      // 새 정산은 최신이라 1페이지로 + 목록/통계 갱신
+      // (page가 이미 1이면 위 effect가 안 도니 목록을 직접 재조회)
+      setPage(1);
+      const data = await findSettleAll(0, filter);
+      setContent(data.content ?? []);
+      setTotalPages(data.totalPages ?? 1);
+      await loadStats();
     } catch (err) {
       console.error('정산 생성 실패', err);
       alert('정산 생성에 실패했습니다. (수수료 정책/데이터를 확인하세요)');
@@ -115,25 +136,25 @@ export default function AdminSettlementList() {
       <KPIGrid>
         <StatCard
           label="정산 대기"
-          value={kpi.waiting}
+          value={stats.waiting}
           unit="건"
           icon={<FaHourglassHalf />}
         />
         <StatCard
           label="정산 완료"
-          value={kpi.complete}
+          value={stats.complete}
           unit="건"
           icon={<FaCheckCircle />}
         />
         <StatCard
           label="세금계산서 발행"
-          value={kpi.invoice}
+          value={stats.invoice}
           unit="건"
           icon={<FaFileInvoice />}
         />
         <StatCard
           label="총 정산액"
-          value={kpi.totalPayout.toLocaleString()}
+          value={Number(stats.totalPayout ?? 0).toLocaleString()}
           unit="원"
           icon={<FaMoneyBillWave />}
         />
@@ -144,7 +165,7 @@ export default function AdminSettlementList() {
           <FilterBtn
             key={tab.value}
             $active={filter === tab.value}
-            onClick={() => setFilter(tab.value)}
+            onClick={() => handleFilterChange(tab.value)}
           >
             {tab.label}
           </FilterBtn>
@@ -161,7 +182,7 @@ export default function AdminSettlementList() {
           <Col>상태</Col>
         </TableHeader>
 
-        {filtered.length === 0 ? (
+        {content.length === 0 ? (
           <EmptyWrap>
             <EmptyState
               title="정산 내역이 없습니다"
@@ -169,7 +190,7 @@ export default function AdminSettlementList() {
             />
           </EmptyWrap>
         ) : (
-          filtered.map((s) => (
+          content.map((s) => (
             <Row key={s.no} onClick={() => nav(`/admin/settlement/host/${s.no}`)}>
               <Col>#{s.no}</Col>
               <Col>호스트 #{s.hostNo}</Col>
@@ -189,6 +210,12 @@ export default function AdminSettlementList() {
           ))
         )}
       </ListCard>
+
+      <Pagination
+        currentPage={page}
+        totalPages={totalPages}
+        onChange={setPage}
+      />
 
       {modalOpen && (
         <ModalOverlay onClick={() => setModalOpen(false)}>

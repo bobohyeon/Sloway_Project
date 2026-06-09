@@ -1,8 +1,18 @@
 import api from '../../../app/api/axiosApi';
 
-// 정산 목록 (관리자 — 전체 정산 회차)
-export async function findSettleAll() {
-  const resp = await api.get('/payment/settlement/settle');
+// 정산 목록 (관리자) — 서버 페이지네이션 + 상태 필터
+// pno(0-base) / tab(상태: all|WAITING|COMPLETE|INVOICE)
+// 응답: { content: [...], totalPages, totalElements, number, ... } (Spring Page)
+export async function findSettleAll(pno = 0, tab = 'all') {
+  const resp = await api.get('/payment/settlement/settle', {
+    params: { pno, tab },
+  });
+  return resp.data;
+}
+
+// 통계 카드용 — 목록과 별개로 전체 상태별 집계(대기/완료/발행 건수 + 총 정산액)
+export async function findSettleStats() {
+  const resp = await api.get('/payment/settlement/settle/stats');
   return resp.data;
 }
 
