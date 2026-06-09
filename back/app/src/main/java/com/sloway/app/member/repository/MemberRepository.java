@@ -5,6 +5,7 @@ import com.sloway.app.member.entity.MemberEntity;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
 
 import java.util.List;
 import java.util.Optional;
@@ -39,4 +40,7 @@ public interface MemberRepository extends JpaRepository<MemberEntity  , Long> , 
     List<MemberEntity> findByNoIn(List<Long> memberNos);
 
     Page<MemberEntity> findByStatus(MemberStatus status, Pageable pageable);
+
+    @Query("SELECT m.no FROM MemberEntity m")
+    List<Long> findAllMemberIds();
 }

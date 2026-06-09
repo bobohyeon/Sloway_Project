@@ -32,27 +32,7 @@ public class NotificationService {
     private final NotificationRepository notificationRepository;
     private final UserNotificationSettingsRepository userSettingsRepository;
     private final HostNotificationSettingsRepository hostSettingsRepository;
-    private final SimpMessagingTemplate messagingTemplate;
 
-    @Async
-    @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
-    @Transactional(propagation = Propagation.REQUIRES_NEW)
-    public void handleNotification(NotificationEvent event) {
-        // 1. 엔티티 생성 및 저장
-        NotificationEntity entity = NotificationEntity.builder()
-                .memberNo(event.getTargetMemberNo())
-                .type(NotificationType.valueOf(event.getTypeCode()))
-                .title(event.getTitle())
-                .description(event.getDescription())
-                .read(false)
-                .build();
-
-        NotificationEntity savedEntity = notificationRepository.save(entity);
-
-        // 2. STOMP 브로커를 통해 전송
-        String destination = "/sub/notifications/" + event.getTargetMemberNo();
-        messagingTemplate.convertAndSend(destination, NotificationResDto.fromEntityValues(savedEntity));
-    }
     // ── 알림 목록 (사용자) ────────────────────────────────────────────────────
 
     public NotificationPageResDto getUserNotifications(Long memberNo, String tab, Pageable pageable) {
