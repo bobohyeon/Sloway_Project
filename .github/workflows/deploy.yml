@@ -1,33 +1,48 @@
-- name: Setup Node.js
+name: Deploy Frontend
+
+on:
+  push:
+    branches:
+      - develop
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: 20
 
-- name: Install dependencies
-  run: npm ci
-  working-directory: front/app
+      - name: Install dependencies
+        run: npm ci
+        working-directory: front/app
 
-- name: Build
-  run: npm run build
-  working-directory: front/app
-  env:
-    VITE_API_BASE_URL: ${{ secrets.VITE_API_BASE_URL }}
+      - name: Build
+        run: npm run build
+        working-directory: front/app
+        env:
+          VITE_API_BASE_URL: ${{ secrets.VITE_API_BASE_URL }}
 
-- name: Configure AWS credentials
-  uses: aws-actions/configure-aws-credentials@v4
-  with:
-    aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-    aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-    aws-region: ap-northeast-2
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ap-northeast-2
 
-- name: Deploy to S3
-  run: |
-    aws s3 sync ./front/app/dist s3://sloway-frontend \
-      --delete \
-      --cache-control "public, max-age=31536000, immutable"
+      - name: Deploy to S3
+        run: |
+          aws s3 sync ./front/app/dist s3://sloway-frontend \
+            --delete \
+            --cache-control "public, max-age=31536000, immutable"
 
-- name: Invalidate CloudFront cache
-  run: |
-    aws cloudfront create-invalidation \
-      --distribution-id ${{ secrets.AWS_CLOUDFRONT_DISTRIBUTION_ID }} \
-      --paths "/*"
+      - name: Invalidate CloudFront cache
+        run: |
+          aws cloudfront create-invalidation \
+            --distribution-id ${{ secrets.AWS_CLOUDFRONT_DISTRIBUTION_ID }} \
+            --paths "/*"
