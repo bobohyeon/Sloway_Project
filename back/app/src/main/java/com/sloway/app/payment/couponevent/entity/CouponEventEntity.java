@@ -43,6 +43,17 @@ public class CouponEventEntity extends BaseEntity {
     @Enumerated(EnumType.STRING)
     private CouponEventStatus status;
 
+    // 다운로드 가능 상태 검증 — OPEN 만 허용, 종료/소진된 이벤트는 발급 차단.
+    // issue() 의 소진 가드는 동시성 막판(issuedCount==totalCount) 이중 안전망으로 유지.
+    public void validateDownloadable() {
+        if (this.status == CouponEventStatus.CLOSED) {
+            throw new CustomException(CouponEventErrorCode.COUPONEVENT_ALREADY_CLOSED);
+        }
+        if (this.status == CouponEventStatus.SOLDOUT) {
+            throw new CustomException(CouponEventErrorCode.COUPONEVENT_SOLDOUT);
+        }
+    }
+
     public void issue() {
         if (this.issuedCount >= this.totalCount) {
             throw new CustomException(CouponEventErrorCode.COUPONEVENT_SOLDOUT);

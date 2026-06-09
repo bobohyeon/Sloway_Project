@@ -5,6 +5,7 @@ import com.sloway.app.payment.pay.dto.response.PayReadyResDto;
 import com.sloway.app.payment.pay.dto.response.PayResDto;
 import com.sloway.app.payment.pay.dto.response.PayStatsResDto;
 import com.sloway.app.payment.pay.dto.response.TossPrepareResDto;
+import com.sloway.app.auth.user.CustomUserDetails;
 import com.sloway.app.payment.pay.pg.toss.dto.request.TossConfirmReqDto;
 import com.sloway.app.payment.pay.service.PayService;
 import lombok.RequiredArgsConstructor;
@@ -14,6 +15,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.view.RedirectView;
 
@@ -32,8 +34,10 @@ public class PayApiController {
     private String frontendUrl;
 
     @PostMapping("/ready")
-    public ResponseEntity<PayReadyResDto> readyPay(@RequestBody PayCreateReqDto payCreateReqDto) {
-        PayReadyResDto payReadyResDto = payService.readyPay(payCreateReqDto);
+    public ResponseEntity<PayReadyResDto> readyPay(
+            @RequestBody PayCreateReqDto payCreateReqDto,
+            @AuthenticationPrincipal CustomUserDetails userDetails) {
+        PayReadyResDto payReadyResDto = payService.readyPay(payCreateReqDto, userDetails.getMemberNo());
         return ResponseEntity.status(HttpStatus.CREATED).body(payReadyResDto);
     }
 
@@ -64,8 +68,10 @@ public class PayApiController {
     }
 
     @PostMapping("/toss/prepare")
-    public ResponseEntity<TossPrepareResDto> prepareTossPay(@RequestBody PayCreateReqDto payCreateReqDto) {
-        TossPrepareResDto resDto = payService.prepareTossPay(payCreateReqDto);
+    public ResponseEntity<TossPrepareResDto> prepareTossPay(
+            @RequestBody PayCreateReqDto payCreateReqDto,
+            @AuthenticationPrincipal CustomUserDetails userDetails) {
+        TossPrepareResDto resDto = payService.prepareTossPay(payCreateReqDto, userDetails.getMemberNo());
         return ResponseEntity.status(HttpStatus.CREATED).body(resDto);
     }
 

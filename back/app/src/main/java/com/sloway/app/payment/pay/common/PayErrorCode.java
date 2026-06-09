@@ -16,7 +16,8 @@ public enum PayErrorCode implements ErrorCode {
     PAY_ALREADY_CANCELED(HttpStatus.BAD_REQUEST, "취소된 결제입니다."),
     PAY_DUPLICATE(HttpStatus.CONFLICT, "결제 중복 시도입니다."),
     PAY_PROCESS_FAILED(HttpStatus.BAD_GATEWAY, "PG 통신 실패입니다."),
-    PAY_AMOUNT_NEGATIVE(HttpStatus.BAD_REQUEST, "결제 금액은 음수가 될 수 없습니다.");
+    PAY_AMOUNT_NEGATIVE(HttpStatus.BAD_REQUEST, "결제 금액은 음수가 될 수 없습니다."),
+    PAY_FORBIDDEN(HttpStatus.FORBIDDEN, "본인의 예약만 결제할 수 있습니다.");
 
     private final HttpStatus status;
     private final String msg;
