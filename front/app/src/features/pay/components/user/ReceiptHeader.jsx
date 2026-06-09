@@ -5,7 +5,6 @@ export function ReceiptHeader({ status = 'completed', paymentId }) {
   const statusInfo = {
     completed: { label: '결제 완료', variant: 'success' },
     refunded: { label: '환불됨', variant: 'muted' },
-    failed: { label: '결제 실패', variant: 'danger' },
   }[status] || { label: '결제 완료', variant: 'success' };
 
   return (

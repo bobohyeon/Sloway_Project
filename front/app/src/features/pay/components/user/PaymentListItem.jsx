@@ -4,7 +4,6 @@ import { PaymentStatusBadge } from './PaymentStatusBadge';
 
 export function PaymentListItem({ payment, onClick, onReceiptClick }) {
   const isRefunded = payment.status === 'refunded';
-  const isFailed = payment.status === 'failed';
 
   const handleReceipt = (e) => {
     e.stopPropagation();
@@ -34,7 +33,7 @@ export function PaymentListItem({ payment, onClick, onReceiptClick }) {
       </Body>
 
       <Right>
-        <Price $refunded={isRefunded} $failed={isFailed}>
+        <Price $refunded={isRefunded}>
           {isRefunded && <RefundLabel>환불</RefundLabel>}
           <strong>{payment.amount.toLocaleString()}</strong>
           <span>원</span>
@@ -138,12 +137,6 @@ const Price = styled.div`
       props.$refunded &&
       `
       text-decoration: line-through;
-      color: var(--gray-400);
-    `}
-
-    ${(props) =>
-      props.$failed &&
-      `
       color: var(--gray-400);
     `}
   }
