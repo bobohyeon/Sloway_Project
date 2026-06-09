@@ -14,6 +14,7 @@ import com.sloway.app.payment.refund.dto.request.RefundCreateReqDto;
 import com.sloway.app.payment.refund.service.RefundService;
 import com.sloway.app.place.entity.office.OfficeEntity;
 import com.sloway.app.place.entity.place.ImgPlaceEntity;
+import com.sloway.app.place.entity.place.PlaceEntity;
 import com.sloway.app.place.entity.station.StationEntity;
 import com.sloway.app.place.entity.workStay.WorkStayEntity;
 import com.sloway.app.place.entity.hostPlace.HostPlaceEntity;
@@ -23,6 +24,8 @@ import com.sloway.app.place.repository.place.ImgPlaceRepository;
 import com.sloway.app.place.repository.station.StationRepository;
 import com.sloway.app.place.repository.workStay.WorkStayRepository;
 import com.sloway.app.reservation.RsvnErrorCode;
+import com.sloway.app.reservation.blackOut.entity.BlackOutEntity;
+import com.sloway.app.reservation.blackOut.repository.BlackOutRepository;
 import com.sloway.app.reservation.rsvn.dto.request.RsvnReqDto;
 import com.sloway.app.reservation.rsvn.dto.response.HostReservationStatsResDto;
 import com.sloway.app.reservation.rsvn.dto.response.HostSpaceResDto;
@@ -37,11 +40,11 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
-import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.stream.Collectors;
+
 
 @Slf4j
 @RequiredArgsConstructor
@@ -59,6 +62,7 @@ public class RsvnService {
     private final HostRepository hostRepository;
     private final HostPlaceRepository hostPlaceRepository;
     private final ImgPlaceRepository imgPlaceRepository;
+    private final BlackOutRepository blackOutRepository;
 
     @Transactional
     public long save(Long memberNo, RsvnReqDto dto) {
@@ -80,6 +84,7 @@ public class RsvnService {
                     new CustomException(RsvnErrorCode.PLACE_NOT_FOUND));
         }
 
+        checkBlackOut(office,station,workStay,dto.getCheckIn(),dto.getCheckOut());
 
         RsvnEntity entity = rsvnRepository.save(
                 RsvnEntity.builder()
@@ -175,15 +180,15 @@ public class RsvnService {
         List<RsvnEntity> rsvns = findRsvnsByHostNo(hostNo);
 
         // 공간(office/station/work) 별 예약 건수 — 각 FK 의 PK(getNo, LAZY 안전) 기준 count
-        java.util.Map<Long, Long> officeCnt = rsvns.stream()
+        Map<Long, Long> officeCnt = rsvns.stream()
                 .filter(r -> r.getOfficeNo() != null)
                 .collect(java.util.stream.Collectors.groupingBy(
                         r -> r.getOfficeNo().getNo(), java.util.stream.Collectors.counting()));
-        java.util.Map<Long, Long> stationCnt = rsvns.stream()
+        Map<Long, Long> stationCnt = rsvns.stream()
                 .filter(r -> r.getStationNo() != null)
                 .collect(java.util.stream.Collectors.groupingBy(
                         r -> r.getStationNo().getNo(), java.util.stream.Collectors.counting()));
-        java.util.Map<Long, Long> workCnt = rsvns.stream()
+        Map<Long, Long> workCnt = rsvns.stream()
                 .filter(r -> r.getWorkStayNo() != null)
                 .collect(java.util.stream.Collectors.groupingBy(
                         r -> r.getWorkStayNo().getNo(), java.util.stream.Collectors.counting()));
@@ -388,5 +393,20 @@ public class RsvnService {
         List<RsvnEntity> complete = rsvnRepository
                 .findByStatusAndCheckOutBefore(RsvnStatus.S, LocalDateTime.now());
         complete.forEach(RsvnEntity::complete);
+    }
+
+
+    //이용불가 설정 날짜 조회
+    private void checkBlackOut(OfficeEntity office,
+                              StationEntity station,
+                              WorkStayEntity workStay,
+                              LocalDateTime checkIn,
+                              LocalDateTime checkOut
+    ){
+        List<BlackOutEntity> checkBlackOutList =
+                blackOutRepository.findOverlapping(office,station,workStay, checkIn,checkOut);
+        if(!checkBlackOutList.isEmpty()){
+            throw new CustomException(RsvnErrorCode.BLACKOUT_CONFLICT);
+        }
     }
 }

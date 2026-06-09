@@ -20,9 +20,12 @@ public class BlackOutController {
     private final BlackOutService blackOutService;
 
     @PostMapping
-    public ResponseEntity<Void> save(@RequestBody BlackOutReqDto dto, @RequestParam Long entityNo){
+    public ResponseEntity<Void> save(
+            @AuthenticationPrincipal CustomUserDetails userDetails,
+            @RequestBody BlackOutReqDto dto,
+            @RequestParam Long entityNo){
 
-        blackOutService.save(entityNo, dto);
+        blackOutService.save(userDetails.getMemberNo(), entityNo, dto);
         return ResponseEntity.status(HttpStatus.CREATED).build();
     }
 
