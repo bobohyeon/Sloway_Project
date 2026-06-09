@@ -105,7 +105,9 @@ export default function PaymentHistory() {
       setLoading(true);
       try {
         const list = await findPaysByMemberNo(memberNo);
-        setPays(list);
+        // 결제 도중 이탈(READY)은 미완료라 내역에서 제외 — 카카오 결제창에서 뒤로가기로 남은 '대기' 건 숨김
+        // (다시 결제는 예약 상세의 '결제하기'로 진행)
+        setPays(list.filter((p) => p.status !== 'READY'));
         setError(null);
       } catch (err) {
         console.error('결제 내역 조회 실패', err);
