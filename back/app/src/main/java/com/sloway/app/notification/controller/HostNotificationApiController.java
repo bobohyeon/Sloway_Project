@@ -4,6 +4,7 @@ import com.sloway.app.auth.user.CustomUserDetails;
 import com.sloway.app.notification.dto.request.NotificationSettingsReqDto;
 import com.sloway.app.notification.dto.response.HostNotificationSettingsResDto;
 import com.sloway.app.notification.dto.response.NotificationPageResDto;
+import com.sloway.app.notification.dto.response.NotificationResDto;
 import com.sloway.app.notification.service.NotificationService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Pageable;
@@ -12,6 +13,9 @@ import org.springframework.data.web.PageableDefault;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
+
+import javax.naming.AuthenticationException;
+import java.util.List;
 
 @RestController
 @RequestMapping("api/host/notifications")
@@ -58,5 +62,16 @@ public class HostNotificationApiController {
             @AuthenticationPrincipal CustomUserDetails userDetails) {
         notificationService.updateHostSettings(userDetails.getMemberNo(), reqDto);
         return ResponseEntity.ok().build();
+    }
+
+    @GetMapping("new/list")
+    public ResponseEntity<List<NotificationResDto>> getNewList(
+            @AuthenticationPrincipal CustomUserDetails userDetails) throws AuthenticationException {
+        Long memberNo = userDetails.getMemberNo();
+        if (memberNo == null){
+            throw new AuthenticationException("[로그인 먼저]");
+        }
+        List<NotificationResDto> dto = notificationService.getNewList(memberNo);
+        return ResponseEntity.ok(dto);
     }
 }

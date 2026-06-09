@@ -17,6 +17,7 @@ import org.springframework.security.authentication.ProviderManager;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+import org.springframework.security.config.annotation.web.configuration.WebSecurityCustomizer;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.core.userdetails.UserDetailsService;
@@ -86,6 +87,9 @@ public class SecurityConfig {
                                 .requestMatchers("/api/host/auth/**").permitAll()
                                 .requestMatchers("/api/host/join/**").permitAll()
                                 .requestMatchers("/api/admin/auth/**").permitAll()
+                                // 현진 추가
+                                .requestMatchers("/api/review/**").permitAll()
+                                .requestMatchers("/ws/**").permitAll()
 
                                 // ── 역할 prefix 보호 ──
                                 .requestMatchers("/api/user/**").hasRole("USER")
@@ -140,7 +144,7 @@ public class SecurityConfig {
                     public CorsConfiguration getCorsConfiguration(HttpServletRequest request) {
                         CorsConfiguration config = new CorsConfiguration();
                         config.setAllowedOrigins(Collections.singletonList("http://localhost:5173"));
-                        config.setAllowedMethods(Collections.singletonList("*"));
+                        config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
                         config.setAllowedHeaders(Collections.singletonList("*"));
                         config.setAllowCredentials(true);
                         config.setExposedHeaders(Collections.singletonList("Authorization"));
@@ -151,6 +155,12 @@ public class SecurityConfig {
 
         return hs.build();
 
+    }
+
+    @Bean
+    public WebSecurityCustomizer webSecurityCustomizer() {
+        // /ws로 시작하는 모든 요청을 Spring Security 필터 체인에서 제외
+        return (web) -> web.ignoring().requestMatchers("/ws/**");
     }
 
 }//class

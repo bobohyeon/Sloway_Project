@@ -437,10 +437,10 @@ function App() {
             path="/host/notification"
             element={<HostNotificationListPage />}
           />
-          <Route
+          {/* <Route
             path="/host/notification/setting"
             element={<HostNotificationSettingsPage />}
-          />
+          /> */}
         </Route>
 
         {/* ══ ADMIN ══ */}
