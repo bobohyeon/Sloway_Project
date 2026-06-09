@@ -3,6 +3,7 @@ package com.sloway.app.payment.pay.dto.response;
 import com.sloway.app.payment.pay.common.PayMethod;
 import com.sloway.app.payment.pay.common.PayStatus;
 import com.sloway.app.payment.pay.entity.PayEntity;
+import com.sloway.app.reservation.rsvn.entity.RsvnEntity;
 import lombok.Builder;
 import lombok.Getter;
 
@@ -27,10 +28,17 @@ public class PayResDto {
     private LocalDateTime modifiedAt;
     private LocalDateTime approvedAt;
 
+    // 예약 → 회원·공간 join (단건 상세 표시용). 회원/공간 도메인이 채워져 연동 가능
+    private String memberName;   // 결제한 회원 이름
+    private String spaceName;    // 예약 공간명(office/station/work 중)
+    private LocalDateTime checkIn;
+    private LocalDateTime checkOut;
+
     public static PayResDto from(PayEntity entity) {
+        RsvnEntity rsvn = entity.getRsvnNo();
         return PayResDto.builder()
                 .no(entity.getNo())
-                .rsvnNo(entity.getRsvnNo().getNo())
+                .rsvnNo(rsvn.getNo())
                 .ucNo(entity.getUcNo() == null ? null : entity.getUcNo().getNo())
                 .tid(entity.getTid())
                 .method(entity.getMethod())
@@ -43,6 +51,18 @@ public class PayResDto {
                 .createdAt(entity.getCreatedAt())
                 .modifiedAt(entity.getModifiedAt())
                 .approvedAt(entity.getApprovedAt())
+                .memberName(rsvn.getMemberNo().getName())
+                .spaceName(resolveSpaceName(rsvn))
+                .checkIn(rsvn.getCheckIn())
+                .checkOut(rsvn.getCheckOut())
                 .build();
+    }
+
+    // 예약에 연결된 공간 타입(office/station/work) 중 채워진 것의 title 반환
+    private static String resolveSpaceName(RsvnEntity rsvn) {
+        if (rsvn.getOfficeNo() != null) return rsvn.getOfficeNo().getTitle();
+        if (rsvn.getStationNo() != null) return rsvn.getStationNo().getTitle();
+        if (rsvn.getWorkStayNo() != null) return rsvn.getWorkStayNo().getTitle();
+        return null;
     }
 }

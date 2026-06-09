@@ -291,10 +291,8 @@ export default function AdminPaymentDetail() {
               <InfoHeader>
                 <Avatar>👤</Avatar>
                 <Main>
-                  <MainName>예약 #{pay.rsvnNo}</MainName>
-                  <SubText>
-                    회원 도메인 미연동 — 추후 회원명/이메일 노출
-                  </SubText>
+                  <MainName>{pay.memberName ?? '회원 정보 없음'}</MainName>
+                  <SubText>예약 #{pay.rsvnNo}</SubText>
                 </Main>
               </InfoHeader>
             </InfoCard>
@@ -308,7 +306,7 @@ export default function AdminPaymentDetail() {
               </Row>
               <Row>
                 <Label>공간 정보</Label>
-                <Value>예약 도메인 미연동</Value>
+                <Value>{pay.spaceName ?? '-'}</Value>
               </Row>
             </InfoCard>
           </Section>
