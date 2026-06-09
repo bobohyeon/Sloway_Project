@@ -2,11 +2,12 @@ package com.sloway.app.place.entity.cashing;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.Immutable;
+import org.hibernate.annotations.Subselect;
 
 import java.io.Serializable;
 import java.time.LocalDateTime;
 @Entity
-@Table(name = "place_summary")
+@Subselect("SELECT * FROM place_summary")
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @Immutable

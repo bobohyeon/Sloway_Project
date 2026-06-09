@@ -1,5 +1,6 @@
--- 기존에 테이블이 있다면 삭제 (이미 엔티티가 있다면 이 부분은 상황에 맞게 조정하세요)
+-- 기존에 테이블이 있다면 삭제
 DROP TABLE IF EXISTS place_summary;
+-- 기존에 존재하는 Materialized view 삭제
 DROP MATERIALIZED VIEW IF EXISTS place_summary;
 
 

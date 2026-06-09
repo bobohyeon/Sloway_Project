@@ -99,27 +99,34 @@ export default function useInsertStation() {
     return `${dateStr}${timeSuffix}`;
   };
 
+  // 🛠️ 컴포넌트 내부 상단에 정의 필요
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
   // 최종 폼 제출 (백엔드 Axios API 호출부)
   const handleSubmit = async () => {
+    // 🛠️ 1. 중복 실행 방지 가드 (이미 제출 중이면 차단)
+    if (isSubmitting) return;
+
     try {
+      setIsSubmitting(true); // 🛠️ 제출 시작: 버튼 잠금
+
       // images가 비어있을 경우를 대비한 안전 가드
       const currentImages = Array.isArray(formData.images)
         ? formData.images
         : [];
 
-      // 1. 상태 분리 (exceptionPeriods도 구조분해로 따로 분리)
+      // 1. 상태 분리
       const { images, facilities, exceptionPeriods, ...dto } = formData;
 
       // 2. 백엔드 DTO 규격에 맞추어 완벽 가공
       const formattedDto = {
         ...dto,
-        placeNo: Number(dto.placeNo), // 🛠️ placeNo가 간혹 String으로 넘어올 수 있으므로 숫자로 확실히 변환
+        placeNo: Number(dto.placeNo),
         checkIn: convertToLocalDateTime(dto.checkIn),
         checkOut: convertToLocalDateTime(dto.checkOut),
 
         facilityList: facilities,
 
-        // exceptionPeriods 배열을 순회하며 startDate, endDate를 LocalDateTime 형태로 변환
         exceptionPeriods: exceptionPeriods.map((period) => ({
           ...period,
           startDate: convertDateToLocalDateTime(period.startDate, false),
@@ -137,21 +144,22 @@ export default function useInsertStation() {
         holPrice: Number(dto.holPrice) || 0,
       };
 
-      // 🛠️ [핵심 수정] 파일 객체만 안전하게 매핑
+      // 3. 파일 객체만 안전하게 매핑
       const files = currentImages.map((img) => img.file);
 
-      // 🛠️ [핵심 수정] 이미지 객체 내부에 없는 img.sort 대신 배열의 index를 기반으로 sortList 자동 생성
+      // 4. 배열의 index를 기반으로 sortList 자동 생성
       const sortList = currentImages.map((_, index) => ({
-        sort: index + 1, // 첫 번째 이미지는 1, 두 번째는 2... 순서 보장
+        sort: index + 1,
       }));
 
+      // 5. 백엔드 API 호출
       const response = await registerStationInspection(
         formattedDto,
         files,
         sortList
       );
 
-      // response나 response.status 검증 후 이동
+      // 6. 응답 검증 및 페이지 이동
       if (
         response &&
         (response.status === 201 || response.status === 200 || response.data)
@@ -162,6 +170,9 @@ export default function useInsertStation() {
     } catch (error) {
       console.error('숙소 등록 실패:', error);
       alert('등록 중 오류가 발생했습니다. 입력 정보를 다시 확인해주세요.');
+    } finally {
+      // 🛠️ 성공하든 실패하든 무조건 버튼 잠금 해제
+      setIsSubmitting(false);
     }
   };
   return {
