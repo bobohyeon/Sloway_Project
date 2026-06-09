@@ -11,7 +11,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
-@RequestMapping("/api/recent/viewed")
+@RequestMapping("/api/user/recent/viewed")
 @RequiredArgsConstructor
 @RestController
 public class RecentViewedController {

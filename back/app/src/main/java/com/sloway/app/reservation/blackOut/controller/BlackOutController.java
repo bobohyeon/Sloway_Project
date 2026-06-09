@@ -12,7 +12,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
-@RequestMapping("/api/blackout")
+@RequestMapping("/api/host/blackout")
 @RequiredArgsConstructor
 @RestController
 public class BlackOutController {
