@@ -3,9 +3,11 @@ package com.sloway.app.payment.settlement.settle.controller;
 import com.sloway.app.auth.user.CustomUserDetails;
 import com.sloway.app.payment.settlement.settle.dto.request.SettleCreateReqDto;
 import com.sloway.app.payment.settlement.settle.dto.response.SettleResDto;
+import com.sloway.app.payment.settlement.settle.dto.response.SettleStatsResDto;
 import com.sloway.app.payment.settlement.settle.service.SettleService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -31,8 +33,13 @@ public class SettleApiController {
 
 
     @GetMapping
-    public ResponseEntity<List<SettleResDto>> findSettleAll() {
-        return ResponseEntity.ok(settleService.findSettleAll());
+    public ResponseEntity<Page<SettleResDto>> findSettleAll(@RequestParam(defaultValue = "0") int pno, @RequestParam(defaultValue = "all") String tab) {
+        return ResponseEntity.ok(settleService.findSettleAll(pno, tab));
+    }
+
+    @GetMapping("/stats")
+    public SettleStatsResDto findSettleStats() {
+        return settleService.findSettleStats();
     }
 
     @GetMapping("/{no}")
@@ -41,12 +48,11 @@ public class SettleApiController {
     }
 
     @GetMapping("/host")
-    public ResponseEntity<List<SettleResDto>> findSettleByHostNo(@AuthenticationPrincipal CustomUserDetails host ) {
+    public ResponseEntity<List<SettleResDto>> findSettleByHostNo(@AuthenticationPrincipal CustomUserDetails host) {
         List<SettleResDto> settleResDtoList = settleService.findSettleByHostNo(host.getMemberNo());
         return ResponseEntity.ok(settleResDtoList);
     }
 
-    // 어드민 — 특정 호스트 정산 조회 (SecurityConfig 에서 ADMIN 권한 필요)
     @GetMapping("/admin/host/{hostNo}")
     public ResponseEntity<List<SettleResDto>> findSettleByHostNoForAdmin(@PathVariable Long hostNo) {
         return ResponseEntity.ok(settleService.findSettleByHostNoForAdmin(hostNo));
