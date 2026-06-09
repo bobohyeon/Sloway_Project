@@ -10,6 +10,7 @@ import lombok.Getter;
 public class HostSpaceResDto {
 
     private Long placeNo;
+    private Long entityNo;
     private String placeImg;
     private String spaceName;
     private String spaceType;
@@ -22,19 +23,23 @@ public class HostSpaceResDto {
 
     public static HostSpaceResDto from(HostPlaceEntity hp, long reservationCount, String placeImg) {
         Long placeNo = null;
+        Long entityNo = null;
         String spaceName = null;
         String spaceType = null;
 
         if (hp.getWorkStayEntity() != null) {
             placeNo = hp.getWorkStayEntity().getPlaceEntity().getNo();
+            entityNo = hp.getWorkStayEntity().getNo();
             spaceName = hp.getWorkStayEntity().getTitle();
             spaceType = hp.getWorkStayEntity().getPlaceEntity().getType();
         } else if (hp.getOfficeEntity() != null) {
             placeNo = hp.getOfficeEntity().getPlaceEntity().getNo();
+            entityNo = hp.getOfficeEntity().getNo();
             spaceName = hp.getOfficeEntity().getTitle();
             spaceType = hp.getOfficeEntity().getPlaceEntity().getType();
         } else if (hp.getStationEntity() != null) {
             placeNo = hp.getStationEntity().getPlaceEntity().getNo();
+            entityNo = hp.getStationEntity().getNo();
             spaceName = hp.getStationEntity().getTitle();
             spaceType = hp.getStationEntity().getPlaceEntity().getType();
         } else if (hp.getPlaceEntity() != null) {
@@ -45,6 +50,7 @@ public class HostSpaceResDto {
 
         return HostSpaceResDto.builder()
                 .placeNo(placeNo)
+                .entityNo(entityNo)
                 .placeImg(placeImg)
                 .spaceName(spaceName)
                 .spaceType(spaceType)
