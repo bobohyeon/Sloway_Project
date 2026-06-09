@@ -38,6 +38,18 @@ public class NotificationResDto {
         CATEGORY_MAP.put(NotificationType.NOTICE, "공지");
     }
 
+    public static NotificationResDto fromEntityValues(NotificationEntity entity) {
+        return new NotificationResDto(
+                entity.getId(),
+                entity.getType(),
+                CATEGORY_MAP.getOrDefault(entity.getType(), entity.getType().name()),
+                entity.getTitle(),
+                entity.getDescription(),
+                formatTimeLabel(entity.getCreatedAt()), // BaseEntity에서 상속받은 createdAt 사용
+                entity.isRead()
+        );
+    }
+
     public static NotificationResDto from(NotificationEntity entity) {
         return new NotificationResDto(
                 entity.getId(),

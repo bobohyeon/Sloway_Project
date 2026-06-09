@@ -2,6 +2,8 @@ import { Link, useNavigate } from 'react-router-dom';
 import styled from 'styled-components';
 import { FaBell, FaCommentDots } from 'react-icons/fa';
 import { useAuth } from '../../../features/auth/hooks/useAuth';
+import { useState } from 'react';
+import NotificationList from '../../../features/notification/components/NotificationList';
 
 const HeaderWrapper = styled.div`
   display: flex;
@@ -150,10 +152,24 @@ const LoginBtn = styled.button`
   }
 `;
 
+const DropdownContainer = styled.div`
+  position: absolute;
+  top: 50px;
+  right: 0;
+  width: 320px;
+  max-height: 400px;
+  background: white;
+  border: 1px solid #d0c8b8;
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  z-index: 1000;
+  overflow-y: auto;
+`;
+
 function Header() {
   const navigate = useNavigate();
   const { isAuthenticated, user, myPagePath, handleLogout } = useAuth();
-
+  const [isNotiOpen, setIsNotiOpen] = useState(false);
   return (
     <HeaderWrapper>
       <Logo to="/">
@@ -170,11 +186,20 @@ function Header() {
       <RightMenu>
         {isAuthenticated ? (
           <>
-            <IconButton title="알림">
-              <FaBell size={18} />
-              <Badge />
-            </IconButton>
-
+            <div style={{ position: 'relative' }}>
+              <IconButton
+                title="알림"
+                onClick={() => setIsNotiOpen(!isNotiOpen)}
+              >
+                <FaBell size={18} />
+                <Badge />
+              </IconButton>
+              {isNotiOpen && (
+                <DropdownContainer>
+                  <NotificationList />
+                </DropdownContainer>
+              )}
+            </div>
             <IconButton title="채팅">
               <FaCommentDots size={18} />
             </IconButton>

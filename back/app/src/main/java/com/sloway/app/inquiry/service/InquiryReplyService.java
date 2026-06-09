@@ -8,8 +8,10 @@ import com.sloway.app.inquiry.entity.InquiryEntity;
 import com.sloway.app.inquiry.entity.InquiryReplyEntity;
 import com.sloway.app.inquiry.exception.InquiryErrorCode;
 import com.sloway.app.inquiry.repository.InquiryReplyRepository;
+import com.sloway.app.notification.event.InquiryAnsweredEvent;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -22,6 +24,7 @@ public class InquiryReplyService {
     private final InquiryReplyRepository replyRepository;
     private final AdminRepository adminRepository;
     private final InquiryService inquiryService;
+    private final ApplicationEventPublisher eventPublisher;
 
     @Transactional
     public void createReply(Long inquiryId, InquiryReplyCreateReqDto reqDto, Long adminNo) {
@@ -35,6 +38,7 @@ public class InquiryReplyService {
         replyRepository.save(reqDto.toEntity(inquiry, admin));
         inquiry.answer();
         log.info("[문의 답변 등록] inquiryId={}, adminNo={}", inquiryId, adminNo);
+        eventPublisher.publishEvent(new InquiryAnsweredEvent(inquiry.getWriter().getNo(), inquiry.getTitle(),"가 등록되었습니다."));
     }
 
     @Transactional

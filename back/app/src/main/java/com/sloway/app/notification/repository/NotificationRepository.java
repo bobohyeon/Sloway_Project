@@ -9,7 +9,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import java.util.List;
 import java.util.Optional;
 
-public interface NotificationRepository extends JpaRepository<NotificationEntity, Long> {
+public interface NotificationRepository extends JpaRepository<NotificationEntity, Long>, NotificationRepositoryCustom {
 
     Page<NotificationEntity> findByMemberNoAndDelYnOrderByCreatedAtDesc(
             Long memberNo, String delYn, Pageable pageable);
