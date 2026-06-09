@@ -58,15 +58,9 @@ public class NoticeService {
     @Transactional
     public void write(NoticeWriteReqDto reqDto) {
         NoticeEntity noticeEntity = noticeRepository.save(reqDto.toEntity());
-        List<MemberEntity> memberEntities = memberRepository.findAll();
-        log.info("[공지사항 등록] id={}, title={}", noticeEntity.getId(), noticeEntity.getTitle());
-        for (MemberEntity member : memberEntities) {
-            // 이벤트 발행
-            eventPublisher.publishEvent(new NoticeEvent(
-                    member.getNo(),
-                    noticeEntity.getTitle(),
-                    "가 등록되었습니다"
-            ));
+        List<Long> memberIds = memberRepository.findAllMemberIds();
+        for (Long id : memberIds) {
+            eventPublisher.publishEvent(new NoticeEvent(id, noticeEntity.getTitle(), "가 등록되었습니다"));
         }
     }
 
