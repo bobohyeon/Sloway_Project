@@ -54,7 +54,6 @@ public class SecurityConfig {
     private final PasswordEncoder passwordEncoder;
 
 
-
     private AuthenticationManager buildauthenticationManager(UserDetailsService uds) {
         DaoAuthenticationProvider provider = new DaoAuthenticationProvider(uds);
         provider.setPasswordEncoder(passwordEncoder);
@@ -87,8 +86,8 @@ public class SecurityConfig {
                                 .requestMatchers("/api/host/auth/**").permitAll()
                                 .requestMatchers("/api/host/join/**").permitAll()
                                 .requestMatchers("/api/admin/auth/**").permitAll()
-                                // 현진 추가
-                                .requestMatchers("/api/review/**").permitAll()
+
+                                //websocket
                                 .requestMatchers("/ws/**").permitAll()
 
                                 // ── 역할 prefix 보호 ──
@@ -129,15 +128,44 @@ public class SecurityConfig {
                                 // ── ADMIN (나머지 결제 도메인 전부 — 반드시 위 구체 경로들 다음) ──
                                 .requestMatchers("/api/payment/**").hasRole("ADMIN")
 
-                                // ══ 예약 도메인 (/api/reservation) — 어드민 조회 전용 ══
+
+                                // ══ 리뷰 도메인 (/api/review) ══════════════════════════
+                                // ⚠️ 순서 규칙: 구체 경로(HOST→ADMIN→USER) 먼저, 공개 GET 맨 마지막.
+                                //    report 경로는 메서드로 역할이 갈림(GET/PUT=ADMIN, POST=USER).
+                                .requestMatchers(HttpMethod.GET, "/api/review/host/stats").hasRole("HOST")
+                                .requestMatchers(HttpMethod.GET, "/api/review/report").hasRole("ADMIN")
+                                .requestMatchers(HttpMethod.PUT, "/api/review/report/**").hasRole("ADMIN")
+                                .requestMatchers(HttpMethod.GET, "/api/review/my").hasRole("USER")
+                                .requestMatchers(HttpMethod.POST, "/api/review", "/api/review/report").hasRole("USER")
+                                .requestMatchers(HttpMethod.PUT, "/api/review/**").hasRole("USER")
+                                .requestMatchers(HttpMethod.DELETE, "/api/review/**").hasRole("USER")
+                                // 답글
+                                .requestMatchers(HttpMethod.POST, "/api/review/reply/**").hasRole("USER")
+                                .requestMatchers(HttpMethod.PUT, "/api/review/reply/**").hasRole("USER")
+                                .requestMatchers(HttpMethod.DELETE, "/api/review/reply/**").hasRole("USER")
+                                .requestMatchers(HttpMethod.GET, "/api/review/reply/**").permitAll()
+                                // 도움돼요
+                                .requestMatchers(HttpMethod.POST, "/api/review/helpful/**").hasRole("USER")
+                                .requestMatchers(HttpMethod.DELETE, "/api/review/helpful/**").hasRole("USER")
+                                .requestMatchers(HttpMethod.GET, "/api/review/helpful/**").permitAll()
+                                // 목록·상세 (공개) — 반드시 위 구체 GET들 다음
+                                .requestMatchers(HttpMethod.GET, "/api/review", "/api/review/**").permitAll()
+
+                                // ══ 예약 도메인 (/api/reservation) ══════════════════════════
+                                // ⚠️ host·admin 구체 경로 먼저, 포괄 USER가 맨 뒤 (USER /** 가 host·admin 안 가리게).
+                                .requestMatchers(HttpMethod.GET, "/api/reservation/host", "/api/reservation/host/**").hasRole("HOST")
+                                .requestMatchers(HttpMethod.POST, "/api/reservation/*/reject").hasRole("HOST")
                                 .requestMatchers(HttpMethod.GET, "/api/reservation/admin/**").hasRole("ADMIN")
+                                .requestMatchers(HttpMethod.POST, "/api/reservation", "/api/reservation/*/cancel").hasRole("USER")
+                                .requestMatchers(HttpMethod.GET, "/api/reservation", "/api/reservation/**").hasRole("USER")
 
                                 // ── 그 외 — 점진 도입 단계, 다른 담당자 API 진행 위해 일단 공개 ──
                                 .anyRequest().permitAll()
+
                 )
                 .addFilterAt(userLoginFilter, UsernamePasswordAuthenticationFilter.class)
-                .addFilterBefore(hostLoginFilter,userLoginFilter.getClass())
-                .addFilterBefore(adminLoginFilter,userLoginFilter.getClass())
+                .addFilterBefore(hostLoginFilter, userLoginFilter.getClass())
+                .addFilterBefore(adminLoginFilter, userLoginFilter.getClass())
                 .addFilterBefore(new JwtAuthenticationFilter(jwtUtil), LoginFilter.class)
                 .cors(cors -> cors.configurationSource(new CorsConfigurationSource() {
                     @Override
