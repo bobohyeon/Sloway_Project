@@ -22,7 +22,7 @@ function toSpaceCard(dto) {
     title: dto.title,
     location: dto.address,
     score: Math.round(dto.avgScore ?? 0),
-    reviewCount: 0,
+    reviewCount: dto.reviewCount ?? 0,
     price: dto.basePrice ?? 0,
     priceUnit: TYPE_UNIT[dto.type] ?? '원~',
     amenities: [],
