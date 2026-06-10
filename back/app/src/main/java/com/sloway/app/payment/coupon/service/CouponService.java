@@ -5,7 +5,6 @@ import com.sloway.app.member.common.MemberErrorCode;
 import com.sloway.app.member.entity.MemberEntity;
 import com.sloway.app.member.repository.MemberRepository;
 import com.sloway.app.payment.coupon.common.CouponErrorCode;
-import com.sloway.app.payment.coupon.common.CouponStatus;
 import com.sloway.app.payment.coupon.dto.request.CouponCreateReqDto;
 import com.sloway.app.payment.coupon.dto.response.CouponResDto;
 import com.sloway.app.payment.coupon.entity.CouponEntity;
@@ -48,7 +47,8 @@ public class CouponService {
 
     public List<CouponResDto> findCouponsByMemberNo(Long no) {
         MemberEntity memberEntity = findMember(no);
-        List<CouponEntity> memberCouponList = couponRepository.findByMemberAndStatus(memberEntity.getNo(), CouponStatus.AVAILABLE);
+        // 쿠폰함은 전체 상태를 내려주고 프론트가 탭(사용가능/사용완료/만료)으로 분류 — AVAILABLE 고정 조회가 사용완료 쿠폰을 숨기던 버그 수정
+        List<CouponEntity> memberCouponList = couponRepository.findByMember(memberEntity.getNo());
         return memberCouponList.stream().map(CouponResDto::from).toList();
     }
 

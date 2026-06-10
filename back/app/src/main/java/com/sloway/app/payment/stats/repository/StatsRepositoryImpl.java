@@ -107,6 +107,7 @@ public class StatsRepositoryImpl implements StatsRepositoryCustom {
                 .fetchOne();
     }
 
+    // 예약 상태별 건수를 GROUP BY 한 쿼리로 집계 — 상태마다 count를 따로 날리지 않고 1회 조회로 묶음
     @Override
     public Map<RsvnStatus, Long> countRsvnGroupByStatus(LocalDateTime start, LocalDateTime end) {
         List<Tuple> rows = jpaQueryFactory
@@ -115,7 +116,6 @@ public class StatsRepositoryImpl implements StatsRepositoryCustom {
                 .where(qRsvnEntity.createdAt.between(start, end))
                 .groupBy(qRsvnEntity.status)
                 .fetch();
-
         Map<RsvnStatus, Long> result = new EnumMap<>(RsvnStatus.class);
         for (Tuple row : rows) {
             result.put(row.get(qRsvnEntity.status), row.get(qRsvnEntity.count()));

@@ -45,28 +45,24 @@ public class RefundService {
     private final KakaoPayClient kakaoPayClient;
     private final TossPayClient tossPayClient;
 
+    // 환불 생성 진입점 — 환불 가능 여부를 검증한 뒤, 이용 예정일까지 남은 기간 기준으로 환불액 산정
     @Transactional
     public RefundResDto createRefund(RefundCreateReqDto refundCreateReqDto, Long loginMemberNo) {
-        PayEntity payEntity = validRefundablePay(refundCreateReqDto.getPayNo());
+        PayEntity payEntity = validRefundablePay(refundCreateReqDto.getPayNo());   // 환불 가능한 결제인지 검증(완료 상태·금액)
         validRefundOwner(payEntity, loginMemberNo);   // ④ 본인 결제만 환불
-
         RsvnEntity rsvn = rsvnRepository.findById(refundCreateReqDto.getRsvnNo())
                 .orElseThrow(() -> new CustomException(RsvnErrorCode.RESERVATION_NOT_FOUND));
-
         RefundEntity refundEntity = refundCreateReqDto.toEntity(payEntity, rsvn);
         RefundRate rate = refundRate(refundEntity);
-
-        validDuplicate(payEntity);
-
+        validDuplicate(payEntity);   // 이미 환불된 건은 중복 환불 차단
         if (RefundRate.DDAY == rate) {
             log.warn("환불 기간 만료 : payNo:{},rsvnNo:{}", refundCreateReqDto.getPayNo(), refundCreateReqDto.getRsvnNo());
             throw new CustomException(RefundErrorCode.REFUND_PERIOD_EXPIRED);
         }
-
+        // 남은 기간별 환불율(rate)을 결제액(finalAmt)에 적용해 환불액 산정
         BigDecimal finalAmt = BigDecimal.valueOf(payEntity.getFinalAmt());
         BigDecimal rateBd = BigDecimal.valueOf(rate.getRate());
         BigDecimal divisor = BigDecimal.valueOf(100);
-
         BigDecimal refundAmt = finalAmt.multiply(rateBd).divide(divisor, 0, RoundingMode.DOWN);
         refundEntity.applyRefund(rate, refundAmt);
         RefundEntity entity = refundRepository.save(refundEntity);
@@ -104,17 +100,18 @@ public class RefundService {
         return RefundResDto.from(refundEntity);
     }
 
+    // 환불 실제 처리 — 포인트·쿠폰 복원과 PG 취소를 정해진 순서로 수행
     private void doRefundProcess(RefundEntity refundEntity) {
         refundEntity.approveRefund();
         PayEntity payEntity = refundEntity.getPayNo();
-
+        // 사용한 쿠폰 회수 처리
         if (payEntity.getUcNo() != null) {
             payEntity.getUcNo().returnCoupon();
         }
-
+        // 적립 포인트를 먼저 취소하고, 사용 포인트를 복원 — 순서가 바뀌면 방금 복원한 포인트까지 취소됨
         pointService.cancelEarnedPoint(payEntity);
         pointService.refundUsedPoint(payEntity);
-
+        // 외부 PG(카카오/토스) 결제 취소 호출
         PayMethod method = payEntity.getMethod();
         if (method == PayMethod.KAKAOPAY) {
             KakaoCancelReqDto cancelReqDto = KakaoCancelReqDto.builder()
@@ -126,7 +123,6 @@ public class RefundService {
         } else if (method == PayMethod.TOSSPAY) {
             tossPayClient.cancel(payEntity.getTid(), "고객 환불 요청");
         }
-
         payEntity.cancelPay();
         refundEntity.completeRefund();
     }
@@ -146,11 +142,11 @@ public class RefundService {
         return refundEntityList.stream().map(RefundResDto::from).toList();
     }
 
+    // 이용 예정일(checkIn)까지 남은 일수 구간별로 환불율을 차등 반환
     private RefundRate refundRate(RefundEntity entity) {
         LocalDateTime checkIn = entity.getRsvnNo().getCheckIn();
         LocalDateTime requestedAt = entity.getRequestedAt();
         long between = ChronoUnit.DAYS.between(requestedAt.toLocalDate(), checkIn.toLocalDate());
-
         if (between >= 7) {
             return RefundRate.WEEK;
         } else if (between >= 4) {

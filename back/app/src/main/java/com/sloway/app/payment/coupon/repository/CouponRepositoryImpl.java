@@ -29,6 +29,16 @@ public class CouponRepositoryImpl implements CouponRepositoryCustom {
     }
 
     @Override
+    public List<CouponEntity> findByMember(Long memberNo) {
+        // status 필터 없이 회원의 모든 쿠폰 조회 (최신 발급순) → 사용완료/만료 쿠폰도 쿠폰함에 노출
+        return jpaQueryFactory
+                .selectFrom(qCouponEntity)
+                .where(qCouponEntity.memberNo.no.eq(memberNo))
+                .orderBy(qCouponEntity.createdAt.desc())
+                .fetch();
+    }
+
+    @Override
     public List<CouponEntity> findByCouponEventAndStatus(Long couponEventNo, CouponStatus status) {
         return jpaQueryFactory
                 .selectFrom(qCouponEntity)
