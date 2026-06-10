@@ -48,6 +48,9 @@ function OfficeDetailPage() {
 
   if (!space) return null;
 
+  // 표시용·결제용 가격을 한 곳에서 결정 (백엔드 basePrice → 없으면 0)
+  const unitPrice = selectedRoom?.price ?? space?.basePrice ?? 0;
+
   return (
     <DetailLayout
       imageBox={<DetailImageBox icon="🌊" />}
@@ -68,14 +71,14 @@ function OfficeDetailPage() {
           onCheckOutChange={setCheckOut}
           onGuestsChange={setGuests}
           blackouts={blackouts}
-          price={selectedRoom?.price ?? space?.basePrice ?? 28000}
+          price={unitPrice}
           priceUnit="원/4시간"
           roomName={selectedRoom?.name ?? null}
           serviceFee={12000}
           rsvnDto={{
             officeNo: space?.entityNo,
             count: guests,
-            amt: selectedRoom?.price ?? space?.basePrice ?? 0,
+            amt: unitPrice,
             checkIn: checkIn || null,
             checkOut: checkOut || null,
             special: null,

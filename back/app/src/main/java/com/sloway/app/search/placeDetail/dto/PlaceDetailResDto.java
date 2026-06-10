@@ -1,6 +1,7 @@
 package com.sloway.app.search.placeDetail.dto;
 
 import com.sloway.app.place.entity.office.OfficeEntity;
+import com.sloway.app.place.entity.office.OfficePeriodEntity;
 import com.sloway.app.place.entity.station.StationEntity;
 import com.sloway.app.place.entity.workStay.WorkStayEntity;
 import lombok.AllArgsConstructor;
@@ -44,7 +45,13 @@ public class PlaceDetailResDto {
                                 .map(a -> a.getAmenityEntity().getName())
                                 .toList())
                 .maxCnt(office.getCnt())
-                .basePrice(null)
+                .basePrice(office
+                        .getOfficePeriodEntities()
+                        .stream()
+                        .mapToInt(OfficePeriodEntity::getPrice)
+                        .min()
+                        .orElse(0)
+                )
                 .checkinTime(null)
                 .checkoutTime(null)
                 .build();
