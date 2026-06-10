@@ -21,6 +21,7 @@ const MainImg = styled.div`
   align-items: center;
   justify-content: center;
   font-size: 80px;
+  overflow: hidden;
   transition: opacity 0.2s;
   &:hover {
     opacity: 0.9;
@@ -40,6 +41,7 @@ const SubImg = styled.div`
   align-items: center;
   justify-content: center;
   font-size: 32px;
+  overflow: hidden;
   position: relative;
   transition: opacity 0.2s;
   &:hover {
@@ -60,7 +62,6 @@ const MoreOverlay = styled.div`
   cursor: pointer;
 `;
 
-// ── 모달 (전체 사진 보기) ──────────────────────────────────
 const Overlay = styled.div`
   position: fixed;
   inset: 0;
@@ -130,6 +131,7 @@ const ModalImg = styled.div`
   align-items: center;
   justify-content: center;
   font-size: 72px;
+  overflow: hidden;
 `;
 
 const ModalImgLabel = styled.div`
@@ -139,7 +141,6 @@ const ModalImgLabel = styled.div`
   align-self: flex-start;
 `;
 
-// 최대 10장 더미 (백엔드 연결 시 images[] props로 교체)
 const DUMMY_IMGS = [
   { emoji: '🌿', shade: '#E8DFD0', label: '외관' },
   { emoji: '🚗', shade: '#D8E0D0', label: '주차장' },
@@ -153,22 +154,41 @@ const DUMMY_IMGS = [
   { emoji: '🌙', shade: '#D0D0E8', label: '야경' },
 ];
 
-function DetailImageBox({ icon = '🌴' }) {
+const IMG_STYLE = { width: '100%', height: '100%', objectFit: 'cover' };
+
+function DetailImageBox({ icon = '🌴', images = [] }) {
   const [open, setOpen] = useState(false);
+  const hasImages = images.length > 0;
 
   return (
     <>
       <Grid onClick={() => setOpen(true)}>
-        <MainImg>{icon}</MainImg>
+        {/* 대표 이미지 */}
+        <MainImg>
+          {hasImages
+            ? <img src={images[0]} alt="대표" style={IMG_STYLE} />
+            : icon
+          }
+        </MainImg>
+
+        {/* 서브 이미지 2×2 */}
         <SubGrid>
-          {DUMMY_IMGS.slice(0, 3).map((img, i) => (
-            <SubImg key={i} $shade={img.shade}>
-              {img.emoji}
+          {[1, 2, 3].map((idx) => (
+            <SubImg key={idx} $shade={DUMMY_IMGS[idx - 1].shade}>
+              {hasImages && images[idx]
+                ? <img src={images[idx]} alt="" style={IMG_STYLE} />
+                : DUMMY_IMGS[idx - 1].emoji
+              }
             </SubImg>
           ))}
           <SubImg $shade={DUMMY_IMGS[3].shade}>
-            {DUMMY_IMGS[3].emoji}
-            <MoreOverlay>+{DUMMY_IMGS.length - 4}장 더보기</MoreOverlay>
+            {hasImages && images[4]
+              ? <img src={images[4]} alt="" style={IMG_STYLE} />
+              : DUMMY_IMGS[3].emoji
+            }
+            <MoreOverlay>
+              +{hasImages ? Math.max(0, images.length - 4) : DUMMY_IMGS.length - 4}장 더보기
+            </MoreOverlay>
           </SubImg>
         </SubGrid>
       </Grid>
@@ -177,21 +197,32 @@ function DetailImageBox({ icon = '🌴' }) {
         <Overlay onClick={() => setOpen(false)}>
           <ModalHeader>
             <span style={{ fontWeight: 600, fontSize: 15 }}>
-              사진 {DUMMY_IMGS.length + 1}장
+              사진 {hasImages ? images.length : DUMMY_IMGS.length + 1}장
             </span>
             <CloseBtn onClick={() => setOpen(false)}>✕</CloseBtn>
           </ModalHeader>
           <ModalBody onClick={(e) => e.stopPropagation()}>
-            {/* 메인 이미지 */}
-            <ModalImg $shade={COLOR.cream}>{icon}</ModalImg>
-            <ModalImgLabel>대표 사진</ModalImgLabel>
-            {/* 나머지 10장 */}
-            {DUMMY_IMGS.map((img, i) => (
-              <div key={i} style={{ width: '100%' }}>
-                <ModalImg $shade={img.shade}>{img.emoji}</ModalImg>
-                <ModalImgLabel>{img.label}</ModalImgLabel>
-              </div>
-            ))}
+            {hasImages ? (
+              images.map((url, i) => (
+                <div key={i} style={{ width: '100%' }}>
+                  <ModalImg $shade={COLOR.cream}>
+                    <img src={url} alt="" style={IMG_STYLE} />
+                  </ModalImg>
+                  <ModalImgLabel>사진 {i + 1}</ModalImgLabel>
+                </div>
+              ))
+            ) : (
+              <>
+                <ModalImg $shade={COLOR.cream}>{icon}</ModalImg>
+                <ModalImgLabel>대표 사진</ModalImgLabel>
+                {DUMMY_IMGS.map((img, i) => (
+                  <div key={i} style={{ width: '100%' }}>
+                    <ModalImg $shade={img.shade}>{img.emoji}</ModalImg>
+                    <ModalImgLabel>{img.label}</ModalImgLabel>
+                  </div>
+                ))}
+              </>
+            )}
           </ModalBody>
         </Overlay>
       )}

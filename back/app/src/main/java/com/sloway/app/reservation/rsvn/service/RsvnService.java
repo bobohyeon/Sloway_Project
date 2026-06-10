@@ -111,7 +111,7 @@ public class RsvnService {
 
         List<RsvnEntity> list = rsvnRepository.findByMemberNo(member);
         // 예약들의 payNo 를 한 번에 조회(N+1 제거)
-        java.util.Map<Long, Long> payNoMap =
+        Map<Long, Long> payNoMap =
                 findCompletePayNoMap(list.stream().map(RsvnEntity::getNo).toList());
         return list.stream()
                 .map(entity -> RsvnResDto.from(entity, payNoMap.get(entity.getNo())))

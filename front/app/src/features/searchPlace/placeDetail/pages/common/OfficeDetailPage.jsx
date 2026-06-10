@@ -53,7 +53,7 @@ function OfficeDetailPage() {
 
   return (
     <DetailLayout
-      imageBox={<DetailImageBox icon="🌊" />}
+      imageBox={<DetailImageBox icon="🌊" images={space?.images ?? []} />}
       mainBox={
         <DetailMainBox
           space={space}
