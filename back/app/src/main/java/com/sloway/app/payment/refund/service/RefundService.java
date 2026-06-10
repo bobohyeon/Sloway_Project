@@ -128,8 +128,9 @@ public class RefundService {
         refundEntity.getRsvnNo().cancel();  // confirm()과 동일한 패턴 — 환불 완료 시 예약 상태 C로 전이
     }
 
+    // 어드민 환불 목록
     public List<RefundResDto> findRefundAll() {
-        return refundRepository.findAll().stream().map(RefundResDto::from).toList();
+        return refundRepository.findAllWithRsvn().stream().map(RefundResDto::from).toList();
     }
 
     public RefundResDto findRefundByNo(Long no) {
