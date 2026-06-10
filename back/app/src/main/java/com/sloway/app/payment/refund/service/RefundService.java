@@ -15,6 +15,7 @@ import com.sloway.app.payment.refund.common.RefundRate;
 import com.sloway.app.payment.refund.common.RefundStatus;
 import com.sloway.app.payment.refund.dto.request.RefundCreateReqDto;
 import com.sloway.app.payment.refund.dto.response.RefundResDto;
+import com.sloway.app.payment.refund.dto.response.RefundStatsResDto;
 import com.sloway.app.payment.refund.entity.RefundEntity;
 import com.sloway.app.payment.refund.repository.RefundRepository;
 import com.sloway.app.reservation.RsvnErrorCode;
@@ -22,6 +23,8 @@ import com.sloway.app.reservation.rsvn.entity.RsvnEntity;
 import com.sloway.app.reservation.rsvn.repository.RsvnRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -49,7 +52,7 @@ public class RefundService {
     @Transactional
     public RefundResDto createRefund(RefundCreateReqDto refundCreateReqDto, Long loginMemberNo) {
         PayEntity payEntity = validRefundablePay(refundCreateReqDto.getPayNo());   // 환불 가능한 결제인지 검증(완료 상태·금액)
-        validRefundOwner(payEntity, loginMemberNo);   // ④ 본인 결제만 환불
+        validRefundOwner(payEntity, loginMemberNo);   // 본인 결제만 환불
         RsvnEntity rsvn = rsvnRepository.findById(refundCreateReqDto.getRsvnNo())
                 .orElseThrow(() -> new CustomException(RsvnErrorCode.RESERVATION_NOT_FOUND));
         RefundEntity refundEntity = refundCreateReqDto.toEntity(payEntity, rsvn);
@@ -100,7 +103,7 @@ public class RefundService {
         return RefundResDto.from(refundEntity);
     }
 
-    // 환불 실제 처리 — 포인트·쿠폰 복원과 PG 취소를 정해진 순서로 수행
+    // 환불 실제 처리
     private void doRefundProcess(RefundEntity refundEntity) {
         refundEntity.approveRefund();
         PayEntity payEntity = refundEntity.getPayNo();
@@ -108,10 +111,10 @@ public class RefundService {
         if (payEntity.getUcNo() != null) {
             payEntity.getUcNo().returnCoupon();
         }
-        // 적립 포인트를 먼저 취소하고, 사용 포인트를 복원 — 순서가 바뀌면 방금 복원한 포인트까지 취소됨
+        // 적립 포인트 선 취소 후 복원
         pointService.cancelEarnedPoint(payEntity);
         pointService.refundUsedPoint(payEntity);
-        // 외부 PG(카카오/토스) 결제 취소 호출
+        // 카카오/토스 결제 취소 호출
         PayMethod method = payEntity.getMethod();
         if (method == PayMethod.KAKAOPAY) {
             KakaoCancelReqDto cancelReqDto = KakaoCancelReqDto.builder()
@@ -125,10 +128,30 @@ public class RefundService {
         }
         payEntity.cancelPay();
         refundEntity.completeRefund();
+        refundEntity.getRsvnNo().cancel();  // confirm()과 동일한 패턴 — 환불 완료 시 예약 상태 C로 전이
     }
 
-    public List<RefundResDto> findRefundAll() {
-        return refundRepository.findAll().stream().map(RefundResDto::from).toList();
+    // 어드민 환불 목록 (서버 페이징 + 탭/기간 필터) — 결제 findPayAll 과 동형
+    public Page<RefundResDto> findRefundAll(int pno, String tab, String period) {
+        PageRequest pageRequest = PageRequest.of(pno, 10);
+        return refundRepository.findRefundAll(pageRequest, tab, toFrom(period));
+    }
+
+    public RefundStatsResDto findRefundStats() {
+        return refundRepository.findRefundStats();
+    }
+
+    // RefundFilterBar 기간값 → 컷오프 시각. 'all'/null 은 기간 필터 안 함
+    private LocalDateTime toFrom(String period) {
+        if (period == null) return null;
+        LocalDateTime now = LocalDateTime.now();
+        return switch (period) {
+            case "today" -> now.minusDays(1);
+            case "week" -> now.minusDays(7);
+            case "month" -> now.minusDays(30);
+            case "3months" -> now.minusDays(90);
+            default -> null;
+        };
     }
 
     public RefundResDto findRefundByNo(Long no) {
@@ -142,7 +165,7 @@ public class RefundService {
         return refundEntityList.stream().map(RefundResDto::from).toList();
     }
 
-    // 이용 예정일(checkIn)까지 남은 일수 구간별로 환불율을 차등 반환
+    // 이용 예정일까지 남은 일수 확인 후 환불율을 차등 반환
     private RefundRate refundRate(RefundEntity entity) {
         LocalDateTime checkIn = entity.getRsvnNo().getCheckIn();
         LocalDateTime requestedAt = entity.getRequestedAt();
@@ -160,8 +183,7 @@ public class RefundService {
         }
     }
 
-    // ④ 환불 요청자 == 결제 소유자 검증 — 남의 결제번호로 환불하는 것 차단.
-    //    호스트 거절(createRefundByHost)은 소유자가 아니라 호스트가 호출하므로 적용하지 않는다.
+    // ④ 환불 요청자 == 결제 소유자 검증
     private void validRefundOwner(PayEntity payEntity, Long loginMemberNo) {
         Long ownerNo = payEntity.getRsvnNo().getMemberNo().getNo();
         if (!Objects.equals(ownerNo, loginMemberNo)) {

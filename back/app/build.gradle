@@ -57,6 +57,9 @@ dependencies {
 	//email SMTP
 	implementation 'org.springframework.boot:spring-boot-starter-mail'
 
+	// 헬스 체크
+	implementation 'org.springframework.boot:spring-boot-starter-actuator'
+
 }
 
 tasks.named('test') {

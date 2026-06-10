@@ -11,6 +11,7 @@ import com.sloway.app.payment.pay.dto.response.PayResDto;
 import com.sloway.app.payment.pay.dto.response.PayStatsResDto;
 import com.sloway.app.payment.pay.entity.PayEntity;
 import com.sloway.app.payment.pay.entity.QPayEntity;
+import com.sloway.app.reservation.rsvn.entity.QRsvnEntity;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
@@ -174,10 +175,17 @@ public class PayRepositoryImpl implements PayRepositoryCustom {
                 .fetchOne();
     }
 
+    // 어드민 결제 목록
     @Override
     public Page<PayResDto> findPayAll(PageRequest pageRequest, PayStatus status, LocalDateTime from) {
+        QRsvnEntity qRsvn = new QRsvnEntity("rsvn");
         List<PayEntity> payEntityList = jpaQueryFactory
                 .selectFrom(qPayEntity)
+                .leftJoin(qPayEntity.rsvnNo, qRsvn).fetchJoin()   // 예약
+                .leftJoin(qRsvn.memberNo).fetchJoin()             // → 회원 이름
+                .leftJoin(qRsvn.officeNo).fetchJoin()             // → 공간명 (셋 중 채워진 하나)
+                .leftJoin(qRsvn.stationNo).fetchJoin()
+                .leftJoin(qRsvn.workStayNo).fetchJoin()
                 .where(statusEq(status), createdAfter(from), qPayEntity.status.ne(PayStatus.READY))
                 .orderBy(qPayEntity.no.desc())
                 .offset(pageRequest.getOffset())

@@ -20,8 +20,9 @@ function OfficeDetailPage() {
   const [reviews, setReviews] = useState([]);
   const [blackouts, setBlackouts] = useState([]);
 
+  // 오피스는 4시간 단위 과금 — 시간 차이를 4로 나눈 횟수
   const nights = checkIn && checkOut
-    ? Math.max(1, Math.ceil((new Date(checkOut) - new Date(checkIn)) / (1000 * 60 * 60 * 24)))
+    ? Math.max(1, Math.ceil((new Date(checkOut) - new Date(checkIn)) / (1000 * 60 * 60 * 4)))
     : 1;
 
   useEffect(() => {
@@ -74,7 +75,6 @@ function OfficeDetailPage() {
           price={unitPrice}
           priceUnit="원/4시간"
           roomName={selectedRoom?.name ?? null}
-          serviceFee={12000}
           rsvnDto={{
             officeNo: space?.entityNo,
             count: guests,

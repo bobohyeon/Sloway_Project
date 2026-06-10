@@ -216,17 +216,17 @@ function RoomListPage() {
   const guests = state?.guests ?? 2;
 
   useEffect(() => {
-    if (space) return; // state로 넘어온 경우 API 호출 불필요
+    // state.space가 있어도 항상 API 호출 — images 등 전체 필드를 채우기 위해
     findSpaceByEntityNo(spaceId)
       .then(setSpace)
-      .catch(() => setSpace(null));
+      .catch(() => setSpace(state?.space ?? null));
   }, [spaceId]);
 
   if (!space) return null;
 
   // DB 구조상 place당 entity 1개 — space 데이터를 방 카드 1장으로 변환
   const rooms = [{
-    id: space.entityNo,
+    id: space.entityNo ?? space.id ?? Number(spaceId),
     name: space.title,
     maxGuests: space.maxCnt ?? 2,
     price: space.basePrice ?? 0,

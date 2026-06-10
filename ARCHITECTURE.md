@@ -213,11 +213,31 @@ PATCH 부분 수정 규칙 — `null = 유지`, `빈 문자열 = 제거`로 일�
 ### 8.2 결제 / 환불 / 정산 — 김우영
 
 ```
-<!-- 담당자 작성 -->
 - 주요 엔티티:
+  PayEntity(결제: rsvn FK·tid·method·finalAmt·status),
+  CouponEntity(발급된 쿠폰: member FK·dcType·status) / CouponEventEntity(게시 템플릿: 다운로드 시 CouponEntity 생성),
+  PointEntity(적립/사용: dealType EARN·USE, status WAIT→SAVE→USED),
+  RefundEntity(환불: pay FK·refundRate·refundAmt BigDecimal),
+  SettleEntity(정산: host FK·payout·carryOver·status) / FeeEntity(공간타입별 수수료율),
+  DailyPayStats·DailyRefundStats(통계 사전집계 엔티티)
 - 핵심 기능:
+  결제(카카오페이·토스페이먼츠 외부 PG 연동, 쿠폰·포인트 통합 finalAmt, 중복결제 방어, 영수증 PDF) ·
+  환불(체크인 기준 환불율 정책표, 유저 자발/호스트 거절 2분류, 쿠폰 복원+포인트 환원+PG 취소 통합) ·
+  정산(4일 자동 배치, 공간타입별 수수료, carry-over 이월, 세금계산서 PDF) ·
+  쿠폰/포인트(쿠폰이벤트 게시→다운로드, 결제 1% 적립[7일 후 확정], 가입 5,000P) ·
+  통계(일별 배치 사전집계 적재 + 조회 API + chart.js 시각화)
 - 핵심 로직(결제 흐름·정산/수수료):
+  결제 흐름 ─ readyPay(READY save → PG ready 요청 → tid 저장 → 결제창 redirect)
+    → approve/confirm(PG 승인 → COMPLETED 전이 → 쿠폰 use + 포인트 use + 1% 적립 EARN row).
+    재진입/콜백 대비 approve·confirm 멱등 처리(이미 COMPLETED면 스킵). 클라 금액 위변조 검증(baseAmt+addAmt ↔ rsvn.amt).
+  환불 ─ 체크인 시점 기준 환불율(7일 100% / 4~6일 70% / 2~3일 50% / 1일 30% / 당일 0%),
+    호스트 거절은 FULL(수수료 면제). 처리 시 쿠폰 복원 → 포인트 환원/적립취소 → PG cancel → 결제 CANCELED 연쇄.
+  정산/수수료 ─ HostPlace 브리지로 호스트 공간 목록 확보 → Pay/Refund 공간타입별 합산 → DB 수수료율 calcFee
+    (OFFICE 8% / STATION 10% / WORK_STAY 12%) → payout 산출. MIN_PAYOUT(10,000원) 미달 시 CARRIED 이월 → 다음 회차 합산.
 - 미완성/이관:
+  네이버페이 보류(테스트 키 발급에도 사업자등록 필수) ·
+  정산 carry-over 연쇄 실측 검증 ·
+  예약↔결제 상태 연동(환불 시 rsvn.cancel 트리거 — 김보현 예약 도메인 협의)
 ```
 
 ### 8.3 예약 / 리뷰 / 지도 / 검색 — 김보현
@@ -256,5 +276,6 @@ PATCH 부분 수정 규칙 — `null = 유지`, `빈 문자열 = 제거`로 일�
 
 - 2026.06: 발표 완료. 아키텍처 문서 신설(회원/인증 도메인 상세, 팀원 도메인 뼈대), AWS 전환 목표 구성·GitHub Actions CI/CD 반영.
 - 2026.06: 호스트 승인 상태 전이 확장 — 재검토(어드민 R→P)·재신청(호스트 R→P, 서류 보완)·이용 제한 게이트(`assertApproved`)·재신청 건 식별(`lastRejectReason`) 추가.
+- 2026.06: 결제/환불/정산 도메인 상세(8.2) 작성 — 엔티티·외부 PG 결제 흐름·환불 정책표·정산 수수료/carry-over 정리.
 
 <!-- 갱신 시 날짜·변경 요약 한 줄씩 추가 -->

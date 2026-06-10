@@ -146,7 +146,6 @@ const TABS = [
 
 function HostReviewPage() {
   const [activeTab, setActiveTab] = useState(0);
-  const [spaceFilter, setSpaceFilter] = useState('전체 공간');
   const [keyword, setKeyword] = useState('');
   const [replyTexts, setReplyTexts] = useState({});
   const [editingId, setEditingId] = useState(null);
@@ -201,7 +200,6 @@ function HostReviewPage() {
         (i.replies?.length === 0 ? 'pending' : 'done') ===
           TABS[activeTab].status
     )
-    .filter((i) => spaceFilter === '전체 공간' || i.space === spaceFilter)
     .filter(
       (i) =>
         !keyword ||

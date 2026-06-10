@@ -159,6 +159,9 @@ public class SecurityConfig {
                                 .requestMatchers(HttpMethod.POST, "/api/reservation", "/api/reservation/*/cancel").hasRole("USER")
                                 .requestMatchers(HttpMethod.GET, "/api/reservation", "/api/reservation/**").hasRole("USER")
 
+                                // 헬스 체크
+                                .requestMatchers("/actuator/health").permitAll()
+
                                 // ── 그 외 — 점진 도입 단계, 다른 담당자 API 진행 위해 일단 공개 ──
                                 .anyRequest().permitAll()
 
@@ -171,7 +174,7 @@ public class SecurityConfig {
                     @Override
                     public CorsConfiguration getCorsConfiguration(HttpServletRequest request) {
                         CorsConfiguration config = new CorsConfiguration();
-                        config.setAllowedOrigins(Collections.singletonList("http://localhost:5173"));
+                        config.setAllowedOrigins(List.of("http://localhost:5173", "https://sloway.store" , "https://www.sloway.store"));
                         config.setAllowedMethods(List.of("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
                         config.setAllowedHeaders(Collections.singletonList("*"));
                         config.setAllowCredentials(true);

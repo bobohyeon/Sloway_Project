@@ -4,11 +4,13 @@ import com.sloway.app.payment.point.dto.request.PointSaveReqDto;
 import com.sloway.app.payment.point.dto.request.PointUseReqDto;
 import com.sloway.app.payment.point.dto.response.PointBalanceResDto;
 import com.sloway.app.payment.point.dto.response.PointResDto;
+import com.sloway.app.auth.user.CustomUserDetails;
 import com.sloway.app.payment.point.service.PointService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -59,14 +61,18 @@ public class PointApiController {
     }
 
     @GetMapping("/member/{no}/balance")
-    public ResponseEntity<PointBalanceResDto> findPointBalanceByMemberNo(@PathVariable Long no) {
-        PointBalanceResDto balance = pointService.findPointBalanceByMemberNo(no);
+    public ResponseEntity<PointBalanceResDto> findPointBalanceByMemberNo(
+            @AuthenticationPrincipal CustomUserDetails userDetails) {
+        // 본인 잔액만 — URL의 no 대신 인증 토큰의 memberNo 사용 (IDOR 방지)
+        PointBalanceResDto balance = pointService.findPointBalanceByMemberNo(userDetails.getMemberNo());
         return ResponseEntity.ok(balance);
     }
 
     @GetMapping("/member/{no}")
-    public ResponseEntity<List<PointResDto>> findPointsByMemberNo(@PathVariable Long no) {
-        List<PointResDto> resDtoList = pointService.findPointsByMemberNo(no);
+    public ResponseEntity<List<PointResDto>> findPointsByMemberNo(
+            @AuthenticationPrincipal CustomUserDetails userDetails) {
+        // 본인 포인트 내역만 (IDOR 방지)
+        List<PointResDto> resDtoList = pointService.findPointsByMemberNo(userDetails.getMemberNo());
         return ResponseEntity.ok(resDtoList);
     }
 }

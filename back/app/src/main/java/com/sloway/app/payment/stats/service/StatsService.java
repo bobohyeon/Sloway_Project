@@ -48,7 +48,7 @@ public class StatsService {
     private final StatsRepositoryCustom statsRepositoryCustom;
     private final HostRepository hostRepository;
 
-    // 일자별 통계를 사전집계 테이블에 적재 — 조회마다 결제 원장을 집계하면 비싸서 하루치를 미리 적재(스케줄러가 자정 호출)
+    // 일자별 통계를 하루치를 미리 적재(스케줄러)
     @Transactional
     public void loadDailyStats(LocalDate targetDate) {
         LocalDateTime startTime = targetDate.atStartOfDay();
@@ -58,7 +58,7 @@ public class StatsService {
             PayMethod payMethod = tuple.get(0, PayMethod.class);
             Long count = tuple.get(1, Long.class);
             Long sum = tuple.get(2, Long.class);
-            // 같은 (일자, 결제수단) 행이 있으면 update, 없으면 insert → 재적재돼도 멱등(upsert)
+            // 같은 행이 있으면 update, 없으면 insert → 재적재돼도 멱등
             dailyPayStatsRepository
                     .findByStatDateAndPayMethod(targetDate,
                             payMethod)
@@ -132,17 +132,23 @@ public class StatsService {
     }
 
 
+    // 6개월 매출 추이
     public List<MonthlyTrendResDto> findStatsMonthlyTrend(int year, int month, int months) {
         YearMonth base = YearMonth.of(year, month);
+        LocalDate start = base.minusMonths(months - 1).atDay(1);
+        LocalDate end = base.atEndOfMonth();
+
+        // ① 기간 전체 월별 합계
+        Map<String, Long> monthlyMap = dailyPayStatsRepository.sumByMonthBetween(start, end).stream()
+                .collect(Collectors.toMap(
+                        m -> m.getMonth(),
+                        m -> m.getSum() == null ? 0L : m.getSum()));
+
+        // ② 루프는 Map 조회만
         List<MonthlyTrendResDto> result = new ArrayList<>();
         for (int i = months - 1; i >= 0; i--) {
             YearMonth ym = base.minusMonths(i);
-            LocalDate start = ym.atDay(1);
-            LocalDate end = ym.atEndOfMonth();
-            long totalAmt = dailyPayStatsRepository.findByStatDateBetween(start, end).stream()
-                    .mapToLong(e -> e.getTotalAmt())
-                    .sum();
-            result.add(MonthlyTrendResDto.of(ym.toString(), totalAmt));
+            result.add(MonthlyTrendResDto.of(ym.toString(), monthlyMap.getOrDefault(ym.toString(), 0L)));
         }
         return result;
     }

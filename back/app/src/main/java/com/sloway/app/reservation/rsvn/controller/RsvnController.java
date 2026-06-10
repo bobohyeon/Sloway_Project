@@ -9,14 +9,19 @@ import com.sloway.app.reservation.rsvn.dto.request.RsvnReqDto;
 import com.sloway.app.reservation.rsvn.dto.response.HostReservationStatsResDto;
 import com.sloway.app.reservation.rsvn.dto.response.HostSpaceResDto;
 import com.sloway.app.reservation.rsvn.dto.response.RsvnResDto;
+import com.sloway.app.reservation.rsvn.entity.RsvnStatus;
 import com.sloway.app.reservation.rsvn.service.RsvnService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Map;
 
 @RequestMapping("/api/reservation")
 @RequiredArgsConstructor
@@ -123,5 +128,30 @@ public class RsvnController {
     @GetMapping("/admin/host/{hostNo}")
     public ResponseEntity<List<RsvnResDto>> findAllByHostForAdmin(@PathVariable Long hostNo) {
         return ResponseEntity.ok(rsvnService.findAllByHostForAdmin(hostNo));
+    }
+
+    // 어드민 — 강제취소
+    @PostMapping("/admin/{no}/force-cancel")
+    public ResponseEntity<Void> forceCancelByAdmin(@PathVariable Long no) {
+        rsvnService.forceCancelByAdmin(no);
+        return ResponseEntity.status(HttpStatus.NO_CONTENT).build();
+    }
+
+    // 어드민 — 상태별 건수 통계
+    @GetMapping("/admin/stats")
+    public ResponseEntity<Map<String, Long>> findAdminStats() {
+        return ResponseEntity.ok(rsvnService.findAdminStats());
+    }
+
+    // 어드민 — 전체 예약 목록 조회 (status 없으면 전체)
+    @GetMapping("/admin")
+    public ResponseEntity<Page<RsvnResDto>> findAllForAdmin(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "20") int size,
+            @RequestParam(required = false) String status
+    ){
+        PageRequest pageable = PageRequest.of(page, size, Sort.by("createdAt").descending());
+        RsvnStatus rsvnStatus = (status != null && !status.isBlank()) ? RsvnStatus.valueOf(status) : null;
+        return ResponseEntity.ok(rsvnService.findAllForAdmin(pageable, rsvnStatus));
     }
 }

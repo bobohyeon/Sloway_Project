@@ -13,8 +13,8 @@ import {
   COLOR,
 } from '../../components/user/RsvnStyled';
 import { ApproveBtn } from '../../components/host/HostRsvnStyled';
-import api from '../../../../app/api/axiosApi';
-import { rejectRsvn } from '../../api/rsvnApi';
+import { findOneRsvn, rejectRsvn } from '../../api/rsvnApi';
+import { useEffect, useState } from 'react';
 
 const SpaceThumb = styled.div`
   width: 52px;
@@ -26,6 +26,7 @@ const SpaceThumb = styled.div`
   justify-content: center;
   font-size: 26px;
   flex-shrink: 0;
+  overflow: hidden;
 `;
 
 const GuestAvatar = styled.div`
@@ -60,13 +61,31 @@ const RequestBox = styled.div`
   margin-top: 10px;
 `;
 
-const STATUS_LABEL = { S: '확정', E: '완료', R: '거절', C: '취소' };
+const STATUS_LABEL = { P: '결제대기', S: '확정', E: '완료', R: '거절', C: '취소' };
+const SPACE_TYPE_ICON = { WORK_STAY: '🌿', OFFICE: '💻', STATION: '🛌' };
+
+// RsvnStatus가 enum 객체로 올 수 있어서 문자열로 변환
+const statusCode = (s) => (typeof s === 'object' ? s?.name ?? String(s) : s);
+
+// checkIn·checkOut(LocalDateTime) → "2025.01.01 · 2박" 형태
+function formatDate(checkIn, checkOut) {
+  if (!checkIn) return '';
+  const inStr = String(checkIn).slice(0, 10).replaceAll('-', '.');
+  if (!checkOut) return inStr;
+  const nights = Math.round((new Date(checkOut) - new Date(checkIn)) / (1000 * 60 * 60 * 24));
+  return nights > 0 ? `${inStr} · ${nights}박` : inStr;
+}
 
 function HostRsvnDetailPage() {
   const navigate = useNavigate();
   const { id } = useParams();
   const location = useLocation();
-  const rsvn = location.state?.rsvn;
+  const [rsvn, setRsvn] = useState(location.state?.rsvn ?? null);
+
+  useEffect(() => {
+    if (rsvn) return;
+    findOneRsvn(id).then(setRsvn);
+  }, [id]);
 
   const handleReject = async () => {
     const ok = window.confirm('예약을 거절하시겠어요?');
@@ -105,17 +124,22 @@ function HostRsvnDetailPage() {
       {/* 공간 + 상태 */}
       <SectionBox style={{ marginBottom: 16 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
-          <SpaceThumb>{rsvn.icon ?? '🏠'}</SpaceThumb>
+          <SpaceThumb>
+            {rsvn.thumbnailUrl
+              ? <img src={rsvn.thumbnailUrl} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+              : (SPACE_TYPE_ICON[rsvn.spaceType] ?? '🏠')
+            }
+          </SpaceThumb>
           <div style={{ flex: 1 }}>
             <div style={{ display: 'flex', gap: 6, marginBottom: 6 }}>
               <RsvnStatusBadge
                 type="status"
-                label={STATUS_LABEL[rsvn.status] ?? rsvn.status}
+                label={STATUS_LABEL[statusCode(rsvn.status)] ?? statusCode(rsvn.status)}
               />
             </div>
-            <div style={{ fontSize: 18, fontWeight: 700 }}>{rsvn.title}</div>
+            <div style={{ fontSize: 18, fontWeight: 700 }}>{rsvn.spaceName}</div>
             <div style={{ fontSize: 12, color: COLOR.gray400, marginTop: 4 }}>
-              예약번호 {rsvn.code}
+              예약번호 {rsvn.no}
             </div>
           </div>
         </div>
@@ -138,7 +162,7 @@ function HostRsvnDetailPage() {
               {rsvn.guestName}
             </div>
             <div style={{ fontSize: 12, color: COLOR.gray400 }}>
-              👤 {rsvn.guests}명
+              👤 {rsvn.count}명
             </div>
           </div>
           <BtnOutline
@@ -156,11 +180,11 @@ function HostRsvnDetailPage() {
         <InfoGrid>
           <InfoItem>
             <InfoLabel>일정</InfoLabel>
-            <InfoValue>{rsvn.date}</InfoValue>
+            <InfoValue>{formatDate(rsvn.checkIn, rsvn.checkOut)}</InfoValue>
           </InfoItem>
           <InfoItem>
             <InfoLabel>이용 인원</InfoLabel>
-            <InfoValue>{rsvn.guests}명</InfoValue>
+            <InfoValue>{rsvn.count}명</InfoValue>
           </InfoItem>
         </InfoGrid>
         {rsvn.special && <RequestBox>💬 {rsvn.special}</RequestBox>}
@@ -171,13 +195,13 @@ function HostRsvnDetailPage() {
         <SectionTitle>결제 정보</SectionTitle>
         <PayRow $total>
           <span>총 결제 금액</span>
-          <span>{rsvn.price}</span>
+          <span>{rsvn.amt?.toLocaleString()}원</span>
         </PayRow>
         {/* 상세 결제 내역은 결제 도메인(4번 우영님) 연동 후 추가 예정 */}
       </SectionBox>
 
       {/* 거절 버튼 — 확정 상태일 때만 */}
-      {rsvn.status === 'S' && (
+      {statusCode(rsvn.status) === 'S' && (
         <div
           style={{
             display: 'flex',

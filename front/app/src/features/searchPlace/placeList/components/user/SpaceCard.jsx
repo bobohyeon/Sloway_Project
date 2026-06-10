@@ -30,6 +30,7 @@ const ImgBox = styled.div`
   align-items: center;
   justify-content: center;
   font-size: 60px;
+  overflow: hidden;
 `;
 
 const WishBtn = styled.button`
@@ -190,7 +191,10 @@ function SpaceCard({ item, onClick }) {
   return (
     <Card onClick={handleClick}>
       <ImgBox>
-        {item.icon}
+        {item.thumbnailUrl
+          ? <img src={item.thumbnailUrl} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+          : item.icon
+        }
         <WishBtn
           onClick={handleWish}
           style={{ color: liked ? '#e74c3c' : '#999' }}

@@ -1,6 +1,7 @@
 import styled from 'styled-components';
 
 const STATUS = {
+  결제대기: { bg: '#FFF9E6', color: '#B8860B' },
   '이용 예정': { bg: '#EEF5EE', color: '#2D6A4F' },
   '이용 완료': { bg: '#F0F0F0', color: '#666' },
   취소됨: { bg: '#FFF0F0', color: '#C0392B' },

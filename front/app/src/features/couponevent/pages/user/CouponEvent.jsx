@@ -82,7 +82,7 @@ export default function CouponEvent() {
 
     setDownloading(no);
     try {
-      await downloadCoupon(no, memberNo);
+      await downloadCoupon(no);
       await loadEvents(); // 발급 현황(수량) 갱신
       await loadIssued(); // 발급완료 상태 갱신 → 버튼 즉시 '발급 완료'로
       alert('쿠폰이 발급됐어요. 쿠폰함에서 확인하세요.');
