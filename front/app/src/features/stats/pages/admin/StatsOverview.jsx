@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import styled from 'styled-components';
+import { FaWallet, FaReceipt, FaBalanceScale, FaPiggyBank } from 'react-icons/fa';
 
 import PageLayout from '../../../../app/layouts/page/PageLayout';
 import { StatCard } from '../../../pay_shared/components/StatCard';
@@ -121,37 +122,36 @@ export default function StatsOverview() {
       description={`${rangeLabel(months)} 결제·환불 통계 요약`}
       maxWidth={1200}
     >
-      <ThisMonthBlock>
-        <ThisMonthHead>
-          <ThisMonthTitle>
-            이번 달 · {current.year}.{String(current.month).padStart(2, '0')}
-          </ThisMonthTitle>
-          <ThisMonthHint>진행 중인 달의 누적 실적</ThisMonthHint>
-        </ThisMonthHead>
-        <KPIGrid>
-          <StatCard
-            label="이번 달 매출"
-            value={Number(thisMonth?.totalAmt ?? 0).toLocaleString()}
-            unit="원"
-            highlight
-          />
-          <StatCard
-            label="결제 건수"
-            value={Number(thisMonth?.payCount ?? 0).toLocaleString()}
-            unit="건"
-          />
-          <StatCard
-            label="평균 결제금"
-            value={Number(thisMonth?.avgAmt ?? 0).toLocaleString()}
-            unit="원"
-          />
-          <StatCard
-            label="순매출 (환불 차감)"
-            value={Number(thisMonth?.netAmt ?? 0).toLocaleString()}
-            unit="원"
-          />
-        </KPIGrid>
-      </ThisMonthBlock>
+      <SectionLabel>
+        이번 달 · {current.year}.{String(current.month).padStart(2, '0')}
+      </SectionLabel>
+      <KPIGrid>
+        <StatCard
+          label="이번 달 매출"
+          value={Number(thisMonth?.totalAmt ?? 0).toLocaleString()}
+          unit="원"
+          icon={<FaWallet />}
+          highlight
+        />
+        <StatCard
+          label="결제 건수"
+          value={Number(thisMonth?.payCount ?? 0).toLocaleString()}
+          unit="건"
+          icon={<FaReceipt />}
+        />
+        <StatCard
+          label="평균 결제금"
+          value={Number(thisMonth?.avgAmt ?? 0).toLocaleString()}
+          unit="원"
+          icon={<FaBalanceScale />}
+        />
+        <StatCard
+          label="순매출 (환불 차감)"
+          value={Number(thisMonth?.netAmt ?? 0).toLocaleString()}
+          unit="원"
+          icon={<FaPiggyBank />}
+        />
+      </KPIGrid>
 
       <FilterBar>
         <StatsRangeTabs value={months} onChange={setMonths} />
@@ -164,21 +164,25 @@ export default function StatsOverview() {
           label="총 매출"
           value={Number(summary?.totalAmt ?? 0).toLocaleString()}
           unit="원"
+          icon={<FaWallet />}
         />
         <StatCard
           label="결제 건수"
           value={Number(summary?.payCount ?? 0).toLocaleString()}
           unit="건"
+          icon={<FaReceipt />}
         />
         <StatCard
           label="평균 결제금"
           value={Number(summary?.avgAmt ?? 0).toLocaleString()}
           unit="원"
+          icon={<FaBalanceScale />}
         />
         <StatCard
           label="순매출 (환불 차감)"
           value={Number(summary?.netAmt ?? 0).toLocaleString()}
           unit="원"
+          icon={<FaPiggyBank />}
           highlight
         />
       </KPIGrid>
@@ -262,31 +266,13 @@ export default function StatsOverview() {
   );
 }
 
-const ThisMonthBlock = styled.div`
-  margin-bottom: var(--space-6);
-  padding-bottom: var(--space-5);
-  border-bottom: 1px solid var(--gray-200);
-`;
-
-const ThisMonthHead = styled.div`
-  display: flex;
-  align-items: baseline;
-  gap: var(--space-3);
-  margin-bottom: var(--space-3);
-  flex-wrap: wrap;
-`;
-
-const ThisMonthTitle = styled.h2`
+// 섹션 구분 라벨 — "이번 달" KPI 묶음 위 제목
+const SectionLabel = styled.h2`
   font-family: var(--font-display);
-  font-size: 1.15rem;
+  font-size: 1.05rem;
   font-weight: 600;
-  color: var(--gray-900);
-  margin: 0;
-`;
-
-const ThisMonthHint = styled.span`
-  font-size: 0.8rem;
-  color: var(--gray-400);
+  color: var(--gray-800);
+  margin: 0 0 var(--space-3);
 `;
 
 const FilterBar = styled.div`
@@ -295,33 +281,6 @@ const FilterBar = styled.div`
   gap: var(--space-3);
   margin-bottom: var(--space-5);
   flex-wrap: wrap;
-`;
-
-const FilterGroup = styled.label`
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-`;
-
-const FilterLabel = styled.span`
-  font-size: 0.82rem;
-  color: var(--gray-600);
-`;
-
-const Select = styled.select`
-  padding: 6px 10px;
-  border: 1px solid var(--gray-200);
-  border-radius: var(--radius-md);
-  background: var(--white);
-  font-family: 'Noto Sans KR', sans-serif;
-  font-size: 0.85rem;
-  color: var(--gray-800);
-  cursor: pointer;
-
-  &:focus {
-    outline: none;
-    border-color: var(--sage);
-  }
 `;
 
 const StatusText = styled.span`
