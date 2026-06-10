@@ -45,7 +45,7 @@ public class SettleService {
 
     private static final int MIN_PAYOUT = 10000;
 
-    // 정산 생성 — 이용 완료된 결제 건을 모아 수수료를 뗀 정산액을 산정해 저장
+    // 정산 생성
     @Transactional
     public SettleResDto createSettle(SettleCreateReqDto reqDto) {
         HostEntity host = hostRepository.findById(reqDto.getHostNo())
@@ -69,7 +69,7 @@ public class SettleService {
                 .toList();
         LocalDateTime start = reqDto.getSettleStartDate().atStartOfDay();
         LocalDateTime end = reqDto.getSettleEndDate().atTime(LocalTime.MAX);
-        // 정산 대상(이용 완료 결제)을 공간 타입별로 합산
+        // 정산 대상(이용 완료)을 공간 타입별로 합산
         int officeAmt = payRepository.sumByOfficeIn(officeNos, start, end).intValue();
         int stationAmt = payRepository.sumByStationIn(stationNos, start, end).intValue();
         int workStayAmt = payRepository.sumByWorkStayIn(workStayNos, start, end).intValue();
@@ -95,7 +95,7 @@ public class SettleService {
         return SettleResDto.from(settleRepository.save(entity));   // 정산 데이터 저장
     }
 
-    // 공간 타입(숙소/워크앤스테이/코워킹오피스)별 수수료율을 결제액에 적용
+    // 공간 타입별 수수료율을 결제액에 적용
     private int calcFee(int amt, PlaceType placeType,LocalDateTime date) {
                 if (amt == 0) return 0;
         int rate = feeRepository.findValidFee(placeType, date)

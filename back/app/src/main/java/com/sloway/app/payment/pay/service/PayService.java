@@ -79,7 +79,7 @@ public class PayService {
         return PayReadyResDto.of(payEntity, readyResDto);
     }
 
-    // 카카오 결제창 통과 후 받은 pg_token으로 최종 승인하는 단계 (GET /pay/approve 콜백)
+    // 카카오 결제창 통과 후  최종 승인하는 단계
     @Transactional
     public PayEntity approvePay(Long payNo, String pgToken) {
         PayEntity payEntity = payRepository.findById(payNo)
@@ -95,17 +95,17 @@ public class PayService {
                 .partnerUserId(memberNo.toString())
                 .pgToken(pgToken)
                 .build();
-        // PG 승인이 성공한 뒤에만 내부 후처리(예약 확정·쿠폰·포인트)를 실행 — 정합성 보장
+        // 승인이 성공한 뒤에만 내부 후 처리(예약 확정·쿠폰·포인트)를 실행
         kakaoPayClient.approve(kakaoApproveReqDto);
         completePayAfterApprove(payEntity, memberNo);
         return payEntity;
     }
 
-    // 카카오·토스 승인 후 공통 후처리 — 예약 확정 → 쿠폰 → 포인트를 한 트랜잭션에서 연쇄
+    // 카카오·토스 승인 후 공통 후처리 — 예약 확정 → 쿠폰 → 포인트
     private void completePayAfterApprove(PayEntity payEntity, Long memberNo) {
         payEntity.getRsvnNo().confirm();   // 결제 성공했으니 예약을 확정 상태로 전이
         payEntity.approvePay();
-        // 쿠폰을 쓴 결제만 사용 처리 (안 쓴 결제는 ucNo가 null)
+        // 쿠폰을 쓴 결제만 사용 처리
         if (payEntity.getUcNo() != null) {
             payEntity.getUcNo().useCoupon(payEntity);
         }
@@ -113,7 +113,7 @@ public class PayService {
         if (usedPoint != null && usedPoint > 0) {
             pointService.usePointInternal(memberNo, payEntity.getUsedPoint(), payEntity);
         }
-        pointService.earnPointInternal(memberNo, payEntity);   // 포인트 사용과 별개로 결제액 1% 적립
+        pointService.earnPointInternal(memberNo, payEntity);
     }
 
     @Transactional
@@ -129,11 +129,11 @@ public class PayService {
         Long payNo = Long.parseLong(orderId.replace("SLOWAY_", ""));   // prepare 때 붙인 "SLOWAY_" prefix를 떼어 payNo 복원
         PayEntity payEntity = payRepository.findById(payNo)
                 .orElseThrow(() -> new CustomException(PayErrorCode.PAY_NOT_FOUND));
-        // 멱등 처리 — 재confirm·중복 호출돼도 한 번만 반영
+        // 멱등 처리 — 중복 호출돼도 한 번만 반영
         if (payEntity.getStatus() == PayStatus.COMPLETED) {
             return PayResDto.from(payEntity);
         }
-        // 금액 위변조 재검증 — 클라가 조작한 금액으로 승인되는 것 차단
+        // 클라에서 조작한 금액으로 승인되는 것 차단
         if (!amount.equals(payEntity.getFinalAmt())) {
             log.warn("토스 결제 금액 불일치 payNo={}, 요청={}, 서버={}", payNo, amount, payEntity.getFinalAmt());
             throw new CustomException(PayErrorCode.PAY_AMOUNT_INVALID);
@@ -143,7 +143,7 @@ public class PayService {
                 .orderId(orderId)
                 .amount(amount)
                 .build());
-        // 토스가 실제 승인 완료(DONE) 응답일 때만 후처리 진행
+        // 토스가 실제 승인 완료 응답일 때만 후 처리 진행
         if (!"DONE".equals(confirmResDto.getStatus())) {
             throw new CustomException(PayErrorCode.PAY_PROCESS_FAILED);
         }
@@ -231,7 +231,7 @@ public class PayService {
     }
 
     private void validCoupon(CouponEntity coupon, Long loginMemberNo) {
-        // ③ 쿠폰 본인 소유 검증 — 남의 쿠폰으로 할인받는 것 차단
+        // 쿠폰 본인 소유 검증
         if (!Objects.equals(coupon.getMemberNo().getNo(), loginMemberNo)) {
             log.warn("타인 쿠폰 사용 시도 ucNo={}, owner={}, login={}",
                     coupon.getNo(), coupon.getMemberNo().getNo(), loginMemberNo);
@@ -245,7 +245,7 @@ public class PayService {
         }
     }
 
-    // ② 결제자 == 예약 소유자 검증 — 남의 예약을 대신 결제하는 것 차단
+    // 결제자 == 예약 소유자 검증
     private void validRsvnOwner(RsvnEntity rsvn, Long loginMemberNo) {
         Long ownerNo = rsvn.getMemberNo().getNo();
         if (!Objects.equals(ownerNo, loginMemberNo)) {
@@ -255,8 +255,7 @@ public class PayService {
         }
     }
 
-    // ① 결제 금액 위변조 검증 — 클라가 보낸 결제 총액(baseAmt+addAmt)이
-    //    서버가 아는 예약 금액(rsvn.amt)과 일치하는지 대조. 토스(confirmTossPay)와 대칭.
+    // 결제 금액 위변조 검증
     private void validAmtMatchesRsvn(PayCreateReqDto payCreateReqDto, RsvnEntity rsvn) {
         int reqTotal = payCreateReqDto.getBaseAmt() + payCreateReqDto.getAddAmt();
         if (rsvn.getAmt() == null || reqTotal != rsvn.getAmt()) {
@@ -266,7 +265,7 @@ public class PayService {
         }
     }
 
-    // ⑤ 포인트 음수 입력 방어 — 음수면 finalAmt가 거꾸로 증가하는 우회 차단
+    // 포인트 음수 입력 방어
     private void validUsedPoint(int usedPoint) {
         if (usedPoint < 0) {
             log.warn("포인트 음수 입력 시도 usedPoint={}", usedPoint);
@@ -282,24 +281,24 @@ public class PayService {
         }
     }
 
-    // 카카오·토스 공통 진입점 — PG 호출 전에 모든 검증과 finalAmt 계산을 끝내고 READY로 저장
+    // 카카오·토스 공통 진입점 — API 호출 전에 모든 검증과 finalAmt 계산을 끝내고 저장
     private PayEntity buildReadyPay(PayCreateReqDto payCreateReqDto, Long loginMemberNo){
         validAmt(payCreateReqDto);
         RsvnEntity rsvn = validRsvn(payCreateReqDto);
-        validRsvnOwner(rsvn, loginMemberNo);           // ② 본인 예약만 결제
-        validAmtMatchesRsvn(payCreateReqDto, rsvn);    // ① 결제 금액 위변조
-        validDuplicate(rsvn.getNo());                  // 이미 결제 완료(COMPLETED)된 예약의 재결제 차단
+        validRsvnOwner(rsvn, loginMemberNo);           // 본인 예약만 결제
+        validAmtMatchesRsvn(payCreateReqDto, rsvn);    // 결제 금액 위변조
+        validDuplicate(rsvn.getNo());                  // 이미 결제 완료된 예약의 재 결제 차단
         CouponEntity coupon = null;
         if (payCreateReqDto.getUcNo() != null) {
             coupon = couponRepository.findById(payCreateReqDto.getUcNo())
                     .orElseThrow(() -> new CustomException(CouponErrorCode.COUPON_NOT_FOUND));
-            validCoupon(coupon, loginMemberNo);        // ③ 본인 쿠폰만 사용
+            validCoupon(coupon, loginMemberNo);        // 본인 쿠폰만 사용
         }
         int dcAmt = calculateDcAmt(coupon, payCreateReqDto.getBaseAmt());
         int usedPoint = payCreateReqDto.getUsedPoint() == null
                 ? 0 : payCreateReqDto.getUsedPoint();
-        validUsedPoint(usedPoint);                     // ⑤ 포인트 음수 방어
-        // 결제 총액(base+add)에서 쿠폰·포인트를 차감한 실제 결제 금액
+        validUsedPoint(usedPoint);                     // 포인트 음수 방어
+        // 결제 총액에서 쿠폰·포인트를 차감한 실제 결제 금액
         int finalAmt = payCreateReqDto.getBaseAmt() + payCreateReqDto.getAddAmt()
                 - dcAmt - usedPoint;
         validFinalAmt(payCreateReqDto, finalAmt, dcAmt, usedPoint);

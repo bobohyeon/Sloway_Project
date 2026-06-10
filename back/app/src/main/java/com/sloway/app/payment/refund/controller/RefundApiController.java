@@ -49,8 +49,10 @@ public class RefundApiController {
     }
 
     @GetMapping("/member/{no}")
-    public ResponseEntity<List<RefundResDto>> findRefundsByMemberNo(@PathVariable Long no) {
-        List<RefundResDto> resDtoList = refundService.findRefundsByMemberNo(no);
+    public ResponseEntity<List<RefundResDto>> findRefundsByMemberNo(
+            @AuthenticationPrincipal CustomUserDetails userDetails) {
+        // 본인 환불 내역만 (IDOR 방지)
+        List<RefundResDto> resDtoList = refundService.findRefundsByMemberNo(userDetails.getMemberNo());
         return ResponseEntity.ok(resDtoList);
     }
 }
