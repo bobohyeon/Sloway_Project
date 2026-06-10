@@ -19,7 +19,7 @@ const TYPE_META = {
 
 export default function SpaceStats() {
   const { year, month } = useMemo(() => getAnchorMonth(), []);
-  const [months, setMonths] = useState(3); // 디폴트 3개월
+  const [months, setMonths] = useState(1); // 디폴트 이번 달
 
   const [stats, setStats] = useState(null);
   // 초기값 true — effect 동기 본문에서 setLoading(true) 호출 금지(set-state-in-effect)
