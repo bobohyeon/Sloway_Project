@@ -81,6 +81,7 @@ function toRecentCard(dto) {
     rating: null,         // ResDto에 평점 없음
     price: null,          // ResDto에 가격 없음
     icon: TYPE_ICON[dto.type] ?? '🏠',
+    thumbnailUrl: dto.thumbnailUrl ?? null,
   };
 }
 
