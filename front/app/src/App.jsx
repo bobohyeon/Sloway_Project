@@ -93,7 +93,6 @@ import BlackoutEditPage from './features/rsvn/blackout/pages/host/BlackoutEditPa
 
 // ── 예약 (관리자) ─────────────────────────────────────────
 import AdminRsvnListPage from './features/rsvn/pages/admin/AdminRsvnListPage';
-import AdminRsvnDetailPage from './features/rsvn/pages/admin/AdminRsvnDetailPage';
 
 // ── 리뷰 (일반회원) ───────────────────────────────────────
 import MyReviewPage from './features/review/pages/user/MyReviewPage';
@@ -471,10 +470,6 @@ function App() {
           <Route path="/admin/amenity" element={<AmenityPage />} />
           {/* 예약·리뷰 */}
           <Route path="/admin/reservation" element={<AdminRsvnListPage />} />
-          <Route
-            path="/admin/reservation/:id"
-            element={<AdminRsvnDetailPage />}
-          />
           <Route path="/admin/review/report" element={<AdminReviewPage />} />
           <Route
             path="/admin/review/report/:id"
