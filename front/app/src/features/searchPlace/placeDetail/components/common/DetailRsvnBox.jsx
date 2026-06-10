@@ -113,7 +113,7 @@ function DetailRsvnBox({
         <CalcBox>
           <CalcRow>
             <span>
-              {price.toLocaleString()}원 × {nights}박
+              {price.toLocaleString()}원 × {nights}{type === 'office' ? '회' : '박'}
             </span>
             <span>{totalBase.toLocaleString()}원</span>
           </CalcRow>
