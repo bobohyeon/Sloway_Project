@@ -85,4 +85,6 @@ jobs:
           key: ${{ secrets.EC2_SSH_KEY }}
           script: |
             kill $(pgrep -f 'app-0.0.1-SNAPSHOT.jar') || true
-            nohup j
+            sleep 2
+            nohup java -Xms128m -Xmx256m -jar ~/sloway/back/app/build/libs/app-0.0.1-SNAPSHOT.jar --spring.datasource.url=jdbc:postgresql://localhost:5432/sloway --spring.datasource.username=postgres --spring.datasource.password=${{ secrets.DB_PASSWORD }} > ~/sloway/app.log 2>&1 &
+            disown
