@@ -5,12 +5,10 @@ import com.sloway.app.host.entity.HostEntity;
 import com.sloway.app.host.repository.HostRepository;
 import com.sloway.app.member.entity.MemberEntity;
 import com.sloway.app.member.repository.MemberRepository;
-import com.sloway.app.payment.pay.common.PayErrorCode;
 import com.sloway.app.payment.pay.common.PayStatus;
 import com.sloway.app.payment.pay.entity.PayEntity;
 import com.sloway.app.payment.pay.repository.PayRepository;
 import com.sloway.app.payment.refund.common.RefundReason;
-import com.sloway.app.payment.refund.dto.request.RefundCreateReqDto;
 import com.sloway.app.payment.refund.service.RefundService;
 import com.sloway.app.place.entity.office.OfficeEntity;
 import com.sloway.app.place.entity.place.ImgPlaceEntity;
@@ -279,27 +277,7 @@ public class RsvnService {
             throw new CustomException(RsvnErrorCode.ALREADY_CANCELLED);
         }
 
-        if (entity.getStatus().equals((RsvnStatus.P))){
-         entity.cancel();
-         return;
-        }
-
         entity.cancel();
-        List<PayEntity> pay = payRepository.findByRsvn(rsvnNo);
-
-        // 해당예약의 결제완료건만 가져오기
-        PayEntity completedPay = pay.stream()
-                .filter(p -> p.getStatus() == PayStatus.COMPLETED)
-                .findFirst()
-                .orElseThrow(()-> new CustomException(PayErrorCode.PAY_NOT_FOUND));
-
-        RefundCreateReqDto refundCreateReqDto = RefundCreateReqDto.builder()
-                .rsvnNo(entity.getNo())
-                .payNo(completedPay.getNo())
-                .refundReason(refundReason)
-                .build();
-
-        refundService.createRefund(refundCreateReqDto, memberNo);
     }
 
     //예약완료조회 (단건 — findOne 등에서 사용)

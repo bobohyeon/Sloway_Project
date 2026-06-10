@@ -125,6 +125,7 @@ public class RefundService {
         }
         payEntity.cancelPay();
         refundEntity.completeRefund();
+        refundEntity.getRsvnNo().cancel();  // confirm()과 동일한 패턴 — 환불 완료 시 예약 상태 C로 전이
     }
 
     public List<RefundResDto> findRefundAll() {
