@@ -1,11 +1,13 @@
 package com.sloway.app.reservation.rsvn.dto.response;
 
+import com.sloway.app.place.entity.place.ImgPlaceEntity;
 import com.sloway.app.reservation.rsvn.entity.RsvnEntity;
 import com.sloway.app.reservation.rsvn.entity.RsvnStatus;
 import lombok.Builder;
 import lombok.Getter;
 
 import java.time.LocalDateTime;
+import java.util.Comparator;
 
 @Getter
 @Builder
@@ -28,19 +30,36 @@ public class RsvnResDto {
     private RsvnStatus status;
     private LocalDateTime createdAt;
 
+    private String thumbnailUrl;
+
     public static RsvnResDto from(RsvnEntity entity, Long payNo){
         String spaceName = null;
         String spaceType = null;
+        String thumbnailUrl = null;
+
         if (entity.getOfficeNo() != null) {
             spaceName = entity.getOfficeNo().getPlaceEntity().getTitle();
             spaceType = entity.getOfficeNo().getPlaceEntity().getType();
+            thumbnailUrl = entity.getOfficeNo().getPlaceEntity().getImages().stream()
+                    .min(Comparator.comparingInt(ImgPlaceEntity::getSort))
+                    .map(ImgPlaceEntity::getCurrentUrl)
+                    .orElse(null);
         } else if (entity.getWorkStayNo() != null) {
             spaceName = entity.getWorkStayNo().getPlaceEntity().getTitle();
             spaceType = entity.getWorkStayNo().getPlaceEntity().getType();
+            thumbnailUrl = entity.getWorkStayNo().getPlaceEntity().getImages().stream()
+                    .min(Comparator.comparingInt(ImgPlaceEntity::getSort))
+                    .map(ImgPlaceEntity::getCurrentUrl)
+                    .orElse(null);
         } else if (entity.getStationNo() != null) {
             spaceName = entity.getStationNo().getPlaceEntity().getTitle();
             spaceType = entity.getStationNo().getPlaceEntity().getType();
+            thumbnailUrl = entity.getStationNo().getPlaceEntity().getImages().stream()
+                    .min(Comparator.comparingInt(ImgPlaceEntity::getSort))
+                    .map(ImgPlaceEntity::getCurrentUrl)
+                    .orElse(null);
         }
+
 
         return RsvnResDto.builder()
                 .no(entity.getNo())
@@ -52,6 +71,7 @@ public class RsvnResDto {
                 .workStayNo(entity.getWorkStayNo() != null ? entity.getWorkStayNo().getNo() : null)
                 .spaceName(spaceName)
                 .spaceType(spaceType)
+                .thumbnailUrl(thumbnailUrl)
                 .count(entity.getCount())
                 .amt(entity.getAmt())
                 .special(entity.getSpecial())
