@@ -8,9 +8,7 @@ import { SettlementStatCard } from '../../../settlement/components/host/Settleme
 import { RefundFilterBar } from '../../components/admin/RefundFilterBar';
 import { RefundRequestCard } from '../../components/admin/RefundRequestCard';
 
-import { findRefundAll } from '../../api/refundApi';
-
-const PAGE_SIZE = 10;
+import { findRefundAll, findRefundStats } from '../../api/refundApi';
 
 // REQUESTED / APPROVED = 사용자 시각 "처리 중" 단일 묶음
 const STATUS_TO_UI = {
@@ -37,18 +35,18 @@ const formatDate = (iso) => {
   )}:${pad(d.getMinutes())}`;
 };
 
-// 호스트 거절 환불 식별 — refundReason null + refundRate FULL 조합 (메서드 시그니처 분기 영역)
+// 호스트 거절 환불 식별 — refundReason null + refundRate FULL 조합
 const isHostRejectedRefund = (refund) =>
   refund.refundReason === null && refund.refundRate === 'FULL';
 
-// 회원·예약·공간·결제수단·결제액은 별도 도메인/조회 영역 — 통합 단계에 join API 또는 N+1 회피 결정
 const toRefundCardItem = (refund) => {
   const refundAmtNumber = Number(refund.refundAmt ?? 0);
   return {
     id: refund.no,
     refundId: `RFD-${String(refund.no).padStart(6, '0')}`,
-    userName: `회원 #${refund.rsvnNo}`,
-    spaceName: `예약 #${refund.rsvnNo}`,
+    // fetch join 으로 채워진 실데이터 우선, 없으면 식별번호 폴백
+    userName: refund.memberName ?? `회원 #${refund.rsvnNo}`,
+    spaceName: refund.spaceName ?? `예약 #${refund.rsvnNo}`,
     spaceEmoji: '🏠',
     method: '-',
     paidAmount: refundAmtNumber,
@@ -62,97 +60,80 @@ const toRefundCardItem = (refund) => {
   };
 };
 
-// RefundFilterBar 기간값(today/week/month/3months/all) → 컷오프(ms). 'all'은 0(필터 안 함)
-const periodToCutoffMs = (period) => {
-  const now = Date.now();
-  const day = 24 * 60 * 60 * 1000;
-  if (period === 'today') return now - day;
-  if (period === 'week') return now - 7 * day;
-  if (period === 'month') return now - 30 * day;
-  if (period === '3months') return now - 90 * day;
-  return 0;
-};
-
 export default function RefundList() {
   const navigate = useNavigate();
 
-  const [refunds, setRefunds] = useState([]);
-  const [tab, setTab] = useState('all');
-  const [period, setPeriod] = useState('month');
-  const [search, setSearch] = useState('');
-  const [page, setPage] = useState(1);
+  const [content, setContent] = useState([]); // 현재 페이지 환불 목록(서버가 잘라서 줌)
+  const [totalPages, setTotalPages] = useState(1); // 서버가 알려준 전체 페이지 수
+  const [stats, setStats] = useState({
+    total: 0,
+    processing: 0,
+    completed: 0,
+    hostRejected: 0,
+  });
+  const [selectedTab, setSelectedTab] = useState('all');
+  const [selectedPeriod, setSelectedPeriod] = useState('month');
+  const [page, setPage] = useState(1); // UI는 1-base, 서버는 0-base
 
+  // 목록 — page/탭/기간 중 하나라도 바뀌면 서버에 재요청
   useEffect(() => {
     const load = async () => {
       try {
-        const list = await findRefundAll();
-        setRefunds(list);
+        const data = await findRefundAll(page - 1, selectedTab, selectedPeriod);
+        setContent(data.content ?? []);
+        setTotalPages(data.totalPages ?? 1);
       } catch (err) {
-        console.error('환불 전체 조회 실패', err);
+        console.error('환불 목록 조회 실패', err);
       }
     };
     load();
+  }, [page, selectedTab, selectedPeriod]);
+
+  // 통계 — 전체 상태별 집계(탭/기간과 무관하게 카드 4개가 항상 전체 기준)
+  useEffect(() => {
+    const loadStats = async () => {
+      try {
+        const data = await findRefundStats();
+        setStats(data);
+      } catch (err) {
+        console.error('환불 통계 조회 실패', err);
+      }
+    };
+    loadStats();
   }, []);
 
-  // 통계 카드는 전체 기간 누적 — 탭/필터 영향 X
-  const stats = useMemo(() => {
-    const s = {
-      total: refunds.length,
-      processing: 0,
-      completed: 0,
-      hostRejected: 0,
-    };
-    refunds.forEach((r) => {
-      const uiStatus = STATUS_TO_UI[r.status];
-      if (uiStatus === 'processing') s.processing += 1;
-      if (uiStatus === 'completed') s.completed += 1;
-      if (isHostRejectedRefund(r)) s.hostRejected += 1;
-    });
-    return s;
-  }, [refunds]);
+  // 탭/기간 바꾸면 1페이지로 리셋(안 하면 끝페이지에서 빈 결과 뜨는 버그)
+  const handleTabChange = (tab) => {
+    setSelectedTab(tab);
+    setPage(1);
+  };
+  const handlePeriodChange = (period) => {
+    setSelectedPeriod(period);
+    setPage(1);
+  };
 
-  const tabs = [
-    { value: 'all', label: '전체', count: stats.total },
-    { value: 'completed', label: '완료', count: stats.completed },
-    { value: 'host_rejected', label: '호스트거절', count: stats.hostRejected },
-  ];
+  const tabs = useMemo(
+    () => [
+      { value: 'all', label: '전체', count: stats.total },
+      { value: 'completed', label: '완료', count: stats.completed },
+      { value: 'host_rejected', label: '호스트거절', count: stats.hostRejected },
+    ],
+    [stats]
+  );
 
-  const filtered = useMemo(() => {
-    const cutoff = periodToCutoffMs(period);
-    return refunds
-      .filter((r) => {
-        const uiStatus = STATUS_TO_UI[r.status];
-        if (tab === 'host_rejected') return isHostRejectedRefund(r);
-        if (tab !== 'all' && uiStatus !== tab) return false;
-        if (
-          cutoff > 0 &&
-          r.createdAt &&
-          new Date(r.createdAt).getTime() < cutoff
-        )
-          return false;
-        if (search) {
-          const refundId = `RFD-${String(r.no).padStart(6, '0')}`;
-          if (!refundId.includes(search.toUpperCase())) return false;
-        }
-        return true;
-      })
-      .map(toRefundCardItem);
-  }, [refunds, tab, period, search]);
-
-  const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
-  const pageItems = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
+  // 서버가 이미 필터·페이징한 결과라 클라에선 화면용 변환만
+  const pageItems = useMemo(() => content.map(toRefundCardItem), [content]);
 
   const handleReset = () => {
-    setTab('all');
-    setPeriod('month');
-    setSearch('');
+    setSelectedTab('all');
+    setSelectedPeriod('month');
     setPage(1);
   };
 
   return (
     <PageLayout
       title="환불 관리"
-      description="모든 환불 요청을 모니터링하고 승인 처리하세요"
+      description="모든 환불 요청을 모니터링하세요"
       maxWidth={1200}
     >
       <StatGrid>
@@ -189,12 +170,10 @@ export default function RefundList() {
 
       <RefundFilterBar
         tabs={tabs}
-        selectedTab={tab}
-        onTabChange={setTab}
-        selectedPeriod={period}
-        onPeriodChange={setPeriod}
-        searchQuery={search}
-        onSearchChange={setSearch}
+        selectedTab={selectedTab}
+        onTabChange={handleTabChange}
+        selectedPeriod={selectedPeriod}
+        onPeriodChange={handlePeriodChange}
       />
 
       {pageItems.length === 0 ? (
@@ -248,4 +227,5 @@ const List = styled.div`
   display: flex;
   flex-direction: column;
   gap: var(--space-3);
+  margin-bottom: var(--space-5);
 `;

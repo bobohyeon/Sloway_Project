@@ -5,8 +5,16 @@ export async function createRefund(refundCreateReqDto) {
   return resp.data;
 }
 
-export async function findRefundAll() {
-  const resp = await api.get(`/payment/refund`);
+export async function findRefundAll(page = 0, tab = 'all', period = 'month') {
+  // 서버 페이징 — page(0-base)/탭/기간을 쿼리로 전달, Page 객체(content/totalPages) 반환
+  const resp = await api.get(`/payment/refund`, {
+    params: { pno: page, tab, period },
+  });
+  return resp.data;
+}
+
+export async function findRefundStats() {
+  const resp = await api.get(`/payment/refund/stats`);
   return resp.data;
 }
 
