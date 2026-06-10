@@ -1,9 +1,11 @@
 import axios from 'axios';
 
 const api = axios.create({
-  baseURL: 'https://api.sloway.store/api',
+  // 로컬 개발(npm run dev)은 로컬 백엔드, 배포 빌드는 운영 서버로 자동 분기
+  baseURL: import.meta.env.DEV
+    ? 'http://localhost:8080/api'
+    : 'https://api.sloway.store/api',
 });
-
 // ─── 요청 인터셉터 ─────────────────────────────────────────
 // 모든 API 호출 시 토큰을 자동으로 헤더에 박는다.
 api.interceptors.request.use((config) => {
