@@ -101,6 +101,8 @@ import {
 const STATUS_LABEL = {
   ACTIVE: '정상',
   REVOKED: '자격 취소',
+  REJECTED: '반려',
+  PENDING: '승인 대기',
 };
 
 const SPACE_TYPE_LABEL = {
@@ -131,7 +133,8 @@ function HostDetailPage() {
   const { hostId } = useParams();
   const navigate = useNavigate();
 
-  const { host, loading, error, revoke, restore } = useHostDetail(hostId);
+  const { host, loading, error, revoke, restore, reReview } =
+    useHostDetail(hostId);
 
   // 자격 취소 모달
   const [revokeOpen, setRevokeOpen] = useState(false);
@@ -165,6 +168,7 @@ function HostDetailPage() {
 
   const isActive = host.status === 'ACTIVE';
   const isRevoked = host.status === 'REVOKED';
+  const isRejected = host.status === 'REJECTED';
 
   const revokeConfirmReady =
     revokeConfirmText === '자격을 취소합니다' &&
@@ -201,6 +205,21 @@ function HostDetailPage() {
       await restore();
     } catch (err) {
       alert(err.response?.data?.message ?? '자격 복구에 실패했습니다.');
+    }
+  };
+
+  const handleReReview = async () => {
+    if (
+      !window.confirm(
+        '이 호스트 신청을 재검토(대기 상태로 되돌리기) 하시겠습니까?\n반려 사유는 초기화되며 다시 심사 대기로 전환됩니다.'
+      )
+    )
+      return;
+    try {
+      await reReview();
+      alert('재검토로 전환되었습니다. 다시 심사 대기 상태입니다.');
+    } catch (err) {
+      alert(err.response?.data?.message ?? '재검토 전환에 실패했습니다.');
     }
   };
 
@@ -466,6 +485,25 @@ function HostDetailPage() {
               회복되며, 운영 공간 재공개는 호스트가 직접 처리해야 합니다.
             </ActionInfo>
             <RestoreBtn onClick={handleRestore}>자격 복원</RestoreBtn>
+          </ActionCard>
+        )}
+        {isRejected && (
+          <ActionCard>
+            <ActionInfo>
+              이 호스트 신청은 반려된 상태입니다.
+              {host.rejectReason && (
+                <>
+                  {' '}
+                  반려 사유: <strong>{host.rejectReason}</strong>
+                </>
+              )}
+              <br />
+              서류가 보완되었다면 재검토로 전환해 다시 심사 대기 상태로 되돌릴
+              수 있습니다.
+            </ActionInfo>
+            <RestoreBtn onClick={handleReReview}>
+              재검토 (대기로 되돌리기)
+            </RestoreBtn>
           </ActionCard>
         )}
       </PageLayout>

@@ -21,7 +21,8 @@ const maskPhone = (phone) => {
 function HostApplyDetailPage() {
   const { id } = useParams();
   const navigate = useNavigate();
-  const { application, loading, approve, reject } = useHostApplyDetail(id);
+  const { application, loading, approve, reject, reReview } =
+    useHostApplyDetail(id);
 
   const [docChecked, setDocChecked] = useState(false);
   const [rejectOpen, setRejectOpen] = useState(false);
@@ -56,6 +57,7 @@ function HostApplyDetailPage() {
   const isPending = application.state === 'PENDING';
   const isApproved = application.state === 'APPROVED';
   const isRejected = application.state === 'REJECTED';
+  const isReapplied = isPending && !!application.lastRejectReason;
 
   const handleApprove = async () => {
     if (!docChecked) {
@@ -88,6 +90,21 @@ function HostApplyDetailPage() {
     }
   };
 
+  const handleReReview = async () => {
+    if (
+      !window.confirm(
+        '이 신청을 재검토하시겠습니까?\n반려 사유가 초기화되고 다시 "승인 대기" 상태로 돌아갑니다.'
+      )
+    )
+      return;
+    try {
+      await reReview();
+      alert('재검토로 전환되었습니다. 다시 검토할 수 있습니다.');
+    } catch (err) {
+      alert(err.response?.data?.message ?? '재검토 전환에 실패했습니다.');
+    }
+  };
+
   // 사업자등록증 새 탭에서 열기
   const openDoc = () => {
     if (!application.businessDocUrl) {
@@ -108,6 +125,17 @@ function HostApplyDetailPage() {
         </S.BackBtn>
 
         {/* 헤더 */}
+        {isReapplied && (
+          <S.Card>
+            <S.ProcessedNotice $variant="rejected">
+              <strong>재신청 건</strong>
+              이전에 아래 사유로 반려되었던 신청입니다. 보완 여부를 확인하고
+              재검토해주세요.
+              <br />
+              이전 반려 사유: {application.lastRejectReason}
+            </S.ProcessedNotice>
+          </S.Card>
+        )}
         <S.Card>
           <S.HeaderRow>
             <S.TitleGroup>
@@ -118,6 +146,7 @@ function HostApplyDetailPage() {
             </S.TitleGroup>
           </S.HeaderRow>
         </S.Card>
+        {/* 재신청 건 안내 — 대기 상태인데 직전 반려 이력이 있으면 */}
 
         {/* 처리 결과 안내 (승인/반려된 경우) */}
         {isApproved && (
@@ -134,9 +163,13 @@ function HostApplyDetailPage() {
               <strong>반려됨</strong>
               사유: {application.rejectReason || '-'}
             </S.ProcessedNotice>
+            <S.ActionBar>
+              <S.ActionBtn $approve onClick={handleReReview}>
+                재검토 (다시 검토하기)
+              </S.ActionBtn>
+            </S.ActionBar>
           </S.Card>
         )}
-
         {/* 신청자 정보 */}
         <S.Card>
           <S.SectionTitle>신청자 정보</S.SectionTitle>

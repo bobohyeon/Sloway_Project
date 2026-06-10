@@ -136,4 +136,12 @@ public class AdminHostController {
         adminHostService.restore(id);
         return ResponseEntity.ok().build();
     }
+
+    @PostMapping("/{id}/re-review")
+    public ResponseEntity<Object> reReview(@PathVariable Long id,
+                                           @AuthenticationPrincipal CustomUserDetails admin) {
+        log.info("호스트 재검토 요청 : hostNo={}, adminNo={}", id, admin.getMemberNo());
+        adminHostService.reReview(id);
+        return ResponseEntity.ok().build();
+    }
 }//class

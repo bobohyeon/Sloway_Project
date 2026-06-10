@@ -152,6 +152,11 @@ function HostStatusPage() {
               호스트 대시보드로 이동
             </S.PrimaryBtn>
           )}
+          {status === 'REJECTED' && (
+            <S.PrimaryBtn onClick={() => navigate('/host/reapply')}>
+              재신청하기
+            </S.PrimaryBtn>
+          )}
         </S.ButtonRow>
       </S.CardStack>
     </PageLayout>
