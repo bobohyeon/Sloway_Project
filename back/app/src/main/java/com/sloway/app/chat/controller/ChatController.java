@@ -1,5 +1,6 @@
-package com.sloway.app.chat;
+package com.sloway.app.chat.controller;
 
+import com.sloway.app.chat.ChatVo;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.event.EventListener;
 import org.springframework.messaging.handler.annotation.DestinationVariable;

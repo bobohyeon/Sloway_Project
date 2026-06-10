@@ -1,4 +1,4 @@
-package com.sloway.app.chat;
+package com.sloway.app.chat.config;
 
 import org.springframework.context.annotation.Configuration;
 import org.springframework.messaging.simp.config.MessageBrokerRegistry;

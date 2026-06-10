@@ -159,6 +159,9 @@ public class SecurityConfig {
                                 .requestMatchers(HttpMethod.POST, "/api/reservation", "/api/reservation/*/cancel").hasRole("USER")
                                 .requestMatchers(HttpMethod.GET, "/api/reservation", "/api/reservation/**").hasRole("USER")
 
+                                // 헬스 체크
+                                .requestMatchers("/actuator/health").permitAll()
+
                                 // ── 그 외 — 점진 도입 단계, 다른 담당자 API 진행 위해 일단 공개 ──
                                 .anyRequest().permitAll()
 
