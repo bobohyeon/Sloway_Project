@@ -127,8 +127,9 @@ public class RefundService {
         refundEntity.completeRefund();
     }
 
+    // 어드민 환불 목록
     public List<RefundResDto> findRefundAll() {
-        return refundRepository.findAll().stream().map(RefundResDto::from).toList();
+        return refundRepository.findAllWithRsvn().stream().map(RefundResDto::from).toList();
     }
 
     public RefundResDto findRefundByNo(Long no) {

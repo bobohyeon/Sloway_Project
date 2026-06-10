@@ -132,17 +132,23 @@ public class StatsService {
     }
 
 
+    // 6개월 매출 추이
     public List<MonthlyTrendResDto> findStatsMonthlyTrend(int year, int month, int months) {
         YearMonth base = YearMonth.of(year, month);
+        LocalDate start = base.minusMonths(months - 1).atDay(1);
+        LocalDate end = base.atEndOfMonth();
+
+        // ① 기간 전체 월별 합계
+        Map<String, Long> monthlyMap = dailyPayStatsRepository.sumByMonthBetween(start, end).stream()
+                .collect(Collectors.toMap(
+                        m -> m.getMonth(),
+                        m -> m.getSum() == null ? 0L : m.getSum()));
+
+        // ② 루프는 Map 조회만
         List<MonthlyTrendResDto> result = new ArrayList<>();
         for (int i = months - 1; i >= 0; i--) {
             YearMonth ym = base.minusMonths(i);
-            LocalDate start = ym.atDay(1);
-            LocalDate end = ym.atEndOfMonth();
-            long totalAmt = dailyPayStatsRepository.findByStatDateBetween(start, end).stream()
-                    .mapToLong(e -> e.getTotalAmt())
-                    .sum();
-            result.add(MonthlyTrendResDto.of(ym.toString(), totalAmt));
+            result.add(MonthlyTrendResDto.of(ym.toString(), monthlyMap.getOrDefault(ym.toString(), 0L)));
         }
         return result;
     }

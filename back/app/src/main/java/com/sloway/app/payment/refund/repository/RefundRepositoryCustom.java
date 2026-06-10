@@ -14,6 +14,9 @@ public interface RefundRepositoryCustom {
 
     List<RefundEntity> findByMember(Long memberNo);
 
+    // 어드민 환불 목록 — 예약·회원·공간 fetch join (N+1 제거)
+    List<RefundEntity> findAllWithRsvn();
+
     Tuple sumBetween(LocalDateTime startDateTime, LocalDateTime endDateTime);
 
     BigDecimal sumByOfficeIn(List<Long> officeNos, LocalDateTime start, LocalDateTime end);

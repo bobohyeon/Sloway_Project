@@ -5,6 +5,7 @@ import com.querydsl.jpa.impl.JPAQueryFactory;
 import com.sloway.app.payment.refund.common.RefundStatus;
 import com.sloway.app.payment.refund.entity.QRefundEntity;
 import com.sloway.app.payment.refund.entity.RefundEntity;
+import com.sloway.app.reservation.rsvn.entity.QRsvnEntity;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
 
@@ -37,6 +38,21 @@ public class RefundRepositoryImpl implements RefundRepositoryCustom {
                 .where(
                         qRefundEntity.rsvnNo.memberNo.no.eq(memberNo)
                 )
+                .fetch();
+    }
+
+    @Override
+    public List<RefundEntity> findAllWithRsvn() {
+        // 예약·회원·공간 -N+1 제거
+        QRsvnEntity qRsvn = new QRsvnEntity("rsvn");
+        return jpaQueryFactory
+                .selectFrom(qRefundEntity)
+                .leftJoin(qRefundEntity.rsvnNo, qRsvn).fetchJoin()
+                .leftJoin(qRsvn.memberNo).fetchJoin()
+                .leftJoin(qRsvn.officeNo).fetchJoin()
+                .leftJoin(qRsvn.stationNo).fetchJoin()
+                .leftJoin(qRsvn.workStayNo).fetchJoin()
+                .orderBy(qRefundEntity.no.desc())
                 .fetch();
     }
 
