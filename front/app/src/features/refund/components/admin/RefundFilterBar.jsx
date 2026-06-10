@@ -15,8 +15,6 @@ export function RefundFilterBar({
   onTabChange,
   selectedPeriod,
   onPeriodChange,
-  searchQuery,
-  onSearchChange,
   periods = DEFAULT_PERIODS,
 }) {
   return (
@@ -26,16 +24,6 @@ export function RefundFilterBar({
       </TabsWrap>
 
       <Filters>
-        <SearchWrap>
-          <SearchIcon>🔎</SearchIcon>
-          <SearchInput
-            type="text"
-            placeholder="환불번호, 사용자명 검색"
-            value={searchQuery || ''}
-            onChange={(e) => onSearchChange(e.target.value)}
-          />
-        </SearchWrap>
-
         <Select value={selectedPeriod} onChange={(e) => onPeriodChange(e.target.value)}>
           {periods.map((p) => (
             <option key={p.value} value={p.value}>
@@ -66,39 +54,6 @@ const Filters = styled.div`
   align-items: center;
   gap: var(--space-2);
   flex-wrap: wrap;
-`
-
-const SearchWrap = styled.div`
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  padding: 6px 12px;
-  background: var(--white);
-  border: 1px solid var(--gray-200);
-  border-radius: var(--radius-md);
-  transition: border-color 160ms ease;
-
-  &:focus-within {
-    border-color: var(--sage);
-    box-shadow: 0 0 0 3px rgba(168, 184, 159, 0.15);
-  }
-`
-
-const SearchIcon = styled.span`
-  font-size: 0.85rem;
-  opacity: 0.6;
-`
-
-const SearchInput = styled.input`
-  border: none;
-  outline: none;
-  font-size: 0.85rem;
-  width: 200px;
-  background: transparent;
-
-  &::placeholder {
-    color: var(--gray-400);
-  }
 `
 
 const Select = styled.select`
