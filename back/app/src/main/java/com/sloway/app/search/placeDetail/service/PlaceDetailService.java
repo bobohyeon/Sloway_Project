@@ -6,71 +6,64 @@ import com.sloway.app.place.entity.station.StationEntity;
 import com.sloway.app.place.entity.workStay.WorkStayEntity;
 import com.sloway.app.reservation.RsvnErrorCode;
 import com.sloway.app.search.placeDetail.dto.PlaceDetailResDto;
-import jakarta.persistence.EntityGraph;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.Map;
+import java.util.List;
 
 @Transactional(readOnly = true)
 @Slf4j
 @Service
 public class PlaceDetailService {
 
-    // EntityGraph로 @OneToMany 컬렉션 즉시 로딩 — repository.findById() lazy 로딩 우회
+    // 트랜잭션이 끝나기 전에 필요한 컬렉션 로딩 — officePeriodEntities는 JOIN FETCH로 확실하게
     @PersistenceContext
     private EntityManager em;
 
     // entityNo만 알 때 — workStay → office → station 순으로 시도
     public PlaceDetailResDto findByEntityNo(Long entityNo) {
-        // 트랜잭션이 끝난뒤에 dto를 get하려고 하면 터짐 -> 트랜잭션이 끝나기 전에 필요한 칼럼 가져오기(이미지,편의시설,예외기간가격)
-        EntityGraph<WorkStayEntity> wsGraph = em.createEntityGraph(WorkStayEntity.class);
-        wsGraph.addAttributeNodes("images", "workAmenityEntities");
-        WorkStayEntity ws = em.find(WorkStayEntity.class, entityNo,
-                Map.of("jakarta.persistence.loadgraph", wsGraph));
-        if (ws != null) return PlaceDetailResDto.from(ws);
+        List<WorkStayEntity> wsList = em.createQuery(
+                "SELECT w FROM WorkStayEntity w WHERE w.no = :no", WorkStayEntity.class)
+                .setParameter("no", entityNo).getResultList();
+        if (!wsList.isEmpty()) return PlaceDetailResDto.from(wsList.get(0));
 
-        EntityGraph<OfficeEntity> oGraph = em.createEntityGraph(OfficeEntity.class);
-        oGraph.addAttributeNodes("officePeriodEntities", "images", "officeAmenityEntities");
-        OfficeEntity o = em.find(OfficeEntity.class, entityNo,
-                Map.of("jakarta.persistence.loadgraph", oGraph));
-        if (o != null) return PlaceDetailResDto.from(o);
+        // officePeriodEntities JOIN FETCH — 가격 계산에 필요
+        List<OfficeEntity> oList = em.createQuery(
+                "SELECT DISTINCT o FROM OfficeEntity o LEFT JOIN FETCH o.officePeriodEntities WHERE o.no = :no",
+                OfficeEntity.class)
+                .setParameter("no", entityNo).getResultList();
+        if (!oList.isEmpty()) return PlaceDetailResDto.from(oList.get(0));
 
-        EntityGraph<StationEntity> stGraph = em.createEntityGraph(StationEntity.class);
-        stGraph.addAttributeNodes("images", "stationAmenityEntities");
-        StationEntity st = em.find(StationEntity.class, entityNo,
-                Map.of("jakarta.persistence.loadgraph", stGraph));
-        if (st != null) return PlaceDetailResDto.from(st);
+        List<StationEntity> stList = em.createQuery(
+                "SELECT s FROM StationEntity s WHERE s.no = :no", StationEntity.class)
+                .setParameter("no", entityNo).getResultList();
+        if (!stList.isEmpty()) return PlaceDetailResDto.from(stList.get(0));
 
         throw new CustomException(RsvnErrorCode.PLACE_NOT_FOUND);
     }
 
     public PlaceDetailResDto getOfficeDetail(Long entityNo) {
-        EntityGraph<OfficeEntity> graph = em.createEntityGraph(OfficeEntity.class);
-        graph.addAttributeNodes("officePeriodEntities", "images", "officeAmenityEntities");
-        OfficeEntity entity = em.find(OfficeEntity.class, entityNo,
-                Map.of("jakarta.persistence.loadgraph", graph));
-        if (entity == null) throw new CustomException(RsvnErrorCode.PLACE_NOT_FOUND);
-        return PlaceDetailResDto.from(entity);
+        // JOIN FETCH로 officePeriodEntities 즉시 로딩 (가격 계산)
+        // images·amenities는 같은 트랜잭션 내 lazy 로딩으로 처리
+        List<OfficeEntity> list = em.createQuery(
+                "SELECT DISTINCT o FROM OfficeEntity o LEFT JOIN FETCH o.officePeriodEntities WHERE o.no = :no",
+                OfficeEntity.class)
+                .setParameter("no", entityNo).getResultList();
+        if (list.isEmpty()) throw new CustomException(RsvnErrorCode.PLACE_NOT_FOUND);
+        return PlaceDetailResDto.from(list.get(0));
     }
 
     public PlaceDetailResDto getStationDetail(Long entityNo) {
-        EntityGraph<StationEntity> graph = em.createEntityGraph(StationEntity.class);
-        graph.addAttributeNodes("images", "stationAmenityEntities");
-        StationEntity entity = em.find(StationEntity.class, entityNo,
-                Map.of("jakarta.persistence.loadgraph", graph));
+        StationEntity entity = em.find(StationEntity.class, entityNo);
         if (entity == null) throw new CustomException(RsvnErrorCode.PLACE_NOT_FOUND);
         return PlaceDetailResDto.from(entity);
     }
 
     public PlaceDetailResDto getWorkStayDetail(Long entityNo) {
-        EntityGraph<WorkStayEntity> graph = em.createEntityGraph(WorkStayEntity.class);
-        graph.addAttributeNodes("images", "workAmenityEntities");
-        WorkStayEntity entity = em.find(WorkStayEntity.class, entityNo,
-                Map.of("jakarta.persistence.loadgraph", graph));
+        WorkStayEntity entity = em.find(WorkStayEntity.class, entityNo);
         if (entity == null) throw new CustomException(RsvnErrorCode.PLACE_NOT_FOUND);
         return PlaceDetailResDto.from(entity);
     }

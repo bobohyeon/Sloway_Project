@@ -24,7 +24,6 @@ function DetailRsvnBox({
   onGuestsChange,
   price = 0,
   priceUnit = '원/박',
-  serviceFee = 12000,
   cancelPolicy = '무료 취소 · 이용 7일 전까지',
   rsvnDto,
   roomName = null,
@@ -33,7 +32,7 @@ function DetailRsvnBox({
   const navigate = useNavigate();
 
   const totalBase = price * nights;
-  const grandTotal = totalBase + serviceFee;
+  const grandTotal = totalBase;
 
   const isBlocked = useMemo(
     () => hasOverlap(checkIn, checkOut, blackouts),
@@ -46,7 +45,7 @@ function DetailRsvnBox({
 
   async function handleRsvn() {
     try {
-      const rsvnNo = await saveRsvn(rsvnDto);
+      const rsvnNo = await saveRsvn({ ...rsvnDto, amt: grandTotal });
       navigate(`/user/payment/checkout`, { state: { rsvnNo } });
     } catch (err) {
       if (err.response?.status === 401 || err.response?.status === 403) {
@@ -117,10 +116,6 @@ function DetailRsvnBox({
               {price.toLocaleString()}원 × {nights}박
             </span>
             <span>{totalBase.toLocaleString()}원</span>
-          </CalcRow>
-          <CalcRow>
-            <span>서비스 수수료</span>
-            <span>{serviceFee.toLocaleString()}원</span>
           </CalcRow>
           <CalcTotal>
             <span>합계</span>
