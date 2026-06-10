@@ -26,6 +26,7 @@ const Thumb = styled.div`
   justify-content: center;
   font-size: 30px;
   flex-shrink: 0;
+  overflow: hidden;
 `;
 
 const TypeTag = styled.span`
@@ -83,7 +84,12 @@ const DeleteBtn = styled.button`
 function RecentCard({ item, onDelete, onClick }) {
   return (
     <Card onClick={() => onClick && onClick(item)}>
-      <Thumb>{item.icon}</Thumb>
+      <Thumb>
+        {item.thumbnailUrl
+          ? <img src={item.thumbnailUrl} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+          : item.icon
+        }
+      </Thumb>
       <div style={{ flex: 1, minWidth: 0 }}>
         <div
           style={{
