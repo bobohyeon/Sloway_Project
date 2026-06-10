@@ -127,33 +127,6 @@ const FilterBar = styled.div`
   flex-wrap: wrap;
 `;
 
-const FilterGroup = styled.label`
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-`;
-
-const FilterLabel = styled.span`
-  font-size: 0.82rem;
-  color: var(--gray-600);
-`;
-
-const Select = styled.select`
-  padding: 6px 10px;
-  border: 1px solid var(--gray-200);
-  border-radius: var(--radius-md);
-  background: var(--white);
-  font-family: 'Noto Sans KR', sans-serif;
-  font-size: 0.85rem;
-  color: var(--gray-800);
-  cursor: pointer;
-
-  &:focus {
-    outline: none;
-    border-color: var(--sage);
-  }
-`;
-
 const StatusText = styled.span`
   font-size: 0.78rem;
   color: var(--gray-400);

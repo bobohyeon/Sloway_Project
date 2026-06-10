@@ -114,14 +114,6 @@ const FilterBar = styled.div`
   display: flex; align-items: center; gap: var(--space-3);
   margin-bottom: var(--space-5); flex-wrap: wrap;
 `;
-const FilterGroup = styled.label`display: inline-flex; align-items: center; gap: 8px;`;
-const FilterLabel = styled.span`font-size: 0.82rem; color: var(--gray-600);`;
-const Select = styled.select`
-  padding: 6px 10px; border: 1px solid var(--gray-200); border-radius: var(--radius-md);
-  background: var(--white); font-family: 'Noto Sans KR', sans-serif;
-  font-size: 0.85rem; color: var(--gray-800); cursor: pointer;
-  &:focus { outline: none; border-color: var(--sage); }
-`;
 const StatusText = styled.span`font-size: 0.78rem; color: var(--gray-400);`;
 const ErrorText = styled.span`font-size: 0.82rem; color: #c0392b;`;
 const Spacer = styled.div`flex: 1;`;
@@ -132,8 +124,9 @@ const DetailLink = styled.button`
 `;
 const KPIGrid = styled.div`
   display: grid; grid-template-columns: repeat(4, 1fr); gap: var(--space-3);
-  margin-bottom: var(--space-5);
+  margin-bottom: var(--space-6);
   @media (max-width: 960px) { grid-template-columns: repeat(2, 1fr); }
+  @media (max-width: 480px) { grid-template-columns: 1fr; }
 `;
 const ChartBlock = styled.div`margin-bottom: var(--space-5);`;
 const EmptyCard = styled(Card)`padding: var(--space-6) var(--space-5);`;

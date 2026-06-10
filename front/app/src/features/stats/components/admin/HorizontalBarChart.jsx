@@ -18,8 +18,11 @@ export function HorizontalBarChart({ title, data, formatValue, action }) {
       {
         data: data.map((d) => d.value),
         backgroundColor: data.map((d) => d.color || '#A8B89F'),
-        borderRadius: 4,
-        barThickness: 22,
+        hoverBackgroundColor: data.map((d) => d.color || '#7D8E74'),
+        borderRadius: 6,
+        borderSkipped: false, // 막대 양끝 모두 둥글게
+        barThickness: 24,
+        maxBarThickness: 30,
       },
     ],
   };
@@ -31,6 +34,16 @@ export function HorizontalBarChart({ title, data, formatValue, action }) {
     plugins: {
       legend: { display: false },
       tooltip: {
+        backgroundColor: '#2F3A2C', // 어두운 sage 배경 + 흰 글씨
+        padding: 12,
+        cornerRadius: 8,
+        displayColors: false,
+        titleFont: { family: "'Noto Sans KR', sans-serif", size: 12 },
+        bodyFont: {
+          family: "'Noto Sans KR', sans-serif",
+          size: 13,
+          weight: '600',
+        },
         callbacks: {
           label: (ctx) => {
             const main = formatValue
@@ -45,10 +58,23 @@ export function HorizontalBarChart({ title, data, formatValue, action }) {
     scales: {
       x: {
         beginAtZero: true,
-        ticks: { callback: (v) => (formatValue ? formatValue(v) : v) },
-        grid: { color: '#f0f0f0' },
+        border: { display: false }, // 축 선 제거 — 그리드만 연하게
+        ticks: {
+          callback: (v) => (formatValue ? formatValue(v) : v),
+          color: '#9CA3A0',
+          font: { family: "'Noto Sans KR', sans-serif", size: 11 },
+          padding: 8,
+        },
+        grid: { color: '#EEF1EC' },
       },
-      y: { grid: { display: false } },
+      y: {
+        border: { display: false },
+        ticks: {
+          color: '#374151',
+          font: { family: "'Noto Sans KR', sans-serif", size: 12, weight: '500' },
+        },
+        grid: { display: false },
+      },
     },
   };
 
