@@ -41,3 +41,19 @@ export async function rejectRsvn(no, payNo) {
   });
   return res.data;
 }
+
+export async function forceCancelForAdmin(no) {
+  await api.post(`/reservation/admin/${no}/force-cancel`);
+}
+
+export async function findRsvnStatsForAdmin() {
+  const res = await api.get('/reservation/admin/stats');
+  return res.data; // { TOTAL: N, P: N, S: N, E: N, R: N, C: N }
+}
+
+export async function findAllRsvnsForAdmin(page = 0, size = 20, status = null) {
+  const params = { page, size };
+  if (status) params.status = status; // 탭 선택 시 서버에 status 전달, 전체면 생략
+  const res = await api.get('/reservation/admin', { params });
+  return res.data;
+}

@@ -1,5 +1,4 @@
-import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useState, useEffect } from 'react';
 import styled from 'styled-components';
 import PageLayout from '../../../../app/layouts/page/PageLayout';
 import RsvnStatusBadge from '../../components/user/RsvnStatusBadge';
@@ -15,93 +14,145 @@ import {
   PageBtn,
   COLOR,
 } from '../../components/user/RsvnStyled';
+import { findAllRsvnsForAdmin, findRsvnStatsForAdmin, forceCancelForAdmin } from '../../api/rsvnApi';
+import { getPageNumbers } from '../../../account/utils/pagination';
 
-// TODO: 관리자 전용 예약 목록 API 연동 — 현재 DUMMY 유지
-const DUMMY = [
-  { id: 1, code: 'SW-20260508-000847', type: '워크앤스테이', status: '확정', guest: '홍', guestName: '홍길동', hostName: '청평스테이', space: '청평 숲속 파인뷰', checkin: '2026.05.08', period: '2박', price: '326,500원', paidAt: '2026.04.24 14:32', guestColor: '#A8B89F' },
-  { id: 2, code: 'SW-20260428-000523', type: '코워킹오피스', status: '확정', guest: '이', guestName: '이지은', hostName: '성수브릭', space: '성수 브릭라운지', checkin: '2026.04.28', period: '당일', price: '28,000원', paidAt: '2026.04.18', guestColor: '#7B9EA8' },
-  { id: 3, code: 'SW-20260424-000892', type: '워크앤스테이', status: '승인 대기', guest: '박', guestName: '박민수', hostName: '청평스테이', space: '청평 숲속 파인뷰', checkin: '2026.05.10', period: '2박', price: '370,000원', paidAt: '방금 전', guestColor: '#C97D4C' },
-  { id: 4, code: 'SW-20260415-000412', type: '숙소', status: '이용 완료', guest: '김', guestName: '김수현', hostName: '돌담집호스트', space: '제주 돌담집 리트릿', checkin: '2026.04.15', period: '2박', price: '444,000원', paidAt: '2026.04.10', guestColor: '#6B8E6B' },
-  { id: 5, code: 'SW-20260320-000218', type: '워크앤스테이', status: '취소', guest: '최', guestName: '최민재', hostName: '남해올리브', space: '남해 올리브 팜스테이', checkin: '2026.03.20', period: '2박', price: '330,000원', paidAt: '2026.03.18', guestColor: '#A87B6B' },
+const STATUS_LABEL = { P: '결제대기', S: '확정', E: '완료', R: '거절', C: '취소' };
+const STATUS_TABS = [
+  { label: '전체', status: null },
+  { label: '결제대기', status: 'P' },
+  { label: '확정', status: 'S' },
+  { label: '완료', status: 'E' },
+  { label: '거절', status: 'R' },
+  { label: '취소', status: 'C' },
 ];
+const SPACE_TYPE_LABEL = { WORK_STAY: '워크앤스테이', OFFICE: '코워킹오피스', STATION: '숙소' };
+const AVATAR_COLORS = ['#A8B89F', '#7B9EA8', '#C97D4C', '#6B8E6B', '#A87B6B', '#8B7BA8'];
 
-const STATUS_TABS = ['전체', '승인 대기', '확정', '이용 완료', '취소'];
+const statusCode = (s) => (typeof s === 'object' ? s?.name ?? String(s) : s);
+const formatCode = (no, createdAt) => {
+  const d = createdAt ? String(createdAt).slice(0, 10).replaceAll('-', '') : '00000000';
+  return `SW-${d}-${String(no).padStart(6, '0')}`;
+};
+const formatDate = (dt) => (dt ? String(dt).slice(0, 10).replaceAll('-', '.') : '');
+const formatPeriod = (checkIn, checkOut, spaceType) => {
+  if (!checkIn || !checkOut) return '';
+  const ms = new Date(checkOut) - new Date(checkIn);
+  if (spaceType === 'OFFICE') return `${Math.ceil(ms / (1000 * 60 * 60))}시간`;
+  const nights = Math.round(ms / (1000 * 60 * 60 * 24));
+  return nights === 0 ? '당일' : `${nights}박`;
+};
 
 const FilterRow = styled.div`
   display: flex; gap: 8px; margin-bottom: 16px; align-items: center; flex-wrap: wrap;
 `;
-
 const Select = styled.select`
   padding: 8px 12px; border: 1px solid ${COLOR.gray200}; border-radius: 8px; font-size: 13px; background: #fff; outline: none;
 `;
-
 const SearchInput = styled.input`
   flex: 1; padding: 8px 12px; border: 1px solid ${COLOR.gray200}; border-radius: 8px; font-size: 13px; outline: none; min-width: 180px;
 `;
-
-const SearchBtn = styled.button`
-  padding: 8px 16px; background: ${COLOR.green}; color: #fff; border: none; border-radius: 8px;
-  font-size: 13px; font-weight: 600; cursor: pointer; &:hover { background: #1a3a2a; }
-`;
-
 const Table = styled.table`
   width: 100%; border-collapse: collapse; background: #fff; border-radius: 12px; overflow: hidden; border: 1px solid ${COLOR.gray200};
 `;
-
 const Th = styled.th`
   padding: 11px 14px; font-size: 12px; font-weight: 600; color: ${COLOR.gray400}; text-align: left;
   border-bottom: 1px solid ${COLOR.gray200}; background: ${COLOR.gray100};
 `;
-
 const Tr = styled.tr`
   cursor: pointer;
   &:hover td { background: #fafafa; }
   &:not(:last-child) td { border-bottom: 1px solid #f0f0f0; }
 `;
-
 const Td = styled.td`padding: 14px; font-size: 13px; color: ${COLOR.black}; vertical-align: middle;`;
-
 const Avatar = styled.div`
   width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center;
   font-weight: 700; font-size: 13px; color: #fff; background: ${({ $color }) => $color}; flex-shrink: 0;
 `;
+const CancelBtn = styled.button`
+  padding: 4px 10px; border-radius: 6px; border: 1px solid #fcc;
+  background: #fff0f0; color: #e05555; font-size: 12px; font-weight: 600;
+  cursor: pointer; white-space: nowrap;
+  &:hover:not(:disabled) { background: #ffe0e0; }
+  &:disabled { opacity: 0.35; cursor: not-allowed; }
+`;
+
+const PAGE_SIZE = 10;
 
 function AdminRsvnListPage() {
   const [activeTab, setActiveTab] = useState(0);
   const [keyword, setKeyword] = useState('');
-  const navigate = useNavigate();
+  const [rsvns, setRsvns] = useState([]);
+  const [page, setPage] = useState(1);
+  const [totalElements, setTotalElements] = useState(0);
+  const [stats, setStats] = useState({});
 
-  const filtered = DUMMY
-    .filter((i) => activeTab === 0 || i.status === STATUS_TABS[activeTab])
-    .filter((i) => !keyword || i.guestName.includes(keyword) || i.hostName.includes(keyword) || i.code.includes(keyword));
 
-  const counts = STATUS_TABS.map((tab, idx) =>
-    idx === 0 ? DUMMY.length : DUMMY.filter((i) => i.status === tab).length
+  // 마운트 시 1회 — StatCards용 상태별 건수
+  useEffect(() => {
+    findRsvnStatsForAdmin().then(setStats).catch(() => {});
+  }, []);
+
+  useEffect(() => {
+    const status = STATUS_TABS[activeTab].status; // 전체 탭이면 null
+    findAllRsvnsForAdmin(page - 1, PAGE_SIZE, status)
+      .then((data) => {
+        setRsvns(data.content);
+        setTotalElements(data.totalElements);
+      })
+      .catch(() => setRsvns([]));
+  }, [page, activeTab]); // 페이지 또는 탭 바뀔 때마다 서버 재조회
+
+  // status 필터는 서버가 처리 — 키워드 검색만 클라이언트에서 처리
+  const filtered = rsvns.filter((i) =>
+    !keyword ||
+    (i.guestName ?? '').includes(keyword) ||
+    (i.spaceName ?? '').includes(keyword) ||
+    formatCode(i.no, i.createdAt).includes(keyword)
   );
+
+  // TabBar 배지: stats에서 각 탭 건수 표시
+  const statKey = { 0: 'TOTAL', 1: 'P', 2: 'S', 3: 'E', 4: 'R', 5: 'C' };
+  const counts = STATUS_TABS.map((_, idx) => stats[statKey[idx]] ?? null);
+
+  // 서버 totalElements 기준으로 총 페이지 수 계산
+  const totalPages = Math.ceil(totalElements / PAGE_SIZE);
+  // 서버가 이미 페이지 단위로 줬으므로 클라이언트 슬라이싱 불필요
+  const paged = filtered;
 
   return (
     <PageLayout title="전체 예약 관리" description="모든 예약을 조회하고 문제 상황을 처리하세요" maxWidth={1200}>
 
       <StatCards>
-        <StatCard><StatLabel>전체 예약</StatLabel><StatValue>{DUMMY.length}건</StatValue></StatCard>
-        <StatCard><StatLabel>확정</StatLabel><StatValue $color={COLOR.green}>{counts[2]}건</StatValue></StatCard>
-        <StatCard><StatLabel>승인 대기</StatLabel><StatValue $color={COLOR.orange}>{counts[1]}건</StatValue></StatCard>
-        <StatCard><StatLabel>취소</StatLabel><StatValue $color={COLOR.red}>{counts[4]}건</StatValue></StatCard>
+        <StatCard onClick={() => { setActiveTab(0); setPage(1); }} style={{ cursor: 'pointer' }}>
+          <StatLabel>전체 예약</StatLabel><StatValue>{stats.TOTAL ?? '-'}건</StatValue>
+        </StatCard>
+        <StatCard onClick={() => { setActiveTab(2); setPage(1); }} style={{ cursor: 'pointer' }}>
+          <StatLabel>확정</StatLabel><StatValue $color={COLOR.green}>{stats.S ?? '-'}건</StatValue>
+        </StatCard>
+        <StatCard onClick={() => { setActiveTab(1); setPage(1); }} style={{ cursor: 'pointer' }}>
+          <StatLabel>결제대기</StatLabel><StatValue $color={COLOR.orange}>{stats.P ?? '-'}건</StatValue>
+        </StatCard>
+        <StatCard onClick={() => { setActiveTab(5); setPage(1); }} style={{ cursor: 'pointer' }}>
+          <StatLabel>취소</StatLabel><StatValue $color={COLOR.red}>{stats.C ?? '-'}건</StatValue>
+        </StatCard>
       </StatCards>
 
       <TabBar>
         {STATUS_TABS.map((tab, idx) => (
-          <TabBtn key={idx} $active={activeTab === idx} onClick={() => setActiveTab(idx)}>
-            {tab}
-            <TabCount $active={activeTab === idx}>{counts[idx]}</TabCount>
+          <TabBtn key={idx} $active={activeTab === idx} onClick={() => { setActiveTab(idx); setPage(1); }}>
+            {tab.label}
+            {counts[idx] !== null && <TabCount $active={activeTab === idx}>{counts[idx]}</TabCount>}
           </TabBtn>
         ))}
       </TabBar>
 
       <FilterRow>
-        <Select><option>전체 유형</option><option>워크앤스테이</option><option>코워킹오피스</option><option>숙소</option></Select>
-        <SearchInput placeholder="게스트·호스트·예약번호" value={keyword} onChange={(e) => setKeyword(e.target.value)} />
-        <SearchBtn>검색</SearchBtn>
+        <SearchInput
+          placeholder="게스트명 · 공간명 · 예약번호"
+          value={keyword}
+          onChange={(e) => { setKeyword(e.target.value); setPage(1); }}
+        />
       </FilterRow>
 
       <Table>
@@ -109,45 +160,80 @@ function AdminRsvnListPage() {
           <tr>
             <Th>예약번호</Th>
             <Th>게스트</Th>
-            <Th>호스트 / 공간</Th>
+            <Th>공간</Th>
             <Th>유형</Th>
             <Th>체크인</Th>
             <Th>기간</Th>
             <Th>금액</Th>
-            <Th>결제일</Th>
+            <Th>등록일</Th>
             <Th>상태</Th>
+            <Th></Th>
           </tr>
         </thead>
         <tbody>
-          {filtered.map((item) => (
-            <Tr key={item.id} onClick={() => navigate(`/admin/reservation/${item.id}`, { state: { rsvn: item } })}>
-              <Td><span style={{ fontSize: 12, color: COLOR.gray400 }}>{item.code}</span></Td>
+          {paged.map((item) => (
+            <Tr key={item.no}>
+              <Td><span style={{ fontSize: 12, color: COLOR.gray400 }}>{formatCode(item.no, item.createdAt)}</span></Td>
               <Td>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                  <Avatar $color={item.guestColor}>{item.guest}</Avatar>
+                  <Avatar $color={AVATAR_COLORS[item.no % AVATAR_COLORS.length]}>
+                    {item.guestName?.[0]}
+                  </Avatar>
                   {item.guestName}
                 </div>
               </Td>
-              <Td>
-                <div style={{ fontWeight: 600 }}>{item.hostName}</div>
-                <div style={{ fontSize: 11, color: COLOR.gray400 }}>{item.space}</div>
+              <Td>{item.spaceName}</Td>
+              <Td><RsvnStatusBadge type="type" label={SPACE_TYPE_LABEL[item.spaceType] ?? item.spaceType} /></Td>
+              <Td>{formatDate(item.checkIn)}</Td>
+              <Td>{formatPeriod(item.checkIn, item.checkOut, item.spaceType)}</Td>
+              <Td style={{ fontWeight: 700 }}>{item.amt?.toLocaleString()}원</Td>
+              <Td style={{ fontSize: 12 }}>{formatDate(item.createdAt)}</Td>
+              <Td><RsvnStatusBadge type="status" label={STATUS_LABEL[statusCode(item.status)] ?? statusCode(item.status)} /></Td>
+              <Td onClick={(e) => e.stopPropagation()}>
+                <CancelBtn
+                  disabled={['C', 'R'].includes(statusCode(item.status))}
+                  onClick={() => {
+                    if (!window.confirm(`예약 ${formatCode(item.no, item.createdAt)}을 강제취소 하시겠습니까?`)) return;
+                    forceCancelForAdmin(item.no)
+                      .then(() => {
+                        // 취소 후 현재 페이지 재조회
+                        const status = STATUS_TABS[activeTab].status;
+                        findAllRsvnsForAdmin(page - 1, PAGE_SIZE, status)
+                          .then((data) => { setRsvns(data.content); setTotalElements(data.totalElements); });
+                        findRsvnStatsForAdmin().then(setStats);
+                      })
+                      .catch(() => alert('강제취소 실패. 다시 시도해주세요.'));
+                  }}
+                >
+                  강제취소
+                </CancelBtn>
               </Td>
-              <Td><RsvnStatusBadge type="type" label={item.type} /></Td>
-              <Td>{item.checkin}</Td>
-              <Td>{item.period}</Td>
-              <Td style={{ fontWeight: 700 }}>{item.price}</Td>
-              <Td style={{ fontSize: 12 }}>{item.paidAt}</Td>
-              <Td><RsvnStatusBadge type="status" label={item.status} /></Td>
             </Tr>
           ))}
+          {paged.length === 0 && (
+            <tr>
+              <Td colSpan={10} style={{ textAlign: 'center', color: COLOR.gray400, padding: '40px 0' }}>
+                조건에 맞는 예약이 없어요
+              </Td>
+            </tr>
+          )}
         </tbody>
       </Table>
 
-      <Pagination>
-        <PageBtn>‹</PageBtn>
-        {[1, 2, 3].map((p) => <PageBtn key={p} $active={p === 1}>{p}</PageBtn>)}
-        <PageBtn>›</PageBtn>
-      </Pagination>
+      {totalPages > 1 && (() => {
+        const { pages, hasPrev, hasNext, prevBlockPage, nextBlockPage } = getPageNumbers(page, totalPages);
+        return (
+          <Pagination>
+            <PageBtn disabled={page === 1} onClick={() => setPage((p) => Math.max(1, p - 1))}>이전</PageBtn>
+            {hasPrev && <PageBtn onClick={() => setPage(prevBlockPage)}>…</PageBtn>}
+            {pages.map((p) => (
+              <PageBtn key={p} $active={p === page} onClick={() => setPage(p)}>{p}</PageBtn>
+            ))}
+            {hasNext && <PageBtn onClick={() => setPage(nextBlockPage)}>…</PageBtn>}
+            <PageBtn disabled={page === totalPages} onClick={() => setPage((p) => Math.min(totalPages, p + 1))}>다음</PageBtn>
+          </Pagination>
+        );
+      })()}
     </PageLayout>
   );
 }

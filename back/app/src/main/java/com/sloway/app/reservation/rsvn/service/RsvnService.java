@@ -34,10 +34,13 @@ import com.sloway.app.reservation.rsvn.repository.RsvnRepository;
 import com.sloway.app.review.ReviewErrorCode;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -215,10 +218,10 @@ public class RsvnService {
                 .orElseThrow(() -> new CustomException(ReviewErrorCode.HOST_NOT_FOUND));
 
         List<RsvnEntity> sorted = findRsvnsByHostNo(host.getNo()).stream()
-                .sorted(java.util.Comparator.comparing(RsvnEntity::getCreatedAt).reversed())
+                .sorted(Comparator.comparing(RsvnEntity::getCreatedAt).reversed())
                 .toList();
         // 예약들의 payNo 를 한 번에 조회(N+1 제거)
-        java.util.Map<Long, Long> payNoMap =
+        Map<Long, Long> payNoMap =
                 findCompletePayNoMap(sorted.stream().map(RsvnEntity::getNo).toList());
         return sorted.stream()
                 .map(entity -> RsvnResDto.from(entity, payNoMap.get(entity.getNo())))
@@ -229,6 +232,40 @@ public class RsvnService {
         HostEntity host = hostRepository.findById(hostNo)
                 .orElseThrow(() -> new CustomException(ReviewErrorCode.HOST_NOT_FOUND));
         return findAllByHost(host.getMemberNo());
+    }
+
+    // 어드민 — 강제취소 (회원 소유 검증 없이 바로 취소)
+    @Transactional
+    public void forceCancelByAdmin(Long rsvnNo) {
+        RsvnEntity entity = rsvnRepository.findById(rsvnNo)
+                .orElseThrow(() -> new CustomException(RsvnErrorCode.RESERVATION_NOT_FOUND));
+        if (entity.getStatus() == RsvnStatus.C || entity.getStatus() == RsvnStatus.R) {
+            throw new CustomException(RsvnErrorCode.ALREADY_CANCELLED);
+        }
+        entity.cancel();
+    }
+
+    // 어드민 — 상태별 건수 통계 (StatCards용 — GROUP BY 단일 쿼리)
+    public Map<String, Long> findAdminStats() {
+        Map<String, Long> result = new java.util.HashMap<>();
+        long total = 0;
+        for (Object[] row : rsvnRepository.countGroupByStatus()) {
+            RsvnStatus status = (RsvnStatus) row[0];
+            long cnt = (long) row[1];
+            result.put(status.name(), cnt);
+            total += cnt;
+        }
+        result.put("TOTAL", total);
+        return result;
+    }
+
+    // 어드민 — 전체 예약 목록 조회 (status null이면 전체, 아니면 해당 상태만)
+    public Page<RsvnResDto> findAllForAdmin(Pageable pageable, RsvnStatus status) {
+        Page<RsvnEntity> all = (status != null)
+                ? rsvnRepository.findByStatus(status, pageable)
+                : rsvnRepository.findAll(pageable);
+        Map<Long, Long> payNoMap = findCompletePayNoMap(all.getContent().stream().map(RsvnEntity::getNo).toList());
+        return all.map(entity -> RsvnResDto.from(entity, payNoMap.get(entity.getNo())));
     }
 
 

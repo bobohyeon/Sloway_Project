@@ -10,6 +10,9 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
@@ -32,6 +35,13 @@ public interface RsvnRepository extends JpaRepository<RsvnEntity, Long> {
 
     //이용완료 스케줄러
     List<RsvnEntity> findByStatusAndCheckOutBefore(RsvnStatus status, LocalDateTime dateTime);
+
+    // 어드민 — 상태별 페이징 조회
+    Page<RsvnEntity> findByStatus(RsvnStatus status, Pageable pageable);
+
+    // 어드민 — 상태별 건수 집계 (단일 GROUP BY 쿼리)
+    @Query("SELECT r.status, COUNT(r) FROM RsvnEntity r GROUP BY r.status")
+    List<Object[]> countGroupByStatus();
 
     // 블랙아웃 등록 시 확정 예약 겹침 검증
     @Query("""
