@@ -3,9 +3,11 @@ package com.sloway.app.payment.refund.controller;
 import com.sloway.app.auth.user.CustomUserDetails;
 import com.sloway.app.payment.refund.dto.request.RefundCreateReqDto;
 import com.sloway.app.payment.refund.dto.response.RefundResDto;
+import com.sloway.app.payment.refund.dto.response.RefundStatsResDto;
 import com.sloway.app.payment.refund.service.RefundService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -31,9 +33,16 @@ public class RefundApiController {
     }
 
     @GetMapping
-    public ResponseEntity<List<RefundResDto>> findRefundAll() {
-        List<RefundResDto> resDtoList = refundService.findRefundAll();
-        return ResponseEntity.ok(resDtoList);
+    public ResponseEntity<Page<RefundResDto>> findRefundAll(
+            @RequestParam(defaultValue = "0") int pno,
+            @RequestParam(defaultValue = "all") String tab,
+            @RequestParam(defaultValue = "month") String period) {
+        return ResponseEntity.ok(refundService.findRefundAll(pno, tab, period));
+    }
+
+    @GetMapping("/stats")
+    public ResponseEntity<RefundStatsResDto> findRefundStats() {
+        return ResponseEntity.ok(refundService.findRefundStats());
     }
 
     @GetMapping("/{no}")

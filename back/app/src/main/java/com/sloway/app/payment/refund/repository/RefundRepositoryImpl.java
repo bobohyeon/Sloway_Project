@@ -1,12 +1,19 @@
 package com.sloway.app.payment.refund.repository;
 
 import com.querydsl.core.Tuple;
+import com.querydsl.core.types.dsl.BooleanExpression;
 import com.querydsl.jpa.impl.JPAQueryFactory;
+import com.sloway.app.payment.refund.common.RefundRate;
 import com.sloway.app.payment.refund.common.RefundStatus;
+import com.sloway.app.payment.refund.dto.response.RefundResDto;
+import com.sloway.app.payment.refund.dto.response.RefundStatsResDto;
 import com.sloway.app.payment.refund.entity.QRefundEntity;
 import com.sloway.app.payment.refund.entity.RefundEntity;
 import com.sloway.app.reservation.rsvn.entity.QRsvnEntity;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Repository;
 
 import java.math.BigDecimal;
@@ -42,18 +49,63 @@ public class RefundRepositoryImpl implements RefundRepositoryCustom {
     }
 
     @Override
-    public List<RefundEntity> findAllWithRsvn() {
-        // 예약·회원·공간 -N+1 제거
+    public Page<RefundResDto> findRefundAll(PageRequest pageRequest, String tab, LocalDateTime from) {
+        // 목록 — 예약·회원·공간 fetch join(N+1 제거) + 탭/기간 필터 + offset 페이징
         QRsvnEntity qRsvn = new QRsvnEntity("rsvn");
-        return jpaQueryFactory
+        List<RefundEntity> list = jpaQueryFactory
                 .selectFrom(qRefundEntity)
                 .leftJoin(qRefundEntity.rsvnNo, qRsvn).fetchJoin()
                 .leftJoin(qRsvn.memberNo).fetchJoin()
                 .leftJoin(qRsvn.officeNo).fetchJoin()
                 .leftJoin(qRsvn.stationNo).fetchJoin()
                 .leftJoin(qRsvn.workStayNo).fetchJoin()
+                .where(tabFilter(tab), createdAfter(from))
                 .orderBy(qRefundEntity.no.desc())
+                .offset(pageRequest.getOffset())
+                .limit(pageRequest.getPageSize())
                 .fetch();
+
+        // count 는 집계라 fetch join 불필요 (목록과 같은 필터 사용)
+        Long total = jpaQueryFactory
+                .select(qRefundEntity.count())
+                .from(qRefundEntity)
+                .where(tabFilter(tab), createdAfter(from))
+                .fetchOne();
+
+        List<RefundResDto> content = list.stream().map(RefundResDto::from).toList();
+        return new PageImpl<>(content, pageRequest, total == null ? 0 : total);
+    }
+
+    @Override
+    public RefundStatsResDto findRefundStats() {
+        return RefundStatsResDto.builder()
+                .total(countWhere(null))
+                .processing(countWhere(qRefundEntity.status.in(RefundStatus.REQUESTED, RefundStatus.APPROVED)))
+                .completed(countWhere(qRefundEntity.status.eq(RefundStatus.COMPLETED)))
+                .hostRejected(countWhere(hostRejectedCond()))
+                .build();
+    }
+
+    private long countWhere(BooleanExpression cond) {
+        Long c = jpaQueryFactory.select(qRefundEntity.count()).from(qRefundEntity).where(cond).fetchOne();
+        return c == null ? 0 : c;
+    }
+
+    // 탭 → where 조건. all/null=전체, completed=COMPLETED, host_rejected=호스트 거절
+    private BooleanExpression tabFilter(String tab) {
+        if (tab == null || tab.equals("all")) return null;
+        if (tab.equals("completed")) return qRefundEntity.status.eq(RefundStatus.COMPLETED);
+        if (tab.equals("host_rejected")) return hostRejectedCond();
+        return null;
+    }
+
+    // 호스트 거절 식별 — refundReason null + refundRate FULL 조합 (프론트 isHostRejectedRefund 와 동일)
+    private BooleanExpression hostRejectedCond() {
+        return qRefundEntity.refundReason.isNull().and(qRefundEntity.refundRate.eq(RefundRate.FULL));
+    }
+
+    private BooleanExpression createdAfter(LocalDateTime from) {
+        return from == null ? null : qRefundEntity.createdAt.goe(from);
     }
 
     @Override

@@ -2,7 +2,11 @@ package com.sloway.app.payment.refund.repository;
 
 import com.querydsl.core.Tuple;
 import com.sloway.app.payment.refund.common.RefundStatus;
+import com.sloway.app.payment.refund.dto.response.RefundResDto;
+import com.sloway.app.payment.refund.dto.response.RefundStatsResDto;
 import com.sloway.app.payment.refund.entity.RefundEntity;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -14,8 +18,11 @@ public interface RefundRepositoryCustom {
 
     List<RefundEntity> findByMember(Long memberNo);
 
-    // 어드민 환불 목록 — 예약·회원·공간 fetch join (N+1 제거)
-    List<RefundEntity> findAllWithRsvn();
+    // 어드민 환불 목록 — fetch join(N+1 제거) + 탭/기간 필터 + 서버 페이징
+    Page<RefundResDto> findRefundAll(PageRequest pageRequest, String tab, LocalDateTime from);
+
+    // 어드민 환불 통계 (탭/기간 무관 전체 상태별 집계)
+    RefundStatsResDto findRefundStats();
 
     Tuple sumBetween(LocalDateTime startDateTime, LocalDateTime endDateTime);
 

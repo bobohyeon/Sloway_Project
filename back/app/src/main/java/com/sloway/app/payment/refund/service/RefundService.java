@@ -15,6 +15,7 @@ import com.sloway.app.payment.refund.common.RefundRate;
 import com.sloway.app.payment.refund.common.RefundStatus;
 import com.sloway.app.payment.refund.dto.request.RefundCreateReqDto;
 import com.sloway.app.payment.refund.dto.response.RefundResDto;
+import com.sloway.app.payment.refund.dto.response.RefundStatsResDto;
 import com.sloway.app.payment.refund.entity.RefundEntity;
 import com.sloway.app.payment.refund.repository.RefundRepository;
 import com.sloway.app.reservation.RsvnErrorCode;
@@ -22,6 +23,8 @@ import com.sloway.app.reservation.rsvn.entity.RsvnEntity;
 import com.sloway.app.reservation.rsvn.repository.RsvnRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -128,9 +131,27 @@ public class RefundService {
         refundEntity.getRsvnNo().cancel();  // confirm()과 동일한 패턴 — 환불 완료 시 예약 상태 C로 전이
     }
 
-    // 어드민 환불 목록
-    public List<RefundResDto> findRefundAll() {
-        return refundRepository.findAllWithRsvn().stream().map(RefundResDto::from).toList();
+    // 어드민 환불 목록 (서버 페이징 + 탭/기간 필터) — 결제 findPayAll 과 동형
+    public Page<RefundResDto> findRefundAll(int pno, String tab, String period) {
+        PageRequest pageRequest = PageRequest.of(pno, 10);
+        return refundRepository.findRefundAll(pageRequest, tab, toFrom(period));
+    }
+
+    public RefundStatsResDto findRefundStats() {
+        return refundRepository.findRefundStats();
+    }
+
+    // RefundFilterBar 기간값 → 컷오프 시각. 'all'/null 은 기간 필터 안 함
+    private LocalDateTime toFrom(String period) {
+        if (period == null) return null;
+        LocalDateTime now = LocalDateTime.now();
+        return switch (period) {
+            case "today" -> now.minusDays(1);
+            case "week" -> now.minusDays(7);
+            case "month" -> now.minusDays(30);
+            case "3months" -> now.minusDays(90);
+            default -> null;
+        };
     }
 
     public RefundResDto findRefundByNo(Long no) {
