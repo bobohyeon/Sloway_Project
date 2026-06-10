@@ -202,139 +202,8 @@ const SelectBtn = styled.button`
   }
 `;
 
-// 더미 방 데이터 — spaceId별로 다르게 (백엔드 연결 시 API 교체)
-const ROOM_DATA = {
-  1: [
-    {
-      id: 'r1',
-      name: '파인뷰 독채 A동',
-      maxGuests: 4,
-      baseGuests: 2,
-      price: 185000,
-      priceUnit: '원/박',
-      amenities: ['듀얼모니터', '와이파이', '회의실'],
-      available: true,
-      icon: '🌲',
-      color: '#E8DFD0',
-    },
-    {
-      id: 'r2',
-      name: '파인뷰 독채 B동',
-      maxGuests: 6,
-      baseGuests: 4,
-      price: 240000,
-      priceUnit: '원/박',
-      amenities: ['듀얼모니터', '와이파이', '주방'],
-      available: true,
-      icon: '🌲',
-      color: '#D8E8D0',
-    },
-    {
-      id: 'r3',
-      name: '파인뷰 글램핑',
-      maxGuests: 2,
-      baseGuests: 2,
-      price: 150000,
-      priceUnit: '원/박',
-      amenities: ['와이파이'],
-      available: false,
-      icon: '⛺',
-      color: '#E0E8D0',
-    },
-  ],
-  2: [
-    {
-      id: 'r4',
-      name: '오션뷰 오픈석',
-      maxGuests: 1,
-      baseGuests: 1,
-      price: 28000,
-      priceUnit: '원/4h',
-      amenities: ['webcam', 'PC'],
-      available: true,
-      icon: '🌊',
-      color: '#D0E0E8',
-    },
-    {
-      id: 'r5',
-      name: '프라이빗 부스',
-      maxGuests: 2,
-      baseGuests: 1,
-      price: 45000,
-      priceUnit: '원/4h',
-      amenities: ['폰부스', '모니터'],
-      available: true,
-      icon: '🎧',
-      color: '#D8D0E8',
-    },
-    {
-      id: 'r6',
-      name: '팀 회의실',
-      maxGuests: 8,
-      baseGuests: 4,
-      price: 80000,
-      priceUnit: '원/4h',
-      amenities: ['빔프로젝터', '화이트보드'],
-      available: true,
-      icon: '🏢',
-      color: '#E0D8E8',
-    },
-  ],
-  3: [
-    {
-      id: 'r7',
-      name: '돌담집 본채',
-      maxGuests: 4,
-      baseGuests: 2,
-      price: 220000,
-      priceUnit: '원/박',
-      amenities: ['주방', '세탁기', '어메니티'],
-      available: true,
-      icon: '🌴',
-      color: '#E8E0D0',
-    },
-    {
-      id: 'r8',
-      name: '별채 테라스룸',
-      maxGuests: 2,
-      baseGuests: 2,
-      price: 180000,
-      priceUnit: '원/박',
-      amenities: ['어메니티', '개인욕실'],
-      available: false,
-      icon: '🏠',
-      color: '#D8E8E0',
-    },
-  ],
-};
-
-// 기본 더미 (id 없을 때)
-const DEFAULT_ROOMS = [
-  {
-    id: 'default1',
-    name: '스탠다드 룸',
-    maxGuests: 2,
-    baseGuests: 2,
-    price: 150000,
-    priceUnit: '원/박',
-    amenities: ['와이파이', '어메니티'],
-    available: true,
-    icon: '🛏',
-    color: '#E8E0D0',
-  },
-  {
-    id: 'default2',
-    name: '디럭스 룸',
-    maxGuests: 4,
-    baseGuests: 2,
-    price: 200000,
-    priceUnit: '원/박',
-    amenities: ['와이파이', '어메니티', '주방'],
-    available: true,
-    icon: '🛏',
-    color: '#D8E8D0',
-  },
-];
+const TYPE_ICON = { WORK_STAY: '🌿', OFFICE: '💻', STATION: '🛌' };
+const TYPE_COLOR = { WORK_STAY: '#D8E8D0', OFFICE: '#D0E0E8', STATION: '#E8E0D0' };
 
 function RoomListPage() {
   const navigate = useNavigate();
@@ -354,7 +223,18 @@ function RoomListPage() {
 
   if (!space) return null;
 
-  const rooms = ROOM_DATA[spaceId] || DEFAULT_ROOMS;
+  // DB 구조상 place당 entity 1개 — space 데이터를 방 카드 1장으로 변환
+  const rooms = [{
+    id: space.entityNo,
+    name: space.title,
+    maxGuests: space.maxCnt ?? 2,
+    price: space.basePrice ?? 0,
+    priceUnit: space.type === 'OFFICE' ? '원/4시간' : '원/박',
+    amenities: space.amenities ?? [],
+    available: true,
+    icon: TYPE_ICON[space.type] ?? '🏠',
+    color: TYPE_COLOR[space.type] ?? '#E8E0D0',
+  }];
 
   // 방 선택 → 공간 유형에 따라 상세 페이지로 이동
   const goDetail = (room) => {
