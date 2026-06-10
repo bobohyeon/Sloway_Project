@@ -113,7 +113,6 @@ import PaymentFail from './features/pay/pages/user/PaymentFail';
 import TossSuccess from './features/pay/pages/user/TossSuccess';
 import PaymentHistory from './features/pay/pages/user/PaymentHistory';
 import PaymentDetail from './features/pay/pages/user/PaymentDetail';
-import CashReceipt from './features/pay/pages/user/CashReceipt';
 import PointHistory from './features/point/pages/user/PointHistory';
 
 // ── 결제 (관리자) ──────────────────────────────────────────
@@ -295,7 +294,6 @@ function App() {
           <Route path="/user/reservation/cancel" element={<RefundListPage />} />
           <Route path="/user/reservation/:id" element={<RsvnDetailPage />} />
           {/* 결제·지갑 */}
-          <Route path="/user/payment/receipt" element={<CashReceipt />} />
           <Route path="/user/payment" element={<PaymentHistory />} />
           <Route path="/user/payment/:no" element={<PaymentDetail />} />
           <Route path="/user/point" element={<PointHistory />} />

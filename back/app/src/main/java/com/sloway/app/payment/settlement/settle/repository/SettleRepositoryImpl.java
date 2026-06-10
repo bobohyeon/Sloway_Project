@@ -60,19 +60,6 @@ public class SettleRepositoryImpl implements SettleRepositoryCustom {
     }
 
 
-
-    // TODO: 위 Custom 에 선언한 2개를 구현 — PayRepositoryImpl.findPayAll(178행) / findPayStats(199행) 미러
-    //  ① 페이징 목록:
-    //     - selectFrom(qSettleEntity) + where(statusEq(status)) + orderBy(no.desc())
-    //       + offset(pageRequest.getOffset()) + limit(pageRequest.getPageSize()) + fetch()
-    //     - 별도 count 쿼리(select(count).where(statusEq)) fetchOne
-    //     - Entity 리스트 → SettleResDto::from 매핑 → new PageImpl<>(list, pageRequest, total)
-    //  ② 통계:
-    //     - groupBy(status) 로 select(status, count, payoutAmt.sum()) fetch
-    //       ※ 결제는 finalAmt 합계였지만 정산은 payoutAmt 합계
-    //     - Tuple 순회하며 status 별 waiting/complete/invoice count + totalPayout 누적 → SettleStatsResDto.builder()
-    //  ③ statusEq(SettleStatus) private 헬퍼: null이면 null 반환(조건 무시), 아니면 qSettleEntity.status.eq(status)
-
     @Override
     public Page<SettleResDto> findSettleAll(PageRequest pageRequest, SettleStatus status) {
         List<SettleEntity> settleEntityList = jpaQueryFactory
