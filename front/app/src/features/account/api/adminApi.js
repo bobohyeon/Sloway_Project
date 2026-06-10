@@ -72,6 +72,12 @@ export const restoreHost = async (hostId) => {
   return response.data;
 };
 
+/** 호스트 재검토. POST /api/admin/hosts/{id}/re-review */
+export const reReviewHost = async (hostId) => {
+  const response = await api.post(`/admin/hosts/${hostId}/re-review`);
+  return response.data;
+};
+
 // ── 어드민 — 호스트 상세의 4번 도메인(정산/계좌/매출) 운영데이터 ──
 // 백엔드는 이미 구현돼 있음(SettleApiController/AccountApiController/StatsApiController 의 /admin/host/{hostNo}).
 

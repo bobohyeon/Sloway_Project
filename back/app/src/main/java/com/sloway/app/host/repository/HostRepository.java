@@ -27,11 +27,21 @@ public interface HostRepository
      */
     Optional<HostEntity> findByMemberNo(Long memberNo);
 
-    /** memberNo로 호스트 가입 여부 */
+    /**
+     * memberNo로 호스트 가입 여부
+     */
     boolean existsByMemberNo(Long memberNo);
 
-    /** 사업자등록번호 중복 체크 (호스트 신청 시 필요) */
+    /**
+     * 사업자등록번호 중복 체크 (호스트 신청 시 필요)
+     */
     boolean existsByBusinessNo(String businessNo);
+
+    /**
+     * 사업자등록번호 중복 체크 — 본인(memberNo) 제외.
+     * 재신청 시 자기 기존 번호엔 안 걸리고, 다른 호스트가 쓰는 번호만 막기 위함.
+     */
+    boolean existsByBusinessNoAndMemberNoNot(String businessNo, Long memberNo);
 
     /**
      * 상태 필터 + 페이징 조회.
@@ -41,4 +51,5 @@ public interface HostRepository
 
     @Query("SELECT h.memberNo FROM HostEntity h WHERE h.memberNo IN :memberNos")
     Set<Long> findMemberNosByMemberNoIn(@Param("memberNos") List<Long> memberNos);
+
 }

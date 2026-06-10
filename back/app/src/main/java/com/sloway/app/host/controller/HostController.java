@@ -2,6 +2,7 @@ package com.sloway.app.host.controller;
 
 import com.sloway.app.auth.dto.request.ChangePasswordRequestDto;
 import com.sloway.app.auth.user.CustomUserDetails;
+import com.sloway.app.host.dto.request.HostReapplyRequestDto;
 import com.sloway.app.host.dto.request.UpdateHostRequestDto;
 import com.sloway.app.host.dto.response.HostApplicationResponseDto;
 import com.sloway.app.host.dto.response.HostMyPageResponseDto;
@@ -9,6 +10,7 @@ import com.sloway.app.host.service.HostService;
 import com.sloway.app.member.dto.request.ChangeEmailRequestDto;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
@@ -100,6 +102,23 @@ public class HostController {
         log.info("호스트 신청 현황 조회: memberNo={}", host.getMemberNo());
         HostApplicationResponseDto result = hostService.getMyApplication(host.getMemberNo());
         return ResponseEntity.ok(result);
+    }
+
+    /**
+     * 호스트 재신청. POST /api/host/mypage/reapply
+     *
+     * 반려된 호스트가 사업자정보·등록증을 보완해 다시 제출.
+     * multipart/form-data: dto(JSON) + businessDoc(파일). 로그인한 호스트 본인만.
+     */
+    @PostMapping(value = "/reapply", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<Void> reapply(
+            @RequestPart("dto") HostReapplyRequestDto dto,
+            @RequestPart("businessDoc") MultipartFile businessDoc,
+            @AuthenticationPrincipal CustomUserDetails host) {
+
+        log.info("호스트 재신청 요청: memberNo={}", host.getMemberNo());
+        hostService.reapply(host.getMemberNo(), dto, businessDoc);
+        return ResponseEntity.ok().build();
     }
 
     /**

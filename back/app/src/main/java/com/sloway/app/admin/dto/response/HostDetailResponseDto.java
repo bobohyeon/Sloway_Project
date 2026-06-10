@@ -32,6 +32,7 @@ public class HostDetailResponseDto {
     private final LocalDateTime createdAt;        // 신청일
     private final LocalDateTime approvedAt;       // 승인 시각 (null 가능)
     private final String rejectReason;            // 반려 사유 (null 가능)
+    private final String lastRejectReason;        // 직전 반려 사유 (재신청 후에도 보존, null=반려된 적 없음)
 
     // ─── 회원 정보 (MemberEntity) ──────────────
     private final String memberName;
@@ -53,6 +54,7 @@ public class HostDetailResponseDto {
                 .createdAt(host.getCreatedAt())
                 .approvedAt(host.getApprovedAt())
                 .rejectReason(host.getRejectReason())
+                .lastRejectReason(host.getLastRejectReason())
                 .memberName(member.getName())
                 .memberEmail(member.getEmail())
                 .memberPhone(member.getPhone())
