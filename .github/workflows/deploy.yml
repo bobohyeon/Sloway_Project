@@ -60,6 +60,10 @@ jobs:
           java-version: 21
           distribution: temurin
 
+      - name: Grant execute permission for gradlew
+        run: chmod +x gradlew
+        working-directory: back/app
+
       - name: Build JAR
         run: ./gradlew bootJar
         working-directory: back/app
@@ -81,9 +85,4 @@ jobs:
           key: ${{ secrets.EC2_SSH_KEY }}
           script: |
             kill $(pgrep -f 'app-0.0.1-SNAPSHOT.jar') || true
-            nohup java -Xms128m -Xmx256m \
-              -jar ~/sloway/back/app/build/libs/app-0.0.1-SNAPSHOT.jar \
-              --spring.datasource.url=jdbc:postgresql://localhost:5432/sloway \
-              --spring.datasource.username=postgres \
-              --spring.datasource.password=${{ secrets.DB_PASSWORD }} \
-              > ~/sloway/app.log 2>&1 &
+            nohup j
