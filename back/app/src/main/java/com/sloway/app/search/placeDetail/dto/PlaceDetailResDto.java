@@ -35,6 +35,9 @@ public class PlaceDetailResDto {
     private String checkinTime;
     private String checkoutTime;
 
+    private String latitude;
+    private String longitude;
+
     public static PlaceDetailResDto from(OfficeEntity office) {
         return PlaceDetailResDto.builder()
                 .entityNo(office.getNo())
@@ -57,6 +60,8 @@ public class PlaceDetailResDto {
                         .toList())
                 .checkinTime(null)
                 .checkoutTime(null)
+                .latitude(office.getPlaceEntity().getLatitude())
+                .longitude(office.getPlaceEntity().getLongitude())
                 .build();
     }
 
@@ -79,6 +84,8 @@ public class PlaceDetailResDto {
                         .toList())
                 .checkinTime(station.getCheckinTime().toLocalTime().toString())
                 .checkoutTime(station.getCheckoutTime().toLocalTime().toString())
+                .latitude(station.getPlaceEntity().getLatitude())
+                .longitude(station.getPlaceEntity().getLongitude())
                 .build();
     }
 
@@ -101,6 +108,8 @@ public class PlaceDetailResDto {
                         .toList())
                 .checkinTime(workStay.getCheckinTime().toLocalTime().toString())
                 .checkoutTime(workStay.getCheckoutTime().toLocalTime().toString())
+                .latitude(workStay.getPlaceEntity().getLatitude())
+                .longitude(workStay.getPlaceEntity().getLongitude())
                 .build();
     }
 }

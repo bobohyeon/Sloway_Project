@@ -29,6 +29,7 @@ function toSpaceCard(dto) {
     roomLeft: dto.remainCount ?? null,
     soldOut: dto.available === false,
     icon: TYPE_ICON[dto.type] ?? '🏠',
+    thumbnailUrl: dto.thumbnailUrl ?? null,
   };
 }
 

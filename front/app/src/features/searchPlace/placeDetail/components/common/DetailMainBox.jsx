@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import styled, { keyframes } from 'styled-components';
 import ReviewItem from './ReviewItem';
 import { COLOR } from '../../../../rsvn/components/user/RsvnStyled';
@@ -229,6 +229,9 @@ const EmptyReview = styled.div`
 function DetailMainBox({ space = {}, reviews = [] }) {
   const [activeTab, setActiveTab] = useState(0);
 
+  // TODO: 지도 컨테이너 DOM 참조 (useRef 패턴 — MapPage.jsx 참고)
+  const mapRef = useRef(null);
+
   const {
     type = '숙소',
     title = '공간명',
@@ -239,7 +242,19 @@ function DetailMainBox({ space = {}, reviews = [] }) {
     infoItems = [],
     notices = [],
     amenities = [],
+    latitude,
+    longitude,
   } = space;
+
+  useEffect(() => {
+    if (activeTab !== 3) return;
+    if (!mapRef.current) return;
+    if (!latitude || !longitude) return;
+
+    const center = new window.kakao.maps.LatLng(Number(latitude), Number(longitude));
+    const map = new window.kakao.maps.Map(mapRef.current, { center, level: 4 });
+    new window.kakao.maps.Marker({ position: center, map });
+  }, [activeTab, latitude, longitude]);
 
   return (
     <Wrap>
@@ -350,9 +365,15 @@ function DetailMainBox({ space = {}, reviews = [] }) {
       {activeTab === 3 && (
         <TabContent>
           <SectionTitle>위치·주변</SectionTitle>
-          <div style={{ color: COLOR.gray400, fontSize: 13 }}>
-            카카오맵 연동 예정
+          <div style={{ fontSize: 13, color: COLOR.gray400, marginBottom: 10 }}>
+            📍 {address}
           </div>
+          {/* TODO: 지도 컨테이너 — useEffect에서 mapRef.current에 카카오맵 렌더링 */}
+          {/*       width: 100%, height: 360px 정도. borderRadius: 12px */}
+          <div
+            ref={mapRef}
+            style={{ width: '100%', height: 360, borderRadius: 12, background: COLOR.gray100 }}
+          />
         </TabContent>
       )}
     </Wrap>

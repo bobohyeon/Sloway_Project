@@ -74,7 +74,6 @@ function OfficeDetailPage() {
           price={unitPrice}
           priceUnit="원/4시간"
           roomName={selectedRoom?.name ?? null}
-          serviceFee={12000}
           rsvnDto={{
             officeNo: space?.entityNo,
             count: guests,
