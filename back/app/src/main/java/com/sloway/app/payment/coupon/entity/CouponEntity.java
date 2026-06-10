@@ -76,12 +76,14 @@ public class CouponEntity extends BaseEntity {
         this.status = CouponStatus.EXPIRED;
     }
 
+    // 환불 시 사용한 쿠폰을 회수 — 결제 연결을 끊고 상태를 되돌림
     public void returnCoupon() {
         if (this.status != CouponStatus.USED) {
             throw new CustomException(CouponErrorCode.COUPON_NOT_USED);
         }
         this.payNo = null;
         this.usedAt = null;
+        // 환불 시점에 이미 만료됐으면 되살리지 않고 EXPIRED — 만료된 쿠폰이 부활하는 것 방지
         if (this.expiredAt != null && this.expiredAt.isBefore(LocalDateTime.now())) {
             this.status = CouponStatus.EXPIRED;
         } else {

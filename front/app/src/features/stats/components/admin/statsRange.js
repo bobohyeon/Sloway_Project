@@ -20,3 +20,9 @@ export function getAnchorMonth() {
   d.setMonth(d.getMonth() - 1);
   return { year: d.getFullYear(), month: d.getMonth() + 1 };
 }
+
+// 기준 시점의 "이번 달(당월)" {year, month(1-base)} 반환 — 진행 중인 달의 누적 실적용
+export function getCurrentMonth() {
+  const d = new Date(DEMO_NOW);
+  return { year: d.getFullYear(), month: d.getMonth() + 1 };
+}

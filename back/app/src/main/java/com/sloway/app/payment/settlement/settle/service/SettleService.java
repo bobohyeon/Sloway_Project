@@ -45,66 +45,57 @@ public class SettleService {
 
     private static final int MIN_PAYOUT = 10000;
 
+    // 정산 생성 — 이용 완료된 결제 건을 모아 수수료를 뗀 정산액을 산정해 저장
     @Transactional
     public SettleResDto createSettle(SettleCreateReqDto reqDto) {
         HostEntity host = hostRepository.findById(reqDto.getHostNo())
                 .orElseThrow(() -> new CustomException(HostErrorCode.HOST_NOT_FOUND));
-
         List<HostPlaceEntity> hostPlaces =
                 hostPlaceRepository.findByHostEntityNoAndStatus(host.getNo(), ApprovalStatus.A);
-
         List<Long> officeNos = hostPlaces.stream()
                 .filter(hp -> hp.getOfficeEntity() != null)
                 .map(hp -> hp.getOfficeEntity().getNo())
                 .distinct()
                 .toList();
-
         List<Long> stationNos = hostPlaces.stream()
                 .filter(hp -> hp.getStationEntity() != null)
                 .map(hp -> hp.getStationEntity().getNo())
                 .distinct()
                 .toList();
-
         List<Long> workStayNos = hostPlaces.stream()
                 .filter(hp -> hp.getWorkStayEntity() != null)
                 .map(hp -> hp.getWorkStayEntity().getNo())
                 .distinct()
                 .toList();
-
         LocalDateTime start = reqDto.getSettleStartDate().atStartOfDay();
         LocalDateTime end = reqDto.getSettleEndDate().atTime(LocalTime.MAX);
-
+        // 정산 대상(이용 완료 결제)을 공간 타입별로 합산
         int officeAmt = payRepository.sumByOfficeIn(officeNos, start, end).intValue();
         int stationAmt = payRepository.sumByStationIn(stationNos, start, end).intValue();
         int workStayAmt = payRepository.sumByWorkStayIn(workStayNos, start, end).intValue();
         int totalAmt = officeAmt + stationAmt + workStayAmt;
-
+        // 공간 타입별 수수료율을 적용해 수수료 합산
         int feeAmt = calcFee(officeAmt, PlaceType.office,start)
                 + calcFee(stationAmt, PlaceType.station,start)
                 + calcFee(workStayAmt, PlaceType.workStay,start);
-
         int refundAmt = refundRepository.sumByOfficeIn(officeNos, start, end)
                 .add(refundRepository.sumByStationIn(stationNos, start, end))
                 .add(refundRepository.sumByWorkStayIn(workStayNos, start, end))
                 .intValue();
-
-        int payoutAmt = totalAmt - feeAmt - refundAmt;
-
+        int payoutAmt = totalAmt - feeAmt - refundAmt;   // 결제액에서 수수료·환불액을 뺀 실지급액
         Integer prevCarryOver = settleRepository.findLatestByHostNo(host.getNo())
                 .map(SettleEntity::getCarryOver).orElse(0);
-
         int effectiveAmt = payoutAmt + prevCarryOver;
-
         if (totalAmt == 0 && prevCarryOver == 0) {
             return null;
         }
-
         SettleEntity entity = reqDto.toEntity(host);
         entity.applyAmounts(totalAmt, feeAmt, refundAmt, payoutAmt);
         entity.settleWithCarry(effectiveAmt, MIN_PAYOUT);
-        return SettleResDto.from(settleRepository.save(entity));
+        return SettleResDto.from(settleRepository.save(entity));   // 정산 데이터 저장
     }
 
+    // 공간 타입(숙소/워크앤스테이/코워킹오피스)별 수수료율을 결제액에 적용
     private int calcFee(int amt, PlaceType placeType,LocalDateTime date) {
                 if (amt == 0) return 0;
         int rate = feeRepository.findValidFee(placeType, date)

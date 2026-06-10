@@ -14,7 +14,11 @@ import {
   findStatsRefund,
 } from '../../api/statsApi';
 import { StatsRangeTabs } from '../../components/admin/StatsRangeTabs';
-import { rangeLabel, getAnchorMonth } from '../../components/admin/statsRange';
+import {
+  rangeLabel,
+  getAnchorMonth,
+  getCurrentMonth,
+} from '../../components/admin/statsRange';
 
 const PAY_METHOD_META = {
   KAKAOPAY: { label: '카카오페이', color: '#FEE500' },
@@ -33,14 +37,29 @@ function formatMan(value) {
 
 export default function StatsOverview() {
   const { year, month } = useMemo(() => getAnchorMonth(), []);
+  const current = useMemo(() => getCurrentMonth(), []); // 진행 중인 당월
   const [months, setMonths] = useState(3); // 디폴트 3개월
 
+  const [thisMonth, setThisMonth] = useState(null); // 이번 달 단독 요약
   const [summary, setSummary] = useState(null);
   const [methods, setMethods] = useState([]);
   const [trend, setTrend] = useState([]);
   const [refund, setRefund] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+
+  // 이번 달(당월) 요약 — 기간 탭과 무관하게 항상 당월 단독(months=1) 조회
+  useEffect(() => {
+    let alive = true;
+    findStatsMonthlySales(current.year, current.month, 1)
+      .then((s) => {
+        if (alive) setThisMonth(s);
+      })
+      .catch(() => {});
+    return () => {
+      alive = false;
+    };
+  }, [current]);
 
   useEffect(() => {
     let alive = true;
@@ -102,6 +121,38 @@ export default function StatsOverview() {
       description={`${rangeLabel(months)} 결제·환불 통계 요약`}
       maxWidth={1200}
     >
+      <ThisMonthBlock>
+        <ThisMonthHead>
+          <ThisMonthTitle>
+            이번 달 · {current.year}.{String(current.month).padStart(2, '0')}
+          </ThisMonthTitle>
+          <ThisMonthHint>진행 중인 달의 누적 실적</ThisMonthHint>
+        </ThisMonthHead>
+        <KPIGrid>
+          <StatCard
+            label="이번 달 매출"
+            value={Number(thisMonth?.totalAmt ?? 0).toLocaleString()}
+            unit="원"
+            highlight
+          />
+          <StatCard
+            label="결제 건수"
+            value={Number(thisMonth?.payCount ?? 0).toLocaleString()}
+            unit="건"
+          />
+          <StatCard
+            label="평균 결제금"
+            value={Number(thisMonth?.avgAmt ?? 0).toLocaleString()}
+            unit="원"
+          />
+          <StatCard
+            label="순매출 (환불 차감)"
+            value={Number(thisMonth?.netAmt ?? 0).toLocaleString()}
+            unit="원"
+          />
+        </KPIGrid>
+      </ThisMonthBlock>
+
       <FilterBar>
         <StatsRangeTabs value={months} onChange={setMonths} />
         {loading && <StatusText>불러오는 중...</StatusText>}
@@ -210,6 +261,33 @@ export default function StatsOverview() {
     </PageLayout>
   );
 }
+
+const ThisMonthBlock = styled.div`
+  margin-bottom: var(--space-6);
+  padding-bottom: var(--space-5);
+  border-bottom: 1px solid var(--gray-200);
+`;
+
+const ThisMonthHead = styled.div`
+  display: flex;
+  align-items: baseline;
+  gap: var(--space-3);
+  margin-bottom: var(--space-3);
+  flex-wrap: wrap;
+`;
+
+const ThisMonthTitle = styled.h2`
+  font-family: var(--font-display);
+  font-size: 1.15rem;
+  font-weight: 600;
+  color: var(--gray-900);
+  margin: 0;
+`;
+
+const ThisMonthHint = styled.span`
+  font-size: 0.8rem;
+  color: var(--gray-400);
+`;
 
 const FilterBar = styled.div`
   display: flex;

@@ -79,42 +79,41 @@ public class PayService {
         return PayReadyResDto.of(payEntity, readyResDto);
     }
 
+    // 카카오 결제창 통과 후 받은 pg_token으로 최종 승인하는 단계 (GET /pay/approve 콜백)
     @Transactional
     public PayEntity approvePay(Long payNo, String pgToken) {
         PayEntity payEntity = payRepository.findById(payNo)
                 .orElseThrow(() -> new CustomException(PayErrorCode.PAY_NOT_FOUND));
-
+        // 멱등 처리 — 콜백 재호출·뒤로가기로 중복 승인돼도 한 번만 반영
         if (payEntity.getStatus() == PayStatus.COMPLETED) {
             return payEntity;
         }
-
         Long memberNo = payEntity.getRsvnNo().getMemberNo().getNo();
-
         KakaoApproveReqDto kakaoApproveReqDto = KakaoApproveReqDto.builder()
                 .tid(payEntity.getTid())
                 .partnerOrderId(payNo.toString())
                 .partnerUserId(memberNo.toString())
                 .pgToken(pgToken)
                 .build();
-
+        // PG 승인이 성공한 뒤에만 내부 후처리(예약 확정·쿠폰·포인트)를 실행 — 정합성 보장
         kakaoPayClient.approve(kakaoApproveReqDto);
         completePayAfterApprove(payEntity, memberNo);
         return payEntity;
     }
 
+    // 카카오·토스 승인 후 공통 후처리 — 예약 확정 → 쿠폰 → 포인트를 한 트랜잭션에서 연쇄
     private void completePayAfterApprove(PayEntity payEntity, Long memberNo) {
-        payEntity.getRsvnNo().confirm();
+        payEntity.getRsvnNo().confirm();   // 결제 성공했으니 예약을 확정 상태로 전이
         payEntity.approvePay();
-
+        // 쿠폰을 쓴 결제만 사용 처리 (안 쓴 결제는 ucNo가 null)
         if (payEntity.getUcNo() != null) {
             payEntity.getUcNo().useCoupon(payEntity);
         }
-
         Integer usedPoint = payEntity.getUsedPoint();
         if (usedPoint != null && usedPoint > 0) {
             pointService.usePointInternal(memberNo, payEntity.getUsedPoint(), payEntity);
         }
-        pointService.earnPointInternal(memberNo, payEntity);
+        pointService.earnPointInternal(memberNo, payEntity);   // 포인트 사용과 별개로 결제액 1% 적립
     }
 
     @Transactional
@@ -127,29 +126,27 @@ public class PayService {
 
     @Transactional
     public PayResDto confirmTossPay(String paymentKey, String orderId, Integer amount) {
-        Long payNo = Long.parseLong(orderId.replace("SLOWAY_", ""));
+        Long payNo = Long.parseLong(orderId.replace("SLOWAY_", ""));   // prepare 때 붙인 "SLOWAY_" prefix를 떼어 payNo 복원
         PayEntity payEntity = payRepository.findById(payNo)
                 .orElseThrow(() -> new CustomException(PayErrorCode.PAY_NOT_FOUND));
-
+        // 멱등 처리 — 재confirm·중복 호출돼도 한 번만 반영
         if (payEntity.getStatus() == PayStatus.COMPLETED) {
             return PayResDto.from(payEntity);
         }
-
+        // 금액 위변조 재검증 — 클라가 조작한 금액으로 승인되는 것 차단
         if (!amount.equals(payEntity.getFinalAmt())) {
             log.warn("토스 결제 금액 불일치 payNo={}, 요청={}, 서버={}", payNo, amount, payEntity.getFinalAmt());
             throw new CustomException(PayErrorCode.PAY_AMOUNT_INVALID);
         }
-
         TossConfirmResDto confirmResDto = tossPayClient.confirm(TossConfirmReqDto.builder()
                 .paymentKey(paymentKey)
                 .orderId(orderId)
                 .amount(amount)
                 .build());
-
+        // 토스가 실제 승인 완료(DONE) 응답일 때만 후처리 진행
         if (!"DONE".equals(confirmResDto.getStatus())) {
             throw new CustomException(PayErrorCode.PAY_PROCESS_FAILED);
         }
-
         Long memberNo = payEntity.getRsvnNo().getMemberNo().getNo();
         payEntity.assignTid(paymentKey);
         completePayAfterApprove(payEntity, memberNo);
@@ -285,32 +282,29 @@ public class PayService {
         }
     }
 
+    // 카카오·토스 공통 진입점 — PG 호출 전에 모든 검증과 finalAmt 계산을 끝내고 READY로 저장
     private PayEntity buildReadyPay(PayCreateReqDto payCreateReqDto, Long loginMemberNo){
         validAmt(payCreateReqDto);
         RsvnEntity rsvn = validRsvn(payCreateReqDto);
         validRsvnOwner(rsvn, loginMemberNo);           // ② 본인 예약만 결제
         validAmtMatchesRsvn(payCreateReqDto, rsvn);    // ① 결제 금액 위변조
-        validDuplicate(rsvn.getNo());
-
+        validDuplicate(rsvn.getNo());                  // 이미 결제 완료(COMPLETED)된 예약의 재결제 차단
         CouponEntity coupon = null;
         if (payCreateReqDto.getUcNo() != null) {
             coupon = couponRepository.findById(payCreateReqDto.getUcNo())
                     .orElseThrow(() -> new CustomException(CouponErrorCode.COUPON_NOT_FOUND));
             validCoupon(coupon, loginMemberNo);        // ③ 본인 쿠폰만 사용
         }
-
         int dcAmt = calculateDcAmt(coupon, payCreateReqDto.getBaseAmt());
         int usedPoint = payCreateReqDto.getUsedPoint() == null
                 ? 0 : payCreateReqDto.getUsedPoint();
         validUsedPoint(usedPoint);                     // ⑤ 포인트 음수 방어
-
+        // 결제 총액(base+add)에서 쿠폰·포인트를 차감한 실제 결제 금액
         int finalAmt = payCreateReqDto.getBaseAmt() + payCreateReqDto.getAddAmt()
                 - dcAmt - usedPoint;
-
         validFinalAmt(payCreateReqDto, finalAmt, dcAmt, usedPoint);
-
         PayEntity payEntity = payCreateReqDto.toEntity(rsvn, coupon, dcAmt, finalAmt);
-        return payRepository.save(payEntity);
+        return payRepository.save(payEntity);          // 아직 PG 미호출 — READY 상태로 먼저 저장
     }
 
 
