@@ -63,6 +63,7 @@ const SpaceThumb = styled.div`
   justify-content: center;
   font-size: 32px;
   flex-shrink: 0;
+  overflow: hidden;
 `;
 
 const TypeTag = styled.span`
@@ -234,6 +235,7 @@ function RoomListPage() {
     available: true,
     icon: TYPE_ICON[space.type] ?? '🏠',
     color: TYPE_COLOR[space.type] ?? '#E8E0D0',
+    thumbnail: space.images?.[0] ?? null,
   }];
 
   // 방 선택 → 공간 유형에 따라 상세 페이지로 이동
@@ -255,7 +257,12 @@ function RoomListPage() {
 
         {/* 공간 요약 */}
         <SpaceSummary>
-          <SpaceThumb>{space.icon}</SpaceThumb>
+          <SpaceThumb>
+            {space.images?.[0]
+              ? <img src={space.images[0]} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+              : (TYPE_ICON[space.type] ?? '🏠')
+            }
+          </SpaceThumb>
           <div style={{ flex: 1 }}>
             <TypeTag>{space.type}</TypeTag>
             <div style={{ fontSize: 18, fontWeight: 700, marginBottom: 3 }}>
@@ -284,7 +291,10 @@ function RoomListPage() {
               }}
             >
               <RoomImg $color={room.color}>
-                {room.icon}
+                {room.thumbnail
+                  ? <img src={room.thumbnail} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                  : room.icon
+                }
                 <AvailBadge $avail={room.available}>
                   {room.available ? '예약 가능' : '예약 마감'}
                 </AvailBadge>
