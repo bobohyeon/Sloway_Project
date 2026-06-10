@@ -18,8 +18,7 @@ public class HostSalesStatsResDto {
 
     // 금액 필드 Long — 공간별 월 매출이 int(약 21억)를 넘겨 음수 되는 것 방지
     public static HostSalesStatsResDto of(Long totalAmt, Long payCount, Long refundAmt, List<MonthlyTrendResDto> trend) {
-        long avgAmt = payCount == 0 ? 0 : totalAmt / payCount;
-
+        long avgAmt = payCount == 0 ? 0 : totalAmt / payCount;   // 결제 0건일 때 0으로 나누기(ArithmeticException) 방지
         return HostSalesStatsResDto.builder()
                 .totalAmt(totalAmt)
                 .payCount(payCount)

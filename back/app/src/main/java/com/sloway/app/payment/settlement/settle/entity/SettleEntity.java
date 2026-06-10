@@ -84,15 +84,16 @@ public class SettleEntity extends BaseEntity {
         this.payoutAmt = payoutAmt;
     }
 
+    // 지급 기준 금액에 미달하면 이번 회차에 지급하지 않고 다음 회차로 이월(carry-over)
     public void settleWithCarry(Integer effectiveAmt, int minPayOut) {
-        if (effectiveAmt >= minPayOut) {
+        if (effectiveAmt >= minPayOut) {   // 지급 최소 기준 이상인지 판정
             this.status = SettleStatus.WAITING;
             this.payoutAmt = effectiveAmt;
             this.carryOver=0;
         } else {
             this.status = SettleStatus.CARRIED;
             this.payoutAmt =0;
-            this.carryOver = effectiveAmt;
+            this.carryOver = effectiveAmt;   // 소액 잔액이 사라지지 않게 다음 회차로 누적
         }
     }
 

@@ -48,16 +48,17 @@ public class StatsService {
     private final StatsRepositoryCustom statsRepositoryCustom;
     private final HostRepository hostRepository;
 
+    // 일자별 통계를 사전집계 테이블에 적재 — 조회마다 결제 원장을 집계하면 비싸서 하루치를 미리 적재(스케줄러가 자정 호출)
     @Transactional
     public void loadDailyStats(LocalDate targetDate) {
         LocalDateTime startTime = targetDate.atStartOfDay();
         LocalDateTime endTime = targetDate.atTime(23, 59, 59);
         List<Tuple> list = payRepository.sumByMethodBetween(startTime, endTime);
-
         for (Tuple tuple : list) {
             PayMethod payMethod = tuple.get(0, PayMethod.class);
             Long count = tuple.get(1, Long.class);
             Long sum = tuple.get(2, Long.class);
+            // 같은 (일자, 결제수단) 행이 있으면 update, 없으면 insert → 재적재돼도 멱등(upsert)
             dailyPayStatsRepository
                     .findByStatDateAndPayMethod(targetDate,
                             payMethod)
@@ -74,12 +75,10 @@ public class StatsService {
                             )
                     );
         }
-
         Tuple refundTuple = refundRepository.sumBetween(startTime,
                 endTime);
         Long refundCount = refundTuple.get(0, Long.class);
         BigDecimal refundAmt = refundTuple.get(1, BigDecimal.class);
-
         dailyRefundStatsRepository.findByStatDate(targetDate)
                 .ifPresentOrElse(
                         entity ->

@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import styled from 'styled-components';
+import { FaWallet, FaReceipt, FaBalanceScale, FaPiggyBank } from 'react-icons/fa';
 
 import PageLayout from '../../../../app/layouts/page/PageLayout';
 import { StatCard } from '../../../pay_shared/components/StatCard';
@@ -33,7 +34,7 @@ function formatMan(value) {
 
 export default function StatsOverview() {
   const { year, month } = useMemo(() => getAnchorMonth(), []);
-  const [months, setMonths] = useState(3); // 디폴트 3개월
+  const [months, setMonths] = useState(1); // 디폴트 이번 달
 
   const [summary, setSummary] = useState(null);
   const [methods, setMethods] = useState([]);
@@ -113,21 +114,25 @@ export default function StatsOverview() {
           label="총 매출"
           value={Number(summary?.totalAmt ?? 0).toLocaleString()}
           unit="원"
+          icon={<FaWallet />}
         />
         <StatCard
           label="결제 건수"
           value={Number(summary?.payCount ?? 0).toLocaleString()}
           unit="건"
+          icon={<FaReceipt />}
         />
         <StatCard
           label="평균 결제금"
           value={Number(summary?.avgAmt ?? 0).toLocaleString()}
           unit="원"
+          icon={<FaBalanceScale />}
         />
         <StatCard
           label="순매출 (환불 차감)"
           value={Number(summary?.netAmt ?? 0).toLocaleString()}
           unit="원"
+          icon={<FaPiggyBank />}
           highlight
         />
       </KPIGrid>
@@ -217,33 +222,6 @@ const FilterBar = styled.div`
   gap: var(--space-3);
   margin-bottom: var(--space-5);
   flex-wrap: wrap;
-`;
-
-const FilterGroup = styled.label`
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-`;
-
-const FilterLabel = styled.span`
-  font-size: 0.82rem;
-  color: var(--gray-600);
-`;
-
-const Select = styled.select`
-  padding: 6px 10px;
-  border: 1px solid var(--gray-200);
-  border-radius: var(--radius-md);
-  background: var(--white);
-  font-family: 'Noto Sans KR', sans-serif;
-  font-size: 0.85rem;
-  color: var(--gray-800);
-  cursor: pointer;
-
-  &:focus {
-    outline: none;
-    border-color: var(--sage);
-  }
 `;
 
 const StatusText = styled.span`

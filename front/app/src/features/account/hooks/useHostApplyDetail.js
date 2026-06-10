@@ -1,6 +1,10 @@
 import { useState, useEffect } from 'react';
-import { getAdminHostDetail, approveHost, rejectHost } from '../api/adminApi';
-
+import {
+  getAdminHostDetail,
+  approveHost,
+  rejectHost,
+  reReviewHost,
+} from '../api/adminApi';
 const STATE_MAP = {
   P: 'PENDING',
   A: 'APPROVED',
@@ -33,6 +37,7 @@ export function useHostApplyDetail(hostId) {
             ? h.approvedAt.replace('T', ' ').slice(0, 16)
             : null,
           rejectReason: h.rejectReason,
+          lastRejectReason: h.lastRejectReason,
         });
       })
       .catch(() => setApplication(null))
@@ -53,5 +58,10 @@ export function useHostApplyDetail(hostId) {
     fetchDetail();
   };
 
-  return { application, loading, approve, reject };
+  const reReview = async () => {
+    await reReviewHost(hostId);
+    fetchDetail();
+  };
+
+  return { application, loading, approve, reject, reReview };
 }

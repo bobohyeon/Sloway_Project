@@ -59,18 +59,14 @@ public class CouponEventService {
     public CouponResDto downloadCoupon(Long eventNo, Long memberNo) {
         CouponEventEntity couponEventEntity = couponEventRepository.findById(eventNo)
                 .orElseThrow(() -> new CustomException(CouponEventErrorCode.COUPONEVENT_NOT_FOUND));
-
         couponEventEntity.validateDownloadable();   // 종료/소진된 이벤트 발급 차단
-
+        // 1인 1회 발급 제한 — 같은 회원이 같은 이벤트를 이미 받았으면 중복 발급 차단
         if (couponEventRepository.existsByEventAndMember(eventNo, memberNo)) {
             throw new CustomException(CouponEventErrorCode.COUPONEVENT_ALREADY_DOWNLOADED);
         }
-
         MemberEntity memberEntity = memberRepository.findById(memberNo)
                 .orElseThrow(() -> new CustomException(MemberErrorCode.MEMBER_NOT_FOUND));
-
         LocalDateTime expiredAt = LocalDateTime.now().plusDays(couponEventEntity.getValidDays());
-
         CouponEntity couponEntity = CouponEntity.builder()
                 .couponName(couponEventEntity.getCouponName())
                 .dcType(couponEventEntity.getDcType())

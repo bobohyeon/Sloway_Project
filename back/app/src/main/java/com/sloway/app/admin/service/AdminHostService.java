@@ -170,4 +170,23 @@ public class AdminHostService {
         host.restore();
         log.info("호스트 자격 복구: hostNo={}, memberNo={}", host.getNo(), host.getMemberNo());
     }
+
+    /**
+     * 호스트 신청 재검토.
+     *
+     * 반려(R) 상태에서만 가능. 반려됐던 신청을 다시 대기(P)로 되돌려
+     * 재심사 대상으로 올린다. 재심사 후 다시 문제가 있으면 reject로 새 사유와
+     * 함께 다시 반려할 수 있다. (반려 사유는 reReview 시 초기화됨)
+     */
+    @Transactional
+    public void reReview(Long hostNo){
+        HostEntity host = hostRepository.findById(hostNo)
+                .orElseThrow(()->new CustomException(HostErrorCode.HOST_NOT_FOUND));
+
+        if (host.getApprovalState()!=ApprovalState.R){
+            throw new CustomException(HostErrorCode.INVALID_APPROVAL_STATE);
+        }
+        host.reReview();
+        log.info("호스트 재검토 전환 : hostNo={},memberNo={}",host.getNo() , host.getMemberNo());
+    }
 }//class

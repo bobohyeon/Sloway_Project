@@ -107,14 +107,14 @@ public class SearchCustomRepositoryImpl implements SearchCustomRepository{
         return region == null ? null : p.address.contains(region.getCode());
     }
 
-    //썸네일
+    //썸네일 — sort 오름차순 첫 번째 (등록 시 sort=1부터 저장하므로 sort=0 조건 제거)
     private JPQLQuery<String> thumbnailExpr(){
-        JPQLQuery<String> thumbnail = JPAExpressions
+        return JPAExpressions
                 .select(i.currentUrl)
                 .from(i)
-                .where(i.placeEntity.eq(p), i.sort.eq((0)))
+                .where(i.placeEntity.eq(p))
+                .orderBy(i.sort.asc())
                 .limit(1);
-        return thumbnail;
     }
 
     //요금최솟값

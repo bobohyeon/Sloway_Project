@@ -201,6 +201,7 @@ import ReviewEditPage from './features/review/pages/user/ReviewEditPage';
 import AmenityPage from './features/approval/pages/admin/AmenityPage';
 import HostNotificationSettingsPage from './features/notification/pages/host/HostNotificationSettingsPage';
 import HostNotificationListPage from './features/notification/pages/host/HostNotificationListPage';
+import HostReapplyPage from './features/account/pages/host/HostReapplyPage';
 
 // ── 임시 플레이스홀더 ─────────────────────────────────────
 const Todo = ({ label }) => (
@@ -339,6 +340,8 @@ function App() {
           <Route path="/host/password" element={<HostChangePasswordPage />} />
           <Route path="/host/withdraw" element={<HostWithdrawPage />} />
           <Route path="/host/application" element={<HostStatusPage />} />
+          <Route path="/host/reapply" element={<HostReapplyPage />} />
+
           <Route
             path="/host/license"
             element={<Todo label="사업자등록증 인증" />}

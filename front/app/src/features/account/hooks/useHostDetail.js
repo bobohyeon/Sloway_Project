@@ -3,6 +3,7 @@ import {
   getAdminHostDetail,
   revokeHost,
   restoreHost,
+  reReviewHost,
   getAdminHostStats, // 4번 — 매출/월별 추이
   getAdminHostSettleList, // 4번 — 정산목록(미정산 집계)
   getAdminHostAccount, // 4번 — 계좌
@@ -162,5 +163,11 @@ export const useHostDetail = (hostId) => {
     await fetchDetail();
   };
 
-  return { host, loading, error, revoke, restore };
+  //재검토 (반려 - > 대기로 되돌리기)
+  const reReview = async () => {
+    await reReviewHost(hostId);
+    await fetchDetail();
+  };
+
+  return { host, loading, error, revoke, restore, reReview };
 };
