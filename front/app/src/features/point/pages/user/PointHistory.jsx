@@ -217,13 +217,13 @@ const Section = styled.section`
 const SectionTitle = styled.h3`
   font-size: 16px;
   font-weight: 700;
-  color: var(--gray800);
+  color: var(--gray-800);
   margin: 0 0 var(--space-3);
 `;
 
 const PolicyTable = styled.div`
   background: var(--white);
-  border: 1px solid var(--gray200);
+  border: 1px solid var(--gray-200);
   border-radius: var(--radius-md);
   overflow: hidden;
 `;
@@ -231,7 +231,7 @@ const PolicyTable = styled.div`
 const PolicyRow = styled.div`
   display: flex;
   padding: var(--space-3) var(--space-4);
-  border-bottom: 1px solid var(--gray100);
+  border-bottom: 1px solid var(--gray-100);
   font-size: 14px;
 
   &:last-child {
@@ -241,17 +241,17 @@ const PolicyRow = styled.div`
 
 const PolicyLabel = styled.div`
   flex: 0 0 120px;
-  color: var(--gray600);
+  color: var(--gray-600);
   font-weight: 500;
 `;
 
 const PolicyValue = styled.div`
   flex: 1;
-  color: var(--gray800);
+  color: var(--gray-800);
 `;
 
 const EmptyBox = styled.div`
-  background: var(--gray100);
+  background: var(--gray-100);
   border-radius: var(--radius-md);
   padding: var(--space-10) var(--space-6);
   text-align: center;
@@ -265,19 +265,19 @@ const EmptyIcon = styled.div`
 const EmptyTitle = styled.div`
   font-size: 15px;
   font-weight: 600;
-  color: var(--gray800);
+  color: var(--gray-800);
   margin-bottom: var(--space-2);
 `;
 
 const EmptyDesc = styled.div`
   font-size: 13px;
-  color: var(--gray600);
+  color: var(--gray-600);
   line-height: 1.5;
 `;
 
 const HistoryList = styled.div`
   background: var(--white);
-  border: 1px solid var(--gray200);
+  border: 1px solid var(--gray-200);
   border-radius: var(--radius-md);
   overflow: hidden;
 `;
@@ -287,7 +287,7 @@ const HistoryRow = styled.div`
   align-items: center;
   justify-content: space-between;
   padding: var(--space-3) var(--space-4);
-  border-bottom: 1px solid var(--gray100);
+  border-bottom: 1px solid var(--gray-100);
 
   &:last-child {
     border-bottom: none;
@@ -308,7 +308,7 @@ const DealBadge = styled.span`
   font-weight: 600;
   color: var(--white);
   background: ${({ $deal }) =>
-    $deal === 'EARN' ? 'var(--sage)' : 'var(--gray600)'};
+    $deal === 'EARN' ? 'var(--sage)' : 'var(--gray-600)'};
 `;
 
 const HistoryMeta = styled.div`
@@ -320,16 +320,16 @@ const HistoryMeta = styled.div`
 const HistoryStatus = styled.span`
   font-size: 14px;
   font-weight: 500;
-  color: var(--gray800);
+  color: var(--gray-800);
 `;
 
 const HistoryDate = styled.span`
   font-size: 12px;
-  color: var(--gray600);
+  color: var(--gray-600);
 `;
 
 const HistoryAmount = styled.div`
   font-size: 15px;
   font-weight: 700;
-  color: ${({ $positive }) => ($positive ? 'var(--sage)' : 'var(--gray800)')};
+  color: ${({ $positive }) => ($positive ? 'var(--sage)' : 'var(--gray-800)')};
 `;

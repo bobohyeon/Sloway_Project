@@ -47,7 +47,7 @@ public class CouponService {
 
     public List<CouponResDto> findCouponsByMemberNo(Long no) {
         MemberEntity memberEntity = findMember(no);
-        // 쿠폰함은 전체 상태를 내려주고 프론트가 탭(사용가능/사용완료/만료)으로 분류 — AVAILABLE 고정 조회가 사용완료 쿠폰을 숨기던 버그 수정
+        // 프론트에서 탭으로 구분 ( 쿠폰 상태 값 기준)
         List<CouponEntity> memberCouponList = couponRepository.findByMember(memberEntity.getNo());
         return memberCouponList.stream().map(CouponResDto::from).toList();
     }

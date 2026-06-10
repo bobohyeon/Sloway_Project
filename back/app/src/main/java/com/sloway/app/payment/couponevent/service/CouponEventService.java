@@ -60,7 +60,7 @@ public class CouponEventService {
         CouponEventEntity couponEventEntity = couponEventRepository.findById(eventNo)
                 .orElseThrow(() -> new CustomException(CouponEventErrorCode.COUPONEVENT_NOT_FOUND));
         couponEventEntity.validateDownloadable();   // 종료/소진된 이벤트 발급 차단
-        // 1인 1회 발급 제한 — 같은 회원이 같은 이벤트를 이미 받았으면 중복 발급 차단
+        // 같은 회원이 같은 이벤트를 이미 받았으면 중복 발급 차단
         if (couponEventRepository.existsByEventAndMember(eventNo, memberNo)) {
             throw new CustomException(CouponEventErrorCode.COUPONEVENT_ALREADY_DOWNLOADED);
         }

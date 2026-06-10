@@ -62,8 +62,10 @@ public class PayApiController {
     }
 
     @GetMapping("/member/{no}")
-    public ResponseEntity<List<PayResDto>> findPaysByMemberNo(@PathVariable Long no) {
-        List<PayResDto> payResDtoList = payService.findPaysByMemberNo(no);
+    public ResponseEntity<List<PayResDto>> findPaysByMemberNo(
+            @AuthenticationPrincipal CustomUserDetails userDetails) {
+        // 본인 결제 내역만 — URL의 no 대신 인증 토큰의 memberNo 사용 (IDOR 방지)
+        List<PayResDto> payResDtoList = payService.findPaysByMemberNo(userDetails.getMemberNo());
         return ResponseEntity.ok(payResDtoList);
     }
 

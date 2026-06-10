@@ -157,14 +157,14 @@ public class PointService {
         return PointBalanceResDto.from(memberEntity, balance);
     }
 
-    // 포인트 잔액 = 적립(SAVE, +) + 사용(USED, -) 합산 — 사용 row가 음수라 더하면 차감 효과
+    // 포인트 잔액 = 적립 + 사용 합산
     private int calcBalance(Long memberNo) {
         int saveSum = pointRepository.sumByMemberAndStatus(memberNo, PointStatus.SAVE);
         int usedSum = pointRepository.sumByMemberAndStatus(memberNo, PointStatus.USED);
         return saveSum + usedSum;
     }
 
-    // 환불 시 사용했던 포인트를 되돌림 — USE row 합계만큼 새 SAVE row를 만들어 복원
+    // 환불 시 사용했던 포인트를 되돌림
     @Transactional
     public void refundUsedPoint(PayEntity payEntity) {
         MemberEntity member = findMember(payEntity.getRsvnNo().getMemberNo().getNo());
@@ -183,7 +183,7 @@ public class PointService {
         pointRepository.save(entity);
     }
 
-    // 환불 시 그 결제로 적립됐던 포인트를 취소 — 아직 미확정(WAIT)·확정(SAVE)인 EARN만 cancel
+    // 환불 시 그 결제로 적립됐던 포인트를 취소
     @Transactional
     public void cancelEarnedPoint(PayEntity payEntity) {
         List<PointEntity> pointList = pointRepository.findByPayAndDealType(payEntity.getNo(), PointDealType.EARN);
