@@ -80,14 +80,16 @@ const RejectBtn = styled.button`
 
 const TABS = [
   { label: '전체', status: null },
+  { label: '결제대기', status: 'P' },
   { label: '확정', status: 'S' },
   { label: '완료', status: 'E' },
   { label: '거절', status: 'R' },
   { label: '취소', status: 'C' },
 ];
 
-const STATUS_LABEL = { S: '확정', E: '완료', R: '거절', C: '취소' };
+const STATUS_LABEL = { P: '결제대기', S: '확정', E: '완료', R: '거절', C: '취소' };
 const STATUS_STYLE = {
+  P: { bg: '#FFF9E6', color: '#B8860B' },
   S: { bg: '#EEF5EE', color: '#2D6A4F' },
   E: { bg: '#F0F0F0', color: '#666' },
   R: { bg: '#FFF3E0', color: '#E65100' },
@@ -162,13 +164,13 @@ function HostRsvnListPage() {
           <StatLabel>전체 예약</StatLabel>
           <StatValue>{list.length}건</StatValue>
         </StatCard>
-        <StatCard style={{ cursor: 'pointer' }} onClick={() => setActiveTab(1)}>
-          <StatLabel>확정</StatLabel>
-          <StatValue $color={COLOR.green}>{counts[1]}건</StatValue>
-        </StatCard>
         <StatCard style={{ cursor: 'pointer' }} onClick={() => setActiveTab(2)}>
+          <StatLabel>확정</StatLabel>
+          <StatValue $color={COLOR.green}>{counts[2]}건</StatValue>
+        </StatCard>
+        <StatCard style={{ cursor: 'pointer' }} onClick={() => setActiveTab(3)}>
           <StatLabel>완료</StatLabel>
-          <StatValue>{counts[2]}건</StatValue>
+          <StatValue>{counts[3]}건</StatValue>
         </StatCard>
         <StatCard style={{ cursor: 'pointer' }} onClick={() => navigate('/host/settlement/dashboard')}>
           <StatLabel>이번 달 매출 →</StatLabel>
