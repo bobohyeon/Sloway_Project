@@ -1,5 +1,6 @@
 package com.sloway.app.payment.refund.controller;
 
+import com.sloway.app.auth.user.CustomUserDetails;
 import com.sloway.app.payment.refund.dto.request.RefundCreateReqDto;
 import com.sloway.app.payment.refund.dto.response.RefundResDto;
 import com.sloway.app.payment.refund.service.RefundService;
@@ -7,6 +8,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -21,8 +23,10 @@ public class RefundApiController {
     private final RefundService refundService;
 
     @PostMapping
-    public ResponseEntity<RefundResDto> createRefund(@RequestBody RefundCreateReqDto refundCreateReqDto) {
-        RefundResDto resDto = refundService.createRefund(refundCreateReqDto);
+    public ResponseEntity<RefundResDto> createRefund(
+            @RequestBody RefundCreateReqDto refundCreateReqDto,
+            @AuthenticationPrincipal CustomUserDetails userDetails) {
+        RefundResDto resDto = refundService.createRefund(refundCreateReqDto, userDetails.getMemberNo());
         return ResponseEntity.status(HttpStatus.CREATED).body(resDto);
     }
 

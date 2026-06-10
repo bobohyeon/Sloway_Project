@@ -58,7 +58,10 @@ export default function AdminCouponEvent() {
   };
 
   useEffect(() => {
-    loadEvents();
+    // async IIFE — effect 본문에서 setState 동기 호출 회피(react-hooks/set-state-in-effect)
+    (async () => {
+      await loadEvents();
+    })();
   }, []);
 
   const resetForm = () => {
@@ -187,7 +190,16 @@ export default function AdminCouponEvent() {
           }
         />
       ) : (
-        <EventGrid>
+        <ListCard>
+          <TableHeader>
+            <HCol>쿠폰명</HCol>
+            <HCol>할인</HCol>
+            <HCol>유효기간</HCol>
+            <HCol>게시 기간</HCol>
+            <HCol>발급 현황</HCol>
+            <HCol>상태</HCol>
+            <HCol>관리</HCol>
+          </TableHeader>
           {events.map((ev) => {
             const statusInfo = STATUS_INFO[ev.status] ?? {
               label: ev.status,
@@ -198,55 +210,37 @@ export default function AdminCouponEvent() {
                 ? Math.round((ev.issuedCount / ev.totalCount) * 100)
                 : 0;
             return (
-              <EventCard key={ev.no}>
-                <CardHeader>
-                  <CardTitle>{ev.couponName}</CardTitle>
+              <Row key={ev.no}>
+                <Col data-label="쿠폰명">
+                  <Strong>{ev.couponName}</Strong>
+                </Col>
+                <Col data-label="할인">
+                  {formatDcValue(ev.dcType, ev.dcValue)}
+                </Col>
+                <Col data-label="유효기간">다운로드 후 {ev.validDays}일</Col>
+                <Col data-label="게시 기간">
+                  {formatDateTime(ev.startAt)} ~ {formatDateTime(ev.endAt)}
+                </Col>
+                <Col data-label="발급 현황">
+                  {ev.issuedCount} / {ev.totalCount}장 ({progress}%)
+                </Col>
+                <Col data-label="상태">
                   <StatusBadge $color={statusInfo.color}>
                     {statusInfo.label}
                   </StatusBadge>
-                </CardHeader>
-
-                <CardBody>
-                  <InfoRow>
-                    <InfoLabel>할인</InfoLabel>
-                    <InfoValue>
-                      {formatDcValue(ev.dcType, ev.dcValue)}
-                    </InfoValue>
-                  </InfoRow>
-                  <InfoRow>
-                    <InfoLabel>유효기간</InfoLabel>
-                    <InfoValue>다운로드 후 {ev.validDays}일</InfoValue>
-                  </InfoRow>
-                  <InfoRow>
-                    <InfoLabel>게시 기간</InfoLabel>
-                    <InfoValue>
-                      {formatDateTime(ev.startAt)} ~ {formatDateTime(ev.endAt)}
-                    </InfoValue>
-                  </InfoRow>
-                  <InfoRow>
-                    <InfoLabel>발급 현황</InfoLabel>
-                    <InfoValue>
-                      {ev.issuedCount} / {ev.totalCount}장 ({progress}%)
-                    </InfoValue>
-                  </InfoRow>
-                  <ProgressBar>
-                    <ProgressFill $width={progress} />
-                  </ProgressBar>
-                </CardBody>
-
-                <CardFooter>
-                  <Button
-                    variant="secondary"
+                </Col>
+                <Col data-label="관리">
+                  <CloseBtn
                     onClick={() => handleClose(ev.no)}
                     disabled={ev.status !== 'OPEN' || closing === ev.no}
                   >
                     {closing === ev.no ? '종료 중...' : '게시 종료'}
-                  </Button>
-                </CardFooter>
-              </EventCard>
+                  </CloseBtn>
+                </Col>
+              </Row>
             );
           })}
-        </EventGrid>
+        </ListCard>
       )}
 
       <Notice>
@@ -366,89 +360,110 @@ export default function AdminCouponEvent() {
   );
 }
 
-const EventGrid = styled.div`
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
-  gap: var(--space-4);
-`;
-
-const EventCard = styled.div`
-  display: flex;
-  flex-direction: column;
+const ListCard = styled.div`
   background: var(--white);
   border: 1px solid var(--gray-200);
   border-radius: var(--radius-md);
-  padding: var(--space-4);
-  gap: var(--space-3);
+  overflow: hidden;
 `;
 
-const CardHeader = styled.div`
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
+const COLS = '1.6fr 1fr 1.3fr 2fr 1.3fr 90px 100px';
+
+const TableHeader = styled.div`
+  display: grid;
+  grid-template-columns: ${COLS};
   gap: var(--space-2);
+  padding: var(--space-3) var(--space-4);
+  background: var(--gray-100);
+  border-bottom: 1px solid var(--gray-200);
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--gray-600);
+
+  @media (max-width: 860px) {
+    display: none;
+  }
 `;
 
-const CardTitle = styled.h3`
-  font-size: 1rem;
-  font-weight: 600;
+const HCol = styled.div``;
+
+const Row = styled.div`
+  display: grid;
+  grid-template-columns: ${COLS};
+  gap: var(--space-2);
+  align-items: center;
+  padding: var(--space-3) var(--space-4);
+  border-bottom: 1px solid var(--gray-100);
+  font-size: 0.85rem;
+  color: var(--gray-800);
+
+  &:last-child {
+    border-bottom: none;
+  }
+
+  &:hover {
+    background: var(--cream);
+  }
+
+  @media (max-width: 860px) {
+    grid-template-columns: 1fr;
+    gap: 4px;
+    padding: var(--space-3) var(--space-4);
+  }
+`;
+
+const Col = styled.div`
+  min-width: 0;
+  word-break: keep-all;
+
+  @media (max-width: 860px) {
+    display: flex;
+    justify-content: space-between;
+    &::before {
+      content: attr(data-label);
+      color: var(--gray-400);
+      font-size: 0.78rem;
+      margin-right: var(--space-2);
+    }
+  }
+`;
+
+const Strong = styled.span`
+  font-weight: 700;
   color: var(--gray-900);
-  margin: 0;
 `;
 
 const StatusBadge = styled.span`
+  display: inline-flex;
+  align-items: center;
   padding: 4px 10px;
   border-radius: 999px;
   background: ${({ $color }) => $color};
   color: var(--white);
-  font-size: 0.75rem;
-  font-weight: 500;
+  font-size: 0.74rem;
+  font-weight: 600;
   white-space: nowrap;
 `;
 
-const CardBody = styled.div`
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-2);
-`;
+const CloseBtn = styled.button`
+  padding: 5px 12px;
+  background: var(--white);
+  border: 1px solid var(--gray-200);
+  border-radius: var(--radius-md);
+  font-size: 0.78rem;
+  color: var(--gray-700);
+  cursor: pointer;
+  font-family: 'Noto Sans KR', sans-serif;
 
-const InfoRow = styled.div`
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  font-size: 0.85rem;
-`;
+  &:disabled {
+    opacity: 0.45;
+    cursor: not-allowed;
+  }
 
-const InfoLabel = styled.span`
-  color: var(--gray-500);
-`;
-
-const InfoValue = styled.span`
-  color: var(--gray-800);
-  font-weight: 500;
-`;
-
-const ProgressBar = styled.div`
-  width: 100%;
-  height: 6px;
-  background: var(--gray-100);
-  border-radius: 999px;
-  overflow: hidden;
-  margin-top: var(--space-1);
-`;
-
-const ProgressFill = styled.div`
-  width: ${({ $width }) => $width}%;
-  height: 100%;
-  background: var(--sage);
-  transition: width 200ms ease;
-`;
-
-const CardFooter = styled.div`
-  display: flex;
-  justify-content: flex-end;
-  padding-top: var(--space-2);
-  border-top: 1px solid var(--gray-100);
+  &:hover:not(:disabled) {
+    border-color: var(--sage);
+    color: var(--sage);
+  }
 `;
 
 const Notice = styled.div`

@@ -12,7 +12,7 @@ import java.time.LocalDateTime;
 public class BlackOutResDto {
 
     private Long no;
-    private Long placeNo;
+    private Long entityNo;
     private String title;
     private String memo;
     private BlackOutReasonType reasonType;
@@ -23,9 +23,16 @@ public class BlackOutResDto {
     private LocalDateTime createdAt;
 
     public static BlackOutResDto from(BlackOutEntity entity){
+
+        Long entityNo =null;
+
+        if(entity.getOfficeNo() != null){ entityNo = entity.getOfficeNo().getNo();
+        }else if(entity.getStationNo() != null){ entityNo = entity.getStationNo().getNo();
+        }else if(entity.getWorkStayNo() != null){ entityNo = entity.getWorkStayNo().getNo();}
+
         return BlackOutResDto.builder()
                 .no(entity.getNo())
-                .placeNo(entity.getPlaceNo().getNo())
+                .entityNo(entityNo)
                 .title(entity.getTitle())
                 .memo(entity.getMemo())
                 .reasonType(entity.getReasonType())

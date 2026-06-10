@@ -32,7 +32,6 @@ const RATE_VALUE = {
 const METHOD_INFO = {
   KAKAOPAY: { label: '카카오페이', icon: '💬', pg: '카카오페이' },
   TOSSPAY: { label: '토스페이', icon: '🅣', pg: '토스페이' },
-  NAVERPAY: { label: '네이버페이', icon: '🇳', pg: '네이버페이' },
 };
 
 const formatDate = (iso) => {
@@ -229,8 +228,8 @@ export default function RefundDetail() {
               <UserHeader>
                 <UserAvatar>👤</UserAvatar>
                 <UserMain>
-                  <UserName>회원 #{refund.rsvnNo}</UserName>
-                  <UserEmail>회원 도메인 연동 영역 (미연동)</UserEmail>
+                  <UserName>{refund.memberName ?? '회원 정보 없음'}</UserName>
+                  <UserEmail>예약 #{refund.rsvnNo}</UserEmail>
                 </UserMain>
               </UserHeader>
             </InfoCard>
@@ -241,8 +240,7 @@ export default function RefundDetail() {
               <SpaceHeader>
                 <SpaceEmoji>🏠</SpaceEmoji>
                 <SpaceMain>
-                  <SpaceName>예약 #{refund.rsvnNo}</SpaceName>
-                  <Badge variant="sage" size="sm">공간 정보 미연동</Badge>
+                  <SpaceName>{refund.spaceName ?? '공간 정보 없음'}</SpaceName>
                 </SpaceMain>
               </SpaceHeader>
             </InfoCard>

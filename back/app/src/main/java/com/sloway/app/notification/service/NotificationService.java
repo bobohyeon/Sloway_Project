@@ -8,12 +8,19 @@ import com.sloway.app.notification.dto.response.NotificationResDto;
 import com.sloway.app.notification.dto.response.UserNotificationSettingsResDto;
 import com.sloway.app.notification.entity.*;
 import com.sloway.app.notification.error.NotificationErrorCode;
+import com.sloway.app.notification.event.NotificationEvent;
 import com.sloway.app.notification.repository.*;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.http.ResponseEntity;
+import org.springframework.messaging.simp.SimpMessagingTemplate;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.event.TransactionPhase;
+import org.springframework.transaction.event.TransactionalEventListener;
 
 import java.util.List;
 
@@ -130,5 +137,9 @@ public class NotificationService {
                     NotificationType.SETTLEMENT, NotificationType.PAYMENT, NotificationType.POLICY);
             default -> null;
         };
+    }
+
+    public List<NotificationResDto> getNewList(Long memberNo) {
+        return notificationRepository.findByMemberNoAndReadAtIsNull(memberNo);
     }
 }

@@ -22,7 +22,7 @@ function toSpaceCard(dto) {
     title: dto.title,
     location: dto.address,
     score: Math.round(dto.avgScore ?? 0),
-    reviewCount: 0,
+    reviewCount: dto.reviewCount ?? 0,
     price: dto.basePrice ?? 0,
     priceUnit: TYPE_UNIT[dto.type] ?? '원~',
     amenities: [],
@@ -37,6 +37,7 @@ const REGIONS = [
   '전체',
   '서울',
   '경기',
+  '인천',
   '전라',
   '경상',
   '충청',
@@ -541,7 +542,19 @@ function SearchResultPage() {
             <BackBtn onClick={() => navigate(-1)}>← 이전으로</BackBtn>
             <ViewToggle>
               <ViewBtn $active>🗂 리스트</ViewBtn>
-              <ViewBtn onClick={() => navigate('/spaces/search/map')}>
+              <ViewBtn
+                onClick={() =>
+                  navigate('/spaces/search/map', {
+                    state: {
+                      type: TYPE_TABS[activeTab],
+                      region,
+                      checkIn,
+                      checkOut,
+                      guests,
+                    },
+                  })
+                }
+              >
                 🗺 지도
               </ViewBtn>
             </ViewToggle>

@@ -27,6 +27,7 @@ export default function useImageUpdate() {
 
   const spaceType = getSpaceType();
   const isWorkStay = spaceType === 'workstay';
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   // 2. 이미지 상태 관리 (일반용 / 오피스 전용 복수화)
   const [images, setImages] = useState([]);
@@ -94,7 +95,12 @@ export default function useImageUpdate() {
   }, [id, spaceType]);
 
   const handleSaveSubmit = async () => {
+    // 🛠️ 중복 클릭 방지 가드
+    if (isSubmitting) return;
+
     try {
+      setIsSubmitting(true); // 🛠️ 제출 시작: 버튼 잠금
+
       const formDataToSend = new FormData();
 
       if (isWorkStay) {
@@ -149,9 +155,11 @@ export default function useImageUpdate() {
     } catch (error) {
       console.error('이미지 업데이트 실패:', error);
       alert('저장 중 오류가 발생했습니다.');
+    } finally {
+      // 🛠️ 성공/실패 여부 관계없이 잠금 해제
+      setIsSubmitting(false);
     }
   };
-
   return {
     isWorkStay,
     images,

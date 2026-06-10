@@ -7,6 +7,7 @@ import DetailRsvnBox from '../../components/common/DetailRsvnBox';
 import { findReviewsByPlace } from '../../../../review/api/reviewApi';
 import { getWorkStayDetail } from '../../../api/searchApi';
 import { saveRecentViewed } from '../../../recentPlace/api/recentApi';
+import { findBlackoutsByEntity } from '../../../../rsvn/api/blackoutApi';
 
 function WorkstayDetailPage() {
   const { id } = useParams();
@@ -17,6 +18,7 @@ function WorkstayDetailPage() {
   const [guests, setGuests] = useState(location.state?.guests ?? 2);
   const [space, setSpace] = useState(null);
   const [reviews, setReviews] = useState([]);
+  const [blackouts, setBlackouts] = useState([]);
 
   const nights = checkIn && checkOut
     ? Math.max(1, Math.ceil((new Date(checkOut) - new Date(checkIn)) / (1000 * 60 * 60 * 24)))
@@ -25,15 +27,17 @@ function WorkstayDetailPage() {
   useEffect(() => {
     const load = async () => {
       try {
-        const [spaceData, reviewData] = await Promise.all([
+        const [spaceData, reviewData, blackoutData] = await Promise.all([
           getWorkStayDetail(Number(id)),
           findReviewsByPlace(Number(id), 'WORK_STAY'),
+          findBlackoutsByEntity(Number(id)),
         ]);
         const avgScore = reviewData.length > 0
           ? Math.round(reviewData.reduce((sum, r) => sum + (r.scoreTotal ?? 0), 0) / reviewData.length)
           : 0;
         setSpace({ ...spaceData, score: avgScore, reviewCount: reviewData.length });
         setReviews(reviewData);
+        setBlackouts(blackoutData ?? []);
         saveRecentViewed(spaceData.placeNo).catch(() => {});
       } catch (e) {
         console.error('데이터 조회 실패', e);
@@ -55,6 +59,7 @@ function WorkstayDetailPage() {
       }
       rsvnBox={
         <DetailRsvnBox
+          type="stay"
           checkIn={checkIn}
           checkOut={checkOut}
           guests={guests}
@@ -62,6 +67,7 @@ function WorkstayDetailPage() {
           onCheckInChange={setCheckIn}
           onCheckOutChange={setCheckOut}
           onGuestsChange={setGuests}
+          blackouts={blackouts}
           price={selectedRoom?.price ?? space?.basePrice ?? 185000}
           priceUnit="원/박"
           roomName={selectedRoom?.name ?? null}

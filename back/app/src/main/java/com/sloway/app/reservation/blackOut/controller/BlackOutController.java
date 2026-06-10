@@ -12,7 +12,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
-@RequestMapping("/api/blackout")
+@RequestMapping("/api/host/blackout")
 @RequiredArgsConstructor
 @RestController
 public class BlackOutController {
@@ -20,9 +20,12 @@ public class BlackOutController {
     private final BlackOutService blackOutService;
 
     @PostMapping
-    public ResponseEntity<Void> save(@RequestBody BlackOutReqDto dto, @RequestParam Long entityNo){
+    public ResponseEntity<Void> save(
+            @AuthenticationPrincipal CustomUserDetails userDetails,
+            @RequestBody BlackOutReqDto dto,
+            @RequestParam Long entityNo){
 
-        blackOutService.save(entityNo, dto);
+        blackOutService.save(userDetails.getMemberNo(), entityNo, dto);
         return ResponseEntity.status(HttpStatus.CREATED).build();
     }
 
@@ -30,6 +33,13 @@ public class BlackOutController {
     public ResponseEntity<List<BlackOutResDto>> findAll(@RequestParam Long entityNo){
         List<BlackOutResDto> dtoList = blackOutService.findAll(entityNo);
         return ResponseEntity.ok(dtoList);
+    }
+
+    // 호스트 달력용 — 내 모든 공간 블랙아웃 조회
+    @GetMapping("/host")
+    public ResponseEntity<List<BlackOutResDto>> findAllByHost(
+            @AuthenticationPrincipal CustomUserDetails userDetails){
+        return ResponseEntity.ok(blackOutService.findAllByHost(userDetails.getMemberNo()));
     }
 
     @PutMapping("/{no}")

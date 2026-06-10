@@ -7,6 +7,7 @@ import DetailRsvnBox from '../../components/common/DetailRsvnBox';
 import { findReviewsByPlace } from '../../../../review/api/reviewApi';
 import { getOfficeDetail } from '../../../api/searchApi';
 import { saveRecentViewed } from '../../../recentPlace/api/recentApi';
+import { findBlackoutsByEntity } from '../../../../rsvn/api/blackoutApi';
 
 function OfficeDetailPage() {
   const { id } = useParams();
@@ -17,6 +18,7 @@ function OfficeDetailPage() {
   const [guests, setGuests] = useState(location.state?.guests ?? 2);
   const [space, setSpace] = useState(null);
   const [reviews, setReviews] = useState([]);
+  const [blackouts, setBlackouts] = useState([]);
 
   const nights = checkIn && checkOut
     ? Math.max(1, Math.ceil((new Date(checkOut) - new Date(checkIn)) / (1000 * 60 * 60 * 24)))
@@ -25,15 +27,17 @@ function OfficeDetailPage() {
   useEffect(() => {
     const load = async () => {
       try {
-        const [spaceData, reviewData] = await Promise.all([
+        const [spaceData, reviewData, blackoutData] = await Promise.all([
           getOfficeDetail(Number(id)),
           findReviewsByPlace(Number(id), 'OFFICE'),
+          findBlackoutsByEntity(Number(id)),
         ]);
         const avgScore = reviewData.length > 0
           ? Math.round(reviewData.reduce((sum, r) => sum + (r.scoreTotal ?? 0), 0) / reviewData.length)
           : 0;
         setSpace({ ...spaceData, score: avgScore, reviewCount: reviewData.length });
         setReviews(reviewData);
+        setBlackouts(blackoutData ?? []);
         saveRecentViewed(spaceData.placeNo).catch(() => {});
       } catch (e) {
         console.error('데이터 조회 실패', e);
@@ -55,6 +59,7 @@ function OfficeDetailPage() {
       }
       rsvnBox={
         <DetailRsvnBox
+          type="office"
           checkIn={checkIn}
           checkOut={checkOut}
           guests={guests}
@@ -62,15 +67,15 @@ function OfficeDetailPage() {
           onCheckInChange={setCheckIn}
           onCheckOutChange={setCheckOut}
           onGuestsChange={setGuests}
+          blackouts={blackouts}
           price={selectedRoom?.price ?? space?.basePrice ?? 28000}
           priceUnit="원/4시간"
           roomName={selectedRoom?.name ?? null}
           serviceFee={12000}
-          inputType="time"
           rsvnDto={{
             officeNo: space?.entityNo,
             count: guests,
-            amt: (selectedRoom?.price ?? space?.basePrice ?? 0) * nights,
+            amt: selectedRoom?.price ?? space?.basePrice ?? 0,
             checkIn: checkIn || null,
             checkOut: checkOut || null,
             special: null,

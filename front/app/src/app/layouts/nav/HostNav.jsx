@@ -134,7 +134,7 @@ const hostMenuGroups = [
       { url: '/host/chat', str: '1:1 채팅', icon: <FaCommentDots /> },
       { url: '/notice', str: '공지사항', icon: <FaBullhorn /> },
       { url: '/host/notification', str: '알림 내역', icon: <FaBell /> },
-      { url: '/host/notification/setting', str: '알림 설정', icon: <FaCog /> },
+      // { url: '/host/notification/setting', str: '알림 설정', icon: <FaCog /> },
     ],
   },
 ];

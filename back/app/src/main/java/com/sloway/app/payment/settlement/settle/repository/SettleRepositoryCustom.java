@@ -1,7 +1,11 @@
 package com.sloway.app.payment.settlement.settle.repository;
 
 import com.sloway.app.payment.settlement.settle.common.SettleStatus;
+import com.sloway.app.payment.settlement.settle.dto.response.SettleResDto;
+import com.sloway.app.payment.settlement.settle.dto.response.SettleStatsResDto;
 import com.sloway.app.payment.settlement.settle.entity.SettleEntity;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 
 import java.util.List;
 import java.util.Optional;
@@ -13,4 +17,8 @@ public interface SettleRepositoryCustom {
     List<SettleEntity> findByHostNo(Long hostNo);
 
     List<SettleEntity> findByStatus(SettleStatus status);
+
+    Page<SettleResDto> findSettleAll(PageRequest pageRequest, SettleStatus status);
+
+    SettleStatsResDto findSettleStats();
 }

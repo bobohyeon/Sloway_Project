@@ -70,10 +70,14 @@ public class SearchCustomRepositoryImpl implements SearchCustomRepository{
                         p.title,
                         p.type,
                         p.address,
+                        p.latitude,
+                        p.longitude,
                         //썸네일
                         thumbnailExpr(),
                         //평균평점
                         avgExpr(),
+                        //리뷰갯수
+                        reviewCountExpr(),
                         //요금최솟값
                         basePriceExpr(),
                         // remainCount — 날짜 선택 시 구현 예정
@@ -143,6 +147,23 @@ public class SearchCustomRepositoryImpl implements SearchCustomRepository{
                         .limit(1)
         );
         return numberTemp;
+    }
+
+    //리뷰갯수
+    private JPQLQuery<Long> reviewCountExpr(){
+        return JPAExpressions
+                .select(rv.no.count())
+                .from(rv)
+                .join(rv.rsvnNo, rsvn)
+                .leftJoin(rsvn.officeNo, o)
+                .leftJoin(rsvn.workStayNo, ws)
+                .leftJoin(rsvn.stationNo, st)
+                .where(
+                        o.placeEntity.eq(p)
+                                .or(ws.placeEntity.eq(p))
+                                .or(st.placeEntity.eq(p)),
+                        rv.delYn.eq("N")
+                );
     }
 
     //평균평점

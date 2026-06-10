@@ -7,6 +7,7 @@ import { Button, EmptyState } from '../../../pay_shared/components';
 import { useAuth } from '../../../auth/hooks/useAuth';
 
 import { downloadCoupon, findEventAll } from '../../api/couponEventApi';
+import { findCouponsByMemberNo } from '../../../coupon/api/couponApi';
 
 const STATUS_INFO = {
   OPEN: { label: '게시중', color: 'var(--sage)' },
@@ -34,6 +35,7 @@ export default function CouponEvent() {
 
   const [events, setEvents] = useState([]);
   const [downloading, setDownloading] = useState(null); // 다운로드 처리 중인 게시 PK
+  const [issuedEventNos, setIssuedEventNos] = useState([]); // 내가 이미 발급받은 이벤트 PK 목록
 
   // handleDownload(발급 후 갱신)에서도 재사용 → useCallback으로 참조 고정
   const loadEvents = useCallback(async () => {
@@ -45,11 +47,28 @@ export default function CouponEvent() {
     }
   }, []);
 
+  // 내 보유 쿠폰에서 발급받은 이벤트 PK 수집(로그인 시에만) → 발급완료 판별용
+  const loadIssued = useCallback(async () => {
+    if (!memberNo) {
+      setIssuedEventNos([]);
+      return;
+    }
+    try {
+      const coupons = await findCouponsByMemberNo(memberNo);
+      setIssuedEventNos(
+        coupons.map((c) => c.couponEventNo).filter((no) => no != null)
+      );
+    } catch (err) {
+      console.error('보유 쿠폰 조회 실패', err);
+    }
+  }, [memberNo]);
+
   useEffect(() => {
     (async () => {
       await loadEvents();
+      await loadIssued();
     })();
-  }, [loadEvents]);
+  }, [loadEvents, loadIssued]);
 
   const handleDownload = async (no, couponName) => {
     if (downloading) return;
@@ -64,7 +83,8 @@ export default function CouponEvent() {
     setDownloading(no);
     try {
       await downloadCoupon(no, memberNo);
-      await loadEvents(); // 발급 현황 갱신
+      await loadEvents(); // 발급 현황(수량) 갱신
+      await loadIssued(); // 발급완료 상태 갱신 → 버튼 즉시 '발급 완료'로
       alert('쿠폰이 발급됐어요. 쿠폰함에서 확인하세요.');
     } catch (err) {
       console.error('쿠폰 다운로드 실패', err);
@@ -95,12 +115,12 @@ export default function CouponEvent() {
               color: 'var(--gray-500)',
             };
             const remaining = Math.max(ev.totalCount - ev.issuedCount, 0);
-            const progress =
-              ev.totalCount > 0
-                ? Math.round((ev.issuedCount / ev.totalCount) * 100)
-                : 0;
+            const alreadyIssued = issuedEventNos.includes(ev.no);
             const canDownload =
-              ev.status === 'OPEN' && downloading !== ev.no && remaining > 0;
+              ev.status === 'OPEN' &&
+              downloading !== ev.no &&
+              remaining > 0 &&
+              !alreadyIssued;
 
             return (
               <EventCard key={ev.no}>
@@ -124,15 +144,6 @@ export default function CouponEvent() {
                       {formatDate(ev.startAt)} ~ {formatDate(ev.endAt)}
                     </InfoValue>
                   </InfoRow>
-                  <InfoRow>
-                    <InfoLabel>남은 수량</InfoLabel>
-                    <InfoValue>
-                      {remaining} / {ev.totalCount}장
-                    </InfoValue>
-                  </InfoRow>
-                  <ProgressBar>
-                    <ProgressFill $width={progress} />
-                  </ProgressBar>
                 </CardBody>
 
                 <CardFooter>
@@ -142,11 +153,13 @@ export default function CouponEvent() {
                     disabled={!canDownload}
                     style={{ width: '100%' }}
                   >
-                    {downloading === ev.no
-                      ? '발급 중...'
-                      : ev.status === 'OPEN'
-                        ? '쿠폰 받기'
-                        : statusInfo.label}
+                    {alreadyIssued
+                      ? '발급 완료'
+                      : downloading === ev.no
+                        ? '발급 중...'
+                        : ev.status === 'OPEN'
+                          ? '쿠폰 받기'
+                          : statusInfo.label}
                   </Button>
                 </CardFooter>
               </EventCard>
@@ -230,22 +243,6 @@ const InfoLabel = styled.span`
 const InfoValue = styled.span`
   color: var(--gray-800);
   font-weight: 500;
-`;
-
-const ProgressBar = styled.div`
-  width: 100%;
-  height: 6px;
-  background: var(--gray-100);
-  border-radius: 999px;
-  overflow: hidden;
-  margin-top: var(--space-1);
-`;
-
-const ProgressFill = styled.div`
-  width: ${({ $width }) => $width}%;
-  height: 100%;
-  background: var(--sage);
-  transition: width 200ms ease;
 `;
 
 const CardFooter = styled.div`

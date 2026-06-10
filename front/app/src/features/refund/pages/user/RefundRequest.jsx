@@ -40,15 +40,6 @@ const REFUND_METHOD_BY_PAY = {
     processingType: '즉시 처리',
     duration: '카드사 정책에 따라 영업일 기준 3 ~ 7일',
   },
-  NAVERPAY: {
-    name: '네이버페이',
-    icon: '🇳',
-    bg: '#03C75A',
-    color: '#FFFFFF',
-    desc: '결제 시 사용한 네이버페이 계정으로 자동 환불됩니다',
-    processingType: '즉시 처리',
-    duration: '카드사 정책에 따라 영업일 기준 3 ~ 7일',
-  },
 };
 
 export default function RefundRequest() {

@@ -162,14 +162,12 @@ const Actions = styled.div`
 const STATUS_TO_UI = {
   READY: 'pending',
   COMPLETED: 'completed',
-  FAILED: 'failed',
   CANCELED: 'refunded',
 };
 
 const METHOD_INFO = {
   KAKAOPAY: { label: '카카오페이', icon: '💛', pg: '카카오페이' },
   TOSSPAY: { label: '토스페이', icon: '💙', pg: '토스페이' },
-  NAVERPAY: { label: '네이버페이', icon: '💚', pg: '네이버페이' },
 };
 
 const REFUND_STATUS_LABEL = {
@@ -293,10 +291,8 @@ export default function AdminPaymentDetail() {
               <InfoHeader>
                 <Avatar>👤</Avatar>
                 <Main>
-                  <MainName>예약 #{pay.rsvnNo}</MainName>
-                  <SubText>
-                    회원 도메인 미연동 — 추후 회원명/이메일 노출
-                  </SubText>
+                  <MainName>{pay.memberName ?? '회원 정보 없음'}</MainName>
+                  <SubText>예약 #{pay.rsvnNo}</SubText>
                 </Main>
               </InfoHeader>
             </InfoCard>
@@ -310,7 +306,7 @@ export default function AdminPaymentDetail() {
               </Row>
               <Row>
                 <Label>공간 정보</Label>
-                <Value>예약 도메인 미연동</Value>
+                <Value>{pay.spaceName ?? '-'}</Value>
               </Row>
             </InfoCard>
           </Section>

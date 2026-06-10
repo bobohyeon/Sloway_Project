@@ -10,8 +10,10 @@ import com.sloway.app.payment.settlement.fee.common.FeeErrorCode;
 import com.sloway.app.payment.settlement.fee.common.PlaceType;
 import com.sloway.app.payment.settlement.fee.repository.FeeRepository;
 import com.sloway.app.payment.settlement.settle.common.SettleErrorCode;
+import com.sloway.app.payment.settlement.settle.common.SettleStatus;
 import com.sloway.app.payment.settlement.settle.dto.request.SettleCreateReqDto;
 import com.sloway.app.payment.settlement.settle.dto.response.SettleResDto;
+import com.sloway.app.payment.settlement.settle.dto.response.SettleStatsResDto;
 import com.sloway.app.payment.settlement.settle.entity.SettleEntity;
 import com.sloway.app.payment.settlement.settle.repository.SettleRepository;
 import com.sloway.app.place.entity.hostPlace.ApprovalStatus;
@@ -19,6 +21,8 @@ import com.sloway.app.place.entity.hostPlace.HostPlaceEntity;
 import com.sloway.app.place.repository.hostPlace.HostPlaceRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -70,15 +74,14 @@ public class SettleService {
         LocalDateTime start = reqDto.getSettleStartDate().atStartOfDay();
         LocalDateTime end = reqDto.getSettleEndDate().atTime(LocalTime.MAX);
 
-        // sumByXxxIn 은 Long 반환(통계 월합산 오버플로우 방지). 정산은 4일 단위라 int 범위 안 → intValue 로 받음
         int officeAmt = payRepository.sumByOfficeIn(officeNos, start, end).intValue();
         int stationAmt = payRepository.sumByStationIn(stationNos, start, end).intValue();
         int workStayAmt = payRepository.sumByWorkStayIn(workStayNos, start, end).intValue();
         int totalAmt = officeAmt + stationAmt + workStayAmt;
 
-        int feeAmt = calcFee(officeAmt, PlaceType.office)
-                + calcFee(stationAmt, PlaceType.station)
-                + calcFee(workStayAmt, PlaceType.workStay);
+        int feeAmt = calcFee(officeAmt, PlaceType.office,start)
+                + calcFee(stationAmt, PlaceType.station,start)
+                + calcFee(workStayAmt, PlaceType.workStay,start);
 
         int refundAmt = refundRepository.sumByOfficeIn(officeNos, start, end)
                 .add(refundRepository.sumByStationIn(stationNos, start, end))
@@ -102,16 +105,31 @@ public class SettleService {
         return SettleResDto.from(settleRepository.save(entity));
     }
 
-    private int calcFee(int amt, PlaceType placeType) {
-        if (amt == 0) return 0;
-        int rate = feeRepository.findByPlaceTypeAndDelYn(placeType, "N")
+    private int calcFee(int amt, PlaceType placeType,LocalDateTime date) {
+                if (amt == 0) return 0;
+        int rate = feeRepository.findValidFee(placeType, date)
                 .orElseThrow(() -> new CustomException(FeeErrorCode.FEE_NOT_FOUND))
                 .getRate();
         return amt * rate / 100;
     }
 
-    public List<SettleResDto> findSettleAll() {
-        return settleRepository.findAll().stream().map(SettleResDto::from).toList();
+    public Page<SettleResDto> findSettleAll(int pno, String tab) {
+        PageRequest pageRequest = PageRequest.of(pno, 10);
+        return settleRepository.findSettleAll(pageRequest,toStatus(tab));
+    }
+
+    public SettleStatsResDto findSettleStats(){
+        return settleRepository.findSettleStats();
+    }
+
+    private SettleStatus toStatus(String tab){
+        if(tab == null) return null;
+        return switch (tab){
+            case "WAITING" -> SettleStatus.WAITING;
+            case "COMPLETE" -> SettleStatus.COMPLETE;
+            case "INVOICE" -> SettleStatus.INVOICE;
+            default -> null;
+        };
     }
 
     public List<SettleResDto> findSettleByHostNo(Long memberNo) {
@@ -121,7 +139,6 @@ public class SettleService {
         return entityList.stream().map(SettleResDto::from).toList();
     }
 
-    // 어드민 — hostNo 직접 조회 (호스트 본인 토큰용과 분리, ADMIN 권한 가정)
     public List<SettleResDto> findSettleByHostNoForAdmin(Long hostNo) {
         return settleRepository.findByHostNo(hostNo).stream().map(SettleResDto::from).toList();
     }

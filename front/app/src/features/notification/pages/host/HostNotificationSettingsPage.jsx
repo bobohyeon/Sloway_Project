@@ -53,6 +53,11 @@ const HOST_SETTING_GROUPS = [
     ],
   },
 ];
+const READ_ONLY_KEYS = [
+  'settlementComplete',
+  'settlementSchedule',
+  'taxInvoice',
+];
 
 const buildInitialSettings = () => {
   const map = {};
@@ -75,6 +80,8 @@ export default function HostNotificationSettingsPage() {
     const fetch = async () => {
       try {
         const { data } = await api.get('/host/notifications/settings');
+        console.log(data);
+
         setSettings(data.settings);
       } catch {
         // 기본값 유지
@@ -84,6 +91,7 @@ export default function HostNotificationSettingsPage() {
   }, []);
 
   const handleToggle = (itemKey, channel) => {
+    if (READ_ONLY_KEYS.includes(itemKey)) return;
     setSettings((prev) => ({
       ...prev,
       [itemKey]: { ...prev[itemKey], [channel]: !prev[itemKey][channel] },
@@ -127,7 +135,10 @@ export default function HostNotificationSettingsPage() {
             {group.items.map((item, idx) => {
               const itemSetting = settings[item.key] ?? { push: true };
               return (
-                <SettingItem key={item.key} $last={idx === group.items.length - 1}>
+                <SettingItem
+                  key={item.key}
+                  $last={idx === group.items.length - 1}
+                >
                   <ItemInfo>
                     <ItemLabel>
                       {item.label}
@@ -142,6 +153,7 @@ export default function HostNotificationSettingsPage() {
                     {['push'].map((ch) => (
                       <Toggle
                         key={ch}
+                        disabled={READ_ONLY_KEYS.includes(item.key)}
                         checked={itemSetting[ch]}
                         onChange={() => handleToggle(item.key, ch)}
                         aria-label={`${item.label} ${CHANNEL_LABELS[ch]} 알림`}
@@ -172,7 +184,7 @@ export default function HostNotificationSettingsPage() {
   );
 }
 
-function Toggle({ checked, onChange, 'aria-label': ariaLabel }) {
+function Toggle({ checked, onChange, disabled, 'aria-label': ariaLabel }) {
   return (
     <ToggleWrap
       role="switch"
@@ -180,6 +192,7 @@ function Toggle({ checked, onChange, 'aria-label': ariaLabel }) {
       aria-label={ariaLabel}
       tabIndex={0}
       onClick={onChange}
+      $disabled={disabled}
       onKeyDown={(e) => e.key === 'Enter' && onChange()}
       $checked={checked}
     >
@@ -206,7 +219,9 @@ const ChannelLegend = styled.div`
   margin-bottom: 4px;
 `;
 
-const LegendSpacer = styled.div`flex: 1;`;
+const LegendSpacer = styled.div`
+  flex: 1;
+`;
 
 const LegendLabel = styled.span`
   width: 56px;
@@ -225,7 +240,9 @@ const GroupHeader = styled.div`
   border-bottom: 1px solid var(--gray-100);
 `;
 
-const GroupIcon = styled.span`font-size: 1.1rem;`;
+const GroupIcon = styled.span`
+  font-size: 1.1rem;
+`;
 const GroupInfo = styled.div``;
 
 const GroupLabel = styled.p`
@@ -303,7 +320,14 @@ const ToggleWrap = styled.div`
   height: 22px;
   border-radius: 999px;
   background: ${(p) => (p.$checked ? '#c07040' : 'var(--gray-200)')};
-  cursor: pointer;
+  cursor: ${(p) => (p.$disabled ? 'not-allowed' : 'pointer')};
+  background: ${(p) => {
+    if (p.$disabled) return '#b47751';
+    return p.$checked ? '#c07040' : 'var(--gray-200)';
+  }};
+
+  // 비활성 시 투명도 조절
+  opacity: ${(p) => (p.$disabled ? 0.6 : 1)};
   transition: background 180ms ease;
   flex-shrink: 0;
   margin: 0 8px;

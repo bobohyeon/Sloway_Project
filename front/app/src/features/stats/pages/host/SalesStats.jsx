@@ -17,20 +17,22 @@ function formatMan(value) {
 
 export default function SalesStats() {
   const { year, month } = useMemo(() => getAnchorMonth(), []);
-  const [months, setMonths] = useState(1);
+  const [months, setMonths] = useState(3); // 디폴트 3개월
 
   const [stats, setStats] = useState(null);
-  const [loading, setLoading] = useState(false);
+  // 초기값 true — effect 동기 본문에서 setLoading(true) 호출 금지(set-state-in-effect)
+  const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
   useEffect(() => {
     let alive = true;
     (async () => {
-      setLoading(true);
-      setError(null);
       try {
         const data = await findHostSalesStats(year, month, months);
-        if (alive) setStats(data);
+        if (alive) {
+          setStats(data);
+          setError(null);
+        }
       } catch (e) {
         if (alive)
           setError(e?.response?.data?.message ?? '매출 통계 조회에 실패했습니다.');

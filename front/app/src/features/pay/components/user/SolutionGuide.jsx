@@ -3,7 +3,7 @@ import { Card } from '../../../pay_shared/components'
 
 const DEFAULT_SOLUTIONS = [
   { num: 1, title: '카드 한도 확인', desc: '신용카드사 앱에서 일일 한도를 확인하고 조정해보세요' },
-  { num: 2, title: '다른 결제 수단 시도', desc: '카카오페이 · 네이버페이 · 토스페이 등 간편결제를 이용해보세요' },
+  { num: 2, title: '다른 결제 수단 시도', desc: '카카오페이 · 토스페이 등 간편결제를 이용해보세요' },
   { num: 3, title: '잠시 후 재시도', desc: '네트워크 오류일 경우 10분 후 다시 시도하면 해결될 수 있어요' },
 ]
 

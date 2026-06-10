@@ -1,6 +1,5 @@
 export const PAY_METHOD_MAP = {
   kakao: 'KAKAOPAY',
-  naver: 'NAVERPAY',
   toss: 'TOSSPAY',
 };
 

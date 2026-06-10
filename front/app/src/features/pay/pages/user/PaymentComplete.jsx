@@ -40,7 +40,6 @@ const BackLink = styled.button`
 const PAY_METHOD_LABEL = {
   KAKAOPAY: '카카오페이',
   TOSSPAY: '토스페이',
-  NAVERPAY: '네이버페이',
 };
 
 const formatPaidAt = (iso) => {
@@ -52,6 +51,19 @@ const formatPaidAt = (iso) => {
   const hh = String(d.getHours()).padStart(2, '0');
   const mi = String(d.getMinutes()).padStart(2, '0');
   return `${yyyy}.${mm}.${dd} ${hh}:${mi}`;
+};
+
+// 체크인~체크아웃 날짜 범위 (YYYY.MM.DD ~ YYYY.MM.DD)
+const formatStayRange = (checkIn, checkOut) => {
+  if (!checkIn || !checkOut) return '-';
+  const day = (iso) => {
+    const d = new Date(iso);
+    return `${d.getFullYear()}.${String(d.getMonth() + 1).padStart(
+      2,
+      '0'
+    )}.${String(d.getDate()).padStart(2, '0')}`;
+  };
+  return `${day(checkIn)} ~ ${day(checkOut)}`;
 };
 
 export default function PaymentComplete() {
@@ -72,15 +84,14 @@ export default function PaymentComplete() {
 
   if (!result) return null;
 
+  // 결제 응답(PayResDto)의 실데이터로 구성 — 공간명·일정은 예약 join 값 사용.
+  // 위치/인원/공간타입은 PayResDto에 없어 생략(ReservationInfoCard가 조건부 렌더).
   const reservation = {
     bookingId: `SW-PAY-${String(result.no).padStart(6, '0')}`,
-    name: '청평 숲속 파인뷰 스테이',
-    type: '워크앤스테이',
-    loc: '경기 가평',
-    emoji: '🌲',
-    dates: '5월 8일 (목) ~ 5월 10일 (토) · 2박',
-    guests: '성인 2명',
-    checkIn: '오후 3:00 이후',
+    name: result.spaceName ?? '예약 공간',
+    emoji: '🏠',
+    dates: formatStayRange(result.checkIn, result.checkOut),
+    checkIn: formatPaidAt(result.checkIn),
     amount: result.finalAmt,
     method: PAY_METHOD_LABEL[result.method] ?? result.method,
     approvalNo: result.tid,

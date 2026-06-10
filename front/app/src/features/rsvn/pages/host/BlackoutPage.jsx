@@ -89,7 +89,7 @@ const formatDt = (dt) => dt?.slice(0, 10).replaceAll('-', '.') ?? '';
 function BlackoutPage() {
   const navigate = useNavigate();
   const [spaces, setSpaces] = useState([]);
-  const [selectedSpace, setSelectedSpace] = useState(null); // { placeNo, spaceName }
+  const [selectedSpace, setSelectedSpace] = useState(null); // { entityNo, spaceName }
   const [items, setItems] = useState([]);
 
   // 호스트 공간 목록 로드
@@ -100,7 +100,7 @@ function BlackoutPage() {
         setSpaces(data);
         if (data.length > 0) {
           setSelectedSpace(data[0]);
-          const blackouts = await findBlackouts(data[0].placeNo);
+          const blackouts = await findBlackouts(data[0].entityNo);
           setItems(blackouts);
         }
       } catch (e) {
@@ -112,11 +112,11 @@ function BlackoutPage() {
 
   // 공간 변경 시 blackout 재조회
   const handleSpaceChange = async (e) => {
-    const placeNo = Number(e.target.value);
-    const space = spaces.find((s) => s.placeNo === placeNo);
+    const entityNo = Number(e.target.value);
+    const space = spaces.find((s) => s.entityNo === entityNo);
     setSelectedSpace(space);
     try {
-      const data = await findBlackouts(placeNo);
+      const data = await findBlackouts(entityNo);
       setItems(data);
     } catch {
       alert('이용 불가 목록을 불러오지 못했어요');
@@ -141,7 +141,7 @@ function BlackoutPage() {
       description="예약을 받지 않을 날짜·시간을 관리하세요"
       actions={
         <BtnPrimary
-          onClick={() => navigate('/host/reservation/block/add', { state: { placeNo: selectedSpace?.placeNo } })}
+          onClick={() => navigate('/host/reservation/block/add', { state: { entityNo: selectedSpace?.entityNo } })}
           disabled={!selectedSpace}
         >
           + 이용 불가 추가
@@ -159,14 +159,14 @@ function BlackoutPage() {
 
       <FilterRow>
         <SpaceSelect
-          value={selectedSpace?.placeNo ?? ''}
+          value={selectedSpace?.entityNo ?? ''}
           onChange={handleSpaceChange}
           disabled={spaces.length === 0}
         >
           {spaces.length === 0
             ? <option>등록된 공간이 없어요</option>
             : spaces.map((s) => (
-                <option key={s.placeNo} value={s.placeNo}>{s.spaceName}</option>
+                <option key={s.entityNo} value={s.entityNo}>{s.spaceName}</option>
               ))
           }
         </SpaceSelect>

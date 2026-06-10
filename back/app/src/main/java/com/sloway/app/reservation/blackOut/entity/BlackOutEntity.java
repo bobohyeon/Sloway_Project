@@ -1,6 +1,8 @@
 package com.sloway.app.reservation.blackOut.entity;
 
-import com.sloway.app.place.entity.place.PlaceEntity;
+import com.sloway.app.place.entity.office.OfficeEntity;
+import com.sloway.app.place.entity.station.StationEntity;
+import com.sloway.app.place.entity.workStay.WorkStayEntity;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -18,9 +20,17 @@ public class BlackOutEntity {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long no;
 
-    @JoinColumn(name = "place_no")
+    @JoinColumn(name = "office_no")
     @ManyToOne(fetch = FetchType.LAZY)
-    private PlaceEntity placeNo;
+    private OfficeEntity officeNo;
+
+    @JoinColumn(name = "station_no")
+    @ManyToOne(fetch = FetchType.LAZY)
+    private StationEntity stationNo;
+
+    @JoinColumn(name = "work_stay_no")
+    @ManyToOne(fetch = FetchType.LAZY)
+    private WorkStayEntity workStayNo;
 
     @Column(nullable = false, length = 100, name = "title")
     private String title;
@@ -38,10 +48,10 @@ public class BlackOutEntity {
     @Column(nullable = false, name = "end_date")
     private LocalDateTime endDate;
 
-    @Column(nullable = false, name = "start_time")
+    @Column(name = "start_time")
     private LocalDateTime startTime;
 
-    @Column(nullable = false, name = "end_time")
+    @Column(name = "end_time")
     private LocalDateTime endTime;
 
     @Column(nullable = false, name = "created_at")

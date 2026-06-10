@@ -1,8 +1,138 @@
+import { useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import dayjs from 'dayjs';
 import styled from 'styled-components';
 import { COLOR } from '../../../../rsvn/components/user/RsvnStyled';
 import { saveRsvn } from '../../../../rsvn/api/rsvnApi';
+
+// 선택 구간이 블랙아웃 범위와 겹치는지 확인
+function hasOverlap(checkIn, checkOut, blackouts) {
+  if (!checkIn || !checkOut || !blackouts?.length) return false;
+  const ci = new Date(checkIn);
+  const co = new Date(checkOut);
+  return blackouts.some((b) => ci < new Date(b.endDate) && co > new Date(b.startDate));
+}
+
+function DetailRsvnBox({
+  type = 'stay',           // 'stay' | 'office'
+  checkIn = '',
+  checkOut = '',
+  guests = 2,
+  nights = 1,
+  onCheckInChange,
+  onCheckOutChange,
+  onGuestsChange,
+  price = 0,
+  priceUnit = '원/박',
+  serviceFee = 12000,
+  cancelPolicy = '무료 취소 · 이용 7일 전까지',
+  rsvnDto,
+  roomName = null,
+  blackouts = [],
+}) {
+  const navigate = useNavigate();
+
+  const totalBase = price * nights;
+  const grandTotal = totalBase + serviceFee;
+
+  const isBlocked = useMemo(
+    () => hasOverlap(checkIn, checkOut, blackouts),
+    [checkIn, checkOut, blackouts]
+  );
+
+  const inputType = type === 'office' ? 'datetime-local' : 'date';
+  const minDate = type === 'office' ? undefined : dayjs().format('YYYY-MM-DD');
+  const minCheckOut = type === 'office' ? undefined : (checkIn || dayjs().format('YYYY-MM-DD'));
+
+  async function handleRsvn() {
+    try {
+      const rsvnNo = await saveRsvn(rsvnDto);
+      navigate(`/user/payment/checkout`, { state: { rsvnNo } });
+    } catch (err) {
+      if (err.response?.status === 401 || err.response?.status === 403) {
+        alert('로그인이 필요합니다');
+        navigate('/login');
+      } else {
+        alert('예약 할 수 없습니다.');
+      }
+    }
+  }
+
+  return (
+    <Box>
+      <PriceRow>
+        <Price>{price.toLocaleString()}</Price>
+        <PriceUnit>{priceUnit}</PriceUnit>
+        {roomName && <RoomNameTag>{roomName}</RoomNameTag>}
+      </PriceRow>
+
+      <InfoRow>
+        <InfoLabel>체크인</InfoLabel>
+        <DateInput
+          type={inputType}
+          value={checkIn}
+          min={minDate}
+          $error={isBlocked}
+          onChange={(e) => onCheckInChange?.(e.target.value)}
+        />
+      </InfoRow>
+      <InfoRow>
+        <InfoLabel>체크아웃</InfoLabel>
+        <DateInput
+          type={inputType}
+          value={checkOut}
+          min={minCheckOut}
+          $error={isBlocked}
+          onChange={(e) => onCheckOutChange?.(e.target.value)}
+        />
+      </InfoRow>
+
+      {isBlocked && (
+        <ErrorMsg>이 기간은 이용 불가 기간입니다.</ErrorMsg>
+      )}
+
+      <InfoRow>
+        <InfoLabel>인원</InfoLabel>
+        <GuestSelect
+          value={guests}
+          onChange={(e) => onGuestsChange?.(Number(e.target.value))}
+        >
+          {[1, 2, 3, 4, 5, 6, 7, 8].map((n) => (
+            <option key={n} value={n}>{n}명</option>
+          ))}
+        </GuestSelect>
+      </InfoRow>
+
+      <RsvnBtn
+        onClick={handleRsvn}
+        disabled={isBlocked || !checkIn || !checkOut}
+      >
+        예약하기
+      </RsvnBtn>
+
+      {price > 0 && nights > 0 && (
+        <CalcBox>
+          <CalcRow>
+            <span>
+              {price.toLocaleString()}원 × {nights}박
+            </span>
+            <span>{totalBase.toLocaleString()}원</span>
+          </CalcRow>
+          <CalcRow>
+            <span>서비스 수수료</span>
+            <span>{serviceFee.toLocaleString()}원</span>
+          </CalcRow>
+          <CalcTotal>
+            <span>합계</span>
+            <span>{grandTotal.toLocaleString()}원</span>
+          </CalcTotal>
+        </CalcBox>
+      )}
+
+      <CancelPolicy>{cancelPolicy}</CancelPolicy>
+    </Box>
+  );
+}
 
 const Box = styled.div`
   background: #fff;
@@ -40,28 +170,53 @@ const InfoRow = styled.div`
   font-size: 14px;
 `;
 
-const InfoLabel = styled.span`
-  color: #666;
-`;
-const InfoValue = styled.span`
+const InfoLabel = styled.span`color: #666;`;
+const InfoValue = styled.span`font-weight: 600; color: ${COLOR.black};`;
+
+const DateInput = styled.input`
+  border: none;
+  border-bottom: 1.5px solid ${({ $error }) => ($error ? '#E53E3E' : '#e8dfd0')};
+  font-size: 14px;
   font-weight: 600;
-  color: ${COLOR.black};
+  color: ${({ $error }) => ($error ? '#E53E3E' : '#2c2c2a')};
+  background: transparent;
+  cursor: pointer;
+  &:focus {
+    outline: none;
+    border-bottom-color: ${({ $error }) => ($error ? '#E53E3E' : '#2d6a4f')};
+  }
+`;
+
+const ErrorMsg = styled.p`
+  font-size: 12px;
+  color: #E53E3E;
+  margin: 4px 0 8px;
+  padding: 0;
+`;
+
+const GuestSelect = styled.select`
+  border: none;
+  border-bottom: 1px solid #e8dfd0;
+  font-size: 14px;
+  font-weight: 600;
+  background: transparent;
+  cursor: pointer;
 `;
 
 const RsvnBtn = styled.button`
   width: 100%;
   padding: 15px;
-  background: ${COLOR.green};
+  background: ${({ disabled }) => (disabled ? '#b0aca4' : COLOR.green)};
   color: #fff;
   border: none;
   border-radius: 10px;
   font-size: 16px;
   font-weight: 700;
   font-family: 'Noto Sans KR', sans-serif;
-  cursor: pointer;
+  cursor: ${({ disabled }) => (disabled ? 'not-allowed' : 'pointer')};
   margin: 16px 0 10px;
   transition: background 0.2s;
-  &:hover {
+  &:hover:not(:disabled) {
     background: #1a3a2a;
   }
 `;
@@ -96,128 +251,6 @@ const CancelPolicy = styled.p`
   color: #8a8a8a;
   text-align: center;
   text-decoration: underline;
-  cursor: pointer;
-`;
-
-function DetailRsvnBox({
-  checkIn = '',
-  checkOut = '',
-  guests = 2,
-  nights = 1,
-  onCheckInChange,
-  onCheckOutChange,
-  onGuestsChange,
-  price = 0,
-  priceUnit = '원/박',
-  serviceFee = 12000,
-  cancelPolicy = '무료 취소 · 이용 7일 전까지',
-  rsvnDto,
-  roomName = null,
-  inputType = 'date',
-}) {
-  const navigate = useNavigate();
-
-  const totalBase = price * nights;
-  const grandTotal = totalBase + serviceFee;
-
-  async function handleRsvn() {
-    try {
-      const rsvnNo = await saveRsvn(rsvnDto);
-      navigate(`/user/payment/checkout`, { state: { rsvnNo } });
-    } catch (err) {
-      if (err.response?.status === 401 || err.response?.status === 403) {
-        alert('로그인이 필요합니다');
-        navigate('/login');
-      } else {
-        alert('예약 할 수 없습니다.');
-      }
-    }
-  }
-
-  return (
-    <Box>
-      <PriceRow>
-        <Price>{price.toLocaleString()}</Price>
-        <PriceUnit>{priceUnit}</PriceUnit>
-        {roomName && <RoomNameTag>{roomName}</RoomNameTag>}
-      </PriceRow>
-
-      <InfoRow>
-        <InfoLabel>체크인</InfoLabel>
-        <DateInput
-          type={inputType}
-          value={checkIn}
-          min={inputType === 'date' ? dayjs().format('YYYY-MM-DD') : undefined}
-          onChange={(e) => onCheckInChange?.(e.target.value)}
-        />
-      </InfoRow>
-      <InfoRow>
-        <InfoLabel>체크아웃</InfoLabel>
-        <DateInput
-          type={inputType}
-          value={checkOut}
-          min={inputType === 'date' ? (checkIn || dayjs().format('YYYY-MM-DD')) : undefined}
-          onChange={(e) => onCheckOutChange?.(e.target.value)}
-        />
-      </InfoRow>
-      <InfoRow>
-        <InfoLabel>인원</InfoLabel>
-        <GuestSelect
-          value={guests}
-          onChange={(e) => onGuestsChange?.(Number(e.target.value))}
-        >
-          {[1, 2, 3, 4, 5, 6, 7, 8].map((n) => (
-            <option key={n} value={n}>{n}명</option>
-          ))}
-        </GuestSelect>
-      </InfoRow>
-
-      <RsvnBtn onClick={handleRsvn}>예약하기</RsvnBtn>
-
-      {price > 0 && nights > 0 && (
-        <CalcBox>
-          <CalcRow>
-            <span>
-              {price.toLocaleString()}원 × {nights}박
-            </span>
-            <span>{totalBase.toLocaleString()}원</span>
-          </CalcRow>
-          <CalcRow>
-            <span>서비스 수수료</span>
-            <span>{serviceFee.toLocaleString()}원</span>
-          </CalcRow>
-          <CalcTotal>
-            <span>합계</span>
-            <span>{grandTotal.toLocaleString()}원</span>
-          </CalcTotal>
-        </CalcBox>
-      )}
-
-      <CancelPolicy>{cancelPolicy}</CancelPolicy>
-    </Box>
-  );
-}
-
-const DateInput = styled.input`
-  border: none;
-  border-bottom: 1px solid #e8dfd0;
-  font-size: 14px;
-  font-weight: 600;
-  color: #2c2c2a;
-  background: transparent;
-  cursor: pointer;
-  &:focus {
-    outline: none;
-    border-bottom-color: #2d6a4f;
-  }
-`;
-
-const GuestSelect = styled.select`
-  border: none;
-  border-bottom: 1px solid #e8dfd0;
-  font-size: 14px;
-  font-weight: 600;
-  background: transparent;
   cursor: pointer;
 `;
 

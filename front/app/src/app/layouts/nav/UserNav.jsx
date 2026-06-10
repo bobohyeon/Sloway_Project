@@ -90,7 +90,7 @@ const userMenuGroups = [
     items: [
       { url: '/user/chat', str: '1:1 채팅', icon: <FaCommentDots /> },
       { url: '/user/notification', str: '알림 내역', icon: <FaBell /> },
-      { url: '/user/notification/setting', str: '알림 설정', icon: <FaCog /> },
+      // { url: '/user/notification/setting', str: '알림 설정', icon: <FaCog /> },
     ],
   },
 ];

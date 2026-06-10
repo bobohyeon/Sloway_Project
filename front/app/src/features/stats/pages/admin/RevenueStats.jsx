@@ -19,18 +19,17 @@ import { rangeLabel, getAnchorMonth } from '../../components/admin/statsRange';
 export default function RevenueStats() {
   const nav = useNavigate();
   const { year, month } = useMemo(() => getAnchorMonth(), []);
-  const [months, setMonths] = useState(1);
+  const [months, setMonths] = useState(3); // 디폴트 3개월
 
   const [summary, setSummary] = useState(null);
   const [trend, setTrend] = useState([]);
   const [refund, setRefund] = useState(null);
-  const [loading, setLoading] = useState(false);
+  // 초기값 true — effect 동기 본문에서 setLoading(true) 호출 금지(set-state-in-effect)
+  const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
   useEffect(() => {
     let alive = true;
-    setLoading(true);
-    setError(null);
     Promise.all([
       findStatsMonthlySales(year, month, months),
       findStatsMonthlyTrend(year, month, months),
@@ -41,6 +40,7 @@ export default function RevenueStats() {
         setSummary(s);
         setTrend(t ?? []);
         setRefund(r);
+        setError(null);
       })
       .catch((e) => {
         if (alive) setError(e?.response?.data?.message ?? '수익 통계 조회에 실패했습니다.');

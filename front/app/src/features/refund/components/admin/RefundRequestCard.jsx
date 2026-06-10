@@ -1,20 +1,17 @@
-import styled, { css } from 'styled-components'
+import styled from 'styled-components'
 import { Card, Badge } from '../../../pay_shared/components'
 
 const STATUS_MAP = {
   completed: { label: '완료', variant: 'success', icon: '✓' },
   processing: { label: '처리중', variant: 'warning', icon: '⏳' },
-  failed: { label: '이상', variant: 'danger', icon: '⚠️' },
   rejected: { label: '거절', variant: 'danger', icon: '✗' },
-  manual: { label: '수동검토', variant: 'warning', icon: '👁' },
 }
 
 export function RefundRequestCard({ request, onClick }) {
   const status = STATUS_MAP[request.status] || STATUS_MAP.completed
-  const isAbnormal = request.status === 'failed' || request.status === 'manual'
 
   return (
-    <Wrap $abnormal={isAbnormal} onClick={() => onClick?.(request)}>
+    <Wrap onClick={() => onClick?.(request)}>
       <TopRow>
         <StatusGroup>
           <Badge variant={status.variant} size="md">
@@ -25,13 +22,6 @@ export function RefundRequestCard({ request, onClick }) {
 
         <DateText>{request.requestedAt}</DateText>
       </TopRow>
-
-      {isAbnormal && request.alertMessage && (
-        <AlertBox>
-          <span>⚠️</span>
-          <span>{request.alertMessage}</span>
-        </AlertBox>
-      )}
 
       <ContentRow>
         <UserSection>
@@ -81,17 +71,6 @@ const Wrap = styled(Card)`
     border-color: var(--sage);
     transform: translateY(-1px);
   }
-
-  ${(props) =>
-    props.$abnormal &&
-    css`
-      border-color: rgba(184, 90, 78, 0.3);
-      background: rgba(184, 90, 78, 0.02);
-
-      &:hover {
-        border-color: #b85a4e;
-      }
-    `}
 `
 
 const TopRow = styled.div`
@@ -117,20 +96,6 @@ const DateText = styled.div`
   font-family: var(--font-mono);
   font-size: 0.78rem;
   color: var(--gray-400);
-`
-
-const AlertBox = styled.div`
-  display: flex;
-  gap: 8px;
-  align-items: center;
-  padding: 8px var(--space-3);
-  background: rgba(184, 90, 78, 0.08);
-  border: 1px solid rgba(184, 90, 78, 0.2);
-  border-radius: var(--radius-md);
-  font-size: 0.82rem;
-  color: #a04c42;
-  font-weight: 500;
-  margin-bottom: var(--space-3);
 `
 
 const ContentRow = styled.div`

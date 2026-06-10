@@ -17,11 +17,17 @@ public class SearchResDto {
     private String type;
     private String address;
 
+    private String latitude;
+    private String longitude;
+
     // 썸네일 이미지 URL - ImgPlaceEntity에 SORT가 있어서, SORT = 0 인걸로 꺼내와야 할듯?
     private String thumbnailUrl;
 
     // 평점은 화면에서 별(5개)로 표시, 1~5점 까지 선택가능.
     private Double avgScore;
+
+    // 리뷰 갯수
+    private Long reviewCount;
 
     // 대표 가격 = 최소 가격
     private Integer basePrice;

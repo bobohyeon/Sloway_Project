@@ -45,27 +45,20 @@ export default function HostDashboard() {
   const [sales, setSales] = useState(null);
   const [spaces, setSpaces] = useState([]);
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState(null);
 
   useEffect(() => {
     let alive = true;
     (async () => {
       setLoading(true);
-      setError(null);
-      try {
-        const [s, sp] = await Promise.all([
-          findHostSalesStats(year, month, 6),
-          findHostSpaces().catch(() => []),
-        ]);
-        if (!alive) return;
-        setSales(s);
-        setSpaces(Array.isArray(sp) ? sp : []);
-      } catch (e) {
-        if (alive)
-          setError(e?.response?.data?.message ?? '대시보드 데이터를 불러오지 못했습니다.');
-      } finally {
-        if (alive) setLoading(false);
-      }
+      // 본인 매출 통계·공간 모두 graceful — 실패(미로그인/백엔드 다운 등)해도 빈 KPI로 표시, 에러 알림 X
+      const [s, sp] = await Promise.all([
+        findHostSalesStats(year, month, 6).catch(() => null),
+        findHostSpaces().catch(() => []),
+      ]);
+      if (!alive) return;
+      setSales(s);
+      setSpaces(Array.isArray(sp) ? sp : []);
+      setLoading(false);
     })();
     return () => { alive = false; };
   }, [year, month]);
@@ -83,7 +76,6 @@ export default function HostDashboard() {
         </GreetingTitle>
         <GreetingSub>최근 6개월 매출·예약 요약입니다.</GreetingSub>
         {loading && <StatusText>불러오는 중...</StatusText>}
-        {error && <ErrorText>{error}</ErrorText>}
       </Greeting>
 
       <KPIGrid>
@@ -157,7 +149,6 @@ const GreetingTitle = styled.h1` font-family: var(--font-display); font-size: 1.
 const Highlight = styled.span` color: var(--sage); `;
 const GreetingSub = styled.p` font-size: 0.85rem; color: var(--gray-600); margin: 0; line-height: 1.5; `;
 const StatusText = styled.span` font-size: 0.78rem; color: var(--gray-400); `;
-const ErrorText = styled.span` font-size: 0.82rem; color: #c0392b; `;
 const KPIGrid = styled.div` display: grid; grid-template-columns: repeat(4, 1fr); gap: var(--space-3); margin-bottom: var(--space-6); @media (max-width: 960px) { grid-template-columns: repeat(2, 1fr); } @media (max-width: 480px) { grid-template-columns: 1fr; } `;
 const EmptyCard = styled(Card)` padding: var(--space-6) var(--space-5); `;
 const SectionMeta = styled.div` font-size: 0.9rem; font-weight: 600; color: var(--gray-800); margin-bottom: var(--space-3); `;

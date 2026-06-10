@@ -1,0 +1,11 @@
+{
+  "permissions": {
+    "allow": [
+      "PowerShell(Get-ChildItem -Path \"D:\\\\dev\\\\fullstack\\\\FinalPrj\\\\front\\\\app\\\\src\" -Recurse -Force | Where-Object { -not $_.PSIsContainer } | Select-Object FullName | Format-Table -AutoSize | Select-Object -First 100)",
+      "PowerShell(Get-ChildItem \"D:\\\\dev\\\\fullstack\\\\FinalPrj\\\\front\\\\app\\\\src\" | Where-Object { $_.PSIsContainer } | ForEach-Object { $_.Name })",
+      "PowerShell(Get-ChildItem \"D:\\\\dev\\\\fullstack\\\\FinalPrj\\\\front\\\\app\\\\src\\\\app\" | Where-Object { $_.PSIsContainer } | ForEach-Object { $_.Name })",
+      "PowerShell(Get-ChildItem \"D:\\\\dev\\\\fullstack\\\\FinalPrj\\\\front\\\\app\\\\src\\\\features\" | Where-Object { $_.PSIsContainer } | ForEach-Object { $_.Name })",
+      "PowerShell(dir -Recurse \"D:\\\\dev\\\\fullstack\\\\FinalPrj\\\\front\\\\app\\\\src\\\\features\\\\notification\\\\layouts\" 2>$null | ? { $_.PSIsContainer -eq $false })"
+    ]
+  }
+}

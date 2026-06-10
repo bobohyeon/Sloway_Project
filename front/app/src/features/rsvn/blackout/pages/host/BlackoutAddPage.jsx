@@ -136,7 +136,7 @@ const TYPES = [
 function BlackoutAddPage() {
   const navigate = useNavigate();
   const location = useLocation();
-  const placeNo = location.state?.placeNo;
+  const entityNo = location.state?.entityNo;
 
   const [selectedType, setSelectedType] = useState(0);
   const [title, setTitle] = useState('');
@@ -148,7 +148,7 @@ function BlackoutAddPage() {
   const [memo, setMemo] = useState('');
 
   const handleSave = async () => {
-    if (!placeNo) {
+    if (!entityNo) {
       alert('공간 번호가 없어요. 이용 불가 목록에서 다시 시도해주세요');
       return;
     }
@@ -160,9 +160,13 @@ function BlackoutAddPage() {
       alert('날짜를 입력해주세요');
       return;
     }
+    if (endDate < startDate) {
+      alert('종료 날짜는 시작 날짜 이후여야 해요');
+      return;
+    }
 
     try {
-      await saveBlackout(placeNo, {
+      await saveBlackout(entityNo, {
         title,
         memo,
         reasonType: TYPES[selectedType].value,
@@ -172,8 +176,12 @@ function BlackoutAddPage() {
         endTime: timeOn && endTime ? `${endDate}T${endTime}:00` : null,
       });
       navigate('/host/reservation/block');
-    } catch {
-      alert('저장에 실패했어요');
+    } catch (err) {
+      if (err?.response?.status === 409) {
+        alert('해당 기간에 이미 확정된 예약이 있어서 이용 불가 설정을 등록할 수 없어요.');
+      } else {
+        alert('저장에 실패했어요.');
+      }
     }
   };
 

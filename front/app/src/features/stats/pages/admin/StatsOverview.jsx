@@ -19,7 +19,6 @@ import { rangeLabel, getAnchorMonth } from '../../components/admin/statsRange';
 const PAY_METHOD_META = {
   KAKAOPAY: { label: '카카오페이', color: '#FEE500' },
   TOSSPAY: { label: '토스페이', color: '#0064FF' },
-  NAVERPAY: { label: '네이버페이', color: '#03C75A' },
 };
 
 function formatWon(value) {
@@ -34,19 +33,17 @@ function formatMan(value) {
 
 export default function StatsOverview() {
   const { year, month } = useMemo(() => getAnchorMonth(), []);
-  const [months, setMonths] = useState(1);
+  const [months, setMonths] = useState(3); // 디폴트 3개월
 
   const [summary, setSummary] = useState(null);
   const [methods, setMethods] = useState([]);
   const [trend, setTrend] = useState([]);
   const [refund, setRefund] = useState(null);
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
   useEffect(() => {
     let alive = true;
-    setLoading(true);
-    setError(null);
 
     Promise.all([
       findStatsMonthlySales(year, month, months),
@@ -60,6 +57,7 @@ export default function StatsOverview() {
         setMethods(m ?? []);
         setTrend(t ?? []);
         setRefund(r);
+        setError(null);
       })
       .catch((e) => {
         if (!alive) return;

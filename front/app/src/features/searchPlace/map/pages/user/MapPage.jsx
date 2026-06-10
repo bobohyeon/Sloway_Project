@@ -1,157 +1,29 @@
-import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useState, useEffect, useRef } from 'react';
+import { useNavigate, useLocation } from 'react-router-dom';
 import styled from 'styled-components';
 import MainHeader from '../../../../main/layouts/MainHeader';
 import { COLOR } from '../../../../rsvn/components/user/RsvnStyled';
+import { searchSpaces } from '../../../api/searchApi';
 
-const SPACES = [
-  {
-    id: 1,
-    type: '워크앤스테이',
-    title: '청평 숲속 파인뷰',
-    location: '경기 가평',
-    score: 4.9,
-    price: 185000,
-    icon: '🌲',
-    x: 22,
-    y: 38,
-    roomCount: 3,
-  },
-  {
-    id: 2,
-    type: '오피스',
-    title: '강릉 바다향 커먼워크',
-    location: '강원 강릉',
-    score: 4.8,
-    price: 28000,
-    icon: '🌊',
-    x: 58,
-    y: 32,
-    roomCount: 3,
-  },
-  {
-    id: 3,
-    type: '숙소',
-    title: '제주 돌담집 리트릿',
-    location: '제주 서귀포',
-    score: 4.9,
-    price: 220000,
-    icon: '🌴',
-    x: 30,
-    y: 60,
-    roomCount: 2,
-  },
-  {
-    id: 4,
-    type: '워크앤스테이',
-    title: '남해 올리브 팜스테이',
-    location: '경남 남해',
-    score: 4.92,
-    price: 165000,
-    icon: '✉️',
-    x: 15,
-    y: 72,
-    roomCount: 2,
-  },
-  {
-    id: 5,
-    type: '오피스',
-    title: '성수 브릭라운지',
-    location: '서울 성수',
-    score: 4.88,
-    price: 25000,
-    icon: '🧱',
-    x: 42,
-    y: 55,
-    roomCount: 4,
-  },
-  {
-    id: 6,
-    type: '숙소',
-    title: '양양 파도소리 빌라',
-    location: '강원 양양',
-    score: 4.95,
-    price: 240000,
-    icon: '🌅',
-    x: 70,
-    y: 48,
-    roomCount: 2,
-  },
-  {
-    id: 7,
-    type: '워크앤스테이',
-    title: '속초 설악 글램스테이',
-    location: '강원 속초',
-    score: 4.87,
-    price: 210000,
-    icon: '⛰️',
-    x: 82,
-    y: 22,
-    roomCount: 1,
-  },
+// SearchResultPage와 동일한 상수
+const TYPE_TABS = ['전체', '워크앤스테이', '오피스', '숙소'];
+const TAB_TO_TYPE = { '워크앤스테이': 'WORK_STAY', '오피스': 'OFFICE', '숙소': 'STATION' };
+const TYPE_LABEL = { OFFICE: '코워킹오피스', WORK_STAY: '워크앤스테이', STATION: '숙소' };
+const REGIONS = ['전체', '서울', '경기', '인천', '강원', '경상', '충청', '전라', '제주'];
+const PRICE_RANGES = [
+  { label: '전체', min: 0, max: Infinity },
+  { label: '5만원 이하', min: 0, max: 50000 },
+  { label: '5~15만원', min: 50000, max: 150000 },
+  { label: '15~25만원', min: 150000, max: 250000 },
+  { label: '25만원 이상', min: 250000, max: Infinity },
 ];
-
-const DUMMY_ROOMS = {
-  1: [
-    {
-      id: 'r1',
-      name: '파인뷰 독채 A동',
-      maxGuests: 4,
-      price: 185000,
-      priceUnit: '원/박',
-      available: true,
-      icon: '🌲',
-    },
-    {
-      id: 'r2',
-      name: '파인뷰 독채 B동',
-      maxGuests: 6,
-      price: 240000,
-      priceUnit: '원/박',
-      available: true,
-      icon: '🌲',
-    },
-    {
-      id: 'r3',
-      name: '파인뷰 글램핑',
-      maxGuests: 2,
-      price: 150000,
-      priceUnit: '원/박',
-      available: false,
-      icon: '⛺',
-    },
-  ],
-  2: [
-    {
-      id: 'r4',
-      name: '오션뷰 오픈석',
-      maxGuests: 1,
-      price: 28000,
-      priceUnit: '원/4h',
-      available: true,
-      icon: '🌊',
-    },
-    {
-      id: 'r5',
-      name: '프라이빗 부스',
-      maxGuests: 2,
-      price: 45000,
-      priceUnit: '원/4h',
-      available: true,
-      icon: '🎧',
-    },
-    {
-      id: 'r6',
-      name: '팀 회의실',
-      maxGuests: 8,
-      price: 80000,
-      priceUnit: '원/4h',
-      available: true,
-      icon: '🏢',
-    },
-  ],
+const AMENITY_OPTIONS = {
+  공통: ['회의실', '와이파이', '공용PC', '반려동물 동반', '공용라운지'],
+  숙박: ['주방', '편의용품', '세탁기', '스타일러'],
+  오피스: ['주차', '프린터', '웹캠', '빔프로젝터'],
 };
 
+/* ── 레이아웃 ── */
 const Layout = styled.div`
   display: flex;
   flex-direction: column;
@@ -160,29 +32,14 @@ const Layout = styled.div`
   overflow: hidden;
 `;
 
-// 상단 검색바 (헤더 아래)
 const SubBar = styled.div`
   background: #fff;
   border-bottom: 1px solid ${COLOR.gray200};
-  padding: 10px 20px;
+  padding: 9px 20px;
   display: flex;
   align-items: center;
   gap: 8px;
   flex-wrap: wrap;
-`;
-
-const FilterChip = styled.div`
-  padding: 6px 12px;
-  border-radius: 16px;
-  border: 1px solid ${COLOR.gray200};
-  background: #fff;
-  font-size: 12px;
-  font-weight: 500;
-  cursor: pointer;
-  white-space: nowrap;
-  &:hover {
-    border-color: ${COLOR.sage};
-  }
 `;
 
 const BackBtn = styled.button`
@@ -195,18 +52,28 @@ const BackBtn = styled.button`
   align-items: center;
   gap: 4px;
   white-space: nowrap;
-  &:hover {
-    color: ${COLOR.black};
-  }
+  &:hover { color: ${COLOR.black}; }
 `;
 
-const Select = styled.select`
-  padding: 6px 10px;
+const Chip = styled.div`
+  padding: 5px 12px;
+  border-radius: 16px;
   border: 1px solid ${COLOR.gray200};
-  border-radius: 8px;
-  font-size: 12px;
   background: #fff;
-  outline: none;
+  font-size: 12px;
+  font-weight: 500;
+`;
+
+const ViewBtn = styled.button`
+  padding: 6px 14px;
+  border-radius: 8px;
+  border: 1px solid ${COLOR.green};
+  background: #fff;
+  color: ${COLOR.green};
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
 `;
 
 const Body = styled.div`
@@ -215,29 +82,132 @@ const Body = styled.div`
   overflow: hidden;
 `;
 
-// 좌측 목록
-const ListPanel = styled.div`
-  width: 320px;
+/* ── 사이드 필터 (SearchResultPage와 동일 구조) ── */
+const SideFilter = styled.aside`
+  width: 220px;
   flex-shrink: 0;
-  overflow-y: auto;
+  padding: 20px 16px;
   border-right: 1px solid ${COLOR.gray200};
   background: #fff;
+  overflow-y: auto;
+  &::-webkit-scrollbar { width: 3px; }
+  &::-webkit-scrollbar-thumb { background: #d8d3cb; border-radius: 10px; }
+`;
 
-  &::-webkit-scrollbar {
-    width: 3px;
-  }
-  &::-webkit-scrollbar-thumb {
-    background: #d8d3cb;
-    border-radius: 10px;
-  }
+const FilterSection = styled.div`margin-bottom: 18px;`;
+
+const FilterTitle = styled.div`
+  font-size: 11px;
+  font-weight: 700;
+  color: ${COLOR.gray400};
+  letter-spacing: 0.06em;
+  margin-bottom: 10px;
+`;
+
+const TypeTabRow = styled.div`
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+`;
+
+const TypeChip = styled.button`
+  padding: 5px 10px;
+  border-radius: 16px;
+  border: 1px solid ${({ $active }) => ($active ? COLOR.green : COLOR.gray200)};
+  background: ${({ $active }) => ($active ? COLOR.greenLight : '#fff')};
+  color: ${({ $active }) => ($active ? COLOR.green : COLOR.gray600)};
+  font-size: 11px;
+  font-weight: ${({ $active }) => ($active ? 700 : 400)};
+  cursor: pointer;
+`;
+
+const RadioRow = styled.label`
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  color: ${({ $active }) => ($active ? COLOR.green : COLOR.gray600)};
+  font-weight: ${({ $active }) => ($active ? 600 : 400)};
+  margin-bottom: 6px;
+  cursor: pointer;
+  input { accent-color: ${COLOR.green}; }
+`;
+
+const CheckRow = styled.label`
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  color: ${COLOR.gray600};
+  margin-bottom: 6px;
+  cursor: pointer;
+  input { accent-color: ${COLOR.green}; }
+`;
+
+const Divider = styled.hr`
+  border: none;
+  border-top: 1px solid ${COLOR.gray200};
+  margin: 12px 0;
+`;
+
+const DateInput = styled.input`
+  width: 100%;
+  padding: 6px 8px;
+  border: 1px solid ${COLOR.gray200};
+  border-radius: 8px;
+  font-size: 12px;
+  font-family: 'Noto Sans KR', sans-serif;
+  outline: none;
+  box-sizing: border-box;
+  &:focus { border-color: ${COLOR.sage}; }
+`;
+
+const GuestInput = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 10px;
+`;
+
+const GuestBtn = styled.button`
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  border: 1px solid ${COLOR.gray200};
+  background: #fff;
+  font-size: 14px;
+  cursor: pointer;
+  &:hover { border-color: ${COLOR.sage}; }
+`;
+
+const ResetBtn = styled.button`
+  width: 100%;
+  padding: 8px;
+  border-radius: 8px;
+  border: 1px solid ${COLOR.gray200};
+  background: #fff;
+  font-size: 12px;
+  color: ${COLOR.gray600};
+  cursor: pointer;
+  margin-top: 4px;
+  &:hover { border-color: ${COLOR.sage}; color: ${COLOR.green}; }
+`;
+
+/* ── 공간 목록 패널 (지도 왼쪽, 고정 너비) ── */
+const ListPanel = styled.div`
+  width: 270px;
+  flex-shrink: 0;
+  border-right: 1px solid ${COLOR.gray200};
+  background: #fff;
+  overflow-y: auto;
+  &::-webkit-scrollbar { width: 3px; }
+  &::-webkit-scrollbar-thumb { background: #d8d3cb; border-radius: 10px; }
 `;
 
 const ListHeader = styled.div`
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 14px 16px;
+  padding: 12px 14px;
   border-bottom: 1px solid ${COLOR.gray200};
+  font-size: 13px;
+  font-weight: 700;
   position: sticky;
   top: 0;
   background: #fff;
@@ -247,27 +217,26 @@ const ListHeader = styled.div`
 const ListCard = styled.div`
   display: flex;
   align-items: center;
-  gap: 12px;
-  padding: 14px 16px;
+  gap: 10px;
+  padding: 12px 14px;
   border-bottom: 1px solid #f5f5f5;
   cursor: pointer;
   background: ${({ $selected }) => ($selected ? COLOR.greenLight : '#fff')};
   transition: background 0.15s;
-  &:hover {
-    background: ${COLOR.cream};
-  }
+  &:hover { background: ${COLOR.cream}; }
 `;
 
 const ListThumb = styled.div`
-  width: 52px;
-  height: 52px;
+  width: 44px;
+  height: 44px;
   background: ${COLOR.cream};
   border-radius: 8px;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 24px;
+  font-size: 20px;
   flex-shrink: 0;
+  overflow: hidden;
 `;
 
 const TypeTag = styled.span`
@@ -279,106 +248,28 @@ const TypeTag = styled.span`
   color: #5b6b53;
 `;
 
-// 지도 영역
+/* ── 지도 영역 ── */
 const MapArea = styled.div`
   flex: 1;
   position: relative;
-  background: #e8efe0;
   overflow: hidden;
 `;
 
-const MapGrid = styled.div`
+/* ── 공간 상세 패널 (지도 위에 오버레이, 우측) ── */
+const DetailPanel = styled.div`
   position: absolute;
-  inset: 0;
-  background-image:
-    linear-gradient(rgba(255, 255, 255, 0.15) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(255, 255, 255, 0.15) 1px, transparent 1px);
-  background-size: 40px 40px;
-`;
-
-const CultureBtn = styled.button`
-  position: absolute;
-  top: 16px;
-  left: 16px;
-  padding: 8px 16px;
-  border-radius: 20px;
-  border: none;
-  background: ${COLOR.terra};
-  color: #fff;
-  font-size: 13px;
-  font-weight: 600;
-  cursor: pointer;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
-`;
-
-const ZoomBtns = styled.div`
-  position: absolute;
-  top: 16px;
-  right: 16px;
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-`;
-
-const ZoomBtn = styled.button`
-  width: 32px;
-  height: 32px;
-  border-radius: 6px;
-  border: 1px solid ${COLOR.gray200};
-  background: #fff;
-  font-size: 16px;
-  cursor: pointer;
-`;
-
-const MapPin = styled.div`
-  position: absolute;
-  transform: translate(-50%, -100%);
-  cursor: pointer;
-`;
-
-const PinBubble = styled.div`
-  padding: 5px 10px;
-  border-radius: 16px;
-  background: ${({ $selected }) => ($selected ? COLOR.green : '#fff')};
-  color: ${({ $selected }) => ($selected ? '#fff' : COLOR.black)};
-  font-size: 12px;
-  font-weight: 700;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
-  border: 1.5px solid
-    ${({ $selected }) => ($selected ? COLOR.green : COLOR.gray200)};
-  white-space: nowrap;
-`;
-
-const PinTail = styled.div`
-  width: 0;
-  height: 0;
-  border-left: 5px solid transparent;
-  border-right: 5px solid transparent;
-  border-top: 6px solid ${({ $selected }) => ($selected ? COLOR.green : '#fff')};
-  margin: 0 auto;
-`;
-
-// 사이드 방 리스트 패널 (네이버지도 스타일)
-const RoomPanel = styled.div`
-  position: absolute;
-  right: ${({ $open }) => ($open ? '0' : '-320px')};
+  right: ${({ $open }) => ($open ? '0' : '-310px')};
   top: 0;
   bottom: 0;
-  width: 300px;
+  width: 290px;
   background: #fff;
   border-left: 1px solid ${COLOR.gray200};
   box-shadow: -4px 0 16px rgba(0, 0, 0, 0.1);
   transition: right 0.3s ease;
   overflow-y: auto;
   z-index: 10;
-
-  &::-webkit-scrollbar {
-    width: 3px;
-  }
-  &::-webkit-scrollbar-thumb {
-    background: #d8d3cb;
-    border-radius: 10px;
-  }
+  &::-webkit-scrollbar { width: 3px; }
+  &::-webkit-scrollbar-thumb { background: #d8d3cb; border-radius: 10px; }
 `;
 
 const PanelToggleBtn = styled.button`
@@ -400,143 +291,334 @@ const PanelToggleBtn = styled.button`
   box-shadow: -2px 0 8px rgba(0, 0, 0, 0.08);
 `;
 
-const PanelHeader = styled.div`
-  padding: 16px;
-  border-bottom: 1px solid ${COLOR.gray200};
-  position: sticky;
-  top: 0;
-  background: #fff;
-  z-index: 1;
-`;
+const PanelInner = styled.div`padding: 16px;`;
 
-const RoomItem = styled.div`
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  padding: 12px 16px;
-  border-bottom: 1px solid #f5f5f5;
-  cursor: ${({ $avail }) => ($avail ? 'pointer' : 'not-allowed')};
-  opacity: ${({ $avail }) => ($avail ? 1 : 0.55)};
-  transition: background 0.15s;
-  &:hover {
-    background: ${({ $avail }) => ($avail ? COLOR.cream : 'none')};
-  }
-`;
-
-const RoomIcon = styled.div`
-  width: 40px;
-  height: 40px;
-  border-radius: 8px;
-  background: ${COLOR.cream};
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 20px;
-  flex-shrink: 0;
-`;
-
-const AvailDot = styled.div`
-  width: 7px;
-  height: 7px;
-  border-radius: 50%;
-  background: ${({ $avail }) => ($avail ? COLOR.green : COLOR.red)};
-  flex-shrink: 0;
-`;
+/* ════════════════════════════════════════════ */
 
 function MapPage() {
   const navigate = useNavigate();
-  const [selected, setSelected] = useState(1);
-  const [cultureOn, setCultureOn] = useState(true);
+  const { state } = useLocation();
+  const mapContainerRef = useRef(null);
+  const mapInstanceRef = useRef(null);
+  const overlaysRef = useRef([]);
+
+  // SearchResultPage에서 넘어올 때 state로 필터 초기값 수신
+  const [activeTab, setActiveTab] = useState(() => {
+    const idx = TYPE_TABS.indexOf(state?.type ?? '');
+    return idx >= 0 ? idx : 0;
+  });
+  const [region, setRegion] = useState(state?.region || '전체');
+  const [checkIn, setCheckIn] = useState(state?.checkIn || '');
+  const [checkOut, setCheckOut] = useState(state?.checkOut || '');
+  const [guests, setGuests] = useState(state?.guests || 2);
+  const [priceIdx, setPriceIdx] = useState(0);
+  const [amenities, setAmenities] = useState([]);
+
+  const [spaces, setSpaces] = useState([]);
+  const [selected, setSelected] = useState(null);
   const [panelOpen, setPanelOpen] = useState(false);
-  const [regionFilter, setRegionFilter] = useState('전체');
+  const [loading, setLoading] = useState(false);
 
-  const selectedSpace = SPACES.find((s) => s.id === selected);
-  const rooms = DUMMY_ROOMS[selected] || [];
+  // 카카오맵 초기화 (마운트 1회)
+  useEffect(() => {
+    const map = new window.kakao.maps.Map(mapContainerRef.current, {
+      center: new window.kakao.maps.LatLng(36.5, 127.5),
+      level: 12,
+    });
+    mapInstanceRef.current = map;
+  }, []);
 
-  const handlePinClick = (id) => {
-    setSelected(id);
-    setPanelOpen(true);
+  // 필터 변경 시 공간 목록 재조회
+  useEffect(() => {
+    const load = async () => {
+      setLoading(true);
+      try {
+        const placeType = activeTab > 0 ? TAB_TO_TYPE[TYPE_TABS[activeTab]] : null;
+        const data = await searchSpaces({
+          region: region !== '전체' ? region : undefined,
+          placeType,
+          checkIn,
+          checkOut,
+        });
+        setSpaces(data);
+      } finally {
+        setLoading(false);
+      }
+    };
+    load();
+  }, [activeTab, region, checkIn, checkOut]);
+
+  // spaces 변경 시 마커 오버레이 갱신
+  useEffect(() => {
+    const map = mapInstanceRef.current;
+    if (!map) return;
+
+    overlaysRef.current.forEach((ov) => ov.setMap(null));
+    overlaysRef.current = [];
+
+    if (!spaces.length) return;
+
+    const bounds = new window.kakao.maps.LatLngBounds();
+    let hasBounds = false;
+
+    spaces.forEach((space) => {
+      const lat = parseFloat(space.latitude);
+      const lng = parseFloat(space.longitude);
+      if (isNaN(lat) || isNaN(lng)) return;
+
+      const pos = new window.kakao.maps.LatLng(lat, lng);
+      bounds.extend(pos);
+      hasBounds = true;
+
+      const wrap = document.createElement('div');
+      wrap.style.cssText = 'cursor:pointer; text-align:center;';
+
+      const bubble = document.createElement('div');
+      bubble.textContent =
+        space.title.length > 7 ? space.title.slice(0, 6) + '…' : space.title;
+      bubble.style.cssText = [
+        'padding:5px 10px',
+        'border-radius:16px',
+        'background:#fff',
+        'font-size:12px',
+        'font-weight:700',
+        'box-shadow:0 2px 8px rgba(0,0,0,.15)',
+        'border:1.5px solid #d8d3cb',
+        'white-space:nowrap',
+        "font-family:'Noto Sans KR',sans-serif",
+      ].join(';');
+
+      const tail = document.createElement('div');
+      tail.style.cssText = [
+        'width:0', 'height:0',
+        'border-left:5px solid transparent',
+        'border-right:5px solid transparent',
+        'border-top:6px solid #fff',
+        'margin:0 auto',
+      ].join(';');
+
+      wrap.appendChild(bubble);
+      wrap.appendChild(tail);
+
+      wrap.addEventListener('click', () => {
+        setSelected(space);
+        setPanelOpen(true);
+        map.panTo(pos);
+      });
+
+      const overlay = new window.kakao.maps.CustomOverlay({
+        position: pos,
+        content: wrap,
+        yAnchor: 1,
+      });
+      overlay.setMap(map);
+      overlaysRef.current.push(overlay);
+    });
+
+    if (hasBounds) map.setBounds(bounds);
+  }, [spaces]);
+
+  const toggleAmenity = (a) =>
+    setAmenities((prev) =>
+      prev.includes(a) ? prev.filter((x) => x !== a) : [...prev, a]
+    );
+
+  const reset = () => {
+    setActiveTab(0);
+    setRegion('전체');
+    setCheckIn('');
+    setCheckOut('');
+    setGuests(2);
+    setPriceIdx(0);
+    setAmenities([]);
   };
 
-  const handleRoomClick = (room) => {
-    if (!room.available) return;
-    const space = selectedSpace;
-    const path =
-      space.type === '오피스'
-        ? `/coworking-offices/${space.id}`
-        : space.type === '워크앤스테이'
-          ? `/workstays/${space.id}`
-          : `/accommodations/${space.id}`;
-    navigate(path, { state: { selectedRoom: room, space } });
+  const handleListCardClick = (space) => {
+    setSelected(space);
+    setPanelOpen(true);
+    const lat = parseFloat(space.latitude);
+    const lng = parseFloat(space.longitude);
+    if (!isNaN(lat) && !isNaN(lng) && mapInstanceRef.current) {
+      mapInstanceRef.current.panTo(new window.kakao.maps.LatLng(lat, lng));
+    }
+  };
+
+  // 리스트 보기 — 현재 필터 state를 SearchResultPage로 전달
+  const goListView = () => {
+    navigate('/spaces/search', {
+      state: {
+        type: TYPE_TABS[activeTab],
+        region,
+        checkIn,
+        checkOut,
+        guests,
+      },
+    });
   };
 
   return (
     <Layout>
       <MainHeader activePage="search" />
 
-      {/* 서브 필터바 */}
+      {/* 상단 현재 필터 요약 바 */}
       <SubBar>
         <BackBtn onClick={() => navigate(-1)}>← 이전으로</BackBtn>
-        <Select
-          value={regionFilter}
-          onChange={(e) => setRegionFilter(e.target.value)}
-        >
-          {['전체', '서울', '경기', '전라', '경상', '충청', '제주', '강원'].map(
-            (r) => (
-              <option key={r}>{r}</option>
-            )
-          )}
-        </Select>
-        <FilterChip>📅 5/8~5/10</FilterChip>
-        <FilterChip>👤 2명</FilterChip>
-        <FilterChip>필터 +</FilterChip>
+        <Chip>📍 {region === '전체' ? '전체 지역' : region}</Chip>
+        <Chip>
+          📅{' '}
+          {checkIn && checkOut
+            ? `${checkIn.slice(5).replace('-', '/')} ~ ${checkOut.slice(5).replace('-', '/')}`
+            : '날짜 미선택'}
+        </Chip>
+        <Chip>👤 {guests}명</Chip>
         <div style={{ marginLeft: 'auto' }}>
-          <button
-            onClick={() => navigate('/spaces/search')}
-            style={{
-              fontSize: 12,
-              color: COLOR.green,
-              background: 'none',
-              border: `1px solid ${COLOR.green}`,
-              borderRadius: 8,
-              padding: '6px 12px',
-              cursor: 'pointer',
-            }}
-          >
-            🗂 리스트 보기
-          </button>
+          <ViewBtn onClick={goListView}>🗂 리스트 보기</ViewBtn>
         </div>
       </SubBar>
 
       <Body>
-        {/* 좌측 목록 */}
+        {/* 사이드 필터 — SearchResultPage와 동일 구조 */}
+        <SideFilter>
+          <div style={{ fontSize: 13, fontWeight: 700, color: COLOR.black, marginBottom: 16 }}>
+            필터
+          </div>
+
+          <FilterSection>
+            <FilterTitle>공간 유형</FilterTitle>
+            <TypeTabRow>
+              {TYPE_TABS.map((tab, i) => (
+                <TypeChip key={tab} $active={activeTab === i} onClick={() => setActiveTab(i)}>
+                  {tab}
+                </TypeChip>
+              ))}
+            </TypeTabRow>
+          </FilterSection>
+
+          <Divider />
+
+          <FilterSection>
+            <FilterTitle>체크인 · 체크아웃</FilterTitle>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+              <DateInput
+                type="date"
+                value={checkIn}
+                min={new Date().toISOString().slice(0, 10)}
+                onChange={(e) => {
+                  setCheckIn(e.target.value);
+                  if (checkOut && e.target.value >= checkOut) setCheckOut('');
+                }}
+              />
+              <DateInput
+                type="date"
+                value={checkOut}
+                min={checkIn || new Date().toISOString().slice(0, 10)}
+                disabled={!checkIn}
+                onChange={(e) => setCheckOut(e.target.value)}
+                style={{ opacity: checkIn ? 1 : 0.5, cursor: checkIn ? 'pointer' : 'not-allowed' }}
+              />
+              {checkIn && checkOut && (
+                <span style={{ fontSize: 11, color: COLOR.gray400 }}>
+                  {Math.round((new Date(checkOut) - new Date(checkIn)) / 86400000)}박
+                </span>
+              )}
+            </div>
+          </FilterSection>
+
+          <Divider />
+
+          <FilterSection>
+            <FilterTitle>지역</FilterTitle>
+            {REGIONS.map((r) => (
+              <RadioRow key={r} $active={region === r}>
+                <input
+                  type="radio"
+                  name="map-region"
+                  checked={region === r}
+                  onChange={() => setRegion(r)}
+                />
+                {r}
+              </RadioRow>
+            ))}
+          </FilterSection>
+
+          <Divider />
+
+          <FilterSection>
+            <FilterTitle>인원수</FilterTitle>
+            <GuestInput>
+              <GuestBtn onClick={() => setGuests((g) => Math.max(1, g - 1))}>−</GuestBtn>
+              <span style={{ fontSize: 13, fontWeight: 600, minWidth: 20, textAlign: 'center' }}>
+                {guests}명
+              </span>
+              <GuestBtn onClick={() => setGuests((g) => g + 1)}>+</GuestBtn>
+            </GuestInput>
+          </FilterSection>
+
+          <Divider />
+
+          <FilterSection>
+            <FilterTitle>가격대</FilterTitle>
+            {PRICE_RANGES.map((p, i) => (
+              <RadioRow key={i} $active={priceIdx === i}>
+                <input
+                  type="radio"
+                  name="map-price"
+                  checked={priceIdx === i}
+                  onChange={() => setPriceIdx(i)}
+                />
+                {p.label}
+              </RadioRow>
+            ))}
+          </FilterSection>
+
+          <Divider />
+
+          {Object.entries(AMENITY_OPTIONS).map(([category, items]) => (
+            <FilterSection key={category}>
+              <FilterTitle>{category} 편의시설</FilterTitle>
+              {items.map((a) => (
+                <CheckRow key={a}>
+                  <input
+                    type="checkbox"
+                    checked={amenities.includes(a)}
+                    onChange={() => toggleAmenity(a)}
+                  />
+                  {a}
+                </CheckRow>
+              ))}
+            </FilterSection>
+          ))}
+
+          <ResetBtn onClick={reset}>필터 초기화</ResetBtn>
+        </SideFilter>
+
+        {/* 공간 목록 패널 */}
         <ListPanel>
           <ListHeader>
-            <span style={{ fontSize: 14, fontWeight: 700 }}>
-              {SPACES.length}개 공간
-            </span>
-            <Select style={{ width: 'auto' }}>
-              <option>인기순</option>
-              <option>가격 낮은순</option>
-              <option>평점순</option>
-            </Select>
+            {loading ? '불러오는 중...' : `${spaces.length}개 공간`}
           </ListHeader>
-
-          {SPACES.map((s) => (
+          {spaces.map((s) => (
             <ListCard
-              key={s.id}
-              $selected={selected === s.id}
-              onClick={() => {
-                setSelected(s.id);
-                setPanelOpen(true);
-              }}
+              key={s.placeNo}
+              $selected={selected?.placeNo === s.placeNo}
+              onClick={() => handleListCardClick(s)}
             >
-              <ListThumb>{s.icon}</ListThumb>
+              <ListThumb>
+                {s.thumbnailUrl ? (
+                  <img
+                    src={s.thumbnailUrl}
+                    alt=""
+                    style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                  />
+                ) : (
+                  <span>🏠</span>
+                )}
+              </ListThumb>
               <div style={{ flex: 1, minWidth: 0 }}>
-                <TypeTag>{s.type}</TypeTag>
+                <TypeTag>{TYPE_LABEL[s.type] ?? s.type}</TypeTag>
                 <div
                   style={{
-                    fontSize: 13,
+                    fontSize: 12,
                     fontWeight: 700,
                     margin: '3px 0 2px',
                     overflow: 'hidden',
@@ -546,166 +628,80 @@ function MapPage() {
                 >
                   {s.title}
                 </div>
-                <div style={{ fontSize: 12, color: '#C97D4C' }}>
-                  ★ {s.score}
+                <div style={{ fontSize: 11, color: '#C97D4C' }}>
+                  {s.avgScore ? `★ ${Number(s.avgScore).toFixed(1)}` : '평점 없음'}
                 </div>
               </div>
-              <div style={{ fontSize: 13, fontWeight: 700, flexShrink: 0 }}>
-                {s.price.toLocaleString()}원~
+              <div style={{ fontSize: 12, fontWeight: 700, flexShrink: 0 }}>
+                {s.basePrice ? `${s.basePrice.toLocaleString()}원~` : '-'}
               </div>
             </ListCard>
           ))}
         </ListPanel>
 
-        {/* 지도 */}
+        {/* 카카오 지도 */}
         <MapArea>
-          <MapGrid />
+          <div ref={mapContainerRef} style={{ width: '100%', height: '100%' }} />
 
-          <CultureBtn onClick={() => setCultureOn((v) => !v)}>
-            🏛 주변 문화·관광지 {cultureOn ? 'ON' : 'OFF'}
-          </CultureBtn>
-
-          <ZoomBtns>
-            <ZoomBtn>+</ZoomBtn>
-            <ZoomBtn>−</ZoomBtn>
-          </ZoomBtns>
-
-          {SPACES.map((s) => (
-            <MapPin
-              key={s.id}
-              style={{ left: `${s.x}%`, top: `${s.y}%` }}
-              onClick={() => handlePinClick(s.id)}
-            >
-              <PinBubble $selected={selected === s.id}>
-                {s.price >= 1000 ? `${Math.round(s.price / 1000)}K` : s.price}
-              </PinBubble>
-              <PinTail $selected={selected === s.id} />
-            </MapPin>
-          ))}
-
-          {/* 방 리스트 사이드 패널 */}
-          <RoomPanel $open={panelOpen}>
+          {/* 공간 상세 패널 (지도 위 오버레이, 우측) */}
+          <DetailPanel $open={panelOpen}>
             <PanelToggleBtn onClick={() => setPanelOpen((v) => !v)}>
               {panelOpen ? '›' : '‹'}
             </PanelToggleBtn>
 
-            {selectedSpace && (
-              <>
-                <PanelHeader>
-                  <div
-                    style={{
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: 10,
-                      marginBottom: 10,
-                    }}
-                  >
-                    <div style={{ fontSize: 24 }}>{selectedSpace.icon}</div>
-                    <div style={{ flex: 1, minWidth: 0 }}>
-                      <TypeTag>{selectedSpace.type}</TypeTag>
-                      <div
-                        style={{
-                          fontSize: 14,
-                          fontWeight: 700,
-                          overflow: 'hidden',
-                          whiteSpace: 'nowrap',
-                          textOverflow: 'ellipsis',
-                        }}
-                      >
-                        {selectedSpace.title}
-                      </div>
-                      <div style={{ fontSize: 12, color: '#C97D4C' }}>
-                        ★ {selectedSpace.score}
-                      </div>
-                    </div>
-                  </div>
-                  <div
-                    style={{
-                      fontSize: 13,
-                      color: COLOR.gray400,
-                      marginBottom: 8,
-                    }}
-                  >
-                    방 {selectedSpace.roomCount}개 · {selectedSpace.location}
-                  </div>
-                  <button
-                    onClick={() =>
-                      navigate(`/spaces/${selectedSpace.id}/rooms`, {
-                        state: { space: selectedSpace },
-                      })
-                    }
-                    style={{
-                      width: '100%',
-                      padding: '8px',
-                      borderRadius: 8,
-                      background: COLOR.green,
-                      color: '#fff',
-                      border: 'none',
-                      fontSize: 13,
-                      fontWeight: 600,
-                      cursor: 'pointer',
-                    }}
-                  >
-                    방 목록 전체 보기
-                  </button>
-                </PanelHeader>
-
-                {rooms.length > 0 ? (
-                  rooms.map((room) => (
-                    <RoomItem
-                      key={room.id}
-                      $avail={room.available}
-                      onClick={() => handleRoomClick(room)}
-                    >
-                      <RoomIcon>{room.icon}</RoomIcon>
-                      <div style={{ flex: 1, minWidth: 0 }}>
-                        <div
-                          style={{
-                            fontSize: 13,
-                            fontWeight: 700,
-                            marginBottom: 2,
-                            overflow: 'hidden',
-                            whiteSpace: 'nowrap',
-                            textOverflow: 'ellipsis',
-                          }}
-                        >
-                          {room.name}
-                        </div>
-                        <div style={{ fontSize: 12, color: COLOR.gray400 }}>
-                          최대 {room.maxGuests}명
-                        </div>
-                      </div>
-                      <div
-                        style={{
-                          display: 'flex',
-                          flexDirection: 'column',
-                          alignItems: 'flex-end',
-                          gap: 4,
-                          flexShrink: 0,
-                        }}
-                      >
-                        <div style={{ fontSize: 13, fontWeight: 700 }}>
-                          {room.price.toLocaleString()}원
-                        </div>
-                        <AvailDot $avail={room.available} />
-                      </div>
-                    </RoomItem>
-                  ))
-                ) : (
-                  <div
-                    style={{
-                      textAlign: 'center',
-                      padding: 32,
-                      color: COLOR.gray400,
-                      fontSize: 13,
-                    }}
-                  >
-                    방 정보를 불러오는 중...
-                  </div>
-                )}
-              </>
+            {selected && (
+              <PanelInner>
+                <div style={{ marginBottom: 6 }}>
+                  <TypeTag>{TYPE_LABEL[selected.type] ?? selected.type}</TypeTag>
+                </div>
+                <div
+                  style={{
+                    fontSize: 14,
+                    fontWeight: 700,
+                    marginBottom: 4,
+                    overflow: 'hidden',
+                    whiteSpace: 'nowrap',
+                    textOverflow: 'ellipsis',
+                  }}
+                >
+                  {selected.title}
+                </div>
+                <div style={{ fontSize: 12, color: '#C97D4C', marginBottom: 4 }}>
+                  {selected.avgScore
+                    ? `★ ${Number(selected.avgScore).toFixed(1)}`
+                    : '평점 없음'}
+                </div>
+                <div style={{ fontSize: 12, color: COLOR.gray400, marginBottom: 10 }}>
+                  {selected.address}
+                </div>
+                <div style={{ fontSize: 15, fontWeight: 700, marginBottom: 14 }}>
+                  {selected.basePrice
+                    ? `${selected.basePrice.toLocaleString()}원~`
+                    : '가격 문의'}
+                </div>
+                <button
+                  onClick={() =>
+                    navigate(`/spaces/${selected.entityNo}/rooms`, {
+                      state: { space: selected, checkIn, checkOut, guests },
+                    })
+                  }
+                  style={{
+                    width: '100%',
+                    padding: '9px',
+                    borderRadius: 8,
+                    background: COLOR.green,
+                    color: '#fff',
+                    border: 'none',
+                    fontSize: 13,
+                    fontWeight: 600,
+                    cursor: 'pointer',
+                  }}
+                >
+                  상세 보기
+                </button>
+              </PanelInner>
             )}
-          </RoomPanel>
+          </DetailPanel>
         </MapArea>
       </Body>
     </Layout>

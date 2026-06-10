@@ -1,11 +1,16 @@
 package com.sloway.app.notice.service;
 
+import com.sloway.app.member.entity.MemberEntity;
+import com.sloway.app.member.repository.MemberRepository;
 import com.sloway.app.notice.dto.request.NoticeWriteReqDto;
 import com.sloway.app.notice.dto.response.NoticeDetailResDto;
 import com.sloway.app.notice.dto.response.NoticeListResDto;
 import com.sloway.app.notice.enums.NoticeCategory;
 import com.sloway.app.notice.entity.NoticeEntity;
 import com.sloway.app.notice.repository.NoticeRepository;
+import com.sloway.app.notification.event.InquiryAnsweredEvent;
+import com.sloway.app.notification.event.NoticeEvent;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.util.StringUtils;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -23,6 +28,8 @@ import java.util.List;
 public class NoticeService {
 
     private final NoticeRepository noticeRepository;
+    private final ApplicationEventPublisher eventPublisher;
+    private final MemberRepository memberRepository;
 
 
     public Page<NoticeListResDto> findAll(
@@ -51,7 +58,10 @@ public class NoticeService {
     @Transactional
     public void write(NoticeWriteReqDto reqDto) {
         NoticeEntity noticeEntity = noticeRepository.save(reqDto.toEntity());
-        log.info("[공지사항 등록] id={}, title={}", noticeEntity.getId(), noticeEntity.getTitle());
+        List<Long> memberIds = memberRepository.findAllMemberIds();
+        for (Long id : memberIds) {
+            eventPublisher.publishEvent(new NoticeEvent(id, noticeEntity.getTitle(), "가 등록되었습니다"));
+        }
     }
 
     @Transactional
