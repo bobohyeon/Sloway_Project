@@ -38,7 +38,7 @@ public class InquiryReplyService {
         replyRepository.save(reqDto.toEntity(inquiry, admin));
         inquiry.answer();
         log.info("[문의 답변 등록] inquiryId={}, adminNo={}", inquiryId, adminNo);
-        eventPublisher.publishEvent(new InquiryAnsweredEvent(inquiry.getWriter().getNo(), inquiry.getTitle(),"가 등록되었습니다."));
+        eventPublisher.publishEvent(new InquiryAnsweredEvent(inquiry.getWriter().getNo(), inquiryId, inquiry.getTitle(),"의 답변이 등록되었습니다."));
     }
 
     @Transactional

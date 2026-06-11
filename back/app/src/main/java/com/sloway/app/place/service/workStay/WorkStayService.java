@@ -235,10 +235,6 @@ public class WorkStayService {
             } else if (files != null && fileIndex < files.size()) {
                 try {
                     String s3Url = s3Service.upload(files.get(fileIndex++), "workStay");
-                    ImgWorkStayEntity entity = ImgWorkStayEntity.from(workStay, s3Url, dto.getSort());
-
-// 여기서 로그를 출력해서 확인하세요
-                    System.out.println("DEBUG: 엔티티 저장 직전 URL 값 -> " + entity.getCurrentUrl());
                     imgWorkStayRepository.save(ImgWorkStayEntity.from(workStay, s3Url, dto.getSort()));
                 } catch (IOException e) { throw new RuntimeException("WorkStay 이미지 업로드 실패", e); }
             }
