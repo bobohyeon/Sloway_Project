@@ -8,8 +8,10 @@ import com.sloway.app.notice.dto.response.NoticeListResDto;
 import com.sloway.app.notice.enums.NoticeCategory;
 import com.sloway.app.notice.entity.NoticeEntity;
 import com.sloway.app.notice.repository.NoticeRepository;
+import com.sloway.app.notification.entity.NotificationEntity;
 import com.sloway.app.notification.event.InquiryAnsweredEvent;
 import com.sloway.app.notification.event.NoticeEvent;
+import com.sloway.app.notification.repository.NotificationRepository;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.util.StringUtils;
 import lombok.RequiredArgsConstructor;
@@ -30,6 +32,7 @@ public class NoticeService {
     private final NoticeRepository noticeRepository;
     private final ApplicationEventPublisher eventPublisher;
     private final MemberRepository memberRepository;
+    private final NotificationRepository notificationRepository;
 
 
     public Page<NoticeListResDto> findAll(
@@ -44,13 +47,16 @@ public class NoticeService {
     }
 
     @Transactional
-    public NoticeDetailResDto findById(Long id) {
+    public NoticeDetailResDto findById(Long id, Long memberNo) {
         NoticeEntity noticeEntity = noticeRepository.findByIdAndDelYn(id , "N")
                 .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 공지사항입니다. id=" + id));
 
         noticeEntity.increaseViewCount();
 
         log.info("[공지사항 상세 조회] id={}, viewCount={}", id, noticeEntity.getViewCount());
+        NotificationEntity notification = notificationRepository.findByTargetNoAndReadIsNull(id, memberNo, "NOTICE");
+        notification.markRead();
+        notificationRepository.save(notification);
         return NoticeDetailResDto.from(noticeEntity);
     }
 
@@ -60,7 +66,7 @@ public class NoticeService {
         NoticeEntity noticeEntity = noticeRepository.save(reqDto.toEntity());
         List<Long> memberIds = memberRepository.findAllMemberIds();
         for (Long id : memberIds) {
-            eventPublisher.publishEvent(new NoticeEvent(id, noticeEntity.getTitle(), "가 등록되었습니다"));
+            eventPublisher.publishEvent(new NoticeEvent(id, noticeEntity.getId(), noticeEntity.getTitle(), "가 등록되었습니다"));
         }
     }
 

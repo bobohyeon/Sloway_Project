@@ -1,9 +1,11 @@
 package com.sloway.app.notice.controller;
 
+import com.sloway.app.auth.user.CustomUserDetails;
 import com.sloway.app.notice.dto.request.NoticeWriteReqDto;
 import com.sloway.app.notice.dto.response.NoticeDetailResDto;
 import com.sloway.app.notice.dto.response.NoticeListResDto;
 import com.sloway.app.notice.service.NoticeService;
+import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
@@ -12,6 +14,7 @@ import org.springframework.data.domain.Sort;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -35,8 +38,12 @@ public class NoticeController {
     }
 
     @GetMapping("{id}")
-    public ResponseEntity<NoticeDetailResDto> findById(@PathVariable Long id) {
-        return ResponseEntity.ok(noticeService.findById(id));
+    public ResponseEntity<NoticeDetailResDto> findById(@PathVariable Long id, @AuthenticationPrincipal CustomUserDetails userDetails) {
+        Long memberNo = userDetails.getMemberNo();
+        if (memberNo == null){
+            throw new EntityNotFoundException("[로그인 먼저 하세요]");
+        }
+        return ResponseEntity.ok(noticeService.findById(id, memberNo));
     }
 
     @PostMapping

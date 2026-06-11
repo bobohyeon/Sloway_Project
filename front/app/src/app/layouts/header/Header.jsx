@@ -4,6 +4,7 @@ import { FaBell, FaCommentDots } from 'react-icons/fa';
 import { useAuth } from '../../../features/auth/hooks/useAuth';
 import { useState } from 'react';
 import NotificationList from '../../../features/notification/components/NotificationList';
+import { useNotification } from './../../../features/notification/hooks/useNotification';
 
 const HeaderWrapper = styled.div`
   display: flex;
@@ -170,6 +171,10 @@ function Header() {
   const navigate = useNavigate();
   const { isAuthenticated, user, myPagePath, handleLogout } = useAuth();
   const [isNotiOpen, setIsNotiOpen] = useState(false);
+  const { notifications, handleRowClick } = useNotification(user?.role);
+  const hasNotifications =
+    Array.isArray(notifications) && notifications.length > 0;
+
   return (
     <HeaderWrapper>
       <Logo to="/">
@@ -192,11 +197,17 @@ function Header() {
                 onClick={() => setIsNotiOpen(!isNotiOpen)}
               >
                 <FaBell size={18} />
-                <Badge />
+                {/* hasNotifications가 true일 때만 Badge 노출 */}
+                {hasNotifications && <Badge />}
               </IconButton>
+
               {isNotiOpen && (
                 <DropdownContainer>
-                  <NotificationList />
+                  {/* props로 notifications 전달 */}
+                  <NotificationList
+                    notifications={notifications}
+                    handleRowClick={handleRowClick}
+                  />
                 </DropdownContainer>
               )}
             </div>

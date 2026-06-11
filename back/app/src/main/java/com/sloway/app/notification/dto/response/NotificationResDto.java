@@ -15,6 +15,7 @@ import java.util.Map;
 public class NotificationResDto {
 
     private Long id;
+    private Long targetId;
     private NotificationType type;
     private String category;
     private String title;
@@ -41,6 +42,7 @@ public class NotificationResDto {
     public static NotificationResDto fromEntityValues(NotificationEntity entity) {
         return new NotificationResDto(
                 entity.getId(),
+                entity.getTargetNo(),
                 entity.getType(),
                 CATEGORY_MAP.getOrDefault(entity.getType(), entity.getType().name()),
                 entity.getTitle(),
@@ -53,6 +55,7 @@ public class NotificationResDto {
     public static NotificationResDto from(NotificationEntity entity) {
         return new NotificationResDto(
                 entity.getId(),
+                entity.getTargetNo(),
                 entity.getType(),
                 CATEGORY_MAP.getOrDefault(entity.getType(), entity.getType().name()),
                 entity.getTitle(),

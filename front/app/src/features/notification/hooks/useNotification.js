@@ -2,12 +2,20 @@ import { useEffect, useState } from 'react';
 import SockJS from 'sockjs-client';
 import Stomp from 'stompjs';
 import api from './../../../app/api/axiosApi';
+import { useNavigate } from 'react-router-dom';
 
 export const useNotification = (role) => {
   const [notifications, setNotifications] = useState([]);
+  const navigate = useNavigate();
+  const [roleMap, setRoleMap] = useState('');
 
   useEffect(() => {
     if (!role) return;
+    if (role === 'H') {
+      setRoleMap('host');
+    } else if (role === 'U') {
+      setRoleMap('user');
+    }
 
     const endpoint =
       role === 'HOST'
@@ -17,6 +25,8 @@ export const useNotification = (role) => {
     const fetchInitialNotifications = async () => {
       try {
         const response = await api.get(endpoint);
+        console.log(response);
+
         setNotifications(response.data);
       } catch (error) {
         console.error('알림 초기 데이터 로드 실패', error);
@@ -42,5 +52,13 @@ export const useNotification = (role) => {
     };
   }, [role]);
 
-  return notifications;
+  function handleRowClick(item) {
+    if (item.type === 'notice') {
+      navigate(`/${item.type}/${item.targetId}`);
+    } else {
+      navigate(`/${roleMap}/${item.type}/${item.targetId}`);
+    }
+  }
+
+  return { notifications, handleRowClick };
 };
