@@ -86,7 +86,15 @@ export const hostSignup = async (data, businessDoc) => {
 // 카카오 로그인 시작 — 카카오 인증 페이지로 이동
 export const startKakaoLogin = () => {
   const clientId = import.meta.env.VITE_KAKAO_CLIENT_ID;
-  const redirectUri = 'http://localhost:8080/api/auth/oauth/kakao/callback';
+  if (!clientId) {
+    // 환경변수 누락 시 client_id=undefined로 카카오 에러 → 빠르게 막고 안내
+    alert('카카오 로그인 설정이 누락됐어요. 잠시 후 다시 시도해주세요.');
+    return;
+  }
+  // axiosApi.js와 동일하게 빌드 환경으로 백엔드 콜백 주소 분기
+  const redirectUri = import.meta.env.DEV
+    ? 'http://localhost:8080/api/auth/oauth/kakao/callback'
+    : 'https://api.sloway.store/api/auth/oauth/kakao/callback';
   const url =
     `https://kauth.kakao.com/oauth/authorize` +
     `?client_id=${clientId}` +
