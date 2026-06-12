@@ -53,7 +53,7 @@ public class ReviewService {
             Long memberNo
             , ReviewCreateReqDto reqDto
             , List<MultipartFile> images
-    ) throws IOException {
+    ) {
         // 내용 빈 문자열 방어
         if (reqDto.getContent() == null || reqDto.getContent().isBlank()) {
             throw new CustomException(ReviewErrorCode.EMPTY_CONTENT);
@@ -90,14 +90,17 @@ public class ReviewService {
                         .scoreAmenity(reqDto.getScoreAmenity())
                 .build());
 
-        if(images != null){
-            for (MultipartFile image : images){
-                String s3Key = s3Service.upload(image, "review");
-               ReviewImgEntity img = ReviewImgEntity.builder()
-                       .reviewNo(savedReview)
-                       .currentUrl(s3Key)
-                       .build();
-            reviewImgRepository.save(img);
+        if (images != null) {
+            for (MultipartFile image : images) {
+                try {
+                    String s3Key = s3Service.upload(image, "review");
+                    reviewImgRepository.save(ReviewImgEntity.builder()
+                            .reviewNo(savedReview)
+                            .currentUrl(s3Key)
+                            .build());
+                } catch (IOException e) {
+                    throw new CustomException(ReviewErrorCode.IMAGE_UPLOAD_FAILED);
+                }
             }
         }
     }
