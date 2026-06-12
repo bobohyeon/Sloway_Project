@@ -1,6 +1,6 @@
 import { loadTossPayments, ANONYMOUS } from '@tosspayments/tosspayments-sdk';
 
-const CLIENT_KEY = import.meta.env.test_ck_jExPeJWYVQ5MjODOvLpPV49R5gvN;
+const CLIENT_KEY = import.meta.env.VITE_TOSS_CLIENT_KEY;
 
 export async function requestTossPayment({
   orderId,
