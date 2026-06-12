@@ -136,19 +136,11 @@ public class SecurityConfig {
                                 .requestMatchers(HttpMethod.GET, "/api/review/report").hasRole("ADMIN")
                                 .requestMatchers(HttpMethod.PUT, "/api/review/report/**").hasRole("ADMIN")
                                 .requestMatchers(HttpMethod.GET, "/api/review/my").hasRole("USER")
-                                .requestMatchers(HttpMethod.POST, "/api/review", "/api/review/report").hasRole("USER")
+                                .requestMatchers(HttpMethod.GET, "/api/review/helpful/*/mine").hasRole("USER")
+                                .requestMatchers(HttpMethod.POST, "/api/review", "/api/review/report", "/api/review/reply",
+                                        "/api/review/helpful").hasRole("USER")
                                 .requestMatchers(HttpMethod.PUT, "/api/review/**").hasRole("USER")
                                 .requestMatchers(HttpMethod.DELETE, "/api/review/**").hasRole("USER")
-                                // 답글
-                                .requestMatchers(HttpMethod.POST, "/api/review/reply/**").hasRole("USER")
-                                .requestMatchers(HttpMethod.PUT, "/api/review/reply/**").hasRole("USER")
-                                .requestMatchers(HttpMethod.DELETE, "/api/review/reply/**").hasRole("USER")
-                                .requestMatchers(HttpMethod.GET, "/api/review/reply/**").permitAll()
-                                // 도움돼요
-                                .requestMatchers(HttpMethod.POST, "/api/review/helpful/**").hasRole("USER")
-                                .requestMatchers(HttpMethod.DELETE, "/api/review/helpful/**").hasRole("USER")
-                                .requestMatchers(HttpMethod.GET, "/api/review/helpful/**").permitAll()
-                                // 목록·상세 (공개) — 반드시 위 구체 GET들 다음
                                 .requestMatchers(HttpMethod.GET, "/api/review", "/api/review/**").permitAll()
 
                                 // ══ 예약 도메인 (/api/reservation) ══════════════════════════
@@ -156,6 +148,7 @@ public class SecurityConfig {
                                 .requestMatchers(HttpMethod.GET, "/api/reservation/host", "/api/reservation/host/**").hasRole("HOST")
                                 .requestMatchers(HttpMethod.POST, "/api/reservation/*/reject").hasRole("HOST")
                                 .requestMatchers(HttpMethod.GET, "/api/reservation/admin/**").hasRole("ADMIN")
+                                .requestMatchers(HttpMethod.POST, "/api/reservation/admin/**").hasRole("ADMIN")
                                 .requestMatchers(HttpMethod.POST, "/api/reservation", "/api/reservation/*/cancel").hasRole("USER")
                                 .requestMatchers(HttpMethod.GET, "/api/reservation", "/api/reservation/**").hasRole("USER")
 
