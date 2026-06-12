@@ -172,19 +172,23 @@ function SpaceCard({ item, onClick }) {
 
   const handleWish = async (e) => {
     e.stopPropagation();
+    const prevLiked = liked;
+    const prevLikeNo = likeNo;
     try {
       if (liked) {
-        await deleteLikePlace(likeNo);
         setLiked(false);
         setLikeNo(null);
+        await deleteLikePlace(likeNo);
       } else {
         const res = await addLikePlace(item.placeNo);
         setLiked(true);
         setLikeNo(res.data?.no ?? res.data?.likeNo ?? null);
       }
-    } catch {
-      // 찜 실패 시 조용히 무시
-      console.error('찜 실패:', e.response?.status, e.response?.data);
+    } catch (err) {
+      // 실패 시 이전 상태로 되돌림
+      setLiked(prevLiked);
+      setLikeNo(prevLikeNo);
+      console.error('찜 실패:', err.response?.status, err.response?.data);
     }
   };
 
