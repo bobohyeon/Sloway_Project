@@ -1,5 +1,22 @@
 import { useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
+
+// 요일 인덱스(0=일) → exceptionPeriod 필드명
+const DAY_FIELD = ['sunPrice','monPrice','tuePrice','wedPrice','thuPrice','friPrice','satPrice'];
+
+// 날짜 범위 내 예외기간 요금 합산 (숙소·워크앤스테이 전용)
+function calcTotalWithExceptions(checkIn, checkOut, basePrice, exceptionPeriods) {
+  let total = 0;
+  let cur = new Date(checkIn);
+  const end = new Date(checkOut);
+  while (cur < end) {
+    const dateStr = cur.toISOString().slice(0, 10);
+    const ep = exceptionPeriods.find(e => dateStr >= e.startDate && dateStr < e.endDate);
+    total += ep ? (ep[DAY_FIELD[cur.getDay()]] ?? basePrice) : basePrice;
+    cur.setDate(cur.getDate() + 1);
+  }
+  return total;
+}
 import dayjs from 'dayjs';
 import styled from 'styled-components';
 import { COLOR } from '../../../../rsvn/components/user/RsvnStyled';
@@ -28,11 +45,20 @@ function DetailRsvnBox({
   rsvnDto,
   roomName = null,
   blackouts = [],
+  exceptionPeriods = [],
 }) {
   const navigate = useNavigate();
 
-  const totalBase = price * nights;
-  const grandTotal = totalBase;
+  // 오피스는 예외기간 계산 없이 단순 price × nights
+  const grandTotal = useMemo(() => {
+    if (type === 'office' || !checkIn || !checkOut || !exceptionPeriods.length) {
+      return price * nights;
+    }
+    return calcTotalWithExceptions(checkIn, checkOut, price, exceptionPeriods);
+  }, [type, checkIn, checkOut, price, nights, exceptionPeriods]);
+
+  const hasException = type !== 'office' && exceptionPeriods.length > 0
+    && checkIn && checkOut && grandTotal !== price * nights;
 
   const isBlocked = useMemo(
     () => hasOverlap(checkIn, checkOut, blackouts),
@@ -112,10 +138,14 @@ function DetailRsvnBox({
       {price > 0 && nights > 0 && (
         <CalcBox>
           <CalcRow>
-            <span>
-              {price.toLocaleString()}원 × {nights}{type === 'office' ? '회' : '박'}
-            </span>
-            <span>{totalBase.toLocaleString()}원</span>
+            {hasException ? (
+              <span style={{ color: '#888', fontSize: 12 }}>날짜별 요금 적용</span>
+            ) : (
+              <span>
+                {price.toLocaleString()}원 × {nights}{type === 'office' ? '회' : '박'}
+              </span>
+            )}
+            <span>{grandTotal.toLocaleString()}원</span>
           </CalcRow>
           <CalcTotal>
             <span>합계</span>

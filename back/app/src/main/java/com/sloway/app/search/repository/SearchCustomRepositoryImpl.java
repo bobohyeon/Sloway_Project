@@ -103,9 +103,14 @@ public class SearchCustomRepositoryImpl implements SearchCustomRepository{
         return type == null ? null : p.type.eq(type);
     }
 
-    //지역 필터
-    private BooleanExpression regionContains(RegionType region){
-        return region == null ? null : p.address.contains(region.getCode());
+    // 지역 필터 — RegionType.keywords 목록을 OR로 연결
+    private BooleanExpression regionContains(RegionType region) {
+        if (region == null) return null;
+        BooleanExpression expr = null;
+        for (String kw : region.getKeywords()) {
+            expr = (expr == null) ? p.address.contains(kw) : expr.or(p.address.contains(kw));
+        }
+        return expr;
     }
 
     // 썸네일 — no 오름차순 첫 번째 이미지 URL (JPQL 서브쿼리에서 LIMIT 미지원으로 중첩 서브쿼리 방식 사용)
