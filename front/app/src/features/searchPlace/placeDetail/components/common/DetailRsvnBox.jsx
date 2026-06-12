@@ -46,19 +46,27 @@ function DetailRsvnBox({
   roomName = null,
   blackouts = [],
   exceptionPeriods = [],
+  chargeAdd = 0,
+  baseCnt = 1,
 }) {
   const navigate = useNavigate();
 
   // 오피스는 예외기간 계산 없이 단순 price × nights
   const grandTotal = useMemo(() => {
-    if (type === 'office' || !checkIn || !checkOut || !exceptionPeriods.length) {
-      return price * nights;
-    }
-    return calcTotalWithExceptions(checkIn, checkOut, price, exceptionPeriods);
-  }, [type, checkIn, checkOut, price, nights, exceptionPeriods]);
+    const baseCost = (type === 'office' || !checkIn || !checkOut || !exceptionPeriods.length)
+      ? price * nights
+      : calcTotalWithExceptions(checkIn, checkOut, price, exceptionPeriods);
+    // 기본 인원 초과분에만 추가요금 적용
+    const extraPeople = Math.max(0, guests - baseCnt);
+    const addCost = extraPeople * (chargeAdd ?? 0) * nights;
+    return baseCost + addCost;
+  }, [type, checkIn, checkOut, price, nights, exceptionPeriods, chargeAdd, guests, baseCnt]);
 
   const hasException = type !== 'office' && exceptionPeriods.length > 0
-    && checkIn && checkOut && grandTotal !== price * nights;
+    && checkIn && checkOut
+    && calcTotalWithExceptions(checkIn, checkOut, price, exceptionPeriods) !== price * nights;
+
+  const hasExtra = checkIn && checkOut && (chargeAdd ?? 0) > 0 && guests > baseCnt;
 
   const isBlocked = useMemo(
     () => hasOverlap(checkIn, checkOut, blackouts),
@@ -88,6 +96,9 @@ function DetailRsvnBox({
       <PriceRow>
         <Price>{price.toLocaleString()}</Price>
         <PriceUnit>{priceUnit}</PriceUnit>
+        {(hasException || hasExtra) && (
+          <ExceptionBadge>요금 별도 적용</ExceptionBadge>
+        )}
         {roomName && <RoomNameTag>{roomName}</RoomNameTag>}
       </PriceRow>
 
@@ -145,8 +156,19 @@ function DetailRsvnBox({
                 {price.toLocaleString()}원 × {nights}{type === 'office' ? '회' : '박'}
               </span>
             )}
-            <span>{grandTotal.toLocaleString()}원</span>
+            <span>
+              {((type === 'office' || !checkIn || !checkOut || !exceptionPeriods.length)
+                ? price * nights
+                : calcTotalWithExceptions(checkIn, checkOut, price, exceptionPeriods)
+              ).toLocaleString()}원
+            </span>
           </CalcRow>
+          {hasExtra && (
+            <CalcRow>
+              <span>인원 추가요금 (+{guests - baseCnt}명 × {(chargeAdd ?? 0).toLocaleString()}원 × {nights}{type === 'office' ? '회' : '박'})</span>
+              <span>{(Math.max(0, guests - baseCnt) * (chargeAdd ?? 0) * nights).toLocaleString()}원</span>
+            </CalcRow>
+          )}
           <CalcTotal>
             <span>합계</span>
             <span>{grandTotal.toLocaleString()}원</span>
@@ -287,6 +309,17 @@ const RoomNameTag = styled.span`
   border-radius: 12px;
   background: rgba(45, 106, 79, 0.1);
   color: #2d6a4f;
+`;
+
+const ExceptionBadge = styled.span`
+  margin-left: 8px;
+  font-size: 11px;
+  font-weight: 600;
+  padding: 2px 8px;
+  border-radius: 10px;
+  background: rgba(201, 125, 76, 0.12);
+  color: #c97d4c;
+  white-space: nowrap;
 `;
 
 export default DetailRsvnBox;

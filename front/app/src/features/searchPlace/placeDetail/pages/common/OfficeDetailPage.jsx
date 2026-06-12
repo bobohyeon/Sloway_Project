@@ -76,6 +76,8 @@ function OfficeDetailPage() {
           onGuestsChange={setGuests}
           blackouts={blackouts}
           exceptionPeriods={space?.exceptionPeriods ?? []}
+          baseCnt={space?.baseCnt ?? 1}
+          chargeAdd={space?.chargeAdd ?? 0}
           price={unitPrice}
           priceUnit="원/4시간"
           roomName={selectedRoom?.name ?? null}

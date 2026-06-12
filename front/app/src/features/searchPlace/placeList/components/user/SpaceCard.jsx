@@ -4,6 +4,7 @@ import styled from 'styled-components';
 import {
   addLikePlace,
   deleteLikePlace,
+  fetchLikePlaceList,
 } from '../../../../wishList/api/wishListApi';
 import { COLOR } from '../../../../rsvn/components/user/RsvnStyled';
 
@@ -180,12 +181,14 @@ function SpaceCard({ item, onClick }) {
         setLikeNo(null);
         await deleteLikePlace(likeNo);
       } else {
-        const res = await addLikePlace(item.placeNo);
         setLiked(true);
-        setLikeNo(res.data?.no ?? res.data?.likeNo ?? null);
+        await addLikePlace(item.placeNo);
+        // 응답에 body 없으므로 목록 재조회해서 likeNo 확인
+        const listRes = await fetchLikePlaceList();
+        const found = (listRes.data ?? []).find(l => l.placeNo === item.placeNo);
+        setLikeNo(found?.no ?? null);
       }
     } catch (err) {
-      // 실패 시 이전 상태로 되돌림
       setLiked(prevLiked);
       setLikeNo(prevLikeNo);
       console.error('찜 실패:', err.response?.status, err.response?.data);
