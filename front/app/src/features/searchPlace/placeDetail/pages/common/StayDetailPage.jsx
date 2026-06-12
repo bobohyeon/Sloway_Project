@@ -63,6 +63,7 @@ function StayDetailPage() {
           onCheckOutChange={setCheckOut}
           onGuestsChange={setGuests}
           blackouts={blackouts}
+          exceptionPeriods={space?.exceptionPeriods ?? []}
           price={selectedRoom?.price ?? space?.basePrice ?? 220000}
           priceUnit="원/박"
           roomName={selectedRoom?.name ?? null}

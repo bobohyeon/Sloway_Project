@@ -68,6 +68,7 @@ function WorkstayDetailPage() {
           onCheckOutChange={setCheckOut}
           onGuestsChange={setGuests}
           blackouts={blackouts}
+          exceptionPeriods={space?.exceptionPeriods ?? []}
           price={selectedRoom?.price ?? space?.basePrice ?? 185000}
           priceUnit="원/박"
           roomName={selectedRoom?.name ?? null}
