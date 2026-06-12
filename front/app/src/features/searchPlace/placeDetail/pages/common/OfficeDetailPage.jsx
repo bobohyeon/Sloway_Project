@@ -19,6 +19,7 @@ function OfficeDetailPage() {
   const [space, setSpace] = useState(null);
   const [reviews, setReviews] = useState([]);
   const [blackouts, setBlackouts] = useState([]);
+  const [error, setError] = useState(false);
 
   // 오피스는 4시간 단위 과금 — 시간 차이를 4로 나눈 횟수
   const nights = checkIn && checkOut
@@ -42,11 +43,13 @@ function OfficeDetailPage() {
         saveRecentViewed(spaceData.placeNo).catch(() => {});
       } catch (e) {
         console.error('데이터 조회 실패', e);
+        setError(true);
       }
     };
     load();
   }, [id]);
 
+  if (error) return <div style={{ padding: 40, textAlign: 'center', color: '#888' }}>공간 정보를 불러오지 못했습니다. 잠시 후 다시 시도해주세요.</div>;
   if (!space) return null;
 
   // 표시용·결제용 가격을 한 곳에서 결정 (백엔드 basePrice → 없으면 0)

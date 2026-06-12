@@ -19,6 +19,7 @@ function WorkstayDetailPage() {
   const [space, setSpace] = useState(null);
   const [reviews, setReviews] = useState([]);
   const [blackouts, setBlackouts] = useState([]);
+  const [error, setError] = useState(false);
 
   const nights = checkIn && checkOut
     ? Math.max(1, Math.ceil((new Date(checkOut) - new Date(checkIn)) / (1000 * 60 * 60 * 24)))
@@ -41,11 +42,13 @@ function WorkstayDetailPage() {
         saveRecentViewed(spaceData.placeNo).catch(() => {});
       } catch (e) {
         console.error('데이터 조회 실패', e);
+        setError(true);
       }
     };
     load();
   }, [id]);
 
+  if (error) return <div style={{ padding: 40, textAlign: 'center', color: '#888' }}>공간 정보를 불러오지 못했습니다. 잠시 후 다시 시도해주세요.</div>;
   if (!space) return null;
 
   return (
