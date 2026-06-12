@@ -50,7 +50,6 @@ public class RefundRepositoryImpl implements RefundRepositoryCustom {
 
     @Override
     public Page<RefundResDto> findRefundAll(PageRequest pageRequest, String tab, LocalDateTime from) {
-        // 목록 — 예약·회원·공간 fetch join(N+1 제거) + 탭/기간 필터 + offset 페이징
         QRsvnEntity qRsvn = new QRsvnEntity("rsvn");
         List<RefundEntity> list = jpaQueryFactory
                 .selectFrom(qRefundEntity)
@@ -65,7 +64,6 @@ public class RefundRepositoryImpl implements RefundRepositoryCustom {
                 .limit(pageRequest.getPageSize())
                 .fetch();
 
-        // count 는 집계라 fetch join 불필요 (목록과 같은 필터 사용)
         Long total = jpaQueryFactory
                 .select(qRefundEntity.count())
                 .from(qRefundEntity)

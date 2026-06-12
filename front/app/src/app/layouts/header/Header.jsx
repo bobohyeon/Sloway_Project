@@ -1,9 +1,10 @@
 import { Link, useNavigate } from 'react-router-dom';
 import styled from 'styled-components';
-import { FaBell, FaCommentDots } from 'react-icons/fa';
+import { FaBell } from 'react-icons/fa';
 import { useAuth } from '../../../features/auth/hooks/useAuth';
 import { useState } from 'react';
 import NotificationList from '../../../features/notification/components/NotificationList';
+import { useNotification } from './../../../features/notification/hooks/useNotification';
 
 const HeaderWrapper = styled.div`
   display: flex;
@@ -170,6 +171,10 @@ function Header() {
   const navigate = useNavigate();
   const { isAuthenticated, user, myPagePath, handleLogout } = useAuth();
   const [isNotiOpen, setIsNotiOpen] = useState(false);
+  const { notifications, handleRowClick } = useNotification(user?.role);
+  const hasNotifications =
+    Array.isArray(notifications) && notifications.length > 0;
+
   return (
     <HeaderWrapper>
       <Logo to="/">
@@ -192,17 +197,19 @@ function Header() {
                 onClick={() => setIsNotiOpen(!isNotiOpen)}
               >
                 <FaBell size={18} />
-                <Badge />
+                {hasNotifications && <Badge />}
               </IconButton>
+
               {isNotiOpen && (
                 <DropdownContainer>
-                  <NotificationList />
+                  <NotificationList
+                    notifications={notifications}
+                    handleRowClick={handleRowClick}
+                  />
                 </DropdownContainer>
               )}
             </div>
-            <IconButton title="채팅">
-              <FaCommentDots size={18} />
-            </IconButton>
+
             <UserButton
               onClick={() => navigate(myPagePath)}
               title="마이페이지로 이동"

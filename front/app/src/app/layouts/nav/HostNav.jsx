@@ -5,6 +5,7 @@ import ProfileBox from './ProfileBox';
 import { useAuth } from '../../../features/auth/hooks/useAuth';
 import { useHostMyPage } from '../../../features/account/hooks/useHostMyPage';
 import { fetchHostReviewStats } from '../../../features/review/api/reviewApi';
+import { fetchPlaceListByHostNo } from '../../../features/place/api/host/place/placeApi';
 import {
   FaHome,
   FaUserCircle,
@@ -22,7 +23,6 @@ import {
   FaReceipt,
   FaChartBar,
   FaStar,
-  FaCommentDots,
   FaBullhorn,
   FaBell,
   FaCog,
@@ -131,7 +131,6 @@ const hostMenuGroups = [
     items: [
       { url: '/host/review', str: '리뷰 답글', icon: <FaStar /> },
       { url: '/host/inquiry', str: '내 문의', icon: <FaQuestionCircle /> },
-      { url: '/host/chat', str: '1:1 채팅', icon: <FaCommentDots /> },
       { url: '/notice', str: '공지사항', icon: <FaBullhorn /> },
       { url: '/host/notification', str: '알림 내역', icon: <FaBell /> },
       // { url: '/host/notification/setting', str: '알림 설정', icon: <FaCog /> },
@@ -143,11 +142,15 @@ function HostNav() {
   const { user } = useAuth();
   const { data } = useHostMyPage();
   const [avgRating, setAvgRating] = useState(null);
+  const [spaceCount, setSpaceCount] = useState('...');
 
   useEffect(() => {
     fetchHostReviewStats()
       .then((res) => setAvgRating(res.averageRating?.toFixed(1) ?? '-'))
       .catch(() => setAvgRating('-'));
+    fetchPlaceListByHostNo()
+      .then((res) => setSpaceCount(Array.isArray(res.data) ? res.data.length : 0))
+      .catch(() => setSpaceCount(0));
   }, []);
 
   return (
@@ -163,7 +166,7 @@ function HostNav() {
           data?.approvedAt ? ` · 승인 ${data.approvedAt.slice(0, 10)}` : ''
         }`}
         stats={[
-          { value: '3', label: '운영 공간' },
+          { value: spaceCount, label: '운영 공간' },
           { value: avgRating ?? '...', label: '평균 평점' },
         ]}
       />

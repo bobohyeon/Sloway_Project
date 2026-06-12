@@ -4,6 +4,7 @@ import com.querydsl.core.types.Projections;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import com.sloway.app.notification.dto.response.NotificationResDto;
 import com.sloway.app.notification.entity.NotificationEntity;
+import com.sloway.app.notification.entity.NotificationType;
 import lombok.RequiredArgsConstructor;
 import static com.sloway.app.notification.entity.QNotificationEntity.notificationEntity;
 
@@ -28,6 +29,17 @@ public class NotificationRepositoryImpl implements NotificationRepositoryCustom{
         return entities.stream()
                 .map(NotificationResDto::fromEntityValues)
                 .toList();
+    }
+
+    @Override
+    public NotificationEntity findByTargetNoAndReadIsNull(Long id, Long memberNo, String type) {
+        return queryFactory.selectFrom(notificationEntity)
+                .where(
+                        notificationEntity.read.isFalse(),
+                        notificationEntity.memberNo.eq(memberNo),
+                        notificationEntity.type.eq(NotificationType.valueOf(type)),
+                        notificationEntity.targetNo.eq(id)
+                ).fetchOne();
     }
 
 

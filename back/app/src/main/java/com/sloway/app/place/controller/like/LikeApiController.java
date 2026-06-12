@@ -28,7 +28,6 @@ public class LikeApiController {
         }
         Long memberNo = userDetails.getMemberNo();
 
-        System.out.println("placeNo = " + placeNo);
         likeService.saveLike(placeNo, memberNo);
 
         return ResponseEntity

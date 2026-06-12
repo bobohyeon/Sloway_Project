@@ -62,7 +62,10 @@ export default function RefundComplete() {
   if (!state?.refund || !state?.pay) return null;
 
   const { refund, pay, reasonDetail } = state;
-  const methodInfo = METHOD_INFO[pay.method] ?? { name: pay.method, icon: '💳' };
+  const methodInfo = METHOD_INFO[pay.method] ?? {
+    name: pay.method,
+    icon: '💳',
+  };
   const refundAmtNumber = Number(refund.refundAmt ?? 0);
 
   const refundDisplay = {
@@ -73,7 +76,9 @@ export default function RefundComplete() {
     method: methodInfo.name,
     methodIcon: methodInfo.icon,
     requestedAt: formatRequestedAt(refund.requestedAt ?? refund.createdAt),
-    expectedDepositAt: formatExpectedDepositAt(refund.requestedAt ?? refund.createdAt),
+    expectedDepositAt: formatExpectedDepositAt(
+      refund.requestedAt ?? refund.createdAt
+    ),
   };
 
   const reasonLabel = REASON_LABEL[refund.refundReason] ?? '호스트 사유';
@@ -92,7 +97,9 @@ export default function RefundComplete() {
           <SpaceEmoji>🏠</SpaceEmoji>
           <SpaceInfo>
             <SpaceName>예약 #{pay.rsvnNo}</SpaceName>
-            <SpaceMeta>결제번호: PAY-{String(pay.no).padStart(6, '0')}</SpaceMeta>
+            <SpaceMeta>
+              결제번호: PAY-{String(pay.no).padStart(6, '0')}
+            </SpaceMeta>
           </SpaceInfo>
         </SpaceCard>
 

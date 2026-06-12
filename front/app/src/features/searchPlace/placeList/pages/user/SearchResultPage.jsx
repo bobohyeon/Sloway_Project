@@ -5,6 +5,7 @@ import SpaceCard from '../../components/user/SpaceCard';
 import MainHeader from '../../../../main/layouts/MainHeader';
 import { COLOR } from '../../../../rsvn/components/user/RsvnStyled';
 import { searchSpaces } from '../../../api/searchApi';
+import { fetchLikePlaceList } from '../../../../wishList/api/wishListApi';
 
 // 타입별 기본 아이콘 · 가격 단위 (DB 영문 대문자 기준)
 const TYPE_ICON  = { WORK_STAY: '🌿', OFFICE: '💻', STATION: '🛌' };
@@ -13,8 +14,9 @@ const TYPE_UNIT  = { WORK_STAY: '원/박', OFFICE: '원/4h', STATION: '원/박' 
 // 탭 한글 → API 타입값 매핑
 const TAB_TO_TYPE = { '워크앤스테이': 'WORK_STAY', '오피스': 'OFFICE', '숙소': 'STATION' };
 
-// SearchResDto → SpaceCard 호환 객체
-function toSpaceCard(dto) {
+// SearchResDto → SpaceCard 호환 객체 (likedMap: placeNo → likeNo)
+function toSpaceCard(dto, likedMap = new Map()) {
+  const likeNo = likedMap.get(dto.placeNo) ?? null;
   return {
     id: dto.entityNo,
     placeNo: dto.placeNo,
@@ -30,6 +32,8 @@ function toSpaceCard(dto) {
     soldOut: dto.available === false,
     icon: TYPE_ICON[dto.type] ?? '🏠',
     thumbnailUrl: dto.thumbnailUrl ?? null,
+    liked: likeNo !== null,
+    likeNo,
   };
 }
 
@@ -348,8 +352,12 @@ function SearchResultPage() {
       setLoading(true);
       try {
         const placeType = activeTab > 0 ? TAB_TO_TYPE[TYPE_TABS[activeTab]] : null;
-        const data = await searchSpaces({ region, placeType, sort, checkIn, checkOut });
-        setSpaces(data.map(toSpaceCard));
+        const [data, likedRes] = await Promise.all([
+          searchSpaces({ region, placeType, sort, checkIn, checkOut }),
+          fetchLikePlaceList().catch(() => ({ data: [] })), // 미로그인 시 빈 배열
+        ]);
+        const likedMap = new Map((likedRes.data ?? []).map(l => [l.placeNo, l.no]));
+        setSpaces(data.map(dto => toSpaceCard(dto, likedMap)));
       } catch (e) {
         console.error(e);
         setSpaces([]);

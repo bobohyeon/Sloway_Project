@@ -34,10 +34,7 @@ const NotificationItem = styled.li`
   }
 `;
 
-const NotificationList = () => {
-  const { user } = useAuth();
-  const notifications = useNotification(user?.role);
-
+const NotificationList = ({ notifications, handleRowClick }) => {
   if (!Array.isArray(notifications)) return null;
 
   return (
@@ -46,10 +43,10 @@ const NotificationList = () => {
       <ul>
         {notifications.length > 0 ? (
           notifications.map((n, index) => (
-            <NotificationItem key={index}>
+            <NotificationItem key={index} onClick={() => handleRowClick(n)}>
               <strong>{n.title}</strong>
               <p>{n.description}</p>
-              <small>{n.createdAt}</small>
+              <small>{n.timeLabel}</small>
             </NotificationItem>
           ))
         ) : (

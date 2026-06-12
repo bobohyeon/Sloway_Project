@@ -17,6 +17,9 @@ public class NotificationEntity extends BaseEntity {
     private Long id;
 
     @Column(nullable = false)
+    private Long targetNo;
+
+    @Column(nullable = false)
     private Long memberNo;
 
     @Enumerated(EnumType.STRING)

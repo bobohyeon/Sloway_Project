@@ -113,7 +113,6 @@ import PaymentFail from './features/pay/pages/user/PaymentFail';
 import TossSuccess from './features/pay/pages/user/TossSuccess';
 import PaymentHistory from './features/pay/pages/user/PaymentHistory';
 import PaymentDetail from './features/pay/pages/user/PaymentDetail';
-import CashReceipt from './features/pay/pages/user/CashReceipt';
 import PointHistory from './features/point/pages/user/PointHistory';
 
 // ── 결제 (관리자) ──────────────────────────────────────────
@@ -186,13 +185,6 @@ import FaqManagePage from './features/faq/pages/admin/FaqManagePage';
 import NotificationListPage from './features/notification/pages/common/NotificationListPage';
 import NotificationSettingsPage from './features/notification/pages/common/NotificationSettingsPage';
 
-// ── 채팅 (유저) ───────────────────────────────────────────
-import UserChatListPage from './features/chat/pages/user/UserChatListPage';
-import UserChatDetailPage from './features/chat/pages/user/UserChatDetailPage';
-
-// ── 채팅 (호스트) ─────────────────────────────────────────
-import HostChatListPage from './features/chat/pages/host/HostChatListPage';
-import HostChatDetailPage from './features/chat/pages/host/HostChatDetailPage';
 import ReviewWritePage from './features/review/pages/user/ReviewWritePage';
 import ReviewEditPage from './features/review/pages/user/ReviewEditPage';
 
@@ -295,7 +287,6 @@ function App() {
           <Route path="/user/reservation/cancel" element={<RefundListPage />} />
           <Route path="/user/reservation/:id" element={<RsvnDetailPage />} />
           {/* 결제·지갑 */}
-          <Route path="/user/payment/receipt" element={<CashReceipt />} />
           <Route path="/user/payment" element={<PaymentHistory />} />
           <Route path="/user/payment/:no" element={<PaymentDetail />} />
           <Route path="/user/point" element={<PointHistory />} />
@@ -319,8 +310,6 @@ function App() {
           />
           <Route path="/user/inquiry/:id" element={<InquiryDetailPage />} />
           {/* 소통 */}
-          <Route path="/user/chat" element={<UserChatListPage />} />
-          <Route path="/user/chat/:id" element={<UserChatDetailPage />} />
           <Route path="/user/notification" element={<NotificationListPage />} />
           <Route
             path="/user/notification/setting"
@@ -433,8 +422,6 @@ function App() {
           />
           <Route path="/host/inquiry/:id" element={<InquiryDetailPage />} />
           <Route path="/host/review" element={<HostReviewPage />} />
-          <Route path="/host/chat" element={<HostChatListPage />} />
-          <Route path="/host/chat/:id" element={<HostChatDetailPage />} />
           <Route
             path="/host/notification"
             element={<HostNotificationListPage />}

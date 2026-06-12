@@ -16,8 +16,6 @@ public enum PointErrorCode implements ErrorCode {
     POINT_NOT_WAIT(HttpStatus.BAD_REQUEST, "적립 대기 상태가 아닙니다."),
     POINT_NOT_HOLDABLE(HttpStatus.BAD_REQUEST, "만료 또는 취소 가능한 상태가 아닙니다."),
     POINT_NOT_USED(HttpStatus.BAD_REQUEST, "사용 상태가 아닙니다."),
-    POINT_ALREADY_EXPIRED(HttpStatus.BAD_REQUEST, "이미 만료된 포인트입니다."),
-    POINT_NOT_ENOUGH(HttpStatus.BAD_REQUEST, "환불될 포인트가 없습니다."),
     POINT_AMOUNT_INVALID(HttpStatus.BAD_REQUEST, "포인트 금액이 올바르지 않습니다.");
 
     private final HttpStatus status;

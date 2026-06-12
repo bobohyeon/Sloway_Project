@@ -36,7 +36,7 @@ export default function InquiryDetailPage() {
         const endpoint = isAdmin ? `/inquiry/${id}` : `/inquiry/my/${id}`;
         const { data } = await api.get(endpoint);
         setInquiry(data);
-      } catch {
+      } catch (e) {
         navigate(isAdmin ? '/admin/inquiry' : '/inquiry', {
           replace: true,
         });

@@ -26,7 +26,7 @@ public class PlaceDetailService {
     // entityNo만 알 때 — workStay → office → station 순으로 시도
     public PlaceDetailResDto findByEntityNo(Long entityNo) {
         List<WorkStayEntity> wsList = em.createQuery(
-                "SELECT w FROM WorkStayEntity w WHERE w.no = :no", WorkStayEntity.class)
+                "SELECT DISTINCT ws FROM WorkStayEntity ws LEFT JOIN FETCH ws.workExceptionPeriodEntities WHERE ws.no = :no", WorkStayEntity.class)
                 .setParameter("no", entityNo).getResultList();
         if (!wsList.isEmpty()) return PlaceDetailResDto.from(wsList.get(0));
 
@@ -38,7 +38,7 @@ public class PlaceDetailService {
         if (!oList.isEmpty()) return PlaceDetailResDto.from(oList.get(0));
 
         List<StationEntity> stList = em.createQuery(
-                "SELECT s FROM StationEntity s WHERE s.no = :no", StationEntity.class)
+                "SELECT DISTINCT s FROM StationEntity s LEFT JOIN FETCH s.stationExceptionPeriodEntities WHERE s.no = :no", StationEntity.class)
                 .setParameter("no", entityNo).getResultList();
         if (!stList.isEmpty()) return PlaceDetailResDto.from(stList.get(0));
 
@@ -57,14 +57,20 @@ public class PlaceDetailService {
     }
 
     public PlaceDetailResDto getStationDetail(Long entityNo) {
-        StationEntity entity = em.find(StationEntity.class, entityNo);
-        if (entity == null) throw new CustomException(RsvnErrorCode.PLACE_NOT_FOUND);
-        return PlaceDetailResDto.from(entity);
+        List<StationEntity> list = em.createQuery(
+                "SELECT DISTINCT s FROM StationEntity s LEFT JOIN FETCH s.stationExceptionPeriodEntities WHERE s.no = :no",
+                StationEntity.class)
+                .setParameter("no", entityNo).getResultList();
+        if (list.isEmpty()) throw new CustomException(RsvnErrorCode.PLACE_NOT_FOUND);
+        return PlaceDetailResDto.from(list.get(0));
     }
 
     public PlaceDetailResDto getWorkStayDetail(Long entityNo) {
-        WorkStayEntity entity = em.find(WorkStayEntity.class, entityNo);
-        if (entity == null) throw new CustomException(RsvnErrorCode.PLACE_NOT_FOUND);
-        return PlaceDetailResDto.from(entity);
+        List<WorkStayEntity> list = em.createQuery(
+                "SELECT DISTINCT ws FROM WorkStayEntity ws LEFT JOIN FETCH ws.workExceptionPeriodEntities WHERE ws.no = :no",
+                WorkStayEntity.class)
+                .setParameter("no", entityNo).getResultList();
+        if (list.isEmpty()) throw new CustomException(RsvnErrorCode.PLACE_NOT_FOUND);
+        return PlaceDetailResDto.from(list.get(0));
     }
 }

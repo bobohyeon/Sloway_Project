@@ -27,6 +27,7 @@ public class NotificationEventListener {
     public void handleNotification(NotificationEvent event) {
         NotificationEntity entity = NotificationEntity.builder()
                 .memberNo(event.getTargetMemberNo())
+                .targetNo(event.getTargetNo())
                 .type(NotificationType.valueOf(event.getTypeCode()))
                 .title(event.getTitle())
                 .description(event.getDescription())

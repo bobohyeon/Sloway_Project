@@ -23,9 +23,9 @@ public class ImgWorkStayEntity {
     private String currentUrl;
 
     @Column(nullable = false)
-    private int sort;
+    private Integer sort;
 
-    public static ImgWorkStayEntity from(WorkStayEntity savedEntity, String url, int sortValue) {
+    public static ImgWorkStayEntity from(WorkStayEntity savedEntity, String url, Integer sortValue) {
         return ImgWorkStayEntity.builder()
                 .workStayEntity(savedEntity)
                 .currentUrl(url)
@@ -33,7 +33,7 @@ public class ImgWorkStayEntity {
                 .build();
     }
 
-    public void updateSort(int sort) {
+    public void updateSort(Integer sort) {
         this.sort = sort;
     }
 }

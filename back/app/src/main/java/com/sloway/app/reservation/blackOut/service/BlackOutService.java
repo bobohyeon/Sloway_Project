@@ -44,6 +44,12 @@ public class BlackOutService {
 
     @Transactional
     public void save(Long memberNo, Long entityNo, BlackOutReqDto dto){
+        // 날짜 null·역순 방어
+        if (dto.getStartDate() == null || dto.getEndDate() == null
+                || !dto.getStartDate().isBefore(dto.getEndDate())) {
+            throw new CustomException(RsvnErrorCode.INVALID_DATE_RANGE);
+        }
+
         HostEntity host = hostRepository.findByMemberNo(memberNo)
                 .orElseThrow(() -> new CustomException(ReviewErrorCode.HOST_NOT_FOUND));
 
@@ -114,6 +120,12 @@ public class BlackOutService {
 
     @Transactional
     public void editBlackOut(Long memberNo, Long no, BlackOutReqDto dto){
+        // 날짜 null·역순 방어
+        if (dto.getStartDate() == null || dto.getEndDate() == null
+                || !dto.getStartDate().isBefore(dto.getEndDate())) {
+            throw new CustomException(RsvnErrorCode.INVALID_DATE_RANGE);
+        }
+
         HostEntity host = hostRepository.findByMemberNo(memberNo)
                 .orElseThrow(() -> new CustomException(ReviewErrorCode.HOST_NOT_FOUND));
         BlackOutEntity entity = blackOutRepository.findById(no)

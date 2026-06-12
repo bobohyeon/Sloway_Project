@@ -30,6 +30,11 @@ public class ReviewReportService {
     // 신고 접수
     @Transactional
     public void save(Long memberNo, ReviewReportReqDto dto) {
+        // 신고 유형 필수값 방어
+        if (dto.getReasonType() == null) {
+            throw new CustomException(ReviewErrorCode.EMPTY_CONTENT);
+        }
+
         MemberEntity member = memberRepository.findById(memberNo)
                 .orElseThrow(()->new CustomException(RsvnErrorCode.MEMBER_NOT_FOUND));
         ReviewEntity review = reviewRepository.findById(dto.getReviewNo())

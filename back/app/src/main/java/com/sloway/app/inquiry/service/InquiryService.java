@@ -13,6 +13,9 @@ import com.sloway.app.inquiry.exception.InquiryErrorCode;
 import com.sloway.app.inquiry.repository.InquiryRepository;
 import com.sloway.app.member.entity.MemberEntity;
 import com.sloway.app.member.repository.MemberRepository;
+import com.sloway.app.notification.entity.NotificationEntity;
+import com.sloway.app.notification.event.InquiryAnsweredEvent;
+import com.sloway.app.notification.repository.NotificationRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.ApplicationEventPublisher;
@@ -30,7 +33,7 @@ public class InquiryService {
 
     private final InquiryRepository inquiryRepository;
     private final MemberRepository memberRepository;
-    private final ApplicationEventPublisher eventPublisher;
+    private final NotificationRepository notificationRepository;
 
     // 관리자
     public Page<AdminInquiryListResDto> findAllForAdmin(
@@ -56,9 +59,15 @@ public class InquiryService {
                 .map(MyInquiryListResDto::from);
     }
 
+    @Transactional
     public MyInquiryDetailResDto findMyInquiryById(Long id, Long memberNo) {
         InquiryEntity entity = getInquiry(id);
         validateWriter(entity, memberNo);
+        NotificationEntity notification =notificationRepository.findByTargetNoAndReadIsNull(id, memberNo, "INQUIRY");
+        if (notification != null) {
+            notification.markRead();
+            notificationRepository.save(notification);
+        }
         return MyInquiryDetailResDto.from(entity);
     }
 
