@@ -1,6 +1,6 @@
 import { Link, useNavigate } from 'react-router-dom';
 import styled from 'styled-components';
-import { FaBell, FaCommentDots } from 'react-icons/fa';
+import { FaBell } from 'react-icons/fa';
 import { useAuth } from '../../../features/auth/hooks/useAuth';
 import { useState } from 'react';
 import NotificationList from '../../../features/notification/components/NotificationList';
@@ -197,13 +197,11 @@ function Header() {
                 onClick={() => setIsNotiOpen(!isNotiOpen)}
               >
                 <FaBell size={18} />
-                {/* hasNotifications가 true일 때만 Badge 노출 */}
                 {hasNotifications && <Badge />}
               </IconButton>
 
               {isNotiOpen && (
                 <DropdownContainer>
-                  {/* props로 notifications 전달 */}
                   <NotificationList
                     notifications={notifications}
                     handleRowClick={handleRowClick}
@@ -211,9 +209,7 @@ function Header() {
                 </DropdownContainer>
               )}
             </div>
-            <IconButton title="채팅">
-              <FaCommentDots size={18} />
-            </IconButton>
+
             <UserButton
               onClick={() => navigate(myPagePath)}
               title="마이페이지로 이동"

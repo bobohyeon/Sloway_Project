@@ -9,7 +9,6 @@ import {
   InfoItem,
   InfoLabel,
   InfoValue,
-  BtnOutline,
   COLOR,
 } from '../../components/user/RsvnStyled';
 import { ApproveBtn } from '../../components/host/HostRsvnStyled';
@@ -165,12 +164,6 @@ function HostRsvnDetailPage() {
               👤 {rsvn.count}명
             </div>
           </div>
-          <BtnOutline
-            style={{ fontSize: 12, padding: '5px 12px' }}
-            onClick={() => navigate('/host/chat')}
-          >
-            💬 메시지 보내기
-          </BtnOutline>
         </div>
       </SectionBox>
 

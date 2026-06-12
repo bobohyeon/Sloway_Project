@@ -4,6 +4,7 @@ import Header from './../header/Header';
 import Nav from './../nav/Nav';
 import Footer from './../footer/Footer';
 import { Outlet } from 'react-router-dom';
+import ChatWidget from '../../../features/chat/components/ChatWidget';
 
 const LayoutContainer = styled.div`
   display: flex;
@@ -97,6 +98,8 @@ function DefaultLayouts() {
       <FooterArea>
         <Footer />
       </FooterArea>
+
+      <ChatWidget />
     </LayoutContainer>
   );
 }
