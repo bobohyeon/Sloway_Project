@@ -41,21 +41,21 @@ public class RsvnResDto {
             spaceName = entity.getOfficeNo().getPlaceEntity().getTitle();
             spaceType = entity.getOfficeNo().getPlaceEntity().getType();
             thumbnailUrl = entity.getOfficeNo().getPlaceEntity().getImages().stream()
-                    .min(Comparator.comparingInt(ImgPlaceEntity::getSort))
+                    .min(Comparator.comparing(ImgPlaceEntity::getSort, Comparator.nullsLast(Integer::compareTo)))
                     .map(ImgPlaceEntity::getCurrentUrl)
                     .orElse(null);
         } else if (entity.getWorkStayNo() != null) {
             spaceName = entity.getWorkStayNo().getPlaceEntity().getTitle();
             spaceType = entity.getWorkStayNo().getPlaceEntity().getType();
             thumbnailUrl = entity.getWorkStayNo().getPlaceEntity().getImages().stream()
-                    .min(Comparator.comparingInt(ImgPlaceEntity::getSort))
+                    .min(Comparator.comparing(ImgPlaceEntity::getSort, Comparator.nullsLast(Integer::compareTo)))
                     .map(ImgPlaceEntity::getCurrentUrl)
                     .orElse(null);
         } else if (entity.getStationNo() != null) {
             spaceName = entity.getStationNo().getPlaceEntity().getTitle();
             spaceType = entity.getStationNo().getPlaceEntity().getType();
             thumbnailUrl = entity.getStationNo().getPlaceEntity().getImages().stream()
-                    .min(Comparator.comparingInt(ImgPlaceEntity::getSort))
+                    .min(Comparator.comparing(ImgPlaceEntity::getSort, Comparator.nullsLast(Integer::compareTo)))
                     .map(ImgPlaceEntity::getCurrentUrl)
                     .orElse(null);
         }
