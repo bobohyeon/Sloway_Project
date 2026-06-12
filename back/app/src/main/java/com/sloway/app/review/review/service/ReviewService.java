@@ -54,6 +54,16 @@ public class ReviewService {
             , ReviewCreateReqDto reqDto
             , List<MultipartFile> images
     ) throws IOException {
+        // 내용 빈 문자열 방어
+        if (reqDto.getContent() == null || reqDto.getContent().isBlank()) {
+            throw new CustomException(ReviewErrorCode.EMPTY_CONTENT);
+        }
+        // 별점 범위(1~5) 방어
+        validateScore(reqDto.getScoreTotal());
+        validateScore(reqDto.getScoreOffice());
+        validateScore(reqDto.getScoreFocus());
+        validateScore(reqDto.getScoreAmenity());
+
         RsvnEntity rsvn = rsvnRepository.findById(reqDto.getRsvnNo())
                 .orElseThrow(()-> new CustomException(RsvnErrorCode.RESERVATION_NOT_FOUND));
 
@@ -115,6 +125,15 @@ public class ReviewService {
         if(!entity.getRsvnNo().getMemberNo().getNo().equals(memberNo)){
             throw new CustomException(RsvnErrorCode.UNAUTHORIZED_ACCESS);
         }
+        // 내용 빈 문자열 방어
+        if (editReqDto.getContent() == null || editReqDto.getContent().isBlank()) {
+            throw new CustomException(ReviewErrorCode.EMPTY_CONTENT);
+        }
+        // 별점 범위(1~5) 방어
+        validateScore(editReqDto.getScoreTotal());
+        validateScore(editReqDto.getScoreOffice());
+        validateScore(editReqDto.getScoreAmenity());
+        validateScore(editReqDto.getScoreFocus());
         entity.editReview(
                 editReqDto.getContent(),
                 editReqDto.getScoreTotal(),
@@ -181,6 +200,13 @@ public class ReviewService {
         Double avg = (t == null) ? null : t.get(0, Double.class);
         Long cnt = (t == null) ? null : t.get(1, Long.class);
         return HostReviewStatsResDto.of(avg == null ? 0.0 : avg, cnt == null ? 0L : cnt);
+    }
+
+    // 별점 1~5 범위 검사 (내부 헬퍼)
+    private void validateScore(Integer score) {
+        if (score == null || score < 1 || score > 5) {
+            throw new CustomException(ReviewErrorCode.INVALID_SCORE);
+        }
     }
 
     // HostPlace 에서 공간 placeNo 추출 (office/station/work/place 중 존재하는 것)

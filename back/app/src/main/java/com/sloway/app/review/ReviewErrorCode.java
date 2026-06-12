@@ -19,6 +19,8 @@ public enum ReviewErrorCode implements ErrorCode {
     ALREADY_REVIEWED(HttpStatus.BAD_REQUEST, "이미 리뷰를 작성한 예약입니다."),
     ALREADY_HELPFUL(HttpStatus.BAD_REQUEST, "이미 도움돼요를 눌렀습니다."),
     ALREADY_REPORT(HttpStatus.BAD_REQUEST, "이미 신고한 리뷰입니다."),
+    INVALID_SCORE(HttpStatus.BAD_REQUEST, "별점은 1~5 사이여야 합니다."),
+    EMPTY_CONTENT(HttpStatus.BAD_REQUEST, "내용을 입력해주세요."),
 
     UNAUTHORIZED_REPLY(HttpStatus.FORBIDDEN,"해당 답글에 권한이 없습니다."),
     UNAUTHORIZED_REPLY_ADMIN(HttpStatus.FORBIDDEN,"관리자만 접근 가능합니다.");

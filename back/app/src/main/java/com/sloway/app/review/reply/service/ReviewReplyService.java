@@ -62,6 +62,10 @@ public class ReviewReplyService {
     // 답글 작성
     @Transactional
     public void save(Long memberNo, ReviewReplyReqDto reqDto) {
+        // 내용 빈 문자열 방어
+        if (reqDto.getContent() == null || reqDto.getContent().isBlank()) {
+            throw new CustomException(ReviewErrorCode.EMPTY_CONTENT);
+        }
 
         HostEntity hostNo = hostRepository.findByMemberNo(memberNo)
                 .orElseThrow(()->new CustomException(ReviewErrorCode.HOST_NOT_FOUND));
@@ -93,6 +97,11 @@ public class ReviewReplyService {
     // 답글 수정
     @Transactional
     public void editReply(Long memberNo, Long replyNo, String content) {
+        // 내용 빈 문자열 방어
+        if (content == null || content.isBlank()) {
+            throw new CustomException(ReviewErrorCode.EMPTY_CONTENT);
+        }
+
         ReviewReplyEntity reply = reviewReplyRepository.findById(replyNo)
                 .orElseThrow(()->new CustomException(ReviewErrorCode.REPLY_NOT_FOUND));
 

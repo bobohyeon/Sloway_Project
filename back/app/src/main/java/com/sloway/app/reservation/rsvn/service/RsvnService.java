@@ -67,6 +67,20 @@ public class RsvnService {
 
     @Transactional
     public long save(Long memberNo, RsvnReqDto dto) {
+        // 공간 미선택 방어
+        if (dto.getOfficeNo() == null && dto.getStationNo() == null && dto.getWorkStayNo() == null) {
+            throw new CustomException(RsvnErrorCode.PLACE_NOT_FOUND);
+        }
+        // 날짜 null·역순 방어 (checkIn == checkOut 도 불가)
+        if (dto.getCheckIn() == null || dto.getCheckOut() == null
+                || !dto.getCheckIn().isBefore(dto.getCheckOut())) {
+            throw new CustomException(RsvnErrorCode.INVALID_DATE_RANGE);
+        }
+        // 인원 양수 방어
+        if (dto.getCount() == null || dto.getCount() <= 0) {
+            throw new CustomException(RsvnErrorCode.INVALID_COUNT);
+        }
+
         MemberEntity member = memberRepository.findById(memberNo).orElseThrow(() ->
                 new CustomException(RsvnErrorCode.MEMBER_NOT_FOUND));
 
@@ -85,7 +99,12 @@ public class RsvnService {
                     new CustomException(RsvnErrorCode.PLACE_NOT_FOUND));
         }
 
-        checkBlackOut(office,station,workStay,dto.getCheckIn(),dto.getCheckOut());
+        checkBlackOut(office, station, workStay, dto.getCheckIn(), dto.getCheckOut());
+        // 같은 공간·기간에 확정(S) 예약이 이미 있으면 중복 차단
+        if (rsvnRepository.countOverlappingRsvn(office, station, workStay,
+                dto.getCheckIn(), dto.getCheckOut(), RsvnStatus.S) > 0) {
+            throw new CustomException(RsvnErrorCode.RSVN_EXISTS_IN_PERIOD);
+        }
 
         RsvnEntity entity = rsvnRepository.save(
                 RsvnEntity.builder()
@@ -308,10 +327,11 @@ public class RsvnService {
         RsvnEntity entity = rsvnRepository.findByNoAndMemberNo(rsvnNo, member)
                 .orElseThrow(() -> new CustomException(RsvnErrorCode.RESERVATION_NOT_FOUND));
 
-        if((entity.getStatus().equals(RsvnStatus.C))
-                || (entity.getStatus().equals(RsvnStatus.R))
-        ){
+        if (entity.getStatus().equals(RsvnStatus.C) || entity.getStatus().equals(RsvnStatus.R)) {
             throw new CustomException(RsvnErrorCode.ALREADY_CANCELLED);
+        }
+        if (entity.getStatus().equals(RsvnStatus.E)) {
+            throw new CustomException(RsvnErrorCode.ALREADY_COMPLETED);
         }
 
         entity.cancel();
