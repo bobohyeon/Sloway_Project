@@ -50,7 +50,7 @@ public class HostPlaceEntity {
     private LocalDateTime approvalDate;
 
     @Enumerated(EnumType.STRING)
-    @Column(length = 1, nullable = false)
+    @Column(columnDefinition = "VARCHAR(1)", nullable = false)
     @Builder.Default
     private ApprovalStatus status = ApprovalStatus.P;
 
