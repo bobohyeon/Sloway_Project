@@ -161,10 +161,10 @@ public class StationRepositoryImpl implements StationRepositoryCustom{
                 .join(hostPlaceEntity).on(
                         hostPlaceEntity.stationEntity.eq(stationEntity)
                                 .and(hostPlaceEntity.no.in(latestHostPlaceIdSubQuery))
+                                .and(hostPlaceEntity.hostEntity.memberNo.eq(memberNo))
                 )
                 .where(
-                        stationEntity.no.eq(stationId),
-                        hostPlaceEntity.hostEntity.memberNo.eq(memberNo) // 본인 숙소인지 검증
+                        stationEntity.no.eq(stationId)
                 )
                 .fetchOne();
     }
