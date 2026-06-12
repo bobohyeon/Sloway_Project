@@ -29,6 +29,7 @@ public class PlaceDetailResDto {
     private String title;
     private String content;
     private String address;
+    private Integer baseCnt;
     private Integer maxCnt;
     private Integer basePrice;
     private List<String> amenities;
@@ -56,6 +57,7 @@ public class PlaceDetailResDto {
                 .amenities(office.getOfficeAmenityEntities().stream()
                         .map(a -> a.getAmenityEntity().getName())
                         .toList())
+                .baseCnt(null)
                 .maxCnt(office.getCnt())
                 .basePrice(office.getOfficePeriodEntities().stream()
                         .filter(op -> op.getExceptionStartDate() == null)
@@ -133,6 +135,7 @@ public class PlaceDetailResDto {
                 .amenities(station.getStationAmenityEntities().stream()
                         .map(a -> a.getAmenityEntity().getName())
                         .toList())
+                .baseCnt(station.getCnt())
                 .maxCnt(station.getMaxCnt())
                 .basePrice(station.getMonPrice())
                 .images(station.getImages().stream()
@@ -173,6 +176,7 @@ public class PlaceDetailResDto {
                 .amenities(workStay.getWorkAmenityEntities().stream()
                         .map(a -> a.getAmenityEntity().getName())
                         .toList())
+                .baseCnt(workStay.getCnt())
                 .maxCnt(workStay.getMaxCnt())
                 .basePrice(workStay.getMonPrice())
                 .images(workStay.getImages().stream()

@@ -142,10 +142,11 @@ function RecentCard({ item, onDelete, onClick }) {
           flexShrink: 0,
         }}
       >
-        <Price>
-          {item.price != null ? item.price.toLocaleString() : '—'}
-          {item.price != null && <span>원~</span>}
-        </Price>
+        {item.price != null && (
+          <Price>
+            {item.price.toLocaleString()}<span>원~</span>
+          </Price>
+        )}
         <DeleteBtn
           onClick={(e) => {
             e.stopPropagation();
