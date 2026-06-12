@@ -1,6 +1,8 @@
 package com.sloway.app.chat.controller;
 
-import com.sloway.app.chat.ChatVo;
+import com.sloway.app.chat.dto.ChatMessageWsDto;
+import com.sloway.app.chat.dto.response.ChatMessageResDto;
+import com.sloway.app.chat.service.ChatService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.event.EventListener;
 import org.springframework.messaging.handler.annotation.DestinationVariable;
@@ -16,24 +18,21 @@ import org.springframework.web.socket.messaging.SessionDisconnectEvent;
 public class ChatController {
 
     private final SimpMessageSendingOperations simpMessageSendingOperations;
+    private final ChatService chatService;
 
     @EventListener
-    public void handleConnect(SessionConnectedEvent event){
-        System.out.println("event = " + event);
+    public void handleConnect(SessionConnectedEvent event) {
+        System.out.println("WebSocket connected: " + event);
     }
 
     @EventListener
-    public void handleDisconnect(SessionDisconnectEvent event){
-        System.out.println("ChatController.handleDisconnect");
-        System.out.println("event = " + event);
+    public void handleDisconnect(SessionDisconnectEvent event) {
+        System.out.println("WebSocket disconnected: " + event);
     }
 
-    @MessageMapping("/{topicId}")
-    public void handleMsg(@DestinationVariable String topicId , ChatVo vo){
-        System.out.println("vo = " + vo);
-        simpMessageSendingOperations.convertAndSend("/sub/" + topicId , vo);
-
+    @MessageMapping("/{roomId}")
+    public void handleMsg(@DestinationVariable Long roomId, ChatMessageWsDto dto) {
+        ChatMessageResDto saved = chatService.saveMessage(roomId, dto.getContent(), dto.getSenderNo());
+        simpMessageSendingOperations.convertAndSend("/sub/" + roomId, saved);
     }
-
-
 }
