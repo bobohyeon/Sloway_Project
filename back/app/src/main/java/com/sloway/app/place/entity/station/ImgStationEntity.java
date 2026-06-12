@@ -24,9 +24,9 @@ public class ImgStationEntity {
     private String currentUrl;
 
     @Column(nullable = false)
-    private int sort;
+    private Integer sort;
 
-    public static ImgStationEntity from(StationEntity stationEntity, String currentUrl, int sort){
+    public static ImgStationEntity from(StationEntity stationEntity, String currentUrl, Integer sort){
         return ImgStationEntity.builder()
                 .stationEntity(stationEntity)
                 .currentUrl(currentUrl)
@@ -34,7 +34,7 @@ public class ImgStationEntity {
                 .build();
     }
 
-    public void updateSort(int sort) {
+    public void updateSort(Integer sort) {
         this.sort = sort;
     }
 }

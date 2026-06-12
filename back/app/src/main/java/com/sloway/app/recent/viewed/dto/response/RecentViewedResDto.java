@@ -23,7 +23,7 @@ public class RecentViewedResDto {
 
     public static RecentViewedResDto from(RecentViewedEntity entity, Long entityNo){
         String thumbnail = entity.getPlaceNo().getImages().stream()
-                .min(Comparator.comparingInt(ImgPlaceEntity::getSort))
+                .min(Comparator.comparing(ImgPlaceEntity::getSort, Comparator.nullsLast(Integer::compareTo)))
                 .map(ImgPlaceEntity::getCurrentUrl)
                 .orElse(null);
 
