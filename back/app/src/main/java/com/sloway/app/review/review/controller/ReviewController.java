@@ -13,7 +13,6 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.io.IOException;
 import java.util.List;
 
 @RequestMapping("/api/review")
@@ -28,7 +27,7 @@ public class ReviewController {
             @AuthenticationPrincipal CustomUserDetails userDetails,
             @RequestPart("dto") ReviewCreateReqDto dto,
             @RequestPart(value = "images",required = false) List<MultipartFile> images
-            ) throws IOException {
+            ) {
         reviewService.save(userDetails.getMemberNo(), dto, images);
         return ResponseEntity
                 .status(HttpStatus.CREATED)
