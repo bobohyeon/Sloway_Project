@@ -42,6 +42,7 @@ public class SearchCustomRepositoryImpl implements SearchCustomRepository{
     private final JPAQueryFactory queryFactory;
     private static final QPlaceEntity p = QPlaceEntity.placeEntity;
     private static final QImgPlaceEntity i = QImgPlaceEntity.imgPlaceEntity;
+    private static final QImgPlaceEntity i2 = new QImgPlaceEntity("imgPlace2");
     private static final QRsvnEntity rsvn = QRsvnEntity.rsvnEntity;
     private static final QRsvnEntity rsvnSub = new QRsvnEntity("rsvnSub");
     private static final QReviewEntity rv = QReviewEntity.reviewEntity;
@@ -107,14 +108,17 @@ public class SearchCustomRepositoryImpl implements SearchCustomRepository{
         return region == null ? null : p.address.contains(region.getCode());
     }
 
-    //썸네일 — sort 오름차순 첫 번째 (등록 시 sort=1부터 저장하므로 sort=0 조건 제거)
+    // 썸네일 — no 오름차순 첫 번째 이미지 URL (JPQL 서브쿼리에서 LIMIT 미지원으로 중첩 서브쿼리 방식 사용)
     private JPQLQuery<String> thumbnailExpr(){
         return JPAExpressions
                 .select(i.currentUrl)
                 .from(i)
-                .where(i.placeEntity.eq(p))
-                .orderBy(i.sort.asc())
-                .limit(1);
+                .where(i.placeEntity.eq(p),
+                       i.no.eq(
+                           JPAExpressions.select(i2.no.min())
+                               .from(i2)
+                               .where(i2.placeEntity.eq(p))
+                       ));
     }
 
     //요금최솟값
