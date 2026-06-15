@@ -78,6 +78,7 @@ export function useUpdateWorkStay(workStayNo) {
       try {
         setIsLoading(true);
         const response = await getWorkStayUpdateDetail(workStayNo);
+        console.log(response.data);
 
         const data = response?.data;
 
