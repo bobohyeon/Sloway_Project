@@ -170,13 +170,13 @@ public class RefundService {
         LocalDateTime checkIn = entity.getRsvnNo().getCheckIn();
         LocalDateTime requestedAt = entity.getRequestedAt();
         long between = ChronoUnit.DAYS.between(requestedAt.toLocalDate(), checkIn.toLocalDate());
-        if (between >= 7) {
+        if (between >= RefundRate.WEEK.getMinday()) {
             return RefundRate.WEEK;
-        } else if (between >= 4) {
+        } else if (between >= RefundRate.FOURTOSIX.getMinday()) {
             return RefundRate.FOURTOSIX;
-        } else if (between >= 2) {
+        } else if (between >= RefundRate.TWOTOTHREE.getMinday()) {
             return RefundRate.TWOTOTHREE;
-        } else if (between >= 1) {
+        } else if (between >= RefundRate.ONEDAY.getMinday()) {
             return RefundRate.ONEDAY;
         } else {
             return RefundRate.DDAY;
