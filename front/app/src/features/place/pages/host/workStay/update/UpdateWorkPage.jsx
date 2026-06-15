@@ -29,6 +29,22 @@ function UpdateWorkPage() {
     facilityList,
   } = useUpdateWorkStay(id);
 
+  const proxySetFormData = (updaterOrValue) => {
+    setFormData((prev) => {
+      // 자식이 보내준 것이 함수(updater)인지, 객체(value)인지 판별
+      const newStay =
+        typeof updaterOrValue === 'function'
+          ? updaterOrValue(prev.stay) // 자식은 자기가 가진 데이터(stay)만 건드린다고 생각함
+          : updaterOrValue;
+
+      // 부모는 전체 데이터 구조를 유지하면서 stay 부분만 교체
+      return {
+        ...prev,
+        stay: newStay,
+      };
+    });
+  };
+
   if (isLoading) {
     return <div>워크앤스테이 상세 정보를 불러오는 중입니다...</div>;
   }
@@ -64,7 +80,7 @@ function UpdateWorkPage() {
         return (
           <UpdateFeeComponent
             formData={formData.stay}
-            setFormData={setFormData}
+            setFormData={proxySetFormData}
             handleChange={handleStayChange}
             prev={() => setStep(2)}
             next={() => setStep(4)}
