@@ -13,7 +13,11 @@ const TopSpacesSection = ({ TOP_SPACES = [], navigate, TYPE_MAP }) => (
       {TOP_SPACES.map((s, i) => (
         <RankCard
           key={i}
-          onClick={() => navigate(`/spaces/${s.placeNo}/rooms`)}
+          onClick={() =>
+            navigate(`/spaces/${s.placeNo}/rooms`, {
+              state: { space: { type: s.type, title: s.title } },
+            })
+          }
         >
           <RankNum>{i + 1}</RankNum>
           <div style={{ fontSize: 32, marginBottom: 10 }}>{s.icon}</div>

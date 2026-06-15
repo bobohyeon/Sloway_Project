@@ -7,10 +7,11 @@ import com.sloway.app.search.dto.response.SearchResDto;
 import com.sloway.app.search.repository.SearchCustomRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.List;
 
 @Slf4j
 @RequiredArgsConstructor
@@ -20,7 +21,10 @@ public class SearchService {
 
     private final SearchCustomRepository searchCustomRepository;
 
-    public List<SearchResDto> search(SearchReqDto dto) {
+    public Page<SearchResDto> search(
+            SearchReqDto dto,
+            Pageable pageable
+            ) {
         // 날짜는 둘 다 null이거나 둘 다 있어야 함 — 한 쪽만 보내면 거부
         if ((dto.getCheckIn() == null) != (dto.getCheckOut() == null)) {
             throw new CustomException(RsvnErrorCode.INVALID_DATE_RANGE);
@@ -34,7 +38,9 @@ public class SearchService {
             throw new CustomException(RsvnErrorCode.INVALID_COUNT);
         }
 
-        return searchCustomRepository.search(dto);
+        Page<SearchResDto> dtoList = searchCustomRepository.search(dto, pageable);
+
+        return dtoList;
     }
 }
 

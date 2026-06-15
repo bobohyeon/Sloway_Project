@@ -24,6 +24,7 @@ public class RecentViewedController {
             @RequestParam Long placeNo
     ){
         recentViewedService.save(userDetails.getMemberNo(), placeNo);
+        System.out.println("placeNo = " + placeNo);
         return ResponseEntity
                 .status(HttpStatus.CREATED)
                 .build();

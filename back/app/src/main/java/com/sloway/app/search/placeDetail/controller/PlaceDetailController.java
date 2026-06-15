@@ -6,10 +6,7 @@ import com.sloway.app.search.placeDetail.dto.PlaceDetailResDto;
 import com.sloway.app.search.placeDetail.service.PlaceDetailService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
@@ -21,9 +18,12 @@ public class PlaceDetailController {
     private final PlaceDetailService placeDetailService;
     private final BlackOutService blackOutService;
 
-    @GetMapping("/find/{entityNo}")
-    public ResponseEntity<PlaceDetailResDto> findByEntityNo(@PathVariable Long entityNo){
-        return ResponseEntity.ok(placeDetailService.findByEntityNo(entityNo));
+    @GetMapping("/find/{placeNo}")
+    public ResponseEntity<List<PlaceDetailResDto>> findByEntityNo(
+            @PathVariable Long placeNo,
+            @RequestParam(required = false) String type  // 없으면 타입 자동 탐색
+    ){
+        return ResponseEntity.ok(placeDetailService.findByEntityNo(placeNo, type));
     }
 
     @GetMapping("/office/{no}")
@@ -49,4 +49,5 @@ public class PlaceDetailController {
     public ResponseEntity<List<BlackOutResDto>> findBlackouts(@PathVariable Long entityNo) {
         return ResponseEntity.ok(blackOutService.findAll(entityNo));
     }
+
 }

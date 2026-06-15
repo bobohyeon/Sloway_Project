@@ -206,7 +206,6 @@ const NextButton = styled.button`
   font-weight: 600;
   cursor: pointer;
 `;
-
 function UpdateFeeComponent({
   formData,
   setFormData,
@@ -214,7 +213,6 @@ function UpdateFeeComponent({
   prev,
   next,
 }) {
-  // 요일 매핑 리스트
   const dayList = [
     { key: 'monPrice', label: '월' },
     { key: 'tuePrice', label: '화' },
@@ -226,53 +224,66 @@ function UpdateFeeComponent({
     { key: 'holPrice', label: '공휴일' },
   ];
 
-  // 예외 기간 추가 함수
+  // 1. 추가 함수: 항상 가장 최신의 이전 상태(prev)를 기반으로 배열을 추가합니다.
   const addException = () => {
-    setFormData({
-      ...formData,
-      exceptionPeriods: [
-        ...formData.exceptionPeriods,
-        {
-          startDate: '',
-          endDate: '',
-          monPrice: '',
-          tuePrice: '',
-          wedPrice: '',
-          thuPrice: '',
-          friPrice: '',
-          satPrice: '',
-          sunPrice: '',
-          holPrice: '',
-        },
-      ],
+    setFormData((prev) => {
+      const currentPeriods = prev?.exceptionPeriods || [];
+      console.log(currentPeriods);
+
+      return {
+        ...prev,
+        exceptionPeriods: [
+          ...currentPeriods,
+          {
+            startDate: '',
+            endDate: '',
+            monPrice: '',
+            tuePrice: '',
+            wedPrice: '',
+            thuPrice: '',
+            friPrice: '',
+            satPrice: '',
+            sunPrice: '',
+            holPrice: '',
+          },
+        ],
+      };
     });
   };
 
-  // 예외 기간 삭제 함수
+  // 2. 삭제 함수: 마찬가지로 최신 상태(prev)에서 필터링하여 지웁니다.
   const removeException = (index) => {
-    const updated = formData.exceptionPeriods.filter((_, i) => i !== index);
-    setFormData({ ...formData, exceptionPeriods: updated });
+    setFormData((prev) => {
+      const currentPeriods = prev?.exceptionPeriods || [];
+      const updated = currentPeriods.filter((_, i) => i !== index);
+      return { ...prev, exceptionPeriods: updated };
+    });
   };
 
-  // 예외 기간 내부 값 변경 함수
+  // 3. 값 변경 함수: 배열을 직접 수정하지 않고, map을 써서 불변성을 유지하며 값을 바꿉니다. (리액트 정석)
   const handleExceptionChange = (index, field, value) => {
-    const updated = [...formData.exceptionPeriods];
-    updated[index][field] = value;
-    setFormData({ ...formData, exceptionPeriods: updated });
+    setFormData((prev) => {
+      const currentPeriods = prev?.exceptionPeriods || [];
+      const updated = currentPeriods.map((item, i) => {
+        if (i === index) {
+          return { ...item, [field]: value };
+        }
+        return item;
+      });
+      return { ...prev, exceptionPeriods: updated };
+    });
   };
 
   return (
     <FormCard>
       <SectionTitle>요금 및 운영 설정</SectionTitle>
 
-      {/* 1. 기본 요일별 요금 */}
       <SubTitle>📅 평상시 요일별 요금 설정</SubTitle>
       <InputGrid>
         {dayList.map((day) => (
           <FormGroup key={day.key}>
             <label>
-              {day.label === '공휴일' ? day.label : `${day.label}요일`} 요금{' '}
-              {day.label === '금' || day.label === '토' ? <span>*</span> : ''}
+              {day.label === '공휴일' ? day.label : `${day.label}요일`} 요금
             </label>
             <PriceInputWrapper>
               <span className="icon">₩</span>
@@ -280,7 +291,7 @@ function UpdateFeeComponent({
                 type="text"
                 name={day.key}
                 placeholder="150,000"
-                value={formData[day.key] || ''}
+                value={formData?.[day.key] ?? ''}
                 onChange={handleChange}
               />
             </PriceInputWrapper>
@@ -288,7 +299,6 @@ function UpdateFeeComponent({
         ))}
       </InputGrid>
 
-      {/* 2. 예외 기간 설정 */}
       <div
         style={{
           marginTop: '50px',
@@ -296,16 +306,15 @@ function UpdateFeeComponent({
           paddingTop: '30px',
         }}
       >
-        <SubTitle>🔥 특정 기간 예외 요금 (성수기·연말)</SubTitle>
-
-        {formData.exceptionPeriods.map((item, index) => (
+        <SubTitle>🔥 특정 기간 예외 요금</SubTitle>
+        {(formData?.exceptionPeriods || []).map((item, index) => (
           <ExceptionBox key={index}>
             <DateGrid>
               <FormGroup>
                 <label>시작일</label>
                 <input
                   type="date"
-                  value={item.startDate}
+                  value={item?.startDate ?? ''}
                   onChange={(e) =>
                     handleExceptionChange(index, 'startDate', e.target.value)
                   }
@@ -315,7 +324,7 @@ function UpdateFeeComponent({
                 <label>종료일</label>
                 <input
                   type="date"
-                  value={item.endDate}
+                  value={item?.endDate ?? ''}
                   onChange={(e) =>
                     handleExceptionChange(index, 'endDate', e.target.value)
                   }
@@ -329,12 +338,6 @@ function UpdateFeeComponent({
               </RemoveButton>
             </DateGrid>
 
-            <p
-              style={{ fontSize: '12px', color: '#888', marginBottom: '15px' }}
-            >
-              * 해당 기간 내 적용할 요일별 금액을 입력하세요.
-            </p>
-
             <InputGrid>
               {dayList.map((day) => (
                 <FormGroup key={`${index}-${day.key}`}>
@@ -344,7 +347,7 @@ function UpdateFeeComponent({
                     <input
                       type="text"
                       placeholder="200,000"
-                      value={item[day.key] || ''}
+                      value={item?.[day.key] ?? ''}
                       onChange={(e) =>
                         handleExceptionChange(index, day.key, e.target.value)
                       }
@@ -355,30 +358,10 @@ function UpdateFeeComponent({
             </InputGrid>
           </ExceptionBox>
         ))}
-
         <AddButton type="button" onClick={addException}>
           + 새로운 예외 기간 추가하기
         </AddButton>
       </div>
-
-      {/* 3. 환불 정책 */}
-      <RefundSection>
-        <label>표준 환불 정책</label>
-        <RefundGrid>
-          <RefundItem>
-            7일 전<span className="percent">100% 환불</span>
-          </RefundItem>
-          <RefundItem highlight>
-            3~4일 전<span className="percent">50% 환불</span>
-          </RefundItem>
-          <RefundItem highlight>
-            1~2일 전<span className="percent">30% 환불</span>
-          </RefundItem>
-          <RefundItem highlight>
-            당일<span className="percent">환불 불가</span>
-          </RefundItem>
-        </RefundGrid>
-      </RefundSection>
 
       <ButtonGroup>
         <PrevButton type="button" onClick={prev}>

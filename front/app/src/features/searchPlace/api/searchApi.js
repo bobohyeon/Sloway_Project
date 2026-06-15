@@ -35,8 +35,10 @@ export async function getWorkStayDetail(no) {
   return res.data;
 }
 
-export async function findSpaceByEntityNo(entityNo) {
-  const res = await api.get(`/spaces/find/${entityNo}`);
+// placeNo로 방 목록 조회. type 없으면 백엔드가 자동 탐색
+export async function findRoomsByPlaceNo(placeNo, type) {
+  const params = type ? { type } : {};
+  const res = await api.get(`/spaces/find/${placeNo}`, { params });
   return res.data;
 }
 
@@ -53,5 +55,6 @@ export async function searchSpaces({ region, placeType, sort, checkIn, checkOut,
   if (guestCount) params.guestCount = guestCount;
 
   const res = await api.get('/spaces/search', { params });
-  return res.data;
+  // 백엔드가 Page<SearchResDto> 반환 — content 배열만 꺼냄
+  return res.data.content ?? res.data;
 }

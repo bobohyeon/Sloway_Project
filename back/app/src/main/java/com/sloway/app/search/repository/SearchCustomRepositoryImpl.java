@@ -27,6 +27,9 @@ import com.sloway.app.search.dto.SortType;
 import com.sloway.app.search.dto.request.SearchReqDto;
 import com.sloway.app.search.dto.response.SearchResDto;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Repository;
 import com.querydsl.jpa.JPAExpressions;
 import com.querydsl.core.types.dsl.Expressions;
@@ -58,15 +61,9 @@ public class SearchCustomRepositoryImpl implements SearchCustomRepository{
     private static final QStationAmenityEntity sa = QStationAmenityEntity.stationAmenityEntity;
 
 
-    @Override
-    public List<SearchResDto> search(SearchReqDto dto) {
-        return queryFactory
+    public Page<SearchResDto> search(SearchReqDto dto, Pageable pageable) {
+        List<SearchResDto> content = queryFactory
                 .select(Projections.constructor(SearchResDto.class,
-                        Expressions.numberTemplate(Long.class, "COALESCE({0},{1},{2})",
-                            JPAExpressions.select(o.no).from(o).where(o.placeEntity.eq(p)),
-                            JPAExpressions.select(ws.no).from(ws).where(ws.placeEntity.eq(p)),
-                            JPAExpressions.select(st.no).from(st).where(st.placeEntity.eq(p))
-                        ),
                         p.no,
                         p.title,
                         p.type,
@@ -93,10 +90,18 @@ public class SearchCustomRepositoryImpl implements SearchCustomRepository{
                 )
                 .from(p)
                 .where(typeEq(dto.getPlaceType()), regionContains(dto.getRegion()), amenitiesFilter(dto.getAmenities()))
-
                 .orderBy(sortOrder((dto.getSort())))
+                .offset(pageable.getOffset())
+                .limit(pageable.getPageSize())
                 .fetch()
                 ;
+        Long total = queryFactory
+                .select(p.count())
+                .from(p)
+                .where(typeEq(dto.getPlaceType()),regionContains(dto.getRegion()),amenitiesFilter(dto.getAmenities()))
+                .fetchOne();
+
+        return new PageImpl<>(content,pageable,total == null ? 0: total);
     }
     // 공간타입 필터
     private BooleanExpression typeEq(String type){
