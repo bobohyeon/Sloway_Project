@@ -35,9 +35,10 @@ export async function getWorkStayDetail(no) {
   return res.data;
 }
 
-// placeNo + type으로 해당 공간의 방 목록 조회 (배열 반환)
+// placeNo로 방 목록 조회. type 없으면 백엔드가 자동 탐색
 export async function findRoomsByPlaceNo(placeNo, type) {
-  const res = await api.get(`/spaces/find/${placeNo}`, { params: { type } });
+  const params = type ? { type } : {};
+  const res = await api.get(`/spaces/find/${placeNo}`, { params });
   return res.data;
 }
 

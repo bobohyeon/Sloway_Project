@@ -228,16 +228,23 @@ function RoomListPage() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const type = spaceInfo?.type;
-    if (!type) return;
     setLoading(true);
-    findRoomsByPlaceNo(spaceId, type)
+    // spaceInfo에 type이 있으면 바로 전달, 없으면 백엔드가 자동 탐색
+    findRoomsByPlaceNo(spaceId, spaceInfo?.type)
       .then(setRooms)
       .catch(() => setRooms([]))
       .finally(() => setLoading(false));
   }, [spaceId]);
 
-  if (!spaceInfo) return null;
+  // spaceInfo 없을 때(메인 페이지 등) rooms 첫 번째 항목으로 요약 구성
+  const summary = spaceInfo ?? (rooms[0] ? {
+    type: rooms[0].type,
+    title: rooms[0].title,
+    location: rooms[0].address,
+    score: 0,
+    reviewCount: 0,
+    thumbnailUrl: rooms[0].images?.[0] ?? null,
+  } : null);
 
   // 방 선택 → entityNo(실제 방 PK)로 상세 페이지 이동
   const goDetail = (room) => {
@@ -256,27 +263,31 @@ function RoomListPage() {
       <Content>
         <BackBtn onClick={() => navigate(-1)}>← 이전으로</BackBtn>
 
-        {/* 공간 요약 — 검색 결과 카드(spaceInfo) 데이터 사용 */}
-        <SpaceSummary>
-          <SpaceThumb>
-            {spaceInfo.thumbnailUrl
-              ? <img src={spaceInfo.thumbnailUrl} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-              : (TYPE_ICON[spaceInfo.type] ?? '🏠')
-            }
-          </SpaceThumb>
-          <div style={{ flex: 1 }}>
-            <TypeTag>{spaceInfo.type}</TypeTag>
-            <div style={{ fontSize: 18, fontWeight: 700, marginBottom: 3 }}>
-              {spaceInfo.title}
+        {/* 공간 요약 */}
+        {summary && (
+          <SpaceSummary>
+            <SpaceThumb>
+              {summary.thumbnailUrl
+                ? <img src={summary.thumbnailUrl} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                : (TYPE_ICON[summary.type] ?? '🏠')
+              }
+            </SpaceThumb>
+            <div style={{ flex: 1 }}>
+              <TypeTag>{summary.type}</TypeTag>
+              <div style={{ fontSize: 18, fontWeight: 700, marginBottom: 3 }}>
+                {summary.title}
+              </div>
+              <div style={{ fontSize: 13, color: COLOR.gray400 }}>
+                {summary.location && `📍 ${summary.location}`}
+                {summary.reviewCount > 0 && (
+                  <span style={{ marginLeft: 12 }}>
+                    ★ {summary.score} ({summary.reviewCount}개 리뷰)
+                  </span>
+                )}
+              </div>
             </div>
-            <div style={{ fontSize: 13, color: COLOR.gray400 }}>
-              📍 {spaceInfo.location}
-              <span style={{ marginLeft: 12 }}>
-                ★ {spaceInfo.score} ({spaceInfo.reviewCount}개 리뷰)
-              </span>
-            </div>
-          </div>
-        </SpaceSummary>
+          </SpaceSummary>
+        )}
 
         <SectionTitle>방 선택</SectionTitle>
         <SectionSub>원하는 방을 선택하고 예약을 진행하세요</SectionSub>

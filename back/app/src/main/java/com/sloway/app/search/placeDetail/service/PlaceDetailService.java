@@ -23,26 +23,40 @@ public class PlaceDetailService {
     @PersistenceContext
     private EntityManager em;
 
-    // entityNo만 알 때 — workStay → office → station 순으로 시도
+    // workstay/office/station(소문자) → WORK_STAY/OFFICE/STATION 정규화
+    // DB 뷰(place_summary)와 PlaceEntity 간 타입명 불일치 방어
+    private String normalizeType(String type) {
+        if (type == null || type.isBlank()) return null;
+        return switch (type.toLowerCase().replace("_", "")) {
+            case "workstay" -> "WORK_STAY";
+            case "office"   -> "OFFICE";
+            case "station"  -> "STATION";
+            default         -> null; // 알 수 없는 값 → tryAll로 폴백
+        };
+    }
+
+    // type 있으면 해당 타입만 조회, null이면 세 타입 순서대로 탐색 (메인 페이지 등 type 모를 때)
     public List<PlaceDetailResDto> findByEntityNo(Long placeNo, String type) {
 
-        if(type.equals("WORK_STAY")){
+        String normalized = normalizeType(type);
+        boolean tryAll = (normalized == null);
+
+        if (tryAll || "WORK_STAY".equals(normalized)) {
             List<WorkStayEntity> wsList = em.createQuery(
                             "SELECT DISTINCT ws FROM WorkStayEntity ws LEFT JOIN FETCH ws.workExceptionPeriodEntities WHERE ws.placeEntity.no = :no", WorkStayEntity.class)
                     .setParameter("no", placeNo).getResultList();
-            if (!wsList.isEmpty())
-                return wsList.stream().map(PlaceDetailResDto::from).toList();
+            if (!wsList.isEmpty()) return wsList.stream().map(PlaceDetailResDto::from).toList();
         }
 
-        if(type.equals("OFFICE")){
-            // officePeriodEntities JOIN FETCH — 가격 계산에 필요
+        if (tryAll || "OFFICE".equals(normalized)) {
             List<OfficeEntity> oList = em.createQuery(
                             "SELECT DISTINCT o FROM OfficeEntity o LEFT JOIN FETCH o.officePeriodEntities WHERE o.placeEntity.no = :no",
                             OfficeEntity.class)
                     .setParameter("no", placeNo).getResultList();
             if (!oList.isEmpty()) return oList.stream().map(PlaceDetailResDto::from).toList();
         }
-        if(type.equals("STATION")){
+
+        if (tryAll || "STATION".equals(normalized)) {
             List<StationEntity> stList = em.createQuery(
                             "SELECT DISTINCT s FROM StationEntity s LEFT JOIN FETCH s.stationExceptionPeriodEntities WHERE s.placeEntity.no = :no", StationEntity.class)
                     .setParameter("no", placeNo).getResultList();
