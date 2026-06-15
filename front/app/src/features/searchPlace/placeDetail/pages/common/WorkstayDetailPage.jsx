@@ -21,9 +21,15 @@ function WorkstayDetailPage() {
   const [blackouts, setBlackouts] = useState([]);
   const [error, setError] = useState(false);
 
-  const nights = checkIn && checkOut
-    ? Math.max(1, Math.ceil((new Date(checkOut) - new Date(checkIn)) / (1000 * 60 * 60 * 24)))
-    : 1;
+  const nights =
+    checkIn && checkOut
+      ? Math.max(
+          1,
+          Math.ceil(
+            (new Date(checkOut) - new Date(checkIn)) / (1000 * 60 * 60 * 24)
+          )
+        )
+      : 1;
 
   useEffect(() => {
     const load = async () => {
@@ -33,13 +39,22 @@ function WorkstayDetailPage() {
           findReviewsByPlace(Number(id), 'WORK_STAY'),
           findBlackoutsByEntity(Number(id)),
         ]);
-        const avgScore = reviewData.length > 0
-          ? Math.round(reviewData.reduce((sum, r) => sum + (r.scoreTotal ?? 0), 0) / reviewData.length)
-          : 0;
-        setSpace({ ...spaceData, score: avgScore, reviewCount: reviewData.length });
+        const avgScore =
+          reviewData.length > 0
+            ? Math.round(
+                reviewData.reduce((sum, r) => sum + (r.scoreTotal ?? 0), 0) /
+                  reviewData.length
+              )
+            : 0;
+        setSpace({
+          ...spaceData,
+          score: avgScore,
+          reviewCount: reviewData.length,
+        });
         setReviews(reviewData);
         setBlackouts(blackoutData ?? []);
         saveRecentViewed(spaceData.placeNo).catch(() => {});
+        console.log(space);
       } catch (e) {
         console.error('데이터 조회 실패', e);
         setError(true);
@@ -48,18 +63,18 @@ function WorkstayDetailPage() {
     load();
   }, [id]);
 
-  if (error) return <div style={{ padding: 40, textAlign: 'center', color: '#888' }}>공간 정보를 불러오지 못했습니다. 잠시 후 다시 시도해주세요.</div>;
+  if (error)
+    return (
+      <div style={{ padding: 40, textAlign: 'center', color: '#888' }}>
+        공간 정보를 불러오지 못했습니다. 잠시 후 다시 시도해주세요.
+      </div>
+    );
   if (!space) return null;
 
   return (
     <DetailLayout
       imageBox={<DetailImageBox icon="🌲" images={space?.images ?? []} />}
-      mainBox={
-        <DetailMainBox
-          space={space}
-          reviews={reviews}
-        />
-      }
+      mainBox={<DetailMainBox space={space} reviews={reviews} />}
       rsvnBox={
         <DetailRsvnBox
           type="stay"
@@ -81,8 +96,12 @@ function WorkstayDetailPage() {
             workStayNo: space?.entityNo,
             count: guests,
             amt: (selectedRoom?.price ?? space?.basePrice ?? 0) * nights,
-            checkIn: checkIn ? new Date(checkIn).toISOString().slice(0, 19) : null,
-            checkOut: checkOut ? new Date(checkOut).toISOString().slice(0, 19) : null,
+            checkIn: checkIn
+              ? new Date(checkIn).toISOString().slice(0, 19)
+              : null,
+            checkOut: checkOut
+              ? new Date(checkOut).toISOString().slice(0, 19)
+              : null,
             special: null,
           }}
         />

@@ -44,7 +44,7 @@ public class RecentViewedService {
         if(isTrue){
             recentViewedRepository.deleteByMemberNoAndPlaceNo(member, place);
         }
-
+        System.out.println("isTrue = " + isTrue);
         //10개 이상이면 가장 오래된 공간 지우기
         if(recentViewedRepository.countByMemberNo(member) >= 10){
             List<RecentViewedEntity> oldest = recentViewedRepository.findTop1ByMemberNoOrderByViewAtAsc(member);
