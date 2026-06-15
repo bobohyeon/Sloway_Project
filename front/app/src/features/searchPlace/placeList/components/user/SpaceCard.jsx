@@ -173,6 +173,10 @@ function SpaceCard({ item, onClick }) {
 
   const handleWish = async (e) => {
     e.stopPropagation();
+    if (!localStorage.getItem('accessToken')) {
+      alert('로그인 후 이용해주세요.');
+      return;
+    }
     const prevLiked = liked;
     const prevLikeNo = likeNo;
     try {

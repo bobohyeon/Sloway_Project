@@ -21,7 +21,7 @@ public class PlaceDetailController {
     @GetMapping("/find/{placeNo}")
     public ResponseEntity<List<PlaceDetailResDto>> findByEntityNo(
             @PathVariable Long placeNo,
-            @RequestParam String type
+            @RequestParam(required = false) String type  // 없으면 타입 자동 탐색
     ){
         return ResponseEntity.ok(placeDetailService.findByEntityNo(placeNo, type));
     }
