@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useParams, useLocation } from 'react-router-dom';
-import { findSpaceByEntityNo } from '../../../api/searchApi';
+import { findRoomsByPlaceNo } from '../../../api/searchApi';
 import styled, { keyframes } from 'styled-components';
 import { COLOR } from '../../../../rsvn/components/user/RsvnStyled';
 import MainHeader from '../../../../main/layouts/MainHeader';
@@ -203,50 +203,51 @@ const SelectBtn = styled.button`
   }
 `;
 
+const EmptyBox = styled.div`
+  grid-column: 1 / -1;
+  text-align: center;
+  padding: 40px 0;
+  color: ${COLOR.gray400};
+  font-size: 14px;
+`;
+
 const TYPE_ICON = { WORK_STAY: '🌿', OFFICE: '💻', STATION: '🛌' };
 const TYPE_COLOR = { WORK_STAY: '#D8E8D0', OFFICE: '#D0E0E8', STATION: '#E8E0D0' };
 
 function RoomListPage() {
   const navigate = useNavigate();
-  const { spaceId } = useParams();
+  const { spaceId } = useParams(); // placeNo
   const { state } = useLocation();
-  const [space, setSpace] = useState(state?.space || null);
+  // 검색 결과 카드 데이터 — 요약 표시용 (title, type, location, score, thumbnailUrl)
+  const spaceInfo = state?.space ?? null;
   const checkIn = state?.checkIn ?? '';
   const checkOut = state?.checkOut ?? '';
   const guests = state?.guests ?? 2;
 
+  const [rooms, setRooms] = useState([]);
+  const [loading, setLoading] = useState(true);
+
   useEffect(() => {
-    // state.space가 있어도 항상 API 호출 — images 등 전체 필드를 채우기 위해
-    findSpaceByEntityNo(spaceId)
-      .then(setSpace)
-      .catch(() => setSpace(state?.space ?? null));
+    const type = spaceInfo?.type;
+    if (!type) return;
+    setLoading(true);
+    findRoomsByPlaceNo(spaceId, type)
+      .then(setRooms)
+      .catch(() => setRooms([]))
+      .finally(() => setLoading(false));
   }, [spaceId]);
 
-  if (!space) return null;
+  if (!spaceInfo) return null;
 
-  // DB 구조상 place당 entity 1개 — space 데이터를 방 카드 1장으로 변환
-  const rooms = [{
-    id: space.entityNo ?? space.id ?? Number(spaceId),
-    name: space.title,
-    maxGuests: space.maxCnt ?? 2,
-    price: space.basePrice ?? 0,
-    priceUnit: space.type === 'OFFICE' ? '원/4시간' : '원/박',
-    amenities: space.amenities ?? [],
-    available: true,
-    icon: TYPE_ICON[space.type] ?? '🏠',
-    color: TYPE_COLOR[space.type] ?? '#E8E0D0',
-    thumbnail: space.images?.[0] ?? null,
-  }];
-
-  // 방 선택 → 공간 유형에 따라 상세 페이지로 이동
+  // 방 선택 → entityNo(실제 방 PK)로 상세 페이지 이동
   const goDetail = (room) => {
     const path =
-      space.type === 'OFFICE'
-        ? `/coworking-offices/${spaceId}`
-        : space.type === 'WORK_STAY'
-          ? `/workstays/${spaceId}`
-          : `/stations/${spaceId}`;
-    navigate(path, { state: { selectedRoom: room, space, checkIn, checkOut, guests } });
+      room.type === 'OFFICE'
+        ? `/coworking-offices/${room.entityNo}`
+        : room.type === 'WORK_STAY'
+          ? `/workstays/${room.entityNo}`
+          : `/stations/${room.entityNo}`;
+    navigate(path, { state: { selectedRoom: room, space: spaceInfo, checkIn, checkOut, guests } });
   };
 
   return (
@@ -255,23 +256,23 @@ function RoomListPage() {
       <Content>
         <BackBtn onClick={() => navigate(-1)}>← 이전으로</BackBtn>
 
-        {/* 공간 요약 */}
+        {/* 공간 요약 — 검색 결과 카드(spaceInfo) 데이터 사용 */}
         <SpaceSummary>
           <SpaceThumb>
-            {space.images?.[0]
-              ? <img src={space.images[0]} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-              : (TYPE_ICON[space.type] ?? '🏠')
+            {spaceInfo.thumbnailUrl
+              ? <img src={spaceInfo.thumbnailUrl} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+              : (TYPE_ICON[spaceInfo.type] ?? '🏠')
             }
           </SpaceThumb>
           <div style={{ flex: 1 }}>
-            <TypeTag>{space.type}</TypeTag>
+            <TypeTag>{spaceInfo.type}</TypeTag>
             <div style={{ fontSize: 18, fontWeight: 700, marginBottom: 3 }}>
-              {space.title}
+              {spaceInfo.title}
             </div>
             <div style={{ fontSize: 13, color: COLOR.gray400 }}>
-              📍 {space.location}
+              📍 {spaceInfo.location}
               <span style={{ marginLeft: 12 }}>
-                ★ {space.score} ({space.reviewCount}개 리뷰)
+                ★ {spaceInfo.score} ({spaceInfo.reviewCount}개 리뷰)
               </span>
             </div>
           </div>
@@ -281,59 +282,69 @@ function RoomListPage() {
         <SectionSub>원하는 방을 선택하고 예약을 진행하세요</SectionSub>
 
         <RoomGrid>
-          {rooms.map((room) => (
-            <RoomCard
-              key={room.id}
-              onClick={() => room.available && goDetail(room)}
-              style={{
-                opacity: room.available ? 1 : 0.6,
-                cursor: room.available ? 'pointer' : 'not-allowed',
-              }}
-            >
-              <RoomImg $color={room.color}>
-                {room.thumbnail
-                  ? <img src={room.thumbnail} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                  : room.icon
-                }
-                <AvailBadge $avail={room.available}>
-                  {room.available ? '예약 가능' : '예약 마감'}
-                </AvailBadge>
-              </RoomImg>
-              <RoomBody>
-                <RoomName>{room.name}</RoomName>
-                <RoomMeta>
-                  <span>
-                    👤 최대 {room.maxGuests}명 (기준 {room.baseGuests}명)
-                  </span>
-                </RoomMeta>
-                <RoomAmenities>
-                  {room.amenities.map((a, i) => (
-                    <AmenityTag key={i}>{a}</AmenityTag>
-                  ))}
-                </RoomAmenities>
-                <RoomPrice>
-                  <Price>
-                    {room.price.toLocaleString()}
-                    <span> {room.priceUnit}</span>
-                  </Price>
-                  {room.available ? (
-                    <SelectBtn
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        goDetail(room);
-                      }}
-                    >
-                      선택
-                    </SelectBtn>
-                  ) : (
-                    <span style={{ fontSize: 12, color: COLOR.gray400 }}>
-                      마감
-                    </span>
-                  )}
-                </RoomPrice>
-              </RoomBody>
-            </RoomCard>
-          ))}
+          {loading ? (
+            <EmptyBox>🔍 불러오는 중...</EmptyBox>
+          ) : rooms.length === 0 ? (
+            <EmptyBox>등록된 방이 없습니다.</EmptyBox>
+          ) : (
+            rooms.map((room) => {
+              const available = true; // TODO: exceptionPeriods 기반 날짜 필터링
+              const icon = TYPE_ICON[room.type] ?? '🏠';
+              const color = TYPE_COLOR[room.type] ?? '#E8E0D0';
+              const thumbnail = room.images?.[0] ?? null;
+              const amenities = room.amenities ?? [];
+              const priceUnit = room.type === 'OFFICE' ? '원/4시간' : '원/박';
+              return (
+                <RoomCard
+                  key={room.entityNo}
+                  onClick={() => available && goDetail(room)}
+                  style={{
+                    opacity: available ? 1 : 0.6,
+                    cursor: available ? 'pointer' : 'not-allowed',
+                  }}
+                >
+                  <RoomImg $color={color}>
+                    {thumbnail
+                      ? <img src={thumbnail} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                      : icon
+                    }
+                    <AvailBadge $avail={available}>
+                      {available ? '예약 가능' : '예약 마감'}
+                    </AvailBadge>
+                  </RoomImg>
+                  <RoomBody>
+                    <RoomName>{room.title}</RoomName>
+                    <RoomMeta>
+                      <span>👤 최대 {room.maxCnt}명 (기준 {room.baseCnt}명)</span>
+                    </RoomMeta>
+                    <RoomAmenities>
+                      {amenities.map((a, i) => (
+                        <AmenityTag key={i}>{a}</AmenityTag>
+                      ))}
+                    </RoomAmenities>
+                    <RoomPrice>
+                      <Price>
+                        {(room.basePrice ?? 0).toLocaleString()}
+                        <span> {priceUnit}</span>
+                      </Price>
+                      {available ? (
+                        <SelectBtn
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            goDetail(room);
+                          }}
+                        >
+                          선택
+                        </SelectBtn>
+                      ) : (
+                        <span style={{ fontSize: 12, color: COLOR.gray400 }}>마감</span>
+                      )}
+                    </RoomPrice>
+                  </RoomBody>
+                </RoomCard>
+              );
+            })
+          )}
         </RoomGrid>
       </Content>
     </Layout>

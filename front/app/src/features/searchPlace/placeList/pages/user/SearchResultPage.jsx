@@ -18,7 +18,7 @@ const TAB_TO_TYPE = { '워크앤스테이': 'WORK_STAY', '오피스': 'OFFICE', 
 function toSpaceCard(dto, likedMap = new Map()) {
   const likeNo = likedMap.get(dto.placeNo) ?? null;
   return {
-    id: dto.entityNo,
+    id: dto.placeNo, // entityNo 제거 후 placeNo를 카드 식별자로 사용
     placeNo: dto.placeNo,
     type: dto.type,
     title: dto.title,

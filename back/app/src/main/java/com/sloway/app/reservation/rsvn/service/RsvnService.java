@@ -350,7 +350,7 @@ public class RsvnService {
     }
 
     // 여러 예약의 완료결제 payNo 를 한 번에 조회 → Map<rsvnNo, payNo> (목록 조회 N+1 제거용)
-    private java.util.Map<Long, Long> findCompletePayNoMap(List<Long> rsvnNos) {
+    private Map<Long, Long> findCompletePayNoMap(List<Long> rsvnNos) {
         if (rsvnNos.isEmpty()) return java.util.Map.of();
         return payRepository.findByRsvnNoIn(rsvnNos).stream()
                 .filter(p -> p.getStatus() == PayStatus.COMPLETED)
