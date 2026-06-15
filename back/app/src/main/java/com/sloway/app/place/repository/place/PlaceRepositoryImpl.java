@@ -152,57 +152,61 @@ public class PlaceRepositoryImpl implements PlaceRepositoryCustom {
     public List<PlaceListRespDto> findPlaceListByMemberNo(Long memberNo) {
         QHostPlaceEntity subHp = new QHostPlaceEntity("subHp");
 
+        // 1. 최신 이력(status)을 구하기 위한 서브쿼리 정의
+        JPQLQuery<Long> latestHostPlaceNo = JPAExpressions
+                .select(subHp.no.max())
+                .from(subHp)
+                .where(subHp.placeEntity.eq(placeEntity));
+
         return queryFactory
                 .select(Projections.constructor(PlaceListRespDto.class,
                         placeEntity.no,
                         placeEntity.type,
-                        hostPlaceEntity.status.stringValue().max(),
+                        hostPlaceEntity.status.stringValue(),
                         placeEntity.title,
                         placeEntity.address,
                         placeSummary.avgScore.avg().coalesce(0.0),
                         placeSummary.rsvnCount.avg().intValue().coalesce(0),
                         placeSummary.rsvnCount.avg().intValue().coalesce(0),
-                        new CaseBuilder()
-                                .when(placeEntity.type.eq("WORK_STAY")).then(workStayEntity.monPrice.min())
-                                .when(placeEntity.type.eq("STATION")).then(stationEntity.monPrice.min())
-                                .when(placeEntity.type.eq("OFFICE")).then(
-                                        JPAExpressions.select(officePeriodEntity.price.min())
-                                                .from(officePeriodEntity)
-                                                .where(officePeriodEntity.officeEntity.eq(officeEntity))
-                                )
-                                .otherwise(0),
+                        getPriceExpression(), // 앞서 바꾼 numberTemplate 메서드
                         imgPlaceEntity.currentUrl.min()
                 ))
                 .from(placeEntity)
-                // 1. 최신 이력 조인 (서브쿼리 방식)
+                // 2. 조인 구조 최적화
                 .innerJoin(hostPlaceEntity).on(hostPlaceEntity.placeEntity.eq(placeEntity)
-                        .and(hostPlaceEntity.no.eq(
-                                JPAExpressions.select(subHp.no.max())
-                                        .from(subHp)
-                                        .where(subHp.placeEntity.eq(placeEntity))
-                        )))
-                // 2. 호스트 정보 조인
+                        .and(hostPlaceEntity.no.eq(latestHostPlaceNo)))
                 .innerJoin(hostEntity).on(hostPlaceEntity.hostEntity.eq(hostEntity))
-                // 3. 통계 및 기타 테이블 Left Join
                 .leftJoin(placeSummary).on(placeSummary.placeNo.eq(placeEntity.no)
                         .and(placeSummary.type.eq(placeEntity.type)))
-                .leftJoin(workStayEntity).on(workStayEntity.placeEntity.eq(placeEntity))
-                .leftJoin(officeEntity).on(officeEntity.placeEntity.eq(placeEntity))
-                .leftJoin(stationEntity).on(stationEntity.placeEntity.eq(placeEntity))
                 .leftJoin(imgPlaceEntity).on(imgPlaceEntity.placeEntity.eq(placeEntity).and(imgPlaceEntity.sort.eq(1)))
                 .where(
                         placeEntity.delYn.eq("N"),
                         hostEntity.memberNo.eq(memberNo)
                 )
+                // 3. GROUP BY 절에 hostPlaceEntity.no 추가
                 .groupBy(
                         placeEntity.no,
                         placeEntity.type,
+                        hostPlaceEntity.no,
+                        hostPlaceEntity.status,
                         placeEntity.title,
-                        placeEntity.address,
-                        officeEntity.no
+                        placeEntity.address
                 )
-                .orderBy(hostPlaceEntity.no.max().desc())
+                .orderBy(hostPlaceEntity.no.desc())
                 .fetch();
+    }
+
+    private NumberExpression<Integer> getPriceExpression() {
+        return Expressions.numberTemplate(Integer.class,
+                "CASE WHEN {0} = 'WORK_STAY' THEN ({1}) " +
+                        "     WHEN {0} = 'STATION' THEN ({2}) " +
+                        "     WHEN {0} = 'OFFICE' THEN ({3}) " +
+                        "     ELSE 0 END",
+                placeEntity.type, // {0}
+                JPAExpressions.select(workStayEntity.monPrice.min()).from(workStayEntity).where(workStayEntity.placeEntity.eq(placeEntity)), // {1}
+                JPAExpressions.select(stationEntity.monPrice.min()).from(stationEntity).where(stationEntity.placeEntity.eq(placeEntity)), // {2}
+                JPAExpressions.select(officePeriodEntity.price.min()).from(officePeriodEntity).join(officePeriodEntity.officeEntity, officeEntity).where(officeEntity.placeEntity.eq(placeEntity)) // {3}
+        );
     }
 
     @Override
