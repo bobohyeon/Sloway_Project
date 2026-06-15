@@ -6,13 +6,13 @@ import lombok.RequiredArgsConstructor;
 @Getter
 @RequiredArgsConstructor
 public enum RefundRate {
-    WEEK("일주일", 100),
-    FOURTOSIX("4~6일", 70),
-    TWOTOTHREE("2~3일", 50),
-    ONEDAY("1일", 30),
-    DDAY("당일", 0),
-    FULL("면제", 100);
+    WEEK(7, 100),
+    FOURTOSIX(4, 70),
+    TWOTOTHREE(2, 50),
+    ONEDAY(1, 30),
+    DDAY(0, 0),
+    FULL(null, 100);
 
-    private final String label;
+    private final Integer minday;
     private final Integer rate;
 }
