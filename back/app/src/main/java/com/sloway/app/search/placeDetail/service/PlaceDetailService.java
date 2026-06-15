@@ -46,6 +46,8 @@ public class PlaceDetailService {
                             "SELECT DISTINCT ws FROM WorkStayEntity ws LEFT JOIN FETCH ws.workExceptionPeriodEntities WHERE ws.placeEntity.no = :no", WorkStayEntity.class)
                     .setParameter("no", placeNo).getResultList();
             if (!wsList.isEmpty()) return wsList.stream().map(PlaceDetailResDto::from).toList();
+            // placeEntity.no로 못 찾은 경우 entity PK(targetNo)로 재시도
+            if (!tryAll) return findByTypeAndEntityNo("WORK_STAY", placeNo);
         }
 
         if (tryAll || "OFFICE".equals(normalized)) {
@@ -54,6 +56,7 @@ public class PlaceDetailService {
                             OfficeEntity.class)
                     .setParameter("no", placeNo).getResultList();
             if (!oList.isEmpty()) return oList.stream().map(PlaceDetailResDto::from).toList();
+            if (!tryAll) return findByTypeAndEntityNo("OFFICE", placeNo);
         }
 
         if (tryAll || "STATION".equals(normalized)) {
@@ -61,11 +64,52 @@ public class PlaceDetailService {
                             "SELECT DISTINCT s FROM StationEntity s LEFT JOIN FETCH s.stationExceptionPeriodEntities WHERE s.placeEntity.no = :no", StationEntity.class)
                     .setParameter("no", placeNo).getResultList();
             if (!stList.isEmpty()) return stList.stream().map(PlaceDetailResDto::from).toList();
+            if (!tryAll) return findByTypeAndEntityNo("STATION", placeNo);
         }
 
-        // placeEntity.no로 못 찾은 경우 — 입력값이 entity PK(targetNo)일 수 있음
-        // (메인페이지 TopSpaces는 targetNo를 URL로 넘기므로 entity PK로 재탐색)
+        // tryAll이면서 placeEntity.no로도 못 찾은 경우 — entity PK로 최종 탐색
         return findByDirectEntityNo(placeNo);
+    }
+
+    // type 알고 있지만 placeEntity.no로 못 찾은 경우 — entity PK로 재시도 후 같은 place 방 전체 반환
+    private List<PlaceDetailResDto> findByTypeAndEntityNo(String type, Long entityNo) {
+        if ("WORK_STAY".equals(type)) {
+            List<WorkStayEntity> list = em.createQuery(
+                    "SELECT DISTINCT ws FROM WorkStayEntity ws LEFT JOIN FETCH ws.workExceptionPeriodEntities WHERE ws.no = :no",
+                    WorkStayEntity.class).setParameter("no", entityNo).getResultList();
+            if (!list.isEmpty()) {
+                Long realPlaceNo = list.get(0).getPlaceEntity().getNo();
+                return em.createQuery(
+                        "SELECT DISTINCT ws FROM WorkStayEntity ws LEFT JOIN FETCH ws.workExceptionPeriodEntities WHERE ws.placeEntity.no = :no",
+                        WorkStayEntity.class).setParameter("no", realPlaceNo).getResultList()
+                        .stream().map(PlaceDetailResDto::from).toList();
+            }
+        }
+        if ("OFFICE".equals(type)) {
+            List<OfficeEntity> list = em.createQuery(
+                    "SELECT DISTINCT o FROM OfficeEntity o LEFT JOIN FETCH o.officePeriodEntities WHERE o.no = :no",
+                    OfficeEntity.class).setParameter("no", entityNo).getResultList();
+            if (!list.isEmpty()) {
+                Long realPlaceNo = list.get(0).getPlaceEntity().getNo();
+                return em.createQuery(
+                        "SELECT DISTINCT o FROM OfficeEntity o LEFT JOIN FETCH o.officePeriodEntities WHERE o.placeEntity.no = :no",
+                        OfficeEntity.class).setParameter("no", realPlaceNo).getResultList()
+                        .stream().map(PlaceDetailResDto::from).toList();
+            }
+        }
+        if ("STATION".equals(type)) {
+            List<StationEntity> list = em.createQuery(
+                    "SELECT DISTINCT s FROM StationEntity s LEFT JOIN FETCH s.stationExceptionPeriodEntities WHERE s.no = :no",
+                    StationEntity.class).setParameter("no", entityNo).getResultList();
+            if (!list.isEmpty()) {
+                Long realPlaceNo = list.get(0).getPlaceEntity().getNo();
+                return em.createQuery(
+                        "SELECT DISTINCT s FROM StationEntity s LEFT JOIN FETCH s.stationExceptionPeriodEntities WHERE s.placeEntity.no = :no",
+                        StationEntity.class).setParameter("no", realPlaceNo).getResultList()
+                        .stream().map(PlaceDetailResDto::from).toList();
+            }
+        }
+        throw new CustomException(RsvnErrorCode.PLACE_NOT_FOUND);
     }
 
     // entity PK(ws.no / o.no / s.no)로 직접 찾은 뒤 같은 place의 방 전체 반환
