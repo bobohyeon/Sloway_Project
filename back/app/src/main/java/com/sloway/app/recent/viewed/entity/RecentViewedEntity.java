@@ -11,7 +11,10 @@ import java.time.LocalDateTime;
 @AllArgsConstructor(access = AccessLevel.PRIVATE)
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @Builder
-@Table(name = "RECENT_PLACE")
+@Table(name = "RECENT_PLACE",
+        indexes = { @Index(name = "idx_recent_viewed_place_no", columnList = "place_no"),
+                    @Index(name = "idx_recent_viewed_user_no", columnList = "user_no")
+})
 @Entity
 public class RecentViewedEntity {
 

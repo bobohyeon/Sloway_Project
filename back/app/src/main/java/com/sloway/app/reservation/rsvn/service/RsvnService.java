@@ -430,6 +430,14 @@ public class RsvnService {
         complete.forEach(RsvnEntity::complete);
     }
 
+    //결제대기 스케줄러
+    @Transactional
+    public void cancelExpiredPending(){
+        List<RsvnEntity> pending = rsvnRepository.findByStatusAndCreatedAtBefore(RsvnStatus.P, LocalDateTime.now().minusMinutes(30));
+        pending.forEach(RsvnEntity::cancel);
+
+    }
+
 
     //이용불가 설정 날짜 조회
     private void checkBlackOut(OfficeEntity office,

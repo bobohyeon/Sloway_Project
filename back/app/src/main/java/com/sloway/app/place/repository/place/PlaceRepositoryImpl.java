@@ -305,7 +305,7 @@ public class PlaceRepositoryImpl implements PlaceRepositoryCustom {
                 .select(Projections.fields(PlaceCardDto.class,
                         placeSummary.placeNo.as("masterNo"),
                         placeSummary.targetNo.as("placeNo"),
-                        placeSummary.title,
+                        placeEntity.title,
                         placeSummary.type,
                         placeSummary.currentUrl.as("mainImageUrl"),
                         placeSummary.address,
@@ -316,6 +316,7 @@ public class PlaceRepositoryImpl implements PlaceRepositoryCustom {
                         placeSummary.status
                 ))
                 .from(placeSummary)
+                .leftJoin(placeEntity).on(placeSummary.placeNo.eq(placeEntity.no))
                 .where(placeSummary.status.eq("I"))
                 .orderBy(placeSummary.finalScore.desc())
                 .limit(4)

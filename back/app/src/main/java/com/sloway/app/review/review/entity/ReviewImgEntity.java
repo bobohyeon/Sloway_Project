@@ -7,7 +7,9 @@ import lombok.*;
 @AllArgsConstructor(access = AccessLevel.PRIVATE)
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @Builder
-@Table(name = "REVIEW_IMG")
+@Table(name = "REVIEW_IMG",
+        indexes = {@Index(name = "idx_review_img_review_no", columnList = "review_no")}
+)
 @Entity
 public class ReviewImgEntity {
 
