@@ -681,7 +681,7 @@ function MapPage() {
                 </div>
                 <button
                   onClick={() =>
-                    navigate(`/spaces/${selected.entityNo}/rooms`, {
+                    navigate(`/spaces/${selected.placeNo}/rooms`, {
                       state: { space: selected, checkIn, checkOut, guests },
                     })
                   }
