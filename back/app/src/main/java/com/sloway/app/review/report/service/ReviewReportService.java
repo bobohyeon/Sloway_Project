@@ -32,7 +32,7 @@ public class ReviewReportService {
     public void save(Long memberNo, ReviewReportReqDto dto) {
         // 신고 유형 필수값 방어
         if (dto.getReasonType() == null) {
-            throw new CustomException(ReviewErrorCode.EMPTY_CONTENT);
+            throw new CustomException(ReviewErrorCode.INVALID_REASON_TYPE);
         }
 
         MemberEntity member = memberRepository.findById(memberNo)

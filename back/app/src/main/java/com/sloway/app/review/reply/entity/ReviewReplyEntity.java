@@ -19,7 +19,7 @@ public class ReviewReplyEntity {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long no;
 
-    @JoinColumn(name = "review_no", nullable = false)
+    @JoinColumn(name = "review_no", nullable = false, unique = true)
     @ManyToOne(fetch = FetchType.LAZY)
     private ReviewEntity reviewNo;
 

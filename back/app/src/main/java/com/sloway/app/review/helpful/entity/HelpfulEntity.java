@@ -11,7 +11,11 @@ import java.time.LocalDateTime;
 @AllArgsConstructor(access = AccessLevel.PRIVATE)
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @Builder
-@Table(name = "HELPFUL")
+@Table(name = "HELPFUL",
+        uniqueConstraints = { @UniqueConstraint(columnNames = {"user_no", "review_no"}) },
+        indexes = { @Index(name = "idx_helpful_user_no", columnList = "user_no"),
+                    @Index(name = "idx_helpful_review_no", columnList = "review_no")
+})
 @Entity
 public class HelpfulEntity {
 

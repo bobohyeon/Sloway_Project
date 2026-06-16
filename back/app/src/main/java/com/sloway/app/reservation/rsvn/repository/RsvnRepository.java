@@ -36,6 +36,9 @@ public interface RsvnRepository extends JpaRepository<RsvnEntity, Long> {
     //이용완료 스케줄러
     List<RsvnEntity> findByStatusAndCheckOutBefore(RsvnStatus status, LocalDateTime dateTime);
 
+    //결제대기 스케줄러
+    List<RsvnEntity> findByStatusAndCreatedAtBefore(RsvnStatus status, LocalDateTime dateTime);
+
     // 어드민 — 상태별 페이징 조회
     Page<RsvnEntity> findByStatus(RsvnStatus status, Pageable pageable);
 
