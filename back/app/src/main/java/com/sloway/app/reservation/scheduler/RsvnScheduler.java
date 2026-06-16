@@ -17,4 +17,9 @@ public class RsvnScheduler {
     public void completeRsvns(){
         rsvnService.completeRsvns();
     }
+
+    @Scheduled(cron = "0 0 * * * *")
+    public void cancelExpiredPending(){
+        rsvnService.cancelExpiredPending();
+    }
 }

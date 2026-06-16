@@ -11,7 +11,11 @@ import java.time.LocalDateTime;
 @AllArgsConstructor(access = AccessLevel.PRIVATE)
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @Builder
-@Table(name = "REVIEW_REPORT")
+@Table(name = "REVIEW_REPORT",
+    indexes = { @Index(name = "idx_review_report_user_no", columnList = "user_no"),
+                @Index(name = "idx_review_report_review_no", columnList = "review_no")
+    }
+)
 @Entity
 public class ReviewReportEntity {
 

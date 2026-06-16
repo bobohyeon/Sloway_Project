@@ -16,6 +16,7 @@ public enum ReviewErrorCode implements ErrorCode {
     REVIEW_PERIOD_EXPIRED(HttpStatus.UNPROCESSABLE_CONTENT, "리뷰 작성 기간이 지났습니다."),
     HOST_NOT_FOUND(HttpStatus.NOT_FOUND,"소유주를 찾을 수 없습니다."),
 
+    INVALID_REASON_TYPE(HttpStatus.BAD_REQUEST, "신고유형을 선택 해 주세요."),
     ALREADY_REVIEWED(HttpStatus.BAD_REQUEST, "이미 리뷰를 작성한 예약입니다."),
     ALREADY_HELPFUL(HttpStatus.BAD_REQUEST, "이미 도움돼요를 눌렀습니다."),
     ALREADY_REPORT(HttpStatus.BAD_REQUEST, "이미 신고한 리뷰입니다."),

@@ -13,7 +13,12 @@ import java.time.LocalDateTime;
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @AllArgsConstructor(access = AccessLevel.PRIVATE)
 @Builder
-@Table(name = "RSVN")
+@Table(name = "RSVN",
+        indexes = { @Index(name = "idx_reservation_user_no", columnList = "user_no"),
+                    @Index(name = "idx_reservation_office_no", columnList = "office_no"),
+                    @Index(name = "idx_reservation_station_no", columnList = "station_no"),
+                    @Index(name = "idx_reservation_work_stay_no", columnList = "work_stay_no")
+})
 @Entity
 public class RsvnEntity {
 
