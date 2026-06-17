@@ -40,10 +40,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
-import java.util.Comparator;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
+import java.util.*;
 import java.util.stream.Collectors;
 
 
@@ -160,14 +157,16 @@ public class RsvnService {
         List<HostPlaceEntity> hostPlaces = hostPlaceRepository.findByHostEntityNo(host.getNo());
 
         // 2. 각 HostPlace에서 PlaceNo만 추출 (중복 제거를 위해 Set 또는 distinct 사용)
-        List<Long> placeNos = hostPlaces.stream()
-                .map(this::getPlaceNoFromHostPlace) // 별도 추출 메서드 활용
-                .filter(Objects::nonNull)
-                .distinct()
-                .toList();
+        Map<Long, HostPlaceEntity> distinctPlaceMap = hostPlaces.stream()
+                .filter(hp -> getPlaceNoFromHostPlace(hp) != null)
+                .collect(Collectors.toMap(
+                        this::getPlaceNoFromHostPlace,
+                        hp -> hp,
+                        (existing, replacement) -> existing
+                ));
 
         // 3. 이미지 정보 일괄 조회 (N+1 방지)
-        Map<Long, String> imageMap = imgPlaceRepository.findByPlaceEntity_NoInAndSort(placeNos, 1)
+        Map<Long, String> imageMap = imgPlaceRepository.findByPlaceEntity_NoInAndSort(new ArrayList<>(distinctPlaceMap.keySet()), 1)
                 .stream()
                 .collect(Collectors.toMap(
                         img -> img.getPlaceEntity().getNo(),
@@ -176,13 +175,13 @@ public class RsvnService {
                 ));
 
         // 4. DTO 매핑
-        return hostPlaces.stream()
-                .map(hp -> {
-                    Long pid = getPlaceNoFromHostPlace(hp);
-                    String imageUrl = imageMap.getOrDefault(pid, null); // 매칭되는 이미지가 없으면 null
+        return distinctPlaceMap.entrySet().stream()
+                .map(entry -> {
+                    Long pid = entry.getKey();
+                    HostPlaceEntity hp = entry.getValue();
+                    String imageUrl = imageMap.get(pid); // 매칭되는 이미지가 없으면 null
                     return HostSpaceResDto.from(hp, imageUrl);
                 })
-                .distinct() // 주의: HostSpaceResDto에 equals/hashCode 필요
                 .toList();
     }
 
