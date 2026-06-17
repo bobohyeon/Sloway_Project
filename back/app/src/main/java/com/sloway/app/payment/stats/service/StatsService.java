@@ -288,6 +288,33 @@ public class StatsService {
 
     }
 
+    // 어드민 대시보드 운영 알림 — 오늘 기준 신규 회원 / 결제 건 / 환불 건
+    public OperationAlertResDto findOperationAlerts() {
+        LocalDate today = LocalDate.now();
+        LocalDateTime start = today.atStartOfDay();
+        LocalDateTime end = today.atTime(23, 59, 59);
+
+        // 신규 회원 (stats가 이미 회원 테이블 집계 — 기존 메서드 재활용)
+        Long newMemberCount = statsRepositoryCustom.countMemberByCreatedAtBetween(start, end);
+
+        // 오늘 결제 건 — 결제수단별 집계의 count 합산 (COMPLETED+CANCELED = 성공 결제)
+        long payCount = payRepository.sumByMethodBetween(start, end).stream()
+                .mapToLong(t -> {
+                    Long c = t.get(1, Long.class);
+                    return c == null ? 0L : c;
+                })
+                .sum();
+
+        // 오늘 환불 건 — 환불 집계의 count 재활용
+        Tuple refundTuple = refundRepository.sumBetween(start, end);
+        Long refundCount = refundTuple.get(0, Long.class);
+
+        return OperationAlertResDto.of(
+                newMemberCount == null ? 0L : newMemberCount,
+                payCount,
+                refundCount == null ? 0L : refundCount);
+    }
+
     private List<MonthlyTrendResDto> buildTrend(YearMonth base, int months, ToLongBiFunction<LocalDateTime, LocalDateTime> valueFn) {
         List<MonthlyTrendResDto> trend = new ArrayList<>();
         for (int i = months - 1; i >= 0; i--) {

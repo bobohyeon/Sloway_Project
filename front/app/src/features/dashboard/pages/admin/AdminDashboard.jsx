@@ -10,6 +10,7 @@ import {
   FaFileInvoiceDollar,
   FaGift,
   FaMoneyBillWave,
+  FaUserPlus,
 } from 'react-icons/fa';
 
 import PageLayout from '../../../../app/layouts/page/PageLayout';
@@ -20,6 +21,7 @@ import {
   findStatsMonthlySales,
   findStatsPayMethods,
   findStatsRefund,
+  findOperationAlerts,
 } from '../../../stats/api/statsApi';
 import { getAnchorMonth } from '../../../stats/components/admin/statsRange';
 
@@ -80,6 +82,7 @@ export default function AdminDashboard() {
   const [summary, setSummary] = useState(null);
   const [methods, setMethods] = useState([]);
   const [refund, setRefund] = useState(null);
+  const [alerts, setAlerts] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
@@ -90,12 +93,14 @@ export default function AdminDashboard() {
       findStatsMonthlySales(year, month),
       findStatsPayMethods(year, month),
       findStatsRefund(year, month),
+      findOperationAlerts(),
     ])
-      .then(([s, m, r]) => {
+      .then(([s, m, r, a]) => {
         if (!alive) return;
         setSummary(s);
         setMethods(m ?? []);
         setRefund(r);
+        setAlerts(a);
         setError(null);
       })
       .catch((e) => {
@@ -191,12 +196,26 @@ export default function AdminDashboard() {
       </ChartBlock>
 
       <Section title="운영 알림">
-        <EmptyCard padded>
-          <EmptyState
-            title="운영 알림 통합 대기"
-            description="회원·공간·리뷰 도메인 API 합류 후 신규 가입·공간 승인·신고 영역이 노출됩니다."
+        <AlertGrid>
+          <StatCard
+            label="오늘 신규 회원가입"
+            value={Number(alerts?.newMemberCount ?? 0).toLocaleString()}
+            unit="명"
+            icon={<FaUserPlus />}
           />
-        </EmptyCard>
+          <StatCard
+            label="오늘 결제"
+            value={Number(alerts?.payCount ?? 0).toLocaleString()}
+            unit="건"
+            icon={<FaReceipt />}
+          />
+          <StatCard
+            label="오늘 환불"
+            value={Number(alerts?.refundCount ?? 0).toLocaleString()}
+            unit="건"
+            icon={<FaUndo />}
+          />
+        </AlertGrid>
       </Section>
 
       <Section title="빠른 액션">
@@ -285,6 +304,17 @@ const DetailLink = styled.button`
 
   &:hover {
     text-decoration: underline;
+  }
+`;
+
+const AlertGrid = styled.div`
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: var(--space-3);
+  margin-bottom: var(--space-6);
+
+  @media (max-width: 960px) {
+    grid-template-columns: 1fr;
   }
 `;
 
