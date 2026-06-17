@@ -32,6 +32,49 @@ function calcTotalWithExceptions(
   }
   return total;
 }
+// 오피스 전용 — checkIn~checkOut 구간을 슬롯별로 나눠 시간당 가격 합산
+const DAY_MAP = ['SUN', 'MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT'];
+function calcOfficeTotalFromSlots(checkIn, checkOut, basePrice, officePriceSlots) {
+  const ciDate = new Date(checkIn);
+  const coDate = new Date(checkOut);
+  const hours = Math.max(1, Math.ceil((coDate - ciDate) / (1000 * 60 * 60)));
+  if (!officePriceSlots?.length) return basePrice * hours;
+
+  const dateStr = checkIn.slice(0, 10);
+  const dayOfWeek = DAY_MAP[ciDate.getDay()];
+
+  // 예외기간 슬롯이 있으면 우선 적용, 없으면 평상시 슬롯
+  const exceptionSlots = officePriceSlots.filter(
+    (s) =>
+      s.exceptionStartDate &&
+      dateStr >= s.exceptionStartDate.slice(0, 10) &&
+      dateStr < s.exceptionEndDate.slice(0, 10) &&
+      s.dayOfWeek?.toUpperCase() === dayOfWeek
+  );
+  const baseSlots = officePriceSlots.filter(
+    (s) => !s.exceptionStartDate && s.dayOfWeek?.toUpperCase() === dayOfWeek
+  );
+  const applicable = exceptionSlots.length > 0 ? exceptionSlots : baseSlots;
+  if (!applicable.length) return basePrice * hours;
+
+  // startTime 시(hour) 오름차순 정렬 후 구간별 겹치는 시간 × 단가 합산
+  const sorted = [...applicable].sort(
+    (a, b) => new Date(a.startTime).getHours() - new Date(b.startTime).getHours()
+  );
+  const startHour = ciDate.getHours();
+  const endHour = coDate.getHours();
+  let total = 0;
+  for (let i = 0; i < sorted.length; i++) {
+    const slotStart = new Date(sorted[i].startTime).getHours();
+    const slotEnd =
+      i + 1 < sorted.length ? new Date(sorted[i + 1].startTime).getHours() : 24;
+    const from = Math.max(startHour, slotStart);
+    const to = Math.min(endHour, slotEnd);
+    if (to > from) total += (to - from) * sorted[i].price;
+  }
+  return total || basePrice * hours;
+}
+
 import dayjs from 'dayjs';
 import styled from 'styled-components';
 import { COLOR } from '../../../../rsvn/components/user/RsvnStyled';
@@ -63,18 +106,21 @@ function DetailRsvnBox({
   roomName = null,
   blackouts = [],
   exceptionPeriods = [],
+  officePriceSlots = [],
   chargeAdd = 0,
   baseCnt = 1,
+  maxCnt = 8,
 }) {
   const navigate = useNavigate();
 
-  // 오피스는 예외기간 계산 없이 단순 price × nights
   const grandTotal = useMemo(() => {
+    if (!checkIn || !checkOut) return price * nights;
     const baseCost =
-      type === 'office' || !checkIn || !checkOut || !exceptionPeriods.length
-        ? price * nights
-        : calcTotalWithExceptions(checkIn, checkOut, price, exceptionPeriods);
-    // 기본 인원 초과분에만 추가요금 적용
+      type === 'office'
+        ? calcOfficeTotalFromSlots(checkIn, checkOut, price, officePriceSlots)
+        : exceptionPeriods.length
+        ? calcTotalWithExceptions(checkIn, checkOut, price, exceptionPeriods)
+        : price * nights;
     const extraPeople = Math.max(0, guests - baseCnt);
     const addCost = extraPeople * (chargeAdd ?? 0) * nights;
     return baseCost + addCost;
@@ -85,18 +131,19 @@ function DetailRsvnBox({
     price,
     nights,
     exceptionPeriods,
+    officePriceSlots,
     chargeAdd,
     guests,
     baseCnt,
   ]);
 
   const hasException =
-    type !== 'office' &&
-    exceptionPeriods.length > 0 &&
     checkIn &&
     checkOut &&
-    calcTotalWithExceptions(checkIn, checkOut, price, exceptionPeriods) !==
-      price * nights;
+    (type === 'office'
+      ? officePriceSlots.length > 0
+      : exceptionPeriods.length > 0 &&
+        calcTotalWithExceptions(checkIn, checkOut, price, exceptionPeriods) !== price * nights);
 
   const hasExtra =
     checkIn && checkOut && (chargeAdd ?? 0) > 0 && guests > baseCnt;
@@ -116,10 +163,15 @@ function DetailRsvnBox({
   const coDate = checkOut ? checkOut.slice(0, 10) : '';
   const coHour = checkOut ? checkOut.slice(11, 13) : '10';
 
-  const handleOfficeCheckIn = (date, hour) =>
-    onCheckInChange?.(date + 'T' + hour + ':00');
-  const handleOfficeCheckOut = (date, hour) =>
-    onCheckOutChange?.(date + 'T' + hour + ':00');
+  // 날짜 변경 시 체크인·체크아웃 모두 같은 날짜로 동기화
+  const handleOfficeDate = (date) => {
+    onCheckInChange?.(date + 'T' + ciHour + ':00');
+    onCheckOutChange?.(date + 'T' + coHour + ':00');
+  };
+  const handleOfficeStartHour = (hour) =>
+    onCheckInChange?.((ciDate || dayjs().format('YYYY-MM-DD')) + 'T' + hour + ':00');
+  const handleOfficeEndHour = (hour) =>
+    onCheckOutChange?.((ciDate || dayjs().format('YYYY-MM-DD')) + 'T' + hour + ':00');
 
   async function handleRsvn() {
     try {
@@ -146,66 +198,65 @@ function DetailRsvnBox({
         {roomName && <RoomNameTag>{roomName}</RoomNameTag>}
       </PriceRow>
 
-      <InfoRow>
-        <InfoLabel>체크인</InfoLabel>
-        {type === 'office' ? (
-          <OfficeTimeRow>
+      {type === 'office' ? (
+        <>
+          <InfoRow>
+            <InfoLabel>날짜</InfoLabel>
             <DateInput
               type="date"
               value={ciDate}
               min={dayjs().format('YYYY-MM-DD')}
               $error={isBlocked}
-              onChange={(e) => handleOfficeCheckIn(e.target.value, ciHour)}
+              onChange={(e) => handleOfficeDate(e.target.value)}
             />
-            <HourSelect
-              value={ciHour}
-              onChange={(e) => handleOfficeCheckIn(ciDate || dayjs().format('YYYY-MM-DD'), e.target.value)}
-            >
-              {Array.from({ length: 24 }, (_, i) => String(i).padStart(2, '0')).map(h => (
-                <option key={h} value={h}>{h}시</option>
-              ))}
-            </HourSelect>
-          </OfficeTimeRow>
-        ) : (
-          <DateInput
-            type="date"
-            value={checkIn}
-            min={minDate}
-            $error={isBlocked}
-            onChange={(e) => onCheckInChange?.(e.target.value)}
-          />
-        )}
-      </InfoRow>
-      <InfoRow>
-        <InfoLabel>체크아웃</InfoLabel>
-        {type === 'office' ? (
-          <OfficeTimeRow>
+          </InfoRow>
+          <InfoRow>
+            <InfoLabel>시간</InfoLabel>
+            <OfficeTimeRow>
+              <HourSelect
+                value={ciHour}
+                onChange={(e) => handleOfficeStartHour(e.target.value)}
+              >
+                {Array.from({ length: 24 }, (_, i) => String(i).padStart(2, '0')).map(h => (
+                  <option key={h} value={h}>{h}시</option>
+                ))}
+              </HourSelect>
+              <span style={{ color: '#888', fontSize: 13 }}>~</span>
+              <HourSelect
+                value={coHour}
+                onChange={(e) => handleOfficeEndHour(e.target.value)}
+              >
+                {Array.from({ length: 24 }, (_, i) => String(i).padStart(2, '0')).map(h => (
+                  <option key={h} value={h}>{h}시</option>
+                ))}
+              </HourSelect>
+            </OfficeTimeRow>
+          </InfoRow>
+        </>
+      ) : (
+        <>
+          <InfoRow>
+            <InfoLabel>체크인</InfoLabel>
             <DateInput
               type="date"
-              value={coDate}
-              min={ciDate || dayjs().format('YYYY-MM-DD')}
+              value={checkIn}
+              min={minDate}
               $error={isBlocked}
-              onChange={(e) => handleOfficeCheckOut(e.target.value, coHour)}
+              onChange={(e) => onCheckInChange?.(e.target.value)}
             />
-            <HourSelect
-              value={coHour}
-              onChange={(e) => handleOfficeCheckOut(coDate || dayjs().format('YYYY-MM-DD'), e.target.value)}
-            >
-              {Array.from({ length: 24 }, (_, i) => String(i).padStart(2, '0')).map(h => (
-                <option key={h} value={h}>{h}시</option>
-              ))}
-            </HourSelect>
-          </OfficeTimeRow>
-        ) : (
-          <DateInput
-            type="date"
-            value={checkOut}
-            min={minCheckOut}
-            $error={isBlocked}
-            onChange={(e) => onCheckOutChange?.(e.target.value)}
-          />
-        )}
-      </InfoRow>
+          </InfoRow>
+          <InfoRow>
+            <InfoLabel>체크아웃</InfoLabel>
+            <DateInput
+              type="date"
+              value={checkOut}
+              min={minCheckOut}
+              $error={isBlocked}
+              onChange={(e) => onCheckOutChange?.(e.target.value)}
+            />
+          </InfoRow>
+        </>
+      )}
 
       {isBlocked && <ErrorMsg>이 기간은 이용 불가 기간입니다.</ErrorMsg>}
 
@@ -215,7 +266,7 @@ function DetailRsvnBox({
           value={guests}
           onChange={(e) => onGuestsChange?.(Number(e.target.value))}
         >
-          {[1, 2, 3, 4, 5, 6, 7, 8].map((n) => (
+          {Array.from({ length: maxCnt }, (_, i) => i + 1).map((n) => (
             <option key={n} value={n}>
               {n}명
             </option>
@@ -235,7 +286,7 @@ function DetailRsvnBox({
           <CalcRow>
             {hasException ? (
               <span style={{ color: '#888', fontSize: 12 }}>
-                날짜별 요금 적용
+                {type === 'office' ? '시간별 요금 적용' : '날짜별 요금 적용'}
               </span>
             ) : (
               <span>
@@ -244,17 +295,11 @@ function DetailRsvnBox({
               </span>
             )}
             <span>
-              {(type === 'office' ||
-              !checkIn ||
-              !checkOut ||
-              !exceptionPeriods.length
+              {(type === 'office' && checkIn && checkOut
+                ? calcOfficeTotalFromSlots(checkIn, checkOut, price, officePriceSlots)
+                : !checkIn || !checkOut || !exceptionPeriods.length
                 ? price * nights
-                : calcTotalWithExceptions(
-                    checkIn,
-                    checkOut,
-                    price,
-                    exceptionPeriods
-                  )
+                : calcTotalWithExceptions(checkIn, checkOut, price, exceptionPeriods)
               ).toLocaleString()}
               원
             </span>

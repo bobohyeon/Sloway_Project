@@ -87,7 +87,9 @@ function OfficeDetailPage() {
           onGuestsChange={setGuests}
           blackouts={blackouts}
           exceptionPeriods={space?.exceptionPeriods ?? []}
+          officePriceSlots={space?.officePriceSlots ?? []}
           baseCnt={space?.baseCnt ?? 1}
+          maxCnt={space?.maxCnt ?? 8}
           chargeAdd={space?.chargeAdd ?? 0}
           price={unitPrice}
           priceUnit="원/1시간"

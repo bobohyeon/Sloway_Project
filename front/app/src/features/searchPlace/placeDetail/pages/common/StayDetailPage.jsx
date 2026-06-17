@@ -21,9 +21,15 @@ function StayDetailPage() {
   const [blackouts, setBlackouts] = useState([]);
   const [error, setError] = useState(false);
 
-  const nights = checkIn && checkOut
-    ? Math.max(1, Math.ceil((new Date(checkOut) - new Date(checkIn)) / (1000 * 60 * 60 * 24)))
-    : 1;
+  const nights =
+    checkIn && checkOut
+      ? Math.max(
+          1,
+          Math.ceil(
+            (new Date(checkOut) - new Date(checkIn)) / (1000 * 60 * 60 * 24)
+          )
+        )
+      : 1;
 
   useEffect(() => {
     const load = async () => {
@@ -33,10 +39,18 @@ function StayDetailPage() {
           findReviewsByPlace(Number(id), 'STATION'),
           findBlackoutsByEntity(Number(id)),
         ]);
-        const avgScore = reviewData.length > 0
-          ? Math.round(reviewData.reduce((sum, r) => sum + (r.scoreTotal ?? 0), 0) / reviewData.length)
-          : 0;
-        setSpace({ ...spaceData, score: avgScore, reviewCount: reviewData.length });
+        const avgScore =
+          reviewData.length > 0
+            ? Math.round(
+                reviewData.reduce((sum, r) => sum + (r.scoreTotal ?? 0), 0) /
+                  reviewData.length
+              )
+            : 0;
+        setSpace({
+          ...spaceData,
+          score: avgScore,
+          reviewCount: reviewData.length,
+        });
         setReviews(reviewData);
         setBlackouts(blackoutData ?? []);
         saveRecentViewed(spaceData.placeNo).catch(() => {});
@@ -48,7 +62,12 @@ function StayDetailPage() {
     load();
   }, [id]);
 
-  if (error) return <div style={{ padding: 40, textAlign: 'center', color: '#888' }}>공간 정보를 불러오지 못했습니다. 잠시 후 다시 시도해주세요.</div>;
+  if (error)
+    return (
+      <div style={{ padding: 40, textAlign: 'center', color: '#888' }}>
+        공간 정보를 불러오지 못했습니다. 잠시 후 다시 시도해주세요.
+      </div>
+    );
   if (!space) return null;
 
   return (
@@ -68,16 +87,21 @@ function StayDetailPage() {
           blackouts={blackouts}
           exceptionPeriods={space?.exceptionPeriods ?? []}
           baseCnt={space?.baseCnt ?? 1}
+          maxCnt={space?.maxCnt ?? 8}
           chargeAdd={space?.chargeAdd ?? 0}
-          price={selectedRoom?.price ?? space?.basePrice ?? 220000}
+          price={selectedRoom?.price ?? space?.basePrice ?? 0}
           priceUnit="원/박"
           roomName={selectedRoom?.name ?? null}
           rsvnDto={{
             stationNo: space?.entityNo,
             count: guests,
             amt: (selectedRoom?.price ?? space?.basePrice ?? 0) * nights,
-            checkIn: checkIn ? new Date(checkIn).toISOString().slice(0, 19) : null,
-            checkOut: checkOut ? new Date(checkOut).toISOString().slice(0, 19) : null,
+            checkIn: checkIn
+              ? new Date(checkIn).toISOString().slice(0, 19)
+              : null,
+            checkOut: checkOut
+              ? new Date(checkOut).toISOString().slice(0, 19)
+              : null,
             special: null,
           }}
         />
