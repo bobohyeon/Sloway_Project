@@ -82,7 +82,10 @@ function OfficeDetailPage() {
           checkOut={checkOut}
           guests={guests}
           nights={hours}
-          onCheckInChange={setCheckIn}
+          onCheckInChange={(val) => {
+            setCheckIn(val);
+            if (checkOut && val >= checkOut) setCheckOut('');
+          }}
           onCheckOutChange={setCheckOut}
           onGuestsChange={setGuests}
           blackouts={blackouts}

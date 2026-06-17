@@ -331,8 +331,8 @@ function SearchResultPage() {
   const [sort, setSort] = useState('인기순');
   const [spaces, setSpaces] = useState([]);
   const [loading, setLoading] = useState(false);
-  const [checkIn, setCheckIn] = useState('');
-  const [checkOut, setCheckOut] = useState('');
+  const [checkIn, setCheckIn] = useState(state?.checkIn ?? '');
+  const [checkOut, setCheckOut] = useState(state?.checkOut ?? '');
 
   // 페이지 이동할 때 state 반영
   useEffect(() => {

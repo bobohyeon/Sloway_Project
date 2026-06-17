@@ -81,7 +81,10 @@ function WorkstayDetailPage() {
           checkOut={checkOut}
           guests={guests}
           nights={nights}
-          onCheckInChange={setCheckIn}
+          onCheckInChange={(val) => {
+            setCheckIn(val);
+            if (checkOut && val >= checkOut) setCheckOut('');
+          }}
           onCheckOutChange={setCheckOut}
           onGuestsChange={setGuests}
           blackouts={blackouts}
