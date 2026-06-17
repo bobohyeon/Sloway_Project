@@ -9,9 +9,10 @@ export function rangeLabel(months) {
   return months === 1 ? '이번 달' : `최근 ${months}개월`;
 }
 
-// 통계 기준 시점 — 시드 더미(2025-06~2026-05)에 맞춘 고정 앵커. PC 시계와 무관.
-// 운영 전환 시 이 한 줄만 `const DEMO_NOW = new Date();` 로 바꾸면 됨.
-const DEMO_NOW = new Date(2026, 5, 5); // 2026-06-05 (month는 0-base라 5=6월)
+// 통계 기준 시점 — 실제 오늘(PC 시계) 기준. 달이 바뀌면 "이번 달"도 자동으로 따라감.
+// ※ 옛 시드 데이터(2025-06~2026-05)는 현재 달이 그 범위를 벗어나면 "이번 달" 뷰에서 안 보임
+//   → 포폴/운영 시 시드를 현재 기준으로 재적재 필요.
+const DEMO_NOW = new Date();
 
 // 통계 기준 시점 — 진행 중인 "이번 달(당월)" {year, month(1-base)} 반환
 export function getAnchorMonth() {
