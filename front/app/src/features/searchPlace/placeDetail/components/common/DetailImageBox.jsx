@@ -4,12 +4,13 @@ import { COLOR } from '../../../../rsvn/components/user/RsvnStyled';
 
 const Grid = styled.div`
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: 6fr 3.5fr 0.5fr;
   gap: 8px;
   border-radius: 16px;
   overflow: hidden;
+  width: 100%;
+  max-width: 1200px;
   height: 420px;
-  cursor: pointer;
   @media (max-width: 768px) {
     height: 260px;
   }
@@ -17,11 +18,9 @@ const Grid = styled.div`
 
 const MainImg = styled.div`
   background: ${COLOR.cream};
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 80px;
+  position: relative;
   overflow: hidden;
+  cursor: pointer;
   transition: opacity 0.2s;
   &:hover {
     opacity: 0.9;
@@ -30,36 +29,52 @@ const MainImg = styled.div`
 
 const SubGrid = styled.div`
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: 1fr;
   grid-template-rows: 1fr 1fr;
   gap: 8px;
 `;
 
 const SubImg = styled.div`
   background: ${({ $shade }) => $shade || COLOR.cream};
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 32px;
-  overflow: hidden;
   position: relative;
+  overflow: hidden;
+  cursor: pointer;
   transition: opacity 0.2s;
   &:hover {
     opacity: 0.9;
   }
 `;
 
-const MoreOverlay = styled.div`
-  position: absolute;
-  inset: 0;
-  background: rgba(0, 0, 0, 0.38);
+
+const NavPanel = styled.div`
+  background: ${COLOR.cream};
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+`;
+
+const NavBtn = styled.button`
+  background: rgba(40, 40, 40, 0.72);
+  border: 1.5px solid rgba(0, 0, 0, 0.45);
+  border-radius: 50%;
+  width: 28px;
+  height: 28px;
+  font-size: 18px;
+  color: #fff;
+  cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
-  color: #fff;
-  font-size: 18px;
-  font-weight: 700;
-  cursor: pointer;
+  transition: background 0.15s;
+  &:hover:not(:disabled) {
+    background: rgba(20, 20, 20, 0.88);
+  }
+  &:disabled {
+    opacity: 0.25;
+    cursor: default;
+  }
 `;
 
 const Overlay = styled.div`
@@ -112,7 +127,6 @@ const ModalBody = styled.div`
   gap: 12px;
   overflow-y: auto;
   max-height: 100vh;
-
   &::-webkit-scrollbar {
     width: 4px;
   }
@@ -127,10 +141,7 @@ const ModalImg = styled.div`
   height: 300px;
   border-radius: 12px;
   background: ${({ $shade }) => $shade || COLOR.cream};
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 72px;
+  position: relative;
   overflow: hidden;
 `;
 
@@ -141,63 +152,86 @@ const ModalImgLabel = styled.div`
   align-self: flex-start;
 `;
 
-const DUMMY_IMGS = [
-  { emoji: '🌿', shade: '#E8DFD0', label: '외관' },
-  { emoji: '🚗', shade: '#D8E0D0', label: '주차장' },
-  { emoji: '🖼️', shade: '#E0E8D8', label: '거실' },
-  { emoji: '🛏', shade: '#D0D8E0', label: '침실 1' },
-  { emoji: '🛁', shade: '#E8E0D8', label: '욕실' },
-  { emoji: '🍳', shade: '#D8E8E0', label: '주방' },
-  { emoji: '💻', shade: '#E0D8E8', label: '업무 공간' },
-  { emoji: '🌅', shade: '#E8D8D0', label: '테라스 뷰' },
-  { emoji: '🪴', shade: '#D8E0D8', label: '정원' },
-  { emoji: '🌙', shade: '#D0D0E8', label: '야경' },
+const SHADES = [
+  '#E8DFD0',
+  '#D8E0D0',
+  '#E0E8D8',
+  '#D0D8E0',
+  '#E8E0D8',
+  '#D8E8E0',
+  '#E0D8E8',
+  '#E8D8D0',
+  '#D8E0D8',
+  '#D0D0E8',
 ];
 
-const IMG_STYLE = { width: '100%', height: '100%', objectFit: 'cover' };
+const IMG_STYLE = {
+  position: 'absolute',
+  inset: 0,
+  width: '100%',
+  height: '100%',
+  objectFit: 'cover',
+};
 
 function DetailImageBox({ icon = '🌴', images = [] }) {
   const [open, setOpen] = useState(false);
+  const [currentIdx, setCurrentIdx] = useState(0);
   const hasImages = images.length > 0;
+  const maxIdx = hasImages ? images.length - 1 : 0;
+
+  const prev = (e) => {
+    e.stopPropagation();
+    setCurrentIdx((i) => Math.max(i - 1, 0));
+  };
+  const next = (e) => {
+    e.stopPropagation();
+    setCurrentIdx((i) => Math.min(i + 1, maxIdx));
+  };
+
+  const getImg = (offset) => (hasImages ? images[currentIdx + offset] : null);
+  const shade = (offset) => SHADES[(currentIdx + offset) % SHADES.length];
 
   return (
     <>
-      <Grid onClick={() => setOpen(true)}>
-        {/* 대표 이미지 */}
-        <MainImg>
-          {hasImages
-            ? <img src={images[0]} alt="대표" style={IMG_STYLE} />
-            : icon
-          }
+      <Grid>
+        {/* 6fr: 메인 이미지 */}
+        <MainImg onClick={() => setOpen(true)}>
+          {getImg(0) ? (
+            <img src={getImg(0)} alt="대표" style={IMG_STYLE} />
+          ) : (
+            icon
+          )}
         </MainImg>
 
-        {/* 서브 이미지 2×2 */}
+        {/* 3.5fr: 서브 이미지 2장 (위/아래) */}
         <SubGrid>
-          {[1, 2, 3].map((idx) => (
-            <SubImg key={idx} $shade={DUMMY_IMGS[idx - 1].shade}>
-              {hasImages && images[idx]
-                ? <img src={images[idx]} alt="" style={IMG_STYLE} />
-                : DUMMY_IMGS[idx - 1].emoji
-              }
-            </SubImg>
-          ))}
-          <SubImg $shade={DUMMY_IMGS[3].shade}>
-            {hasImages && images[4]
-              ? <img src={images[4]} alt="" style={IMG_STYLE} />
-              : DUMMY_IMGS[3].emoji
-            }
-            <MoreOverlay>
-              +{hasImages ? Math.max(0, images.length - 4) : DUMMY_IMGS.length - 4}장 더보기
-            </MoreOverlay>
+          <SubImg $shade={shade(1)} onClick={() => setOpen(true)}>
+            {getImg(1) && <img src={getImg(1)} alt="" style={IMG_STYLE} />}
+          </SubImg>
+          <SubImg $shade={shade(2)} onClick={() => setOpen(true)}>
+            {getImg(2) && <img src={getImg(2)} alt="" style={IMG_STYLE} />}
           </SubImg>
         </SubGrid>
+
+        {/* 0.5fr: 이전/다음 네비게이션 */}
+        <NavPanel>
+          <NavBtn onClick={prev} disabled={currentIdx === 0}>
+            ‹
+          </NavBtn>
+          <span style={{ fontSize: 10, color: COLOR.gray400 || '#999' }}>
+            {currentIdx + 1}/{hasImages ? images.length : 1}
+          </span>
+          <NavBtn onClick={next} disabled={currentIdx >= maxIdx}>
+            ›
+          </NavBtn>
+        </NavPanel>
       </Grid>
 
       {open && (
         <Overlay onClick={() => setOpen(false)}>
           <ModalHeader>
             <span style={{ fontWeight: 600, fontSize: 15 }}>
-              사진 {hasImages ? images.length : DUMMY_IMGS.length + 1}장
+              사진 {hasImages ? images.length : 0}장
             </span>
             <CloseBtn onClick={() => setOpen(false)}>✕</CloseBtn>
           </ModalHeader>
@@ -205,23 +239,14 @@ function DetailImageBox({ icon = '🌴', images = [] }) {
             {hasImages ? (
               images.map((url, i) => (
                 <div key={i} style={{ width: '100%' }}>
-                  <ModalImg $shade={COLOR.cream}>
+                  <ModalImg $shade={SHADES[i % SHADES.length]}>
                     <img src={url} alt="" style={IMG_STYLE} />
                   </ModalImg>
                   <ModalImgLabel>사진 {i + 1}</ModalImgLabel>
                 </div>
               ))
             ) : (
-              <>
-                <ModalImg $shade={COLOR.cream}>{icon}</ModalImg>
-                <ModalImgLabel>대표 사진</ModalImgLabel>
-                {DUMMY_IMGS.map((img, i) => (
-                  <div key={i} style={{ width: '100%' }}>
-                    <ModalImg $shade={img.shade}>{img.emoji}</ModalImg>
-                    <ModalImgLabel>{img.label}</ModalImgLabel>
-                  </div>
-                ))}
-              </>
+              <ModalImg $shade={COLOR.cream}>{icon}</ModalImg>
             )}
           </ModalBody>
         </Overlay>
