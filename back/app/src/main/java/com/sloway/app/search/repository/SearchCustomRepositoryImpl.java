@@ -197,7 +197,7 @@ public class SearchCustomRepositoryImpl implements SearchCustomRepository{
         return avg;
     }
 
-    //잔여 객실/좌석 수
+    //잔여 객실/좌석 수 — place에 동일 타입 엔티티가 여러 개일 수 있으므로 .min()으로 집계
     private NumberTemplate<Integer> remainCountExpr(LocalDate checkIn, LocalDate checkOut){
         NumberTemplate<Integer> remainCount =
                 Expressions.numberTemplate(Integer.class,
@@ -210,12 +210,10 @@ public class SearchCustomRepositoryImpl implements SearchCustomRepository{
                                         .where(
                                                 rsvnSub.officeNo.eq(o),
                                                 rsvnSub.status.eq(RsvnStatus.S),
-                                                // 예약종료 < 검색시작일(체크인) , 어차피 하루에 한팀이니까 시간 신경x 날짜만 신경
                                                 rsvnSub.checkIn.lt(checkOut.plusDays(1).atStartOfDay()),
-                                                // 예약시작 > 검색종료일(체크아웃)
                                                 rsvnSub.checkOut.gt(checkIn.atStartOfDay())
                                         )
-                        ))
+                        ).min())
                         .from(o)
                         .where(o.placeEntity.eq(p))
                         ,
@@ -230,7 +228,7 @@ public class SearchCustomRepositoryImpl implements SearchCustomRepository{
                                                 rsvnSub.checkIn.lt(checkOut.plusDays(1).atStartOfDay()),
                                                 rsvnSub.checkOut.gt(checkIn.atStartOfDay())
                                         )
-                        ))
+                        ).min())
                         .from(ws)
                         .where(ws.placeEntity.eq(p))
                         ,
@@ -245,7 +243,7 @@ public class SearchCustomRepositoryImpl implements SearchCustomRepository{
                                                 rsvnSub.checkIn.lt(checkOut.plusDays(1).atStartOfDay()),
                                                 rsvnSub.checkOut.gt(checkIn.atStartOfDay())
                                         )
-                        ))
+                        ).min())
                         .from(st)
                         .where(st.placeEntity.eq(p))
                 );

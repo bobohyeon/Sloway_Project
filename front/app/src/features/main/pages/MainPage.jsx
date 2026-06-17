@@ -69,7 +69,7 @@ const SearchBox = styled.div`
   box-shadow: 0 4px 24px rgba(0, 0, 0, 0.1);
   overflow: hidden;
   width: 100%;
-  max-width: 680px;
+  max-width: 960px;
 `;
 
 const SearchField = styled.div`
@@ -253,8 +253,8 @@ const TypeTag = styled.span`
 `;
 
 function MainPage() {
-  const [location, setLocation] = useState('');
-  const [date, setDate] = useState('');
+  const [checkIn, setCheckIn] = useState('');
+  const [checkOut, setCheckOut] = useState('');
   const [guests, setGuests] = useState(1);
   const [spaceType, setSpaceType] = useState('전체');
   const [region, setRegion] = useState('전체');
@@ -284,7 +284,7 @@ function MainPage() {
   // 메인 검색 버튼
   const handleSearch = () => {
     navigate('/spaces/search', {
-      state: { type: spaceType, region, guests },
+      state: { type: spaceType, region, guests, checkIn, checkOut },
     });
   };
 
@@ -339,6 +339,49 @@ function MainPage() {
                 </option>
               ))}
             </select>
+          </SearchField>
+          {/* 체크인 */}
+          <SearchField as="div" style={{ padding: '14px 20px', flex: 1 }}>
+            <SearchLabel>체크인</SearchLabel>
+            <input
+              type="date"
+              value={checkIn}
+              min={new Date().toISOString().slice(0, 10)}
+              onChange={(e) => {
+                setCheckIn(e.target.value);
+                if (checkOut && e.target.value >= checkOut) setCheckOut('');
+              }}
+              style={{
+                border: 'none',
+                background: 'transparent',
+                fontSize: 14,
+                outline: 'none',
+                fontFamily: 'inherit',
+                color: checkIn ? '#1A1A1A' : '#aaa',
+                cursor: 'pointer',
+                width: '100%',
+              }}
+            />
+          </SearchField>
+          {/* 체크아웃 */}
+          <SearchField as="div" style={{ padding: '14px 20px', flex: 1 }}>
+            <SearchLabel>체크아웃</SearchLabel>
+            <input
+              type="date"
+              value={checkOut}
+              min={checkIn || new Date().toISOString().slice(0, 10)}
+              onChange={(e) => setCheckOut(e.target.value)}
+              style={{
+                border: 'none',
+                background: 'transparent',
+                fontSize: 14,
+                outline: 'none',
+                fontFamily: 'inherit',
+                color: checkOut ? '#1A1A1A' : '#aaa',
+                cursor: 'pointer',
+                width: '100%',
+              }}
+            />
           </SearchField>
           {/* 공간 유형 */}
           <SearchField style={{ flex: 1 }}>
