@@ -4,10 +4,7 @@ import com.sloway.app.common.exception.CustomException;
 import com.sloway.app.member.entity.MemberEntity;
 import com.sloway.app.member.repository.MemberRepository;
 import com.sloway.app.place.entity.place.PlaceEntity;
-import com.sloway.app.place.repository.office.OfficeRepository;
 import com.sloway.app.place.repository.place.PlaceRepository;
-import com.sloway.app.place.repository.station.StationRepository;
-import com.sloway.app.place.repository.workStay.WorkStayRepository;
 import com.sloway.app.recent.viewed.dto.response.RecentViewedResDto;
 import com.sloway.app.recent.viewed.entity.RecentViewedEntity;
 import com.sloway.app.recent.viewed.repository.RecentViewedRepository;
@@ -28,9 +25,6 @@ public class RecentViewedService {
     private final RecentViewedRepository recentViewedRepository;
     private final MemberRepository memberRepository;
     private final PlaceRepository placeRepository;
-    private final OfficeRepository officeRepository;
-    private final WorkStayRepository workStayRepository;
-    private final StationRepository stationRepository;
 
     @Transactional
     public void save(Long memberNo, Long placeNo){

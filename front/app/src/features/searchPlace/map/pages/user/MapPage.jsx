@@ -4,6 +4,11 @@ import styled from 'styled-components';
 import MainHeader from '../../../../main/layouts/MainHeader';
 import { COLOR } from '../../../../rsvn/components/user/RsvnStyled';
 import { searchSpaces } from '../../../api/searchApi';
+import {
+  addLikePlace,
+  deleteLikePlace,
+  fetchLikePlaceList,
+} from '../../../../wishList/api/wishListApi';
 
 // SearchResultPage와 동일한 상수
 const TYPE_TABS = ['전체', '워크앤스테이', '오피스', '숙소'];
@@ -370,6 +375,8 @@ function MapPage() {
   const [selected, setSelected] = useState(null);
   const [panelOpen, setPanelOpen] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [liked, setLiked] = useState(false);
+  const [likeNo, setLikeNo] = useState(null);
 
   // 카카오맵 초기화 (마운트 1회)
   useEffect(() => {
@@ -471,6 +478,38 @@ function MapPage() {
 
     if (hasBounds) map.setBounds(bounds);
   }, [spaces]);
+
+  // selected 바뀔 때 찜 상태 초기화
+  useEffect(() => {
+    setLiked(false);
+    setLikeNo(null);
+  }, [selected?.placeNo]);
+
+  const handleWish = async (e) => {
+    e.stopPropagation();
+    if (!localStorage.getItem('accessToken')) {
+      alert('로그인 후 이용해주세요.');
+      return;
+    }
+    const prevLiked = liked;
+    const prevLikeNo = likeNo;
+    try {
+      if (liked) {
+        setLiked(false);
+        setLikeNo(null);
+        await deleteLikePlace(likeNo);
+      } else {
+        setLiked(true);
+        await addLikePlace(selected.placeNo);
+        const listRes = await fetchLikePlaceList();
+        const found = (listRes.data ?? []).find(l => l.placeNo === selected.placeNo);
+        setLikeNo(found?.no ?? null);
+      }
+    } catch {
+      setLiked(prevLiked);
+      setLikeNo(prevLikeNo);
+    }
+  };
 
   const toggleAmenity = (a) =>
     setAmenities((prev) =>
@@ -740,10 +779,23 @@ function MapPage() {
 
             {selected && (
               <PanelInner>
-                <div style={{ marginBottom: 6 }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
                   <TypeTag>
                     {TYPE_LABEL[selected.type] ?? selected.type}
                   </TypeTag>
+                  <button
+                    onClick={handleWish}
+                    style={{
+                      width: 32, height: 32, borderRadius: '50%',
+                      background: '#fff', border: '1px solid #e8dfd0',
+                      display: 'flex', alignItems: 'center', justifyContent: 'center',
+                      fontSize: 15, cursor: 'pointer',
+                      color: liked ? '#e74c3c' : '#999',
+                      boxShadow: '0 2px 6px rgba(0,0,0,.1)',
+                    }}
+                  >
+                    {liked ? '♥' : '♡'}
+                  </button>
                 </div>
                 <div
                   style={{
