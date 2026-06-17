@@ -106,10 +106,20 @@ function DetailRsvnBox({
     [checkIn, checkOut, blackouts]
   );
 
-  const inputType = type === 'office' ? 'datetime-local' : 'date';
   const minDate = type === 'office' ? undefined : dayjs().format('YYYY-MM-DD');
   const minCheckOut =
     type === 'office' ? undefined : checkIn || dayjs().format('YYYY-MM-DD');
+
+  // 오피스 체크인/체크아웃 날짜·시간 파싱 헬퍼
+  const ciDate = checkIn ? checkIn.slice(0, 10) : '';
+  const ciHour = checkIn ? checkIn.slice(11, 13) : '09';
+  const coDate = checkOut ? checkOut.slice(0, 10) : '';
+  const coHour = checkOut ? checkOut.slice(11, 13) : '10';
+
+  const handleOfficeCheckIn = (date, hour) =>
+    onCheckInChange?.(date + 'T' + hour + ':00');
+  const handleOfficeCheckOut = (date, hour) =>
+    onCheckOutChange?.(date + 'T' + hour + ':00');
 
   async function handleRsvn() {
     try {
@@ -138,29 +148,63 @@ function DetailRsvnBox({
 
       <InfoRow>
         <InfoLabel>체크인</InfoLabel>
-        <DateInput
-          type={inputType}
-          value={checkIn}
-          min={minDate}
-          $error={isBlocked}
-          step={type === 'office' ? 3600 : undefined}
-          onChange={(e) =>
-            onCheckInChange?.(e.target.value.slice(0, 13) + ':00')
-          }
-        />
+        {type === 'office' ? (
+          <OfficeTimeRow>
+            <DateInput
+              type="date"
+              value={ciDate}
+              min={dayjs().format('YYYY-MM-DD')}
+              $error={isBlocked}
+              onChange={(e) => handleOfficeCheckIn(e.target.value, ciHour)}
+            />
+            <HourSelect
+              value={ciHour}
+              onChange={(e) => handleOfficeCheckIn(ciDate || dayjs().format('YYYY-MM-DD'), e.target.value)}
+            >
+              {Array.from({ length: 24 }, (_, i) => String(i).padStart(2, '0')).map(h => (
+                <option key={h} value={h}>{h}시</option>
+              ))}
+            </HourSelect>
+          </OfficeTimeRow>
+        ) : (
+          <DateInput
+            type="date"
+            value={checkIn}
+            min={minDate}
+            $error={isBlocked}
+            onChange={(e) => onCheckInChange?.(e.target.value)}
+          />
+        )}
       </InfoRow>
       <InfoRow>
         <InfoLabel>체크아웃</InfoLabel>
-        <DateInput
-          type={inputType}
-          value={checkOut}
-          min={minCheckOut}
-          $error={isBlocked}
-          step={type === 'office' ? 3600 : undefined}
-          onChange={(e) =>
-            onCheckOutChange?.(e.target.value.slice(0, 13) + ':00')
-          }
-        />
+        {type === 'office' ? (
+          <OfficeTimeRow>
+            <DateInput
+              type="date"
+              value={coDate}
+              min={ciDate || dayjs().format('YYYY-MM-DD')}
+              $error={isBlocked}
+              onChange={(e) => handleOfficeCheckOut(e.target.value, coHour)}
+            />
+            <HourSelect
+              value={coHour}
+              onChange={(e) => handleOfficeCheckOut(coDate || dayjs().format('YYYY-MM-DD'), e.target.value)}
+            >
+              {Array.from({ length: 24 }, (_, i) => String(i).padStart(2, '0')).map(h => (
+                <option key={h} value={h}>{h}시</option>
+              ))}
+            </HourSelect>
+          </OfficeTimeRow>
+        ) : (
+          <DateInput
+            type="date"
+            value={checkOut}
+            min={minCheckOut}
+            $error={isBlocked}
+            onChange={(e) => onCheckOutChange?.(e.target.value)}
+          />
+        )}
       </InfoRow>
 
       {isBlocked && <ErrorMsg>이 기간은 이용 불가 기간입니다.</ErrorMsg>}
@@ -282,6 +326,23 @@ const InfoRow = styled.div`
 
 const InfoLabel = styled.span`
   color: #666;
+`;
+
+const OfficeTimeRow = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 8px;
+`;
+
+const HourSelect = styled.select`
+  border: none;
+  border-bottom: 1.5px solid #e8dfd0;
+  font-size: 14px;
+  font-weight: 600;
+  color: #2c2c2a;
+  background: transparent;
+  cursor: pointer;
+  &:focus { outline: none; border-bottom-color: #2d6a4f; }
 `;
 const InfoValue = styled.span`
   font-weight: 600;
