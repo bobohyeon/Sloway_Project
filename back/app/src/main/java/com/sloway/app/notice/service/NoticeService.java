@@ -57,8 +57,8 @@ public class NoticeService {
         NotificationEntity notification = notificationRepository.findByTargetNoAndReadIsNull(id, memberNo, "NOTICE");
         if (notification != null) {
             notification.markRead();
+            notificationRepository.save(notification);
         }
-        notificationRepository.save(notification);
         return NoticeDetailResDto.from(noticeEntity);
     }
 
