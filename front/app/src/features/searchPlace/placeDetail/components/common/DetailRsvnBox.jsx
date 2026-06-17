@@ -143,6 +143,7 @@ function DetailRsvnBox({
           value={checkIn}
           min={minDate}
           $error={isBlocked}
+          step={type === 'office' ? 3600 : undefined}
           onChange={(e) => onCheckInChange?.(e.target.value)}
         />
       </InfoRow>
@@ -153,6 +154,7 @@ function DetailRsvnBox({
           value={checkOut}
           min={minCheckOut}
           $error={isBlocked}
+          step={type === 'office' ? 3600 : undefined}
           onChange={(e) => onCheckOutChange?.(e.target.value)}
         />
       </InfoRow>
