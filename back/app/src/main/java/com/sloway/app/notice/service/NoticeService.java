@@ -55,7 +55,9 @@ public class NoticeService {
 
         log.info("[공지사항 상세 조회] id={}, viewCount={}", id, noticeEntity.getViewCount());
         NotificationEntity notification = notificationRepository.findByTargetNoAndReadIsNull(id, memberNo, "NOTICE");
-        notification.markRead();
+        if (notification != null) {
+            notification.markRead();
+        }
         notificationRepository.save(notification);
         return NoticeDetailResDto.from(noticeEntity);
     }
