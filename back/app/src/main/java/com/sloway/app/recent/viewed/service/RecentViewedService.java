@@ -72,14 +72,7 @@ public class RecentViewedService {
 
     // PlaceEntity → 해당 타입 엔티티의 PK(entityNo) 조회
     private Long resolveEntityNo(PlaceEntity place) {
-        return switch (place.getType()) {
-            case "WORK_STAY" -> workStayRepository.findByPlaceNo(place.getNo())
-                    .map(w -> w.getNo()).orElse(null);
-            case "OFFICE"    -> officeRepository.findByPlaceNo(place.getNo())
-                    .map(o -> o.getNo()).orElse(null);
-            default          -> stationRepository.findByPlaceNo(place.getNo())
-                    .map(s -> s.getNo()).orElse(null);
-        };
+        return place.getNo();
     }
 
     //단건 삭제
