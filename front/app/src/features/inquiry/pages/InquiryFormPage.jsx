@@ -94,7 +94,7 @@ export default function InquiryFormPage({ isEdit = false }) {
 
   if (isEdit && !isEditable) {
     return (
-      <PageLayout title="문의사항 수정">
+      <PageLayout title="문의사항 수정" maxWidth={900}>
         <BlockedCard padded elevated>
           <BlockedIcon aria-hidden="true">🔒</BlockedIcon>
           <BlockedTitle>수정할 수 없는 문의입니다</BlockedTitle>
@@ -119,6 +119,7 @@ export default function InquiryFormPage({ isEdit = false }) {
           ? '문의 내용을 수정합니다. 답변 대기 중일 때만 수정 가능합니다.'
           : '궁금하신 점을 남겨주시면 빠르게 답변 드리겠습니다.'
       }
+      maxWidth={900}
     >
       {!isEdit && (
         <NoticeBanner>

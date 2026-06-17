@@ -104,6 +104,7 @@ export default function FaqManagePage() {
     <PageLayout
       title="FAQ 관리"
       description="자주 묻는 질문을 등록하고 관리합니다"
+      maxWidth={900}
       actions={
         <Button onClick={() => navigate('/admin/faq/form')}>+ FAQ 등록</Button>
       }

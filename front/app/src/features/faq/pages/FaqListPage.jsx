@@ -86,6 +86,7 @@ export default function FaqListPage() {
     <PageLayout
       title="자주 묻는 질문"
       description="궁금한 점을 빠르게 해결해 드립니다."
+      maxWidth={900}
     >
       {/* 검색 바 */}
       <SearchBar>
