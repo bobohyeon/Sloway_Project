@@ -54,7 +54,6 @@ function WorkstayDetailPage() {
         setReviews(reviewData);
         setBlackouts(blackoutData ?? []);
         saveRecentViewed(spaceData.placeNo).catch(() => {});
-        console.log(space);
       } catch (e) {
         console.error('데이터 조회 실패', e);
         setError(true);
@@ -82,14 +81,18 @@ function WorkstayDetailPage() {
           checkOut={checkOut}
           guests={guests}
           nights={nights}
-          onCheckInChange={setCheckIn}
+          onCheckInChange={(val) => {
+            setCheckIn(val);
+            if (checkOut && val >= checkOut) setCheckOut('');
+          }}
           onCheckOutChange={setCheckOut}
           onGuestsChange={setGuests}
           blackouts={blackouts}
           exceptionPeriods={space?.exceptionPeriods ?? []}
           baseCnt={space?.baseCnt ?? 1}
+          maxCnt={space?.maxCnt ?? 8}
           chargeAdd={space?.chargeAdd ?? 0}
-          price={selectedRoom?.price ?? space?.basePrice ?? 185000}
+          price={selectedRoom?.price ?? space?.basePrice ?? 0}
           priceUnit="원/박"
           roomName={selectedRoom?.name ?? null}
           rsvnDto={{

@@ -16,6 +16,7 @@ import java.time.LocalDate;
 import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 @AllArgsConstructor
 @NoArgsConstructor
@@ -45,6 +46,8 @@ public class PlaceDetailResDto {
     //       예외기간 가격 리스트. 날짜 선택 시 프론트에서 재계산에 사용.
 
     private Integer chargeAdd;
+
+    private List<OfficePriceSlotDto> officePriceSlots;
 
     public static PlaceDetailResDto from(OfficeEntity office) {
         return PlaceDetailResDto.builder()
@@ -121,6 +124,11 @@ public class PlaceDetailResDto {
                                 .toList()
                 )
                 .chargeAdd(null)
+                .officePriceSlots(
+                        office.getOfficePeriodEntities().stream()
+                                .map(OfficePriceSlotDto::from)
+                                .toList()
+                )
                 .build();
     }
 
@@ -162,10 +170,11 @@ public class PlaceDetailResDto {
                         .toList()
                 )
                 .chargeAdd(station.getChargeAdd())
+                .officePriceSlots(null)
                 .build();
     }
 
-    public static PlaceDetailResDto from(WorkStayEntity workStay) {
+    public static PlaceDetailResDto from(WorkStayEntity workStay, List<String> officeImgUrls) {
         return PlaceDetailResDto.builder()
                 .entityNo(workStay.getNo())
                 .placeNo(workStay.getPlaceEntity().getNo())
@@ -179,10 +188,15 @@ public class PlaceDetailResDto {
                 .baseCnt(workStay.getCnt())
                 .maxCnt(workStay.getMaxCnt())
                 .basePrice(workStay.getMonPrice())
-                .images(workStay.getImages().stream()
-                        .sorted(Comparator.comparing(ImgWorkStayEntity::getSort, Comparator.nullsLast(Integer::compareTo)))
-                        .map(ImgWorkStayEntity::getCurrentUrl)
-                        .toList())
+                .images(
+                        Stream.concat(
+                                workStay.getImages().stream()
+                                .sorted(Comparator.comparing(ImgWorkStayEntity::getSort, Comparator.nullsLast(Integer::compareTo)))
+                                .map(ImgWorkStayEntity::getCurrentUrl),
+                                officeImgUrls.stream()
+                                )
+                                .toList()
+                        )
                 .checkinTime(workStay.getCheckinTime().toLocalTime().toString())
                 .checkoutTime(workStay.getCheckoutTime().toLocalTime().toString())
                 .latitude(workStay.getPlaceEntity().getLatitude())
@@ -203,6 +217,7 @@ public class PlaceDetailResDto {
                         .toList()
                 )
                 .chargeAdd(workStay.getChargeAdd())
+                .officePriceSlots(null)
                 .build();
     }
 }

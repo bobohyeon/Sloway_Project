@@ -83,7 +83,7 @@ export default function NoticeFormPage({ isEdit = false }) {
       }
       backTo="/admin/notice"
       backLabel="공지 관리"
-      maxWidth={1200}
+      maxWidth={900}
     >
       <FormLayout>
         {/* 좌측 본문 영역 */}

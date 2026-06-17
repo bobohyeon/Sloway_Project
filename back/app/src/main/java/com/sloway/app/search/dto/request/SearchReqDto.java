@@ -4,6 +4,7 @@ import com.sloway.app.search.dto.RegionType;
 import com.sloway.app.search.dto.SortType;
 import lombok.Getter;
 import lombok.Setter;
+import org.springframework.format.annotation.DateTimeFormat;
 
 import java.time.LocalDate;
 import java.util.List;
@@ -16,7 +17,9 @@ public class SearchReqDto {
     private RegionType region;
 
     //  둘 다 nullable (날짜 미선택하면 잔여 객실 수 안보임)
+    @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
     private LocalDate checkIn;
+    @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
     private LocalDate checkOut;
 
     // null이면 필터 미적용

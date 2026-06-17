@@ -117,11 +117,8 @@ const RoomCard = styled.div`
 const RoomImg = styled.div`
   height: 140px;
   background: ${({ $color }) => $color || COLOR.cream};
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 48px;
   position: relative;
+  overflow: hidden;
 `;
 
 const AvailBadge = styled.div`
@@ -211,8 +208,11 @@ const EmptyBox = styled.div`
   font-size: 14px;
 `;
 
-const TYPE_ICON = { WORK_STAY: '🌿', OFFICE: '💻', STATION: '🛌' };
-const TYPE_COLOR = { WORK_STAY: '#D8E8D0', OFFICE: '#D0E0E8', STATION: '#E8E0D0' };
+const TYPE_COLOR = {
+  WORK_STAY: '#D8E8D0',
+  OFFICE: '#D0E0E8',
+  STATION: '#E8E0D0',
+};
 
 function RoomListPage() {
   const navigate = useNavigate();
@@ -237,14 +237,18 @@ function RoomListPage() {
   }, [spaceId]);
 
   // spaceInfo 없을 때(메인 페이지 등) rooms 첫 번째 항목으로 요약 구성
-  const summary = spaceInfo ?? (rooms[0] ? {
-    type: rooms[0].type,
-    title: rooms[0].title,
-    location: rooms[0].address,
-    score: 0,
-    reviewCount: 0,
-    thumbnailUrl: rooms[0].images?.[0] ?? null,
-  } : null);
+  const summary =
+    spaceInfo ??
+    (rooms[0]
+      ? {
+          type: rooms[0].type,
+          title: rooms[0].title,
+          location: rooms[0].address,
+          score: 0,
+          reviewCount: 0,
+          thumbnailUrl: rooms[0].images?.[0] ?? null,
+        }
+      : null);
 
   // 방 선택 → entityNo(실제 방 PK)로 상세 페이지 이동
   const goDetail = (room) => {
@@ -254,7 +258,15 @@ function RoomListPage() {
         : room.type === 'WORK_STAY'
           ? `/workstays/${room.entityNo}`
           : `/stations/${room.entityNo}`;
-    navigate(path, { state: { selectedRoom: room, space: spaceInfo, checkIn, checkOut, guests } });
+    navigate(path, {
+      state: {
+        selectedRoom: room,
+        space: spaceInfo,
+        checkIn,
+        checkOut,
+        guests,
+      },
+    });
   };
 
   return (
@@ -267,10 +279,13 @@ function RoomListPage() {
         {summary && (
           <SpaceSummary>
             <SpaceThumb>
-              {summary.thumbnailUrl
-                ? <img src={summary.thumbnailUrl} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                : (TYPE_ICON[summary.type] ?? '🏠')
-              }
+              {summary.thumbnailUrl && (
+                <img
+                  src={summary.thumbnailUrl}
+                  alt=""
+                  style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                />
+              )}
             </SpaceThumb>
             <div style={{ flex: 1 }}>
               <TypeTag>{summary.type}</TypeTag>
@@ -279,11 +294,6 @@ function RoomListPage() {
               </div>
               <div style={{ fontSize: 13, color: COLOR.gray400 }}>
                 {summary.location && `📍 ${summary.location}`}
-                {summary.reviewCount > 0 && (
-                  <span style={{ marginLeft: 12 }}>
-                    ★ {summary.score} ({summary.reviewCount}개 리뷰)
-                  </span>
-                )}
               </div>
             </div>
           </SpaceSummary>
@@ -300,11 +310,10 @@ function RoomListPage() {
           ) : (
             rooms.map((room) => {
               const available = true; // TODO: exceptionPeriods 기반 날짜 필터링
-              const icon = TYPE_ICON[room.type] ?? '🏠';
               const color = TYPE_COLOR[room.type] ?? '#E8E0D0';
               const thumbnail = room.images?.[0] ?? null;
               const amenities = room.amenities ?? [];
-              const priceUnit = room.type === 'OFFICE' ? '원/4시간' : '원/박';
+              const priceUnit = room.type === 'OFFICE' ? '원/1시간' : '원/박';
               return (
                 <RoomCard
                   key={room.entityNo}
@@ -315,10 +324,19 @@ function RoomListPage() {
                   }}
                 >
                   <RoomImg $color={color}>
-                    {thumbnail
-                      ? <img src={thumbnail} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                      : icon
-                    }
+                    {thumbnail && (
+                      <img
+                        src={thumbnail}
+                        alt=""
+                        style={{
+                          position: 'absolute',
+                          inset: 0,
+                          width: '100%',
+                          height: '100%',
+                          objectFit: 'cover',
+                        }}
+                      />
+                    )}
                     <AvailBadge $avail={available}>
                       {available ? '예약 가능' : '예약 마감'}
                     </AvailBadge>
@@ -326,7 +344,9 @@ function RoomListPage() {
                   <RoomBody>
                     <RoomName>{room.title}</RoomName>
                     <RoomMeta>
-                      <span>👤 최대 {room.maxCnt}명 (기준 {room.baseCnt}명)</span>
+                      <span>
+                        👤 최대 {room.maxCnt}명 (기준 {room.baseCnt}명)
+                      </span>
                     </RoomMeta>
                     <RoomAmenities>
                       {amenities.map((a, i) => (
@@ -348,7 +368,9 @@ function RoomListPage() {
                           선택
                         </SelectBtn>
                       ) : (
-                        <span style={{ fontSize: 12, color: COLOR.gray400 }}>마감</span>
+                        <span style={{ fontSize: 12, color: COLOR.gray400 }}>
+                          마감
+                        </span>
                       )}
                     </RoomPrice>
                   </RoomBody>

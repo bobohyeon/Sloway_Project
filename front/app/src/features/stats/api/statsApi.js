@@ -55,3 +55,9 @@ export async function findMemberStats(year, month, months = 1) {
   });
   return resp.data;
 }
+
+// 어드민 대시보드 운영 알림 — 오늘 기준(파라미터 없음)
+export async function findOperationAlerts() {
+  const resp = await api.get(`/payment/stats/alerts`);
+  return resp.data;
+}

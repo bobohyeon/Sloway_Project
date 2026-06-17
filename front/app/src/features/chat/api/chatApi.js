@@ -20,6 +20,9 @@ export const getUserChatMessages = (roomId) =>
 export const markUserChatRead = (roomId) =>
   api.patch(`/user/chat/rooms/${roomId}/read`);
 
+export const leaveUserChatRoom = (roomId) =>
+  api.delete(`/user/chat/rooms/${roomId}`);
+
 // ─── HOST ─────────────────────────────────────────────────────────────────────
 
 export const hostCreateOrGetRoom = (rsvnNo) =>
@@ -36,3 +39,6 @@ export const getHostChatMessages = (roomId) =>
 
 export const markHostChatRead = (roomId) =>
   api.patch(`/host/chat/rooms/${roomId}/read`);
+
+export const leaveHostChatRoom = (roomId) =>
+  api.delete(`/host/chat/rooms/${roomId}`);

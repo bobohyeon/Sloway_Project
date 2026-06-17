@@ -15,7 +15,7 @@ const TopSpacesSection = ({ TOP_SPACES = [], navigate, TYPE_MAP }) => (
           key={i}
           onClick={() =>
             navigate(`/spaces/${s.placeNo}/rooms`, {
-              state: { space: { type: s.type, title: s.title } },
+              state: { space: { type: s.type, title: s.title, thumbnailUrl: s.mainImageUrl ?? null } },
             })
           }
         >

@@ -304,21 +304,29 @@ public class PlaceRepositoryImpl implements PlaceRepositoryCustom {
         return queryFactory
                 .select(Projections.fields(PlaceCardDto.class,
                         placeSummary.placeNo.as("masterNo"),
-                        placeSummary.targetNo.as("placeNo"),
+                        placeSummary.targetNo.min().as("placeNo"),
                         placeEntity.title,
                         placeSummary.type,
                         placeSummary.currentUrl.as("mainImageUrl"),
                         placeSummary.address,
-                        placeSummary.price,
-                        placeSummary.finalScore,
-                        placeSummary.rsvnCount.as("totalReservations"),
-                        placeSummary.avgScore.as("avgReviewScore"),
+                        placeSummary.price.min().as("price"),
+                        placeSummary.finalScore.avg().castToNum(Integer.class).as("finalScore"),
+                        placeSummary.rsvnCount.sum().as("totalReservations"),
+                        placeSummary.avgScore.avg().as("avgReviewScore"),
                         placeSummary.status
                 ))
                 .from(placeSummary)
                 .leftJoin(placeEntity).on(placeSummary.placeNo.eq(placeEntity.no))
                 .where(placeSummary.status.eq("I"))
-                .orderBy(placeSummary.finalScore.desc())
+                .groupBy(
+                        placeSummary.placeNo,
+                        placeEntity.title,
+                        placeSummary.type,
+                        placeSummary.currentUrl,
+                        placeSummary.address,
+                        placeSummary.status
+                )
+                .orderBy(placeSummary.finalScore.avg().desc())
                 .limit(4)
                 .fetch();
     }

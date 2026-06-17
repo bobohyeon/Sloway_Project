@@ -124,6 +124,7 @@ export default function InquiryManagePage() {
     <PageLayout
       title="문의사항 관리"
       description="접수된 문의를 확인하고 답변을 등록하세요"
+      maxWidth={900}
     >
       <Divider />
 

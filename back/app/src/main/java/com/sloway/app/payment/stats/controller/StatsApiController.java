@@ -81,5 +81,12 @@ public class StatsApiController {
         return ResponseEntity.ok(resDto);
     }
 
+    // 어드민 대시보드 운영 알림 — 오늘 기준(파라미터 없음, 서버에서 LocalDate.now())
+    @GetMapping("/alerts")
+    public ResponseEntity<OperationAlertResDto> findOperationAlerts() {
+        OperationAlertResDto resDto = statsService.findOperationAlerts();
+        return ResponseEntity.ok(resDto);
+    }
+
 
 }

@@ -82,7 +82,7 @@ export default function FaqFormPage({ isEdit = false }) {
       description={isEdit ? `FAQ #${id}를 수정합니다.` : '새 FAQ를 등록합니다.'}
       backTo="/admin/faq"
       backLabel="FAQ 관리"
-      maxWidth={1200}
+      maxWidth={900}
     >
       <FormLayout>
         {/* 좌측 본문 */}

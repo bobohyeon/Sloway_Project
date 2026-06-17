@@ -71,7 +71,9 @@ public class PayRepositoryImpl implements PayRepositoryCustom {
                 )
                 .from(qPayEntity)
                 .where(
-                        qPayEntity.status.eq(PayStatus.COMPLETED),
+                        // 총매출(gross) = 한 번이라도 결제 성공한 건. 환불(CANCELED)도 포함해야
+                        // "총매출 - 환불 = 순매출"이 성립. (READY/FAILED 만 제외)
+                        qPayEntity.status.in(PayStatus.COMPLETED, PayStatus.CANCELED),
                         qPayEntity.createdAt.between(startDateTime, endDateTime)
                 )
                 .groupBy(qPayEntity.method)
