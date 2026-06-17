@@ -117,11 +117,8 @@ const RoomCard = styled.div`
 const RoomImg = styled.div`
   height: 140px;
   background: ${({ $color }) => $color || COLOR.cream};
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 48px;
   position: relative;
+  overflow: hidden;
 `;
 
 const AvailBadge = styled.div`
@@ -211,7 +208,6 @@ const EmptyBox = styled.div`
   font-size: 14px;
 `;
 
-const TYPE_ICON = { WORK_STAY: '🌿', OFFICE: '💻', STATION: '🛌' };
 const TYPE_COLOR = {
   WORK_STAY: '#D8E8D0',
   OFFICE: '#D0E0E8',
@@ -283,14 +279,12 @@ function RoomListPage() {
         {summary && (
           <SpaceSummary>
             <SpaceThumb>
-              {summary.thumbnailUrl ? (
+              {summary.thumbnailUrl && (
                 <img
                   src={summary.thumbnailUrl}
                   alt=""
                   style={{ width: '100%', height: '100%', objectFit: 'cover' }}
                 />
-              ) : (
-                (TYPE_ICON[summary.type] ?? '🏠')
               )}
             </SpaceThumb>
             <div style={{ flex: 1 }}>
@@ -300,11 +294,6 @@ function RoomListPage() {
               </div>
               <div style={{ fontSize: 13, color: COLOR.gray400 }}>
                 {summary.location && `📍 ${summary.location}`}
-                {summary.reviewCount > 0 && (
-                  <span style={{ marginLeft: 12 }}>
-                    ★ {summary.score} ({summary.reviewCount}개 리뷰)
-                  </span>
-                )}
               </div>
             </div>
           </SpaceSummary>
@@ -321,7 +310,6 @@ function RoomListPage() {
           ) : (
             rooms.map((room) => {
               const available = true; // TODO: exceptionPeriods 기반 날짜 필터링
-              const icon = TYPE_ICON[room.type] ?? '🏠';
               const color = TYPE_COLOR[room.type] ?? '#E8E0D0';
               const thumbnail = room.images?.[0] ?? null;
               const amenities = room.amenities ?? [];
@@ -336,18 +324,18 @@ function RoomListPage() {
                   }}
                 >
                   <RoomImg $color={color}>
-                    {thumbnail ? (
+                    {thumbnail && (
                       <img
                         src={thumbnail}
                         alt=""
                         style={{
+                          position: 'absolute',
+                          inset: 0,
                           width: '100%',
                           height: '100%',
                           objectFit: 'cover',
                         }}
                       />
-                    ) : (
-                      icon
                     )}
                     <AvailBadge $avail={available}>
                       {available ? '예약 가능' : '예약 마감'}
