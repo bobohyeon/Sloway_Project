@@ -63,6 +63,14 @@ public class ChatApiController {
         return ResponseEntity.ok().build();
     }
 
+    @DeleteMapping("/api/user/chat/rooms/{roomId}")
+    public ResponseEntity<Void> userLeaveRoom(
+            @PathVariable Long roomId,
+            @AuthenticationPrincipal CustomUserDetails user) {
+        chatService.leaveRoom(roomId, user.getMemberNo());
+        return ResponseEntity.ok().build();
+    }
+
     // ─── HOST 채팅 ────────────────────────────────────────────────────────────
 
     @PostMapping("/api/host/chat/rooms")
@@ -96,6 +104,14 @@ public class ChatApiController {
             @PathVariable Long roomId,
             @AuthenticationPrincipal CustomUserDetails user) {
         chatService.markAsRead(roomId, user.getMemberNo());
+        return ResponseEntity.ok().build();
+    }
+
+    @DeleteMapping("/api/host/chat/rooms/{roomId}")
+    public ResponseEntity<Void> hostLeaveRoom(
+            @PathVariable Long roomId,
+            @AuthenticationPrincipal CustomUserDetails user) {
+        chatService.leaveRoom(roomId, user.getMemberNo());
         return ResponseEntity.ok().build();
     }
 }

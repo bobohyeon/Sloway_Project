@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import styled from 'styled-components';
-import { FaCommentDots, FaArrowLeft, FaTimes, FaPaperPlane } from 'react-icons/fa';
+import { FaCommentDots, FaArrowLeft, FaTimes, FaPaperPlane, FaSignOutAlt } from 'react-icons/fa';
 import { useSelector } from 'react-redux';
 import { Client } from '@stomp/stompjs';
 import SockJS from 'sockjs-client';
@@ -13,6 +13,8 @@ import {
   markUserChatRead,
   markHostChatRead,
   userCreateOrGetRoomByPlace,
+  leaveUserChatRoom,
+  leaveHostChatRoom,
 } from '../api/chatApi';
 import { searchSpaces } from '../../searchPlace/api/searchApi';
 
@@ -63,6 +65,8 @@ export default function ChatWidget() {
 
   // ─── WebSocket ───────────────────────────────────────────────────────────
   const stompRef = useRef(null);
+  const roomsRef = useRef([]);
+  const loadRoomsRef = useRef(null);
 
   // ─── 방 목록 로드 + WS 구독 ──────────────────────────────────────────────
   const loadRooms = useCallback(() => {
@@ -75,6 +79,9 @@ export default function ChatWidget() {
       })
       .catch(() => {});
   }, [chatRole]);
+
+  useEffect(() => { roomsRef.current = rooms; }, [rooms]);
+  useEffect(() => { loadRoomsRef.current = loadRooms; }, [loadRooms]);
 
   // 마운트 시 방 목록 + WS 뱃지 구독
   useEffect(() => {
@@ -110,13 +117,18 @@ export default function ChatWidget() {
                 } else if (msg.senderNo !== user.memberNo) {
                   // 다른 방 메시지 → 뱃지 증가
                   setTotalUnread((prev) => prev + 1);
-                  setRooms((prev) =>
-                    prev.map((r) =>
-                      r.roomId === room.roomId
-                        ? { ...r, lastMessage: msg.content, lastMessageTime: msg.createdAt, unreadCount: r.unreadCount + 1 }
-                        : r
-                    )
-                  );
+                  if (!roomsRef.current.some((r) => r.roomId === room.roomId)) {
+                    // 나간 채팅방에 메시지가 오면 목록 재조회로 방을 다시 표시
+                    loadRoomsRef.current?.();
+                  } else {
+                    setRooms((prev) =>
+                      prev.map((r) =>
+                        r.roomId === room.roomId
+                          ? { ...r, lastMessage: msg.content, lastMessageTime: msg.createdAt, unreadCount: r.unreadCount + 1 }
+                          : r
+                      )
+                    );
+                  }
                 }
               });
             });
@@ -136,7 +148,7 @@ export default function ChatWidget() {
   // 패널 열릴 때 방 목록 최신화
   useEffect(() => {
     if (isOpen && view === 'list') loadRooms();
-  }, [isOpen]);
+  }, [isOpen, view, loadRooms]);
 
   // ─── 채팅방 열기 ─────────────────────────────────────────────────────────
   const openRoom = useCallback(
@@ -175,6 +187,25 @@ export default function ChatWidget() {
     setInputText('');
     loadRooms();
   }, [loadRooms]);
+
+  // 채팅방 나가기
+  const handleLeave = useCallback(async () => {
+    if (!activeRoom) return;
+    if (!window.confirm('채팅방을 나가시겠습니까?\n나간 채팅방은 목록에서 사라집니다.')) return;
+    const leave = chatRole === 'host' ? leaveHostChatRoom : leaveUserChatRoom;
+    try {
+      await leave(activeRoom.roomId);
+      setTotalUnread((prev) => Math.max(0, prev - (activeRoom.unreadCount || 0)));
+      setRooms((prev) => prev.filter((r) => r.roomId !== activeRoom.roomId));
+      setView('list');
+      setActiveRoom(null);
+      activeRoomRef.current = null;
+      setMessages([]);
+      setInputText('');
+    } catch {
+      alert('채팅방 나가기에 실패했습니다. 잠시 후 다시 시도해주세요.');
+    }
+  }, [activeRoom, chatRole]);
 
   // ─── 메시지 전송 ─────────────────────────────────────────────────────────
   const handleSend = useCallback(() => {
@@ -228,7 +259,7 @@ export default function ChatWidget() {
       if (creating) return;
       setCreating(true);
       try {
-        const room = await userCreateOrGetRoomByPlace(place.entityNo, place.type);
+        const room = await userCreateOrGetRoomByPlace(place.placeNo, place.type);
         setPlaceQuery('');
         setPlaceResults([]);
         openRoom({ roomId: room.roomId, counterpartName: room.counterpartName, spaceName: room.spaceName, unreadCount: room.unreadCount || 0 });
@@ -283,9 +314,16 @@ export default function ChatWidget() {
                 <SpaceTag>{activeRoom.spaceName}</SpaceTag>
               )}
             </PanelLeft>
-            <CloseBtn onClick={closeWidget} title="닫기">
-              <FaTimes size={14} />
-            </CloseBtn>
+            <HeaderRight>
+              {view === 'detail' && (
+                <LeaveBtn onClick={handleLeave} title="채팅방 나가기">
+                  <FaSignOutAlt size={13} />
+                </LeaveBtn>
+              )}
+              <CloseBtn onClick={closeWidget} title="닫기">
+                <FaTimes size={14} />
+              </CloseBtn>
+            </HeaderRight>
           </PanelHeader>
 
           {/* ── 목록 뷰 ── */}
@@ -540,6 +578,25 @@ const SpaceTag = styled.span`
   overflow: hidden;
   text-overflow: ellipsis;
   max-width: 80px;
+`;
+
+const HeaderRight = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  flex-shrink: 0;
+`;
+
+const LeaveBtn = styled.button`
+  background: none;
+  border: none;
+  color: #c0887a;
+  cursor: pointer;
+  padding: 4px 6px;
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+  &:hover { color: #a05a4e; }
 `;
 
 const CloseBtn = styled.button`

@@ -72,8 +72,9 @@ public class ChatService {
         // effectively final capture for lambda
         final String finalSpaceName = spaceName;
 
-        // 기존 방 조회 또는 신규 생성
+        // 기존 방 조회(나간 경우 rejoin) 또는 신규 생성
         ChatRoomEntity room = chatRoomRepository.findByHostAndUser(hostMember, userMember)
+                .map(r -> { r.rejoin(); return r; })
                 .orElseGet(() -> chatRoomRepository.save(
                         ChatRoomEntity.builder()
                                 .host(hostMember)
@@ -122,6 +123,7 @@ public class ChatService {
         final String finalSpaceName = spaceName;
 
         ChatRoomEntity room = chatRoomRepository.findByHostAndUser(hostMember, userMember)
+                .map(r -> { r.rejoin(); return r; })
                 .orElseGet(() -> chatRoomRepository.save(
                         ChatRoomEntity.builder()
                                 .host(hostMember)
@@ -132,10 +134,23 @@ public class ChatService {
         return buildRoomRes(room, requesterMemberNo);
     }
 
+    /** 채팅방 나가기 — 나간 사람의 목록에서 숨김 */
+    @Transactional
+    public void leaveRoom(Long roomId, Long memberNo) {
+        ChatRoomEntity room = getRoom(roomId);
+        verifyAccess(room, memberNo);
+        if (room.getHost().getNo().equals(memberNo)) {
+            room.leaveAsHost();
+        } else {
+            room.leaveAsUser();
+        }
+    }
+
     /** USER 전체 읽지 않은 메시지 수 */
     public long getTotalUnreadForUser(Long memberNo) {
         MemberEntity member = getMember(memberNo);
         return chatRoomRepository.findByUserOrderByCreatedAtDesc(member).stream()
+                .filter(r -> !r.isUserLeft())
                 .mapToLong(r -> chatRepository.countByChatRoomAndSenderNotAndReadAtIsNull(r, member))
                 .sum();
     }
@@ -144,6 +159,7 @@ public class ChatService {
     public long getTotalUnreadForHost(Long memberNo) {
         MemberEntity member = getMember(memberNo);
         return chatRoomRepository.findByHostOrderByCreatedAtDesc(member).stream()
+                .filter(r -> !r.isHostLeft())
                 .mapToLong(r -> chatRepository.countByChatRoomAndSenderNotAndReadAtIsNull(r, member))
                 .sum();
     }
@@ -152,6 +168,7 @@ public class ChatService {
     public List<ChatRoomResDto> getRoomsForUser(Long memberNo) {
         MemberEntity member = getMember(memberNo);
         return chatRoomRepository.findByUserOrderByCreatedAtDesc(member).stream()
+                .filter(r -> !r.isUserLeft())
                 .map(r -> buildRoomRes(r, memberNo))
                 .toList();
     }
@@ -160,6 +177,7 @@ public class ChatService {
     public List<ChatRoomResDto> getRoomsForHost(Long memberNo) {
         MemberEntity member = getMember(memberNo);
         return chatRoomRepository.findByHostOrderByCreatedAtDesc(member).stream()
+                .filter(r -> !r.isHostLeft())
                 .map(r -> buildRoomRes(r, memberNo))
                 .toList();
     }
@@ -185,6 +203,13 @@ public class ChatService {
         ChatRoomEntity room = getRoom(roomId);
         MemberEntity sender = getMember(senderMemberNo);
         verifyAccess(room, senderMemberNo);
+
+        // 상대방이 나간 상태면 메시지 수신 시 목록에 다시 표시
+        if (room.getHost().getNo().equals(senderMemberNo)) {
+            room.rejoinUser();
+        } else {
+            room.rejoinHost();
+        }
 
         ChatEntity chat = chatRepository.save(
                 ChatEntity.builder()

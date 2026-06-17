@@ -27,4 +27,18 @@ public class ChatRoomEntity extends BaseEntity {
 
     @Column(length = 200)
     private String spaceName;
+
+    @Builder.Default
+    @Column(name = "USER_LEFT", nullable = false)
+    private boolean userLeft = false;
+
+    @Builder.Default
+    @Column(name = "HOST_LEFT", nullable = false)
+    private boolean hostLeft = false;
+
+    public void leaveAsUser()  { this.userLeft = true; }
+    public void leaveAsHost()  { this.hostLeft = true; }
+    public void rejoin()       { this.userLeft = false; this.hostLeft = false; }
+    public void rejoinUser()   { this.userLeft = false; }
+    public void rejoinHost()   { this.hostLeft = false; }
 }
