@@ -177,18 +177,18 @@ function DetailImageBox({ icon = '🌴', images = [] }) {
   const [open, setOpen] = useState(false);
   const [currentIdx, setCurrentIdx] = useState(0);
   const hasImages = images.length > 0;
-  const maxIdx = hasImages ? images.length - 1 : 0;
+  const total = hasImages ? images.length : 1;
 
   const prev = (e) => {
     e.stopPropagation();
-    setCurrentIdx((i) => Math.max(i - 1, 0));
+    setCurrentIdx((i) => (i - 1 + total) % total);
   };
   const next = (e) => {
     e.stopPropagation();
-    setCurrentIdx((i) => Math.min(i + 1, maxIdx));
+    setCurrentIdx((i) => (i + 1) % total);
   };
 
-  const getImg = (offset) => (hasImages ? images[currentIdx + offset] : null);
+  const getImg = (offset) => (hasImages ? images[(currentIdx + offset) % total] : null);
   const shade = (offset) => SHADES[(currentIdx + offset) % SHADES.length];
 
   return (
@@ -215,15 +215,11 @@ function DetailImageBox({ icon = '🌴', images = [] }) {
 
         {/* 0.5fr: 이전/다음 네비게이션 */}
         <NavPanel>
-          <NavBtn onClick={prev} disabled={currentIdx === 0}>
-            ‹
-          </NavBtn>
+          <NavBtn onClick={prev}>‹</NavBtn>
           <span style={{ fontSize: 10, color: COLOR.gray400 || '#999' }}>
-            {currentIdx + 1}/{hasImages ? images.length : 1}
+            {currentIdx + 1}/{total}
           </span>
-          <NavBtn onClick={next} disabled={currentIdx >= maxIdx}>
-            ›
-          </NavBtn>
+          <NavBtn onClick={next}>›</NavBtn>
         </NavPanel>
       </Grid>
 
