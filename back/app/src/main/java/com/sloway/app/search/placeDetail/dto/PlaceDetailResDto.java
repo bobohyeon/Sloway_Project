@@ -47,6 +47,8 @@ public class PlaceDetailResDto {
 
     private Integer chargeAdd;
 
+    private List<OfficePriceSlotDto> officePriceSlots;
+
     public static PlaceDetailResDto from(OfficeEntity office) {
         return PlaceDetailResDto.builder()
                 .entityNo(office.getNo())
@@ -122,6 +124,11 @@ public class PlaceDetailResDto {
                                 .toList()
                 )
                 .chargeAdd(null)
+                .officePriceSlots(
+                        office.getOfficePeriodEntities().stream()
+                                .map(OfficePriceSlotDto::from)
+                                .toList()
+                )
                 .build();
     }
 
@@ -163,6 +170,7 @@ public class PlaceDetailResDto {
                         .toList()
                 )
                 .chargeAdd(station.getChargeAdd())
+                .officePriceSlots(null)
                 .build();
     }
 
@@ -209,6 +217,7 @@ public class PlaceDetailResDto {
                         .toList()
                 )
                 .chargeAdd(workStay.getChargeAdd())
+                .officePriceSlots(null)
                 .build();
     }
 }
