@@ -3,10 +3,13 @@ package com.sloway.app.reservation.rsvn.dto.response;
 import com.sloway.app.place.entity.hostPlace.HostPlaceEntity;
 import com.sloway.app.place.entity.place.ImgPlaceEntity;
 import lombok.Builder;
+import lombok.EqualsAndHashCode;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 
 @Getter
 @Builder
+@EqualsAndHashCode
 public class HostSpaceResDto {
 
     private Long placeNo;
