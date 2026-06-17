@@ -51,7 +51,7 @@ public class PlaceDetailService {
             List<WorkStayEntity> wsList = em.createQuery(
                             "SELECT DISTINCT ws FROM WorkStayEntity ws LEFT JOIN FETCH ws.workExceptionPeriodEntities WHERE ws.placeEntity.no = :no", WorkStayEntity.class)
                     .setParameter("no", placeNo).getResultList();
-            if (!wsList.isEmpty()) return wsList.stream().map(PlaceDetailResDto::from).toList();
+            if (!wsList.isEmpty()) return wsList.stream().map(ws -> PlaceDetailResDto.from(ws, List.of())).toList();
             // placeEntity.no로 못 찾은 경우 entity PK(targetNo)로 재시도
             if (!tryAll) return findByTypeAndEntityNo("WORK_STAY", placeNo);
         }
@@ -88,7 +88,7 @@ public class PlaceDetailService {
                 return em.createQuery(
                         "SELECT DISTINCT ws FROM WorkStayEntity ws LEFT JOIN FETCH ws.workExceptionPeriodEntities WHERE ws.placeEntity.no = :no",
                         WorkStayEntity.class).setParameter("no", realPlaceNo).getResultList()
-                        .stream().map(PlaceDetailResDto::from).toList();
+                        .stream().map(ws -> PlaceDetailResDto.from(ws, List.of())).toList();
             }
         }
         if ("OFFICE".equals(type)) {
@@ -128,7 +128,7 @@ public class PlaceDetailService {
             return em.createQuery(
                     "SELECT DISTINCT ws FROM WorkStayEntity ws LEFT JOIN FETCH ws.workExceptionPeriodEntities WHERE ws.placeEntity.no = :no",
                     WorkStayEntity.class).setParameter("no", realPlaceNo).getResultList()
-                    .stream().map(PlaceDetailResDto::from).toList();
+                    .stream().map(ws -> PlaceDetailResDto.from(ws, List.of())).toList();
         }
         List<OfficeEntity> oList = em.createQuery(
                 "SELECT DISTINCT o FROM OfficeEntity o LEFT JOIN FETCH o.officePeriodEntities WHERE o.no = :no",
