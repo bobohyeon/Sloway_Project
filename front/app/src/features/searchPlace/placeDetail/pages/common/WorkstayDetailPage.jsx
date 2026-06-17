@@ -54,7 +54,6 @@ function WorkstayDetailPage() {
         setReviews(reviewData);
         setBlackouts(blackoutData ?? []);
         saveRecentViewed(spaceData.placeNo).catch(() => {});
-        console.log(space);
       } catch (e) {
         console.error('데이터 조회 실패', e);
         setError(true);

@@ -1,5 +1,9 @@
 import { useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
+import dayjs from 'dayjs';
+import styled from 'styled-components';
+import { COLOR } from '../../../../rsvn/components/user/RsvnStyled';
+import { saveRsvn } from '../../../../rsvn/api/rsvnApi';
 
 // 요일 인덱스(0=일) → exceptionPeriod 필드명
 const DAY_FIELD = [
@@ -75,11 +79,6 @@ function calcOfficeTotalFromSlots(checkIn, checkOut, basePrice, officePriceSlots
   return total || basePrice * hours;
 }
 
-import dayjs from 'dayjs';
-import styled from 'styled-components';
-import { COLOR } from '../../../../rsvn/components/user/RsvnStyled';
-import { saveRsvn } from '../../../../rsvn/api/rsvnApi';
-
 // 선택 구간이 블랙아웃 범위와 겹치는지 확인
 function hasOverlap(checkIn, checkOut, blackouts) {
   if (!checkIn || !checkOut || !blackouts?.length) return false;
@@ -113,29 +112,17 @@ function DetailRsvnBox({
 }) {
   const navigate = useNavigate();
 
-  const grandTotal = useMemo(() => {
+  const baseCost = useMemo(() => {
     if (!checkIn || !checkOut) return price * nights;
-    const baseCost =
-      type === 'office'
-        ? calcOfficeTotalFromSlots(checkIn, checkOut, price, officePriceSlots)
-        : exceptionPeriods.length
-        ? calcTotalWithExceptions(checkIn, checkOut, price, exceptionPeriods)
-        : price * nights;
+    if (type === 'office') return calcOfficeTotalFromSlots(checkIn, checkOut, price, officePriceSlots);
+    if (!exceptionPeriods.length) return price * nights;
+    return calcTotalWithExceptions(checkIn, checkOut, price, exceptionPeriods);
+  }, [type, checkIn, checkOut, price, nights, exceptionPeriods, officePriceSlots]);
+
+  const grandTotal = useMemo(() => {
     const extraPeople = Math.max(0, guests - baseCnt);
-    const addCost = extraPeople * (chargeAdd ?? 0) * nights;
-    return baseCost + addCost;
-  }, [
-    type,
-    checkIn,
-    checkOut,
-    price,
-    nights,
-    exceptionPeriods,
-    officePriceSlots,
-    chargeAdd,
-    guests,
-    baseCnt,
-  ]);
+    return baseCost + extraPeople * (chargeAdd ?? 0) * nights;
+  }, [baseCost, guests, baseCnt, chargeAdd, nights]);
 
   const hasException =
     checkIn &&
@@ -294,15 +281,7 @@ function DetailRsvnBox({
                 {type === 'office' ? '시간' : '박'}
               </span>
             )}
-            <span>
-              {(type === 'office' && checkIn && checkOut
-                ? calcOfficeTotalFromSlots(checkIn, checkOut, price, officePriceSlots)
-                : !checkIn || !checkOut || !exceptionPeriods.length
-                ? price * nights
-                : calcTotalWithExceptions(checkIn, checkOut, price, exceptionPeriods)
-              ).toLocaleString()}
-              원
-            </span>
+            <span>{baseCost.toLocaleString()}원</span>
           </CalcRow>
           {hasExtra && (
             <CalcRow>
@@ -388,10 +367,6 @@ const HourSelect = styled.select`
   background: transparent;
   cursor: pointer;
   &:focus { outline: none; border-bottom-color: #2d6a4f; }
-`;
-const InfoValue = styled.span`
-  font-weight: 600;
-  color: ${COLOR.black};
 `;
 
 const DateInput = styled.input`

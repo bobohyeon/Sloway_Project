@@ -4,6 +4,7 @@ import com.sloway.app.common.exception.CustomException;
 import com.sloway.app.place.entity.office.OfficeEntity;
 import com.sloway.app.place.entity.station.StationEntity;
 import com.sloway.app.place.entity.workStay.WorkStayEntity;
+import com.sloway.app.place.entity.workStay.workOffice.ImgWorkStayOfficeEntity;
 import com.sloway.app.place.entity.workStay.workOffice.WorkOfficeEntity;
 import com.sloway.app.place.repository.workStay.workOffice.WorkOfficeRepository;
 import com.sloway.app.reservation.RsvnErrorCode;
@@ -184,7 +185,7 @@ public class PlaceDetailService {
         List<WorkOfficeEntity> officeList = workOfficeRepository.findAllByWorkStayEntityNo(entityNo);
         List<String> officeImgUrls = officeList.stream()
                 .flatMap(workOfficeEntity -> workOfficeEntity.getImages().stream())
-                .map(imgWorkStayOfficeEntity -> imgWorkStayOfficeEntity.getCurrentUrl())
+                .map(ImgWorkStayOfficeEntity::getCurrentUrl)
                 .toList();
 
 
