@@ -153,35 +153,35 @@ public class RsvnService {
         HostEntity host = hostRepository.findByMemberNo(memberNo)
                 .orElseThrow(() -> new CustomException(ReviewErrorCode.HOST_NOT_FOUND));
 
-        // 1. 해당 호스트의 모든 공간 정보 조회
+        // 1. 모든 공간 정보 일단 전부 조회
         List<HostPlaceEntity> hostPlaces = hostPlaceRepository.findByHostEntityNo(host.getNo());
 
-        // 2. 각 HostPlace에서 PlaceNo만 추출 (중복 제거를 위해 Set 또는 distinct 사용)
-        Map<Long, HostPlaceEntity> distinctPlaceMap = hostPlaces.stream()
-                .filter(hp -> getPlaceNoFromHostPlace(hp) != null)
-                .collect(Collectors.toMap(
-                        this::getPlaceNoFromHostPlace,
-                        hp -> hp,
-                        (existing, replacement) -> existing
-                ));
+        // 2. 일괄 조회를 위해 우선 전체 placeNo 목록 추출 (중복 제거하되 맵 변환은 안 함)
+        List<Long> allPlaceNos = hostPlaces.stream()
+                .map(this::getPlaceNoFromHostPlace)
+                .filter(Objects::nonNull)
+                .distinct()
+                .toList();
 
         // 3. 이미지 정보 일괄 조회 (N+1 방지)
-        Map<Long, String> imageMap = imgPlaceRepository.findByPlaceEntity_NoInAndSort(new ArrayList<>(distinctPlaceMap.keySet()), 1)
+        Map<Long, String> imageMap = imgPlaceRepository.findByPlaceEntity_NoInAndSort(allPlaceNos, 1)
                 .stream()
                 .collect(Collectors.toMap(
                         img -> img.getPlaceEntity().getNo(),
                         ImgPlaceEntity::getCurrentUrl,
-                        (existing, replacement) -> existing // 중복 시 기존값 유지
+                        (existing, replacement) -> existing
                 ));
 
-        // 4. DTO 매핑
-        return distinctPlaceMap.entrySet().stream()
-                .map(entry -> {
-                    Long pid = entry.getKey();
-                    HostPlaceEntity hp = entry.getValue();
-                    String imageUrl = imageMap.get(pid); // 매칭되는 이미지가 없으면 null
+        // 4. 먼저 DTO로 전부 변환한 뒤, '공간명'과 'placeNo'가 모두 같을 때만 중복 제거하기
+        return hostPlaces.stream()
+                .map(hp -> {
+                    Long pid = getPlaceNoFromHostPlace(hp);
+                    String imageUrl = (pid != null) ? imageMap.get(pid) : null;
                     return HostSpaceResDto.from(hp, imageUrl);
                 })
+                // 🌟 [핵심] 맵에서 임의로 지우지 않고, DTO 객체 자체의 중복만 정밀하게 필터링
+                // (HostSpaceResDto에 @EqualsAndHashCode 필수!)
+                .distinct()
                 .toList();
     }
 
