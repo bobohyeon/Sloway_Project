@@ -62,6 +62,7 @@ export default function InquiryListPage() {
     <PageLayout
       title="내 문의사항"
       description="등록한 문의사항과 답변을 확인하세요"
+      maxWidth={900}
       actions={
         <Button
           onClick={() => {

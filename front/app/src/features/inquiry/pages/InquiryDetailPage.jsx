@@ -60,7 +60,7 @@ export default function InquiryDetailPage() {
   };
 
   return (
-    <PageLayout maxWidth={800}>
+    <PageLayout maxWidth={900}>
       {/* 브레드크럼 */}
       <Breadcrumb>
         <BreadcrumbBtn

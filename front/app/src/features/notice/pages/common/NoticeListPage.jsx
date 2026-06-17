@@ -62,6 +62,7 @@ export default function NoticeListPage() {
     <PageLayout
       title="공지사항"
       description="서비스 관련 중요한 소식을 전해드립니다."
+      maxWidth={900}
     >
       {/* 검색/카테고리 */}
       <FilterRow>

@@ -93,6 +93,7 @@ export default function NoticeManagePage() {
     <PageLayout
       title="공지사항 관리"
       description="공지사항을 등록하고 노출 순서를 관리합니다"
+      maxWidth={900}
       actions={
         <Button onClick={() => navigate('/admin/notice/form')}>
           + 공지사항 등록
