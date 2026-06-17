@@ -21,10 +21,13 @@ function OfficeDetailPage() {
   const [blackouts, setBlackouts] = useState([]);
   const [error, setError] = useState(false);
 
-  // 오피스는 4시간 단위 과금 — 시간 차이를 4로 나눈 횟수
-  const nights = checkIn && checkOut
-    ? Math.max(1, Math.ceil((new Date(checkOut) - new Date(checkIn)) / (1000 * 60 * 60 * 4)))
-    : 1;
+  const hours =
+    checkIn && checkOut
+      ? Math.max(
+          1,
+          Math.ceil((new Date(checkOut) - new Date(checkIn)) / (1000 * 60 * 60))
+        )
+      : 1;
 
   useEffect(() => {
     const load = async () => {
@@ -34,10 +37,18 @@ function OfficeDetailPage() {
           findReviewsByPlace(Number(id), 'OFFICE'),
           findBlackoutsByEntity(Number(id)),
         ]);
-        const avgScore = reviewData.length > 0
-          ? Math.round(reviewData.reduce((sum, r) => sum + (r.scoreTotal ?? 0), 0) / reviewData.length)
-          : 0;
-        setSpace({ ...spaceData, score: avgScore, reviewCount: reviewData.length });
+        const avgScore =
+          reviewData.length > 0
+            ? Math.round(
+                reviewData.reduce((sum, r) => sum + (r.scoreTotal ?? 0), 0) /
+                  reviewData.length
+              )
+            : 0;
+        setSpace({
+          ...spaceData,
+          score: avgScore,
+          reviewCount: reviewData.length,
+        });
         setReviews(reviewData);
         setBlackouts(blackoutData ?? []);
         saveRecentViewed(spaceData.placeNo).catch(() => {});
@@ -49,7 +60,12 @@ function OfficeDetailPage() {
     load();
   }, [id]);
 
-  if (error) return <div style={{ padding: 40, textAlign: 'center', color: '#888' }}>공간 정보를 불러오지 못했습니다. 잠시 후 다시 시도해주세요.</div>;
+  if (error)
+    return (
+      <div style={{ padding: 40, textAlign: 'center', color: '#888' }}>
+        공간 정보를 불러오지 못했습니다. 잠시 후 다시 시도해주세요.
+      </div>
+    );
   if (!space) return null;
 
   // 표시용·결제용 가격을 한 곳에서 결정 (백엔드 basePrice → 없으면 0)
@@ -58,19 +74,14 @@ function OfficeDetailPage() {
   return (
     <DetailLayout
       imageBox={<DetailImageBox icon="🌊" images={space?.images ?? []} />}
-      mainBox={
-        <DetailMainBox
-          space={space}
-          reviews={reviews}
-        />
-      }
+      mainBox={<DetailMainBox space={space} reviews={reviews} />}
       rsvnBox={
         <DetailRsvnBox
           type="office"
           checkIn={checkIn}
           checkOut={checkOut}
           guests={guests}
-          nights={nights}
+          nights={hours}
           onCheckInChange={setCheckIn}
           onCheckOutChange={setCheckOut}
           onGuestsChange={setGuests}
@@ -79,7 +90,7 @@ function OfficeDetailPage() {
           baseCnt={space?.baseCnt ?? 1}
           chargeAdd={space?.chargeAdd ?? 0}
           price={unitPrice}
-          priceUnit="원/4시간"
+          priceUnit="원/1시간"
           roomName={selectedRoom?.name ?? null}
           rsvnDto={{
             officeNo: space?.entityNo,

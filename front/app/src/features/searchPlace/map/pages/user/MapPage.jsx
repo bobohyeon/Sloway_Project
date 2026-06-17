@@ -7,9 +7,27 @@ import { searchSpaces } from '../../../api/searchApi';
 
 // SearchResultPage와 동일한 상수
 const TYPE_TABS = ['전체', '워크앤스테이', '오피스', '숙소'];
-const TAB_TO_TYPE = { '워크앤스테이': 'WORK_STAY', '오피스': 'OFFICE', '숙소': 'STATION' };
-const TYPE_LABEL = { OFFICE: '코워킹오피스', WORK_STAY: '워크앤스테이', STATION: '숙소' };
-const REGIONS = ['전체', '서울', '경기', '인천', '강원', '경상', '충청', '전라', '제주'];
+const TAB_TO_TYPE = {
+  워크앤스테이: 'WORK_STAY',
+  오피스: 'OFFICE',
+  숙소: 'STATION',
+};
+const TYPE_LABEL = {
+  OFFICE: '코워킹오피스',
+  WORK_STAY: '워크앤스테이',
+  STATION: '숙소',
+};
+const REGIONS = [
+  '전체',
+  '서울',
+  '경기',
+  '인천',
+  '강원',
+  '경상',
+  '충청',
+  '전라',
+  '제주',
+];
 const PRICE_RANGES = [
   { label: '전체', min: 0, max: Infinity },
   { label: '5만원 이하', min: 0, max: 50000 },
@@ -52,7 +70,9 @@ const BackBtn = styled.button`
   align-items: center;
   gap: 4px;
   white-space: nowrap;
-  &:hover { color: ${COLOR.black}; }
+  &:hover {
+    color: ${COLOR.black};
+  }
 `;
 
 const Chip = styled.div`
@@ -90,11 +110,18 @@ const SideFilter = styled.aside`
   border-right: 1px solid ${COLOR.gray200};
   background: #fff;
   overflow-y: auto;
-  &::-webkit-scrollbar { width: 3px; }
-  &::-webkit-scrollbar-thumb { background: #d8d3cb; border-radius: 10px; }
+  &::-webkit-scrollbar {
+    width: 3px;
+  }
+  &::-webkit-scrollbar-thumb {
+    background: #d8d3cb;
+    border-radius: 10px;
+  }
 `;
 
-const FilterSection = styled.div`margin-bottom: 18px;`;
+const FilterSection = styled.div`
+  margin-bottom: 18px;
+`;
 
 const FilterTitle = styled.div`
   font-size: 11px;
@@ -130,7 +157,9 @@ const RadioRow = styled.label`
   font-weight: ${({ $active }) => ($active ? 600 : 400)};
   margin-bottom: 6px;
   cursor: pointer;
-  input { accent-color: ${COLOR.green}; }
+  input {
+    accent-color: ${COLOR.green};
+  }
 `;
 
 const CheckRow = styled.label`
@@ -141,7 +170,9 @@ const CheckRow = styled.label`
   color: ${COLOR.gray600};
   margin-bottom: 6px;
   cursor: pointer;
-  input { accent-color: ${COLOR.green}; }
+  input {
+    accent-color: ${COLOR.green};
+  }
 `;
 
 const Divider = styled.hr`
@@ -159,7 +190,9 @@ const DateInput = styled.input`
   font-family: 'Noto Sans KR', sans-serif;
   outline: none;
   box-sizing: border-box;
-  &:focus { border-color: ${COLOR.sage}; }
+  &:focus {
+    border-color: ${COLOR.sage};
+  }
 `;
 
 const GuestInput = styled.div`
@@ -176,7 +209,9 @@ const GuestBtn = styled.button`
   background: #fff;
   font-size: 14px;
   cursor: pointer;
-  &:hover { border-color: ${COLOR.sage}; }
+  &:hover {
+    border-color: ${COLOR.sage};
+  }
 `;
 
 const ResetBtn = styled.button`
@@ -189,7 +224,10 @@ const ResetBtn = styled.button`
   color: ${COLOR.gray600};
   cursor: pointer;
   margin-top: 4px;
-  &:hover { border-color: ${COLOR.sage}; color: ${COLOR.green}; }
+  &:hover {
+    border-color: ${COLOR.sage};
+    color: ${COLOR.green};
+  }
 `;
 
 /* ── 공간 목록 패널 (지도 왼쪽, 고정 너비) ── */
@@ -199,8 +237,13 @@ const ListPanel = styled.div`
   border-right: 1px solid ${COLOR.gray200};
   background: #fff;
   overflow-y: auto;
-  &::-webkit-scrollbar { width: 3px; }
-  &::-webkit-scrollbar-thumb { background: #d8d3cb; border-radius: 10px; }
+  &::-webkit-scrollbar {
+    width: 3px;
+  }
+  &::-webkit-scrollbar-thumb {
+    background: #d8d3cb;
+    border-radius: 10px;
+  }
 `;
 
 const ListHeader = styled.div`
@@ -223,7 +266,9 @@ const ListCard = styled.div`
   cursor: pointer;
   background: ${({ $selected }) => ($selected ? COLOR.greenLight : '#fff')};
   transition: background 0.15s;
-  &:hover { background: ${COLOR.cream}; }
+  &:hover {
+    background: ${COLOR.cream};
+  }
 `;
 
 const ListThumb = styled.div`
@@ -268,8 +313,13 @@ const DetailPanel = styled.div`
   transition: right 0.3s ease;
   overflow-y: auto;
   z-index: 10;
-  &::-webkit-scrollbar { width: 3px; }
-  &::-webkit-scrollbar-thumb { background: #d8d3cb; border-radius: 10px; }
+  &::-webkit-scrollbar {
+    width: 3px;
+  }
+  &::-webkit-scrollbar-thumb {
+    background: #d8d3cb;
+    border-radius: 10px;
+  }
 `;
 
 const PanelToggleBtn = styled.button`
@@ -291,7 +341,9 @@ const PanelToggleBtn = styled.button`
   box-shadow: -2px 0 8px rgba(0, 0, 0, 0.08);
 `;
 
-const PanelInner = styled.div`padding: 16px;`;
+const PanelInner = styled.div`
+  padding: 16px;
+`;
 
 /* ════════════════════════════════════════════ */
 
@@ -333,7 +385,8 @@ function MapPage() {
     const load = async () => {
       setLoading(true);
       try {
-        const placeType = activeTab > 0 ? TAB_TO_TYPE[TYPE_TABS[activeTab]] : null;
+        const placeType =
+          activeTab > 0 ? TAB_TO_TYPE[TYPE_TABS[activeTab]] : null;
         const data = await searchSpaces({
           region: region !== '전체' ? region : undefined,
           placeType,
@@ -390,7 +443,8 @@ function MapPage() {
 
       const tail = document.createElement('div');
       tail.style.cssText = [
-        'width:0', 'height:0',
+        'width:0',
+        'height:0',
         'border-left:5px solid transparent',
         'border-right:5px solid transparent',
         'border-top:6px solid #fff',
@@ -479,7 +533,14 @@ function MapPage() {
       <Body>
         {/* 사이드 필터 — SearchResultPage와 동일 구조 */}
         <SideFilter>
-          <div style={{ fontSize: 13, fontWeight: 700, color: COLOR.black, marginBottom: 16 }}>
+          <div
+            style={{
+              fontSize: 13,
+              fontWeight: 700,
+              color: COLOR.black,
+              marginBottom: 16,
+            }}
+          >
             필터
           </div>
 
@@ -487,7 +548,11 @@ function MapPage() {
             <FilterTitle>공간 유형</FilterTitle>
             <TypeTabRow>
               {TYPE_TABS.map((tab, i) => (
-                <TypeChip key={tab} $active={activeTab === i} onClick={() => setActiveTab(i)}>
+                <TypeChip
+                  key={tab}
+                  $active={activeTab === i}
+                  onClick={() => setActiveTab(i)}
+                >
                   {tab}
                 </TypeChip>
               ))}
@@ -514,11 +579,17 @@ function MapPage() {
                 min={checkIn || new Date().toISOString().slice(0, 10)}
                 disabled={!checkIn}
                 onChange={(e) => setCheckOut(e.target.value)}
-                style={{ opacity: checkIn ? 1 : 0.5, cursor: checkIn ? 'pointer' : 'not-allowed' }}
+                style={{
+                  opacity: checkIn ? 1 : 0.5,
+                  cursor: checkIn ? 'pointer' : 'not-allowed',
+                }}
               />
               {checkIn && checkOut && (
                 <span style={{ fontSize: 11, color: COLOR.gray400 }}>
-                  {Math.round((new Date(checkOut) - new Date(checkIn)) / 86400000)}박
+                  {Math.round(
+                    (new Date(checkOut) - new Date(checkIn)) / 86400000
+                  )}
+                  박
                 </span>
               )}
             </div>
@@ -546,8 +617,17 @@ function MapPage() {
           <FilterSection>
             <FilterTitle>인원수</FilterTitle>
             <GuestInput>
-              <GuestBtn onClick={() => setGuests((g) => Math.max(1, g - 1))}>−</GuestBtn>
-              <span style={{ fontSize: 13, fontWeight: 600, minWidth: 20, textAlign: 'center' }}>
+              <GuestBtn onClick={() => setGuests((g) => Math.max(1, g - 1))}>
+                −
+              </GuestBtn>
+              <span
+                style={{
+                  fontSize: 13,
+                  fontWeight: 600,
+                  minWidth: 20,
+                  textAlign: 'center',
+                }}
+              >
                 {guests}명
               </span>
               <GuestBtn onClick={() => setGuests((g) => g + 1)}>+</GuestBtn>
@@ -608,7 +688,11 @@ function MapPage() {
                   <img
                     src={s.thumbnailUrl}
                     alt=""
-                    style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                    style={{
+                      width: '100%',
+                      height: '100%',
+                      objectFit: 'cover',
+                    }}
                   />
                 ) : (
                   <span>🏠</span>
@@ -629,7 +713,9 @@ function MapPage() {
                   {s.title}
                 </div>
                 <div style={{ fontSize: 11, color: '#C97D4C' }}>
-                  {s.avgScore ? `★ ${Number(s.avgScore).toFixed(1)}` : '평점 없음'}
+                  {s.avgScore
+                    ? `★ ${Number(s.avgScore).toFixed(1)}`
+                    : '평점 없음'}
                 </div>
               </div>
               <div style={{ fontSize: 12, fontWeight: 700, flexShrink: 0 }}>
@@ -641,7 +727,10 @@ function MapPage() {
 
         {/* 카카오 지도 */}
         <MapArea>
-          <div ref={mapContainerRef} style={{ width: '100%', height: '100%' }} />
+          <div
+            ref={mapContainerRef}
+            style={{ width: '100%', height: '100%' }}
+          />
 
           {/* 공간 상세 패널 (지도 위 오버레이, 우측) */}
           <DetailPanel $open={panelOpen}>
@@ -652,7 +741,9 @@ function MapPage() {
             {selected && (
               <PanelInner>
                 <div style={{ marginBottom: 6 }}>
-                  <TypeTag>{TYPE_LABEL[selected.type] ?? selected.type}</TypeTag>
+                  <TypeTag>
+                    {TYPE_LABEL[selected.type] ?? selected.type}
+                  </TypeTag>
                 </div>
                 <div
                   style={{
@@ -666,22 +757,32 @@ function MapPage() {
                 >
                   {selected.title}
                 </div>
-                <div style={{ fontSize: 12, color: '#C97D4C', marginBottom: 4 }}>
+                <div
+                  style={{ fontSize: 12, color: '#C97D4C', marginBottom: 4 }}
+                >
                   {selected.avgScore
                     ? `★ ${Number(selected.avgScore).toFixed(1)}`
                     : '평점 없음'}
                 </div>
-                <div style={{ fontSize: 12, color: COLOR.gray400, marginBottom: 10 }}>
+                <div
+                  style={{
+                    fontSize: 12,
+                    color: COLOR.gray400,
+                    marginBottom: 10,
+                  }}
+                >
                   {selected.address}
                 </div>
-                <div style={{ fontSize: 15, fontWeight: 700, marginBottom: 14 }}>
+                <div
+                  style={{ fontSize: 15, fontWeight: 700, marginBottom: 14 }}
+                >
                   {selected.basePrice
                     ? `${selected.basePrice.toLocaleString()}원~`
                     : '가격 문의'}
                 </div>
                 <button
                   onClick={() =>
-                    navigate(`/spaces/${selected.entityNo}/rooms`, {
+                    navigate(`/spaces/${selected.placeNo}/rooms`, {
                       state: { space: selected, checkIn, checkOut, guests },
                     })
                   }
