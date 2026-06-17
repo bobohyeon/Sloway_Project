@@ -118,14 +118,15 @@ public class SearchCustomRepositoryImpl implements SearchCustomRepository{
         return expr;
     }
 
-    // 썸네일 — no 오름차순 첫 번째 이미지 URL (JPQL 서브쿼리에서 LIMIT 미지원으로 중첩 서브쿼리 방식 사용)
+    // 썸네일 — sort 오름차순 첫 번째 이미지 URL
+    // JPQL 서브쿼리는 LIMIT 미지원 → sort.min() + currentUrl.min() 집계함수로 항상 1개만 반환
     private JPQLQuery<String> thumbnailExpr(){
         return JPAExpressions
-                .select(i.currentUrl)
+                .select(i.currentUrl.min())
                 .from(i)
                 .where(i.placeEntity.eq(p),
-                       i.no.eq(
-                           JPAExpressions.select(i2.no.min())
+                       i.sort.eq(
+                           JPAExpressions.select(i2.sort.min())
                                .from(i2)
                                .where(i2.placeEntity.eq(p))
                        ));
@@ -145,20 +146,18 @@ public class SearchCustomRepositoryImpl implements SearchCustomRepository{
                                         "LEAST({0},{1},{2},{3},{4},{5},{6},{7})",
                                         ws.monPrice,ws.tuePrice,ws.wedPrice,ws.thuPrice,
                                         ws.friPrice,ws.satPrice,ws.sunPrice,ws.holPrice
-                                ))
+                                ).min())
                         .from(ws)
                         .where(ws.placeEntity.eq(p))
-                        .limit(1)
                 ,
                 JPAExpressions.select(
                                 Expressions.numberTemplate(Integer.class,
                                         "LEAST({0},{1},{2},{3},{4},{5},{6},{7})",
                                         st.monPrice,st.tuePrice,st.wedPrice,st.thuPrice,
                                         st.friPrice,st.satPrice,st.sunPrice,st.holPrice
-                                ))
+                                ).min())
                         .from(st)
                         .where(st.placeEntity.eq(p))
-                        .limit(1)
         );
         return numberTemp;
     }
