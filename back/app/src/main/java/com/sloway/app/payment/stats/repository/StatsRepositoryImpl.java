@@ -1,6 +1,10 @@
 package com.sloway.app.payment.stats.repository;
 
 import com.querydsl.core.Tuple;
+import com.querydsl.core.types.dsl.BooleanExpression;
+import com.querydsl.core.types.dsl.CaseBuilder;
+import com.querydsl.core.types.dsl.Expressions;
+import com.querydsl.core.types.dsl.StringExpression;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import com.sloway.app.member.common.MemberStatus;
 import com.sloway.app.member.entity.QMemberEntity;
@@ -35,10 +39,31 @@ public class StatsRepositoryImpl implements StatsRepositoryCustom {
     }
 
 
+    // 타입 row 판별 (office/station/work 중 하나라도 not null = PLACE-only row 제외)
+    private BooleanExpression typedRow() {
+        return qHostPlaceEntity.officeEntity.isNotNull()
+                .or(qHostPlaceEntity.stationEntity.isNotNull())
+                .or(qHostPlaceEntity.workStayEntity.isNotNull());
+    }
+
+    // 공간 식별 키 — 타입별 id에 접두('O'/'S'/'W')를 붙여 타입 간 번호 충돌 방지.
+    // 재제출 등으로 같은 공간 row가 여러 개여도 countDistinct 하면 1개로 셈.
+    private StringExpression spaceKey() {
+        return new CaseBuilder()
+                .when(qHostPlaceEntity.officeEntity.isNotNull())
+                .then(qHostPlaceEntity.officeEntity.no.stringValue().prepend("O"))
+                .when(qHostPlaceEntity.stationEntity.isNotNull())
+                .then(qHostPlaceEntity.stationEntity.no.stringValue().prepend("S"))
+                .when(qHostPlaceEntity.workStayEntity.isNotNull())
+                .then(qHostPlaceEntity.workStayEntity.no.stringValue().prepend("W"))
+                .otherwise(Expressions.nullExpression(String.class));
+    }
+
     @Override
     public Long countHostPlaceByOffice() {
+        // count(*) → countDistinct: 재제출 중복 row 제거하고 실제 공간 수만 셈
         return jpaQueryFactory
-                .select(qHostPlaceEntity.count())
+                .select(qHostPlaceEntity.officeEntity.no.countDistinct())
                 .from(qHostPlaceEntity)
                 .where(
                         qHostPlaceEntity.officeEntity.isNotNull()
@@ -49,7 +74,7 @@ public class StatsRepositoryImpl implements StatsRepositoryCustom {
     @Override
     public Long countHostPlaceByStation() {
         return jpaQueryFactory
-                .select(qHostPlaceEntity.count())
+                .select(qHostPlaceEntity.stationEntity.no.countDistinct())
                 .from(qHostPlaceEntity)
                 .where(
                         qHostPlaceEntity.stationEntity.isNotNull()
@@ -60,7 +85,7 @@ public class StatsRepositoryImpl implements StatsRepositoryCustom {
     @Override
     public Long countHostPlaceByWorkStay() {
         return jpaQueryFactory
-                .select(qHostPlaceEntity.count())
+                .select(qHostPlaceEntity.workStayEntity.no.countDistinct())
                 .from(qHostPlaceEntity)
                 .where(
                         qHostPlaceEntity.workStayEntity.isNotNull()
@@ -70,14 +95,13 @@ public class StatsRepositoryImpl implements StatsRepositoryCustom {
 
     @Override
     public Long countHostPlaceByStatus(ApprovalStatus status) {
+        // 상태별 distinct 공간 수 (중복 row 제거)
         return jpaQueryFactory
-                .select(qHostPlaceEntity.count())
+                .select(spaceKey().countDistinct())
                 .from(qHostPlaceEntity)
                 .where(
                         qHostPlaceEntity.status.eq(status),
-                        qHostPlaceEntity.officeEntity.isNotNull()
-                                .or(qHostPlaceEntity.stationEntity.isNotNull())
-                                .or(qHostPlaceEntity.workStayEntity.isNotNull())
+                        typedRow()
                 )
                 .fetchOne();
     }
@@ -85,13 +109,11 @@ public class StatsRepositoryImpl implements StatsRepositoryCustom {
     @Override
     public Long countHostPlaceByCreatedAtBetween(LocalDateTime start, LocalDateTime end) {
         return jpaQueryFactory
-                .select(qHostPlaceEntity.count())
+                .select(spaceKey().countDistinct())
                 .from(qHostPlaceEntity)
                 .where(
                         qHostPlaceEntity.createdAt.between(start, end),
-                        qHostPlaceEntity.officeEntity.isNotNull()
-                                .or(qHostPlaceEntity.stationEntity.isNotNull())
-                                .or(qHostPlaceEntity.workStayEntity.isNotNull())
+                        typedRow()
                 )
                 .fetchOne();
     }
