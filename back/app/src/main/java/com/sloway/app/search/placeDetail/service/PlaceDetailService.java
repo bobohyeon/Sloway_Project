@@ -4,16 +4,20 @@ import com.sloway.app.common.exception.CustomException;
 import com.sloway.app.place.entity.office.OfficeEntity;
 import com.sloway.app.place.entity.station.StationEntity;
 import com.sloway.app.place.entity.workStay.WorkStayEntity;
+import com.sloway.app.place.entity.workStay.workOffice.WorkOfficeEntity;
+import com.sloway.app.place.repository.workStay.workOffice.WorkOfficeRepository;
 import com.sloway.app.reservation.RsvnErrorCode;
 import com.sloway.app.search.placeDetail.dto.PlaceDetailResDto;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
+@RequiredArgsConstructor
 @Transactional(readOnly = true)
 @Slf4j
 @Service
@@ -22,6 +26,8 @@ public class PlaceDetailService {
     // 트랜잭션이 끝나기 전에 필요한 컬렉션 로딩 — officePeriodEntities는 JOIN FETCH로 확실하게
     @PersistenceContext
     private EntityManager em;
+
+    private final WorkOfficeRepository workOfficeRepository;
 
     // workstay/office/station(소문자) → WORK_STAY/OFFICE/STATION 정규화
     // DB 뷰(place_summary)와 PlaceEntity 간 타입명 불일치 방어
@@ -174,7 +180,15 @@ public class PlaceDetailService {
                 WorkStayEntity.class)
                 .setParameter("no", entityNo).getResultList();
         if (list.isEmpty()) throw new CustomException(RsvnErrorCode.PLACE_NOT_FOUND);
-        return PlaceDetailResDto.from(list.get(0));
+
+        List<WorkOfficeEntity> officeList = workOfficeRepository.findAllByWorkStayEntityNo(entityNo);
+        List<String> officeImgUrls = officeList.stream()
+                .flatMap(workOfficeEntity -> workOfficeEntity.getImages().stream())
+                .map(imgWorkStayOfficeEntity -> imgWorkStayOfficeEntity.getCurrentUrl())
+                .toList();
+
+
+        return PlaceDetailResDto.from(list.get(0), officeImgUrls);
     }
 
 }
