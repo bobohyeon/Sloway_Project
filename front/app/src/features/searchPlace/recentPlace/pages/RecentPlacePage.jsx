@@ -4,7 +4,11 @@ import styled, { keyframes } from 'styled-components';
 import PageLayout from '../../../../app/layouts/page/PageLayout';
 import { COLOR } from '../../../rsvn/components/user/RsvnStyled';
 import RecentCard from '../components/user/RecentCard';
-import { findRecentViewed, deleteRecentViewed, deleteAllRecentViewed } from '../api/recentApi';
+import {
+  findRecentViewed,
+  deleteRecentViewed,
+  deleteAllRecentViewed,
+} from '../api/recentApi';
 
 const fadeInUp = keyframes`
   from { opacity: 0; transform: translateY(10px); }
@@ -71,15 +75,15 @@ function timeAgo(viewAt) {
 // RecentViewedResDto → RecentCard 호환 객체
 function toRecentCard(dto) {
   return {
-    id: dto.no,           // 삭제 시 사용하는 키
+    id: dto.no, // 삭제 시 사용하는 키
     placeNo: dto.placeNo,
     entityNo: dto.entityNo, // 공간 상세 페이지 이동에 사용
     type: dto.type,
     title: dto.title,
     location: dto.address,
     timeAgo: timeAgo(dto.viewAt),
-    rating: null,         // ResDto에 평점 없음
-    price: null,          // ResDto에 가격 없음
+    rating: null, // ResDto에 평점 없음
+    price: null, // ResDto에 가격 없음
     icon: TYPE_ICON[dto.type] ?? '🏠',
     thumbnailUrl: dto.thumbnailUrl ?? null,
   };
@@ -115,7 +119,7 @@ function RecentPlacePage() {
 
   const handleCardClick = (item) => {
     const path = SPACE_PATH[item.type] || 'workstays';
-    navigate(`/${path}/${item.entityNo}`);
+    navigate(`/${path}/${item.placeNo}`);
   };
 
   return (
