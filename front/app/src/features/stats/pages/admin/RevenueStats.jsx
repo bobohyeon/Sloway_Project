@@ -43,10 +43,17 @@ export default function RevenueStats() {
         setError(null);
       })
       .catch((e) => {
-        if (alive) setError(e?.response?.data?.message ?? '수익 통계 조회에 실패했습니다.');
+        if (alive)
+          setError(
+            e?.response?.data?.message ?? '수익 통계 조회에 실패했습니다.'
+          );
       })
-      .finally(() => { if (alive) setLoading(false); });
-    return () => { alive = false; };
+      .finally(() => {
+        if (alive) setLoading(false);
+      });
+    return () => {
+      alive = false;
+    };
   }, [year, month, months]);
 
   const currentYm = `${year}-${String(month).padStart(2, '0')}`;
@@ -58,7 +65,7 @@ export default function RevenueStats() {
 
   return (
     <PageLayout
-      title="수익 통계"
+      title="매출 통계"
       description="월별 매출·환불·순매출 추이"
       maxWidth={1200}
     >
@@ -67,14 +74,31 @@ export default function RevenueStats() {
         {loading && <StatusText>불러오는 중...</StatusText>}
         {error && <ErrorText>{error}</ErrorText>}
         <Spacer />
-        <DetailLink onClick={() => nav('/admin/stats/sales')}>통합 대시보드 →</DetailLink>
+        <DetailLink onClick={() => nav('/admin/stats/sales')}>
+          통합 대시보드 →
+        </DetailLink>
       </FilterBar>
 
       <KPIGrid>
-        <StatCard label="총 매출" value={Number(summary?.totalAmt ?? 0).toLocaleString()} unit="원" icon={<FaCoins />} highlight />
-        <StatCard label="환불 총액" value={Number(refund?.refundAmt ?? 0).toLocaleString()} unit="원" icon={<FaUndo />} />
-        <StatCard label="순매출 (환불 차감)" value={Number(summary?.netAmt ?? 0).toLocaleString()} unit="원" icon={<FaChartLine />} />
-        <StatCard label="환불율" value={Number(refund?.refundRate ?? 0)} unit="%" icon={<FaUndo />} />
+        <StatCard
+          label="총 매출"
+          value={Number(summary?.totalAmt ?? 0).toLocaleString()}
+          unit="원"
+          icon={<FaCoins />}
+          highlight
+        />
+        <StatCard
+          label="환불 총액"
+          value={Number(refund?.refundAmt ?? 0).toLocaleString()}
+          unit="원"
+          icon={<FaUndo />}
+        />
+        <StatCard
+          label="순매출 (환불 차감)"
+          value={Number(summary?.netAmt ?? 0).toLocaleString()}
+          unit="원"
+          icon={<FaChartLine />}
+        />
       </KPIGrid>
 
       <ChartBlock>
@@ -111,22 +135,47 @@ export default function RevenueStats() {
 }
 
 const FilterBar = styled.div`
-  display: flex; align-items: center; gap: var(--space-3);
-  margin-bottom: var(--space-5); flex-wrap: wrap;
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  margin-bottom: var(--space-5);
+  flex-wrap: wrap;
 `;
-const StatusText = styled.span`font-size: 0.78rem; color: var(--gray-400);`;
-const ErrorText = styled.span`font-size: 0.82rem; color: #c0392b;`;
-const Spacer = styled.div`flex: 1;`;
+const StatusText = styled.span`
+  font-size: 0.78rem;
+  color: var(--gray-400);
+`;
+const ErrorText = styled.span`
+  font-size: 0.82rem;
+  color: #c0392b;
+`;
+const Spacer = styled.div`
+  flex: 1;
+`;
 const DetailLink = styled.button`
-  background: transparent; border: none; color: var(--sage);
-  font-size: 0.82rem; font-weight: 600; cursor: pointer; padding: 4px 0;
-  &:hover { text-decoration: underline; }
+  background: transparent;
+  border: none;
+  color: var(--sage);
+  font-size: 0.82rem;
+  font-weight: 600;
+  cursor: pointer;
+  padding: 4px 0;
+  &:hover {
+    text-decoration: underline;
+  }
 `;
 const KPIGrid = styled.div`
-  display: grid; grid-template-columns: repeat(4, 1fr); gap: var(--space-3);
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: var(--space-3);
   margin-bottom: var(--space-6);
-  @media (max-width: 960px) { grid-template-columns: repeat(2, 1fr); }
-  @media (max-width: 480px) { grid-template-columns: 1fr; }
+  @media (max-width: 960px) {
+    grid-template-columns: 1fr;
+  }
 `;
-const ChartBlock = styled.div`margin-bottom: var(--space-5);`;
-const EmptyCard = styled(Card)`padding: var(--space-6) var(--space-5);`;
+const ChartBlock = styled.div`
+  margin-bottom: var(--space-5);
+`;
+const EmptyCard = styled(Card)`
+  padding: var(--space-6) var(--space-5);
+`;
