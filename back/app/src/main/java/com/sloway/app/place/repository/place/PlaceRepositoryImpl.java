@@ -166,7 +166,7 @@ public class PlaceRepositoryImpl implements PlaceRepositoryCustom {
                         placeEntity.title,
                         placeEntity.address,
                         placeSummary.avgScore.avg().coalesce(0.0),
-                        placeSummary.rsvnCount.avg().intValue().coalesce(0),
+                        getReviewCountExpression(),
                         placeSummary.rsvnCount.avg().intValue().coalesce(0),
                         getPriceExpression(), // 앞서 바꾼 numberTemplate 메서드
                         imgPlaceEntity.currentUrl.min()
@@ -194,6 +194,43 @@ public class PlaceRepositoryImpl implements PlaceRepositoryCustom {
                 )
                 .orderBy(hostPlaceEntity.no.desc())
                 .fetch();
+    }
+
+    private NumberExpression<Long> getReviewCountExpression() {
+        // STATION을 통한 리뷰 수
+        JPQLQuery<Long> stationReviewCount = JPAExpressions
+                .select(reviewEntity.no.count())
+                .from(reviewEntity)
+                .join(rsvnEntity).on(reviewEntity.rsvnNo.eq(rsvnEntity))
+                .join(stationEntity).on(rsvnEntity.stationNo.eq(stationEntity))
+                .where(stationEntity.placeEntity.eq(placeEntity));
+
+        // OFFICE를 통한 리뷰 수
+        JPQLQuery<Long> officeReviewCount = JPAExpressions
+                .select(reviewEntity.no.count())
+                .from(reviewEntity)
+                .join(rsvnEntity).on(reviewEntity.rsvnNo.eq(rsvnEntity))
+                .join(officeEntity).on(rsvnEntity.officeNo.eq(officeEntity))
+                .where(officeEntity.placeEntity.eq(placeEntity));
+
+        // WORK_STAY를 통한 리뷰 수
+        JPQLQuery<Long> workStayReviewCount = JPAExpressions
+                .select(reviewEntity.no.count())
+                .from(reviewEntity)
+                .join(rsvnEntity).on(reviewEntity.rsvnNo.eq(rsvnEntity))
+                .join(workStayEntity).on(rsvnEntity.workStayNo.eq(workStayEntity))
+                .where(workStayEntity.placeEntity.eq(placeEntity));
+
+        return Expressions.numberTemplate(Long.class,
+                "CASE WHEN {0} = 'STATION' THEN ({1}) " +
+                        "     WHEN {0} = 'OFFICE' THEN ({2}) " +
+                        "     WHEN {0} = 'WORK_STAY' THEN ({3}) " +
+                        "     ELSE 0 END",
+                placeEntity.type,
+                stationReviewCount,
+                officeReviewCount,
+                workStayReviewCount
+        );
     }
 
     private NumberExpression<Integer> getPriceExpression() {
