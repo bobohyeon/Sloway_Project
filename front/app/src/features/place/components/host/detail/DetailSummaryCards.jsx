@@ -26,11 +26,13 @@ const Card = styled.div`
 `;
 
 export default function DetailSummaryCards({ data }) {
+  console.log(data);
+
   const cards = [
     { label: '📅 이번 달 예약', value: `${data.monthlyBookings}건` },
     {
       label: '💰 이번 달 매출',
-      value: `${data.monthlyRevenue}원`,
+      value: `${Number(data?.monthlyRevenue ?? 0).toLocaleString()}원`,
       highlight: true,
     },
     { label: '⭐ 평균 평점', value: `${data.averageRating}점` },

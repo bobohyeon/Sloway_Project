@@ -47,7 +47,7 @@ function DetailBasicInfo({ info }) {
         </InfoItem>
         <InfoItem>
           <span className="label">기본 요금 (1박)</span>
-          <span className="price">{info.basePrice}원</span>
+          <span className="price">{info.basePrice.toLocaleString()}원</span>
         </InfoItem>
         <InfoItem>
           <span className="label">유형</span>
@@ -55,7 +55,7 @@ function DetailBasicInfo({ info }) {
         </InfoItem>
         <InfoItem>
           <span className="label">주말 요금</span>
-          <span className="val">{info.weekendPrice}원</span>
+          <span className="val">{info.weekendPrice.toLocaleString()}원</span>
         </InfoItem>
         <InfoItem>
           <span className="label">주소</span>
