@@ -166,7 +166,7 @@ public class PlaceRepositoryImpl implements PlaceRepositoryCustom {
                         placeEntity.title,
                         placeEntity.address,
                         placeSummary.avgScore.avg().coalesce(0.0),
-                        getReviewCountExpression(),
+                        getReviewCountExpression().intValue().coalesce(0),
                         placeSummary.rsvnCount.avg().intValue().coalesce(0),
                         getPriceExpression(), // 앞서 바꾼 numberTemplate 메서드
                         imgPlaceEntity.currentUrl.min()
