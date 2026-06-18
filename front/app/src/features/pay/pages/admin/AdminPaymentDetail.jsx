@@ -7,7 +7,7 @@ import { PaymentDetailCard } from '../../components/user/PaymentDetailCard';
 import { PaymentStatusBadge } from '../../components/user/PaymentStatusBadge';
 import { PriceBreakdown } from '../../components/user/PriceBreakdown';
 import { findPayByNo } from '../../api/payApi';
-import { findRefundAll } from '../../../refund/api/refundApi';
+import { findRefundByPayNo } from '../../../refund/api/refundApi';
 
 const StatusRow = styled.div`
   display: flex;
@@ -231,13 +231,15 @@ export default function AdminPaymentDetail() {
     if (!no) return;
     const load = async () => {
       try {
-        const [payResDto, refundList] = await Promise.all([
-          findPayByNo(no),
-          findRefundAll(),
-        ]);
+        const payResDto = await findPayByNo(no);
         setPay(payResDto);
-        const refund = refundList.find((r) => r.payNo === payResDto.no);
-        if (refund) setLinkedRefund(refund);
+        // 연관 환불 조회는 별도 try/catch — 환불 쪽이 터져도 결제 화면은 떠야 함
+        try {
+          const refund = await findRefundByPayNo(payResDto.no);
+          if (refund && refund.no) setLinkedRefund(refund);
+        } catch (refundErr) {
+          console.error('연관 환불 조회 실패', refundErr);
+        }
       } catch (err) {
         console.error('관리자 결제 상세 조회 실패', err);
         alert('결제 정보를 불러올 수 없습니다.');

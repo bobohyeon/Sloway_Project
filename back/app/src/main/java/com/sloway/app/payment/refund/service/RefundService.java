@@ -160,6 +160,12 @@ public class RefundService {
         return RefundResDto.from(refundEntity);
     }
 
+    // 결제 상세 화면용 — 연관 환불 단건. 환불 없으면 null (예외 X, 정상 케이스)
+    public RefundResDto findRefundByPayNo(Long payNo) {
+        RefundEntity refundEntity = refundRepository.findByPay(payNo);
+        return refundEntity == null ? null : RefundResDto.from(refundEntity);
+    }
+
     public List<RefundResDto> findRefundsByMemberNo(Long memberNo) {
         List<RefundEntity> refundEntityList = refundRepository.findByMember(memberNo);
         return refundEntityList.stream().map(RefundResDto::from).toList();

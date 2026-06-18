@@ -51,6 +51,13 @@ public class RefundApiController {
         return ResponseEntity.ok(resDto);
     }
 
+    // 결제 상세 화면용 — 결제 1건의 연관 환불 단건 (없으면 null 바디). "/{no}"(Long)와 경로 충돌 없음
+    @GetMapping("/pay/{payNo}")
+    public ResponseEntity<RefundResDto> findRefundByPayNo(@PathVariable Long payNo) {
+        RefundResDto resDto = refundService.findRefundByPayNo(payNo);
+        return ResponseEntity.ok(resDto);
+    }
+
     @PatchMapping("/{no}/process")
     public ResponseEntity<RefundResDto> processRefund(@PathVariable Long no) {
         RefundResDto resDto = refundService.processRefund(no);
