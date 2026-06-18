@@ -59,7 +59,7 @@ public class PlaceService {
                             // S3 업로드 후 Key 반환 (또는 URL)
                             String s3Key = s3Service.upload(files.get(i), "place");
                             int sortValue = sortList.get(i).getSort();
-                            return ImgPlaceEntity.from(placeEntity, s3Key, sortValue);
+                            return ImgPlaceEntity.from(placeEntity, s3Key, sortValue+1);
                         } catch (IOException e) {
                             throw new RuntimeException("S3 업로드 실패", e);
                         }
