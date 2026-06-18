@@ -178,6 +178,12 @@ function HostReviewPage() {
     [placeGroups, selectedPlaceNo]
   );
 
+  // 하위 공간명 중복 여부 (중복 시 spaceType 함께 표시)
+  const hasDupSubNames = useMemo(() => {
+    const nameSet = new Set(subSpaces.map((s) => s.spaceName));
+    return nameSet.size < subSpaces.length;
+  }, [subSpaces]);
+
   // 마운트 시 공간 목록 로드 → 첫 번째 상위/하위 공간 자동 선택
   useEffect(() => {
     findHostSpaces()
@@ -303,17 +309,13 @@ function HostReviewPage() {
           }}
         >
           {subSpaces.length === 0 && <option value="">하위 공간 없음</option>}
-          {(() => {
-            const nameSet = new Set(subSpaces.map((s) => s.spaceName));
-            const hasDup = nameSet.size < subSpaces.length;
-            return subSpaces.map((s, i) => (
-              <option key={i} value={`${s.entityNo ?? s.placeNo}_${s.spaceType ?? ''}`}>
-                {hasDup
-                  ? `${s.spaceName} · ${SPACE_TYPE_LABEL[s.spaceType] ?? s.spaceType}`
-                  : s.spaceName}
-              </option>
-            ));
-          })()}
+          {subSpaces.map((s, i) => (
+            <option key={i} value={`${s.entityNo ?? s.placeNo}_${s.spaceType ?? ''}`}>
+              {hasDupSubNames
+                ? `${s.spaceName} · ${SPACE_TYPE_LABEL[s.spaceType] ?? s.spaceType}`
+                : s.spaceName}
+            </option>
+          ))}
           ))}
         </Select>
         <Select value={period} onChange={(e) => { setPeriod(e.target.value); setPage(1); }}>
