@@ -73,7 +73,8 @@ public class UserDetailsServiceImpl implements UserDetailsService {
                 member.getEmail(),
                 user.getPassword(),
                 MemberRole.U,
-                member.getName()        // ← 추가
+                member.getName(),
+                member.getImgUrl()      // ← 프로필 사진 URL (로그인 응답에 실어 보냄)
         );
     }
 }//class

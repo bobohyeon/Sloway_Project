@@ -76,7 +76,8 @@ public class HostDetailService implements UserDetailsService {
                 member.getEmail(),
                 host.getPassword(),
                 MemberRole.H,
-                member.getName()
+                member.getName(),
+                member.getImgUrl()      // ← 프로필 사진 URL (로그인 응답에 실어 보냄)
         );
 
 

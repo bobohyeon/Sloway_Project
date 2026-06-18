@@ -19,4 +19,5 @@ public class LoginResponseDto {
     private Long memberNo;
     private String email;
     private String role;
+    private String imgurl;
 }

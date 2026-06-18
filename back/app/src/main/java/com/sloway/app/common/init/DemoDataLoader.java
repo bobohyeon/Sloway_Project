@@ -66,7 +66,7 @@ public class DemoDataLoader implements CommandLineRunner {
         // 1) Member (공통 정보) 먼저 저장 → memberNo 발급받음
         MemberEntity member = MemberEntity.builder()
                 .email(email)
-                .name("데모일반유저")
+                .name("일반유저")
                 .phone("01012345678")
                 .birthDate("19981030")
                 .status(MemberStatus.A)
@@ -100,7 +100,7 @@ public class DemoDataLoader implements CommandLineRunner {
         // 1) Member (공통 정보) 먼저 저장 → memberNo 발급받음
         MemberEntity member = MemberEntity.builder()
                 .email(email)
-                .name("데모호스트유저")
+                .name("호스트유저")
                 .phone("01011111111")
                 .birthDate("19981030")
                 .status(MemberStatus.A)
@@ -112,7 +112,7 @@ public class DemoDataLoader implements CommandLineRunner {
         HostEntity host = HostEntity.builder()
                 .memberNo(saveMember.getNo())
                 .password(passwordEncoder.encode("1234"))
-                .businessName("워케이션데모")
+                .businessName("워크 엔 스테이")
                 .businessNo("1234567890")
                 //데모여서 즉시 승인
                 .approvalState(ApprovalState.A)
@@ -132,7 +132,7 @@ public class DemoDataLoader implements CommandLineRunner {
         AdminEntity admin = AdminEntity.builder()
                 .email(email)
                 .password(passwordEncoder.encode("1234"))
-                .name("데모관리자")
+                .name("SloWay관리자")
                 .phone("01022222222")
                 .build();
         adminRepository.save(admin);

@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useDispatch } from 'react-redux';
 import { hostLogin } from '../api/authApi';
-import { login } from '../store/authSlice';
+import { login, setProfileImage } from '../store/authSlice';
 
 /**
  * 호스트 로그인 폼 훅.
@@ -39,6 +39,7 @@ export function useHostLoginForm() {
 
       localStorage.setItem('refreshToken', result.refreshToken);
       dispatch(login(result.accessToken));
+      dispatch(setProfileImage(result.imgUrl)); // 로그인 직후 헤더에 프로필 사진 반영
 
       navigate('/host/dashboard');
     } catch (err) {
