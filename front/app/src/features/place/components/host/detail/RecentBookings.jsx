@@ -49,6 +49,9 @@ const UserIcon = styled.div`
   width: 50px;
   height: 50px;
   background-color: #f1f1f1;
+  background-image: url(${(props) => props.$userImageUrl});
+  background-size: cover;
+  background-position: center;
   border-radius: 10px;
   display: flex;
   align-items: center;
@@ -115,7 +118,9 @@ function RecentBookings({ bookings = [] }) {
               navigate(`/host/reservation/list/${booking.bookingId}`);
             }}
           >
-            <UserIcon>👤</UserIcon>
+            <UserIcon $imageUrl={booking.userImageUrl}>
+              {!booking.userImageUrl && '👤'}
+            </UserIcon>
             <BookingInfo>
               <div className="user-name">{booking.userName}</div>
               <div className="sub-info">
