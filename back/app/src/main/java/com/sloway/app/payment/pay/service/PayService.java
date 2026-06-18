@@ -51,6 +51,7 @@ public class PayService {
     private final PointService pointService;
     private final KakaoPayClient kakaoPayClient;
     private final TossPayClient tossPayClient;
+    private final PayFailureRecorder payFailureRecorder;
 
     @Value("${app.base-url}")
     private String baseUrl;
@@ -96,7 +97,16 @@ public class PayService {
                 .pgToken(pgToken)
                 .build();
         // 승인이 성공한 뒤에만 내부 후 처리(예약 확정·쿠폰·포인트)를 실행
-        kakaoPayClient.approve(kakaoApproveReqDto);
+        // PG 호출 실패 시 별도 트랜잭션으로 FAILED 기록 후 예외 전파(READY 영구 잔존 방지)
+        try {
+            kakaoPayClient.approve(kakaoApproveReqDto);
+        } catch (CustomException e) {
+            throw e;
+        } catch (Exception e) {
+            log.error("카카오 승인 실패 payNo={}", payNo, e);
+            payFailureRecorder.markFailed(payNo);
+            throw new CustomException(PayErrorCode.PAY_PROCESS_FAILED);
+        }
         completePayAfterApprove(payEntity, memberNo);
         return payEntity;
     }
@@ -138,14 +148,27 @@ public class PayService {
             log.warn("토스 결제 금액 불일치 payNo={}, 요청={}, 서버={}", payNo, amount, payEntity.getFinalAmt());
             throw new CustomException(PayErrorCode.PAY_AMOUNT_INVALID);
         }
-        TossConfirmResDto confirmResDto = tossPayClient.confirm(TossConfirmReqDto.builder()
-                .paymentKey(paymentKey)
-                .orderId(orderId)
-                .amount(amount)
-                .build());
+        TossConfirmResDto confirmResDto;
+        try {
+            confirmResDto = tossPayClient.confirm(TossConfirmReqDto.builder()
+                    .paymentKey(paymentKey)
+                    .orderId(orderId)
+                    .amount(amount)
+                    .build());
+        } catch (Exception e) {
+            log.error("토스 승인 실패 payNo={}", payNo, e);
+            payFailureRecorder.markFailed(payNo);
+            throw new CustomException(PayErrorCode.PAY_PROCESS_FAILED);
+        }
         // 토스가 실제 승인 완료 응답일 때만 후 처리 진행
         if (!"DONE".equals(confirmResDto.getStatus())) {
             throw new CustomException(PayErrorCode.PAY_PROCESS_FAILED);
+        }
+        // 토스 응답의 실제 청구액(totalAmount)을 서버 금액과 재대조(응답 위변조·불일치 방어)
+        if (!Objects.equals(confirmResDto.getTotalAmount(), payEntity.getFinalAmt())) {
+            log.warn("토스 confirm 응답 금액 불일치 payNo={}, 응답={}, 서버={}",
+                    payNo, confirmResDto.getTotalAmount(), payEntity.getFinalAmt());
+            throw new CustomException(PayErrorCode.PAY_AMOUNT_INVALID);
         }
         Long memberNo = payEntity.getRsvnNo().getMemberNo().getNo();
         payEntity.assignTid(paymentKey);
@@ -228,6 +251,12 @@ public class PayService {
             );
             throw new CustomException(PayErrorCode.PAY_AMOUNT_NEGATIVE);
         }
+        // 0원 결제 차단 — 쿠폰+포인트로 0원이 되면 카카오/토스 PG가 거부해 READY 잔존하므로 사전 차단
+        if (finalAmt == 0) {
+            log.warn("0원 결제 시도 baseAmt={}, dcAmt={}, usedPoint={}",
+                    payCreateReqDto.getBaseAmt(), dcAmt, usedPoint);
+            throw new CustomException(PayErrorCode.PAY_AMOUNT_INVALID);
+        }
     }
 
     private void validCoupon(CouponEntity coupon, Long loginMemberNo) {
@@ -298,6 +327,12 @@ public class PayService {
         int usedPoint = payCreateReqDto.getUsedPoint() == null
                 ? 0 : payCreateReqDto.getUsedPoint();
         validUsedPoint(usedPoint);                     // 포인트 음수 방어
+        // 포인트 사전 검증 — approve가 아니라 ready 단계에서 한도(30%)·최소·잔액 체크
+        // (프론트 우회·한도초과 시 카카오 승인 후 터지는 정합성 붕괴 방지)
+        if (usedPoint > 0) {
+            int basisAmt = payCreateReqDto.getBaseAmt() + payCreateReqDto.getAddAmt() - dcAmt;
+            pointService.validatePointUsage(loginMemberNo, usedPoint, basisAmt);
+        }
         // 결제 총액에서 쿠폰·포인트를 차감한 실제 결제 금액
         int finalAmt = payCreateReqDto.getBaseAmt() + payCreateReqDto.getAddAmt()
                 - dcAmt - usedPoint;

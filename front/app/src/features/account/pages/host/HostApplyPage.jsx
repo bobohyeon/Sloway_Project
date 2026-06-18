@@ -305,7 +305,7 @@ function HostApplyPage() {
               이메일로 결과를 안내드려요.
             </CompleteDesc>
             <CompleteBtnRow>
-              <GhostBtn onClick={() => navigate('/user/mypage')}>
+              <GhostBtn onClick={() => navigate('/host/profile')}>
                 마이페이지로
               </GhostBtn>
               <PrimaryBtn onClick={() => navigate('/user/host/status')}>

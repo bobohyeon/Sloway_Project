@@ -19,8 +19,8 @@ import java.util.Optional;
 
 public interface RsvnRepository extends JpaRepository<RsvnEntity, Long> {
 
-    //내 예약 목록 조회
-    List<RsvnEntity> findByMemberNo(MemberEntity memberNo);
+    //내 예약 목록 조회 (최신순)
+    List<RsvnEntity> findByMemberNoOrderByCreatedAtDesc(MemberEntity memberNo);
 
     //내 예약 상세 조회
     Optional<RsvnEntity> findByNoAndMemberNo(Long no, MemberEntity memberNo);
@@ -45,6 +45,20 @@ public interface RsvnRepository extends JpaRepository<RsvnEntity, Long> {
     // 어드민 — 상태별 건수 집계 (단일 GROUP BY 쿼리)
     @Query("SELECT r.status, COUNT(r) FROM RsvnEntity r GROUP BY r.status")
     List<Object[]> countGroupByStatus();
+
+    // 공간별 확정 예약 조회 (예약 가능 날짜 표시용)
+    @Query("""
+        SELECT r FROM RsvnEntity r
+        WHERE r.status = 'S'
+        AND (
+            (:type = 'OFFICE'    AND r.officeNo.no   = :entityNo) OR
+            (:type = 'STATION'   AND r.stationNo.no  = :entityNo) OR
+            (:type = 'WORK_STAY' AND r.workStayNo.no = :entityNo)
+        )
+        """)
+    List<RsvnEntity> findConfirmedByEntityNo(
+            @Param("entityNo") Long entityNo,
+            @Param("type") String type);
 
     // 블랙아웃 등록 시 확정 예약 겹침 검증
     @Query("""

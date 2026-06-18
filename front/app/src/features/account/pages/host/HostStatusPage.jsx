@@ -144,7 +144,7 @@ function HostStatusPage() {
 
         {/* 상태별 액션 버튼 */}
         <S.ButtonRow>
-          <S.GhostBtn onClick={() => navigate('/host/mypage')}>
+          <S.GhostBtn onClick={() => navigate('/host/profile')}>
             마이페이지로
           </S.GhostBtn>
           {status === 'APPROVED' && (

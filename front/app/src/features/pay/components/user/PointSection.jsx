@@ -1,11 +1,14 @@
 import styled from 'styled-components';
 import { Card, Section } from '../../../pay_shared/components';
 
-export function PointSection({ heldPoints, points, onChange }) {
+export function PointSection({ heldPoints, points, onChange, maxUsable = 0 }) {
+  // 입력값을 사용 가능 한도(보유·30% 중 작은 값)로 클램핑 — 한도 초과 입력 자체를 차단
   const handleInput = (e) => {
-    const v = Math.min(Math.max(0, Number(e.target.value) || 0), heldPoints);
+    const v = Math.min(Math.max(0, Number(e.target.value) || 0), maxUsable);
     onChange(v);
   };
+  // 한도가 최소 사용액(1,000P) 미만이면 포인트 사용 불가
+  const usable = maxUsable >= 1000;
 
   return (
     <Section title="포인트 사용">
@@ -22,19 +25,28 @@ export function PointSection({ heldPoints, points, onChange }) {
             <InputField>
               <input
                 type="number"
-                placeholder="사용할 포인트"
+                placeholder={usable ? '사용할 포인트' : '사용 불가'}
                 value={points || ''}
                 onChange={handleInput}
-                max={heldPoints}
+                max={maxUsable}
+                disabled={!usable}
               />
               <InputUnit>P</InputUnit>
             </InputField>
-            <UseAllBtn onClick={() => onChange(heldPoints)}>
-              전액 사용
+            <UseAllBtn
+              onClick={() => onChange(maxUsable)}
+              disabled={!usable}
+            >
+              최대 사용
             </UseAllBtn>
           </InputWrap>
         </Row>
-        <Hint>최소 1,000P부터 사용 가능 · 결제액의 30%까지 사용 가능</Hint>
+        <Hint>
+          최소 1,000P부터 · 결제액의 30%까지
+          {usable
+            ? ` (최대 ${maxUsable.toLocaleString()}P 사용 가능)`
+            : ' · 현재 결제액으로는 포인트 사용이 어려워요'}
+        </Hint>
       </Card>
     </Section>
   );
@@ -138,6 +150,13 @@ const UseAllBtn = styled.button`
   &:hover {
     background: var(--sage);
     color: var(--white);
+  }
+
+  &:disabled {
+    opacity: 0.45;
+    cursor: not-allowed;
+    background: var(--gray-100);
+    color: var(--gray-400);
   }
 `;
 

@@ -92,6 +92,7 @@ public class LoginFilter extends UsernamePasswordAuthenticationFilter {
                 .memberNo(userDetails.getMemberNo())
                 .email(userDetails.getEmail())
                 .role(userDetails.getRole().name())
+                .imgurl(userDetails.getImgUrl())   // 프로필 사진 URL (host/admin·미설정이면 null)
                 .build();
 
         // 4) 응답에 실제로 쓰기

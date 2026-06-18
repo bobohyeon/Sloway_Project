@@ -26,6 +26,7 @@ import com.sloway.app.reservation.blackOut.entity.BlackOutEntity;
 import com.sloway.app.reservation.blackOut.repository.BlackOutRepository;
 import com.sloway.app.reservation.rsvn.dto.request.RsvnReqDto;
 import com.sloway.app.reservation.rsvn.dto.response.HostReservationStatsResDto;
+import com.sloway.app.reservation.rsvn.dto.response.BlockedDateResDto;
 import com.sloway.app.reservation.rsvn.dto.response.HostSpaceResDto;
 import com.sloway.app.reservation.rsvn.dto.response.RsvnResDto;
 import com.sloway.app.reservation.rsvn.entity.RsvnEntity;
@@ -40,10 +41,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
-import java.util.Comparator;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
+import java.util.*;
 import java.util.stream.Collectors;
 
 
@@ -129,7 +127,7 @@ public class RsvnService {
                 new CustomException(RsvnErrorCode.MEMBER_NOT_FOUND)
         );
 
-        List<RsvnEntity> list = rsvnRepository.findByMemberNo(member);
+        List<RsvnEntity> list = rsvnRepository.findByMemberNoOrderByCreatedAtDesc(member);
         // 예약들의 payNo 를 한 번에 조회(N+1 제거)
         Map<Long, Long> payNoMap =
                 findCompletePayNoMap(list.stream().map(RsvnEntity::getNo).toList());
@@ -151,38 +149,56 @@ public class RsvnService {
         return RsvnResDto.from(entity, payNo);
     }
 
+    //공간별 확정 예약 날짜 조회 (프론트 예약박스 충돌 체크용)
+    public List<BlockedDateResDto> findBlockedDates(Long entityNo, String type) {
+        return rsvnRepository.findConfirmedByEntityNo(entityNo, type)
+                .stream()
+                .map(BlockedDateResDto::from)
+                .collect(Collectors.toList());
+    }
+
+    //예약 상세 조회 (호스트용 — memberNo 체크 없이 rsvnNo로만 조회)
+    public RsvnResDto findOneForHost(Long rsvnNo) {
+        RsvnEntity entity = rsvnRepository.findById(rsvnNo)
+                .orElseThrow(() -> new CustomException(RsvnErrorCode.RESERVATION_NOT_FOUND));
+        Long payNo = findCompletePayNo(entity.getNo());
+        return RsvnResDto.from(entity, payNo);
+    }
+
     //호스트 — 내 공간 목록 조회 (placeNo + 공간명)
     public List<HostSpaceResDto> findHostSpaces(Long memberNo) {
         HostEntity host = hostRepository.findByMemberNo(memberNo)
                 .orElseThrow(() -> new CustomException(ReviewErrorCode.HOST_NOT_FOUND));
 
-        // 1. 해당 호스트의 모든 공간 정보 조회
+        // 1. 모든 공간 정보 일단 전부 조회
         List<HostPlaceEntity> hostPlaces = hostPlaceRepository.findByHostEntityNo(host.getNo());
 
-        // 2. 각 HostPlace에서 PlaceNo만 추출 (중복 제거를 위해 Set 또는 distinct 사용)
-        List<Long> placeNos = hostPlaces.stream()
-                .map(this::getPlaceNoFromHostPlace) // 별도 추출 메서드 활용
+        // 2. 일괄 조회를 위해 우선 전체 placeNo 목록 추출 (중복 제거하되 맵 변환은 안 함)
+        List<Long> allPlaceNos = hostPlaces.stream()
+                .map(this::getPlaceNoFromHostPlace)
                 .filter(Objects::nonNull)
                 .distinct()
                 .toList();
 
         // 3. 이미지 정보 일괄 조회 (N+1 방지)
-        Map<Long, String> imageMap = imgPlaceRepository.findByPlaceEntity_NoInAndSort(placeNos, 1)
+        Map<Long, String> imageMap = imgPlaceRepository.findByPlaceEntity_NoInAndSort(allPlaceNos, 1)
                 .stream()
                 .collect(Collectors.toMap(
                         img -> img.getPlaceEntity().getNo(),
                         ImgPlaceEntity::getCurrentUrl,
-                        (existing, replacement) -> existing // 중복 시 기존값 유지
+                        (existing, replacement) -> existing
                 ));
 
-        // 4. DTO 매핑
+        // 4. 먼저 DTO로 전부 변환한 뒤, '공간명'과 'placeNo'가 모두 같을 때만 중복 제거하기
         return hostPlaces.stream()
                 .map(hp -> {
                     Long pid = getPlaceNoFromHostPlace(hp);
-                    String imageUrl = imageMap.getOrDefault(pid, null); // 매칭되는 이미지가 없으면 null
+                    String imageUrl = (pid != null) ? imageMap.get(pid) : null;
                     return HostSpaceResDto.from(hp, imageUrl);
                 })
-                .distinct() // 주의: HostSpaceResDto에 equals/hashCode 필요
+                // 🌟 [핵심] 맵에서 임의로 지우지 않고, DTO 객체 자체의 중복만 정밀하게 필터링
+                // (HostSpaceResDto에 @EqualsAndHashCode 필수!)
+                .distinct()
                 .toList();
     }
 

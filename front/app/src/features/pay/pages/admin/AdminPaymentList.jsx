@@ -64,7 +64,8 @@ const toPaymentForUI = (resDto) => {
     method: methodInfo.label,
     methodIcon: methodInfo.icon,
     emoji: '🏠',
-    space: `예약 #${resDto.rsvnNo}`,
+    thumbnail: resDto.thumbnail ?? null,
+    space: resDto.spaceName ?? `예약 #${resDto.rsvnNo}`,
     paidAt: formatPaidAt(resDto.approvedAt ?? resDto.createdAt),
     amount: resDto.finalAmt ?? 0,
   };
@@ -178,7 +179,6 @@ export default function AdminPaymentList() {
           value={stats.refunded.toLocaleString()}
           unit="건"
           subText="취소된 결제"
-          highlight={stats.refunded > 0}
         />
       </StatGrid>
 

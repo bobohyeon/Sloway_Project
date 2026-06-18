@@ -17,7 +17,13 @@ export function ReservationInfoCard({ reservation }) {
       <Divider />
 
       <SpaceRow>
-        <Image>{reservation.emoji}</Image>
+        <Image>
+          {reservation.thumbnail ? (
+            <img src={reservation.thumbnail} alt={reservation.name} />
+          ) : (
+            reservation.emoji
+          )}
+        </Image>
         <SpaceInfo>
           {reservation.type && (
             <Badge variant="sage" size="sm">
@@ -127,6 +133,13 @@ const Image = styled.div`
   justify-content: center;
   font-size: 2rem;
   flex-shrink: 0;
+  overflow: hidden;
+
+  img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
 `;
 
 const SpaceInfo = styled.div`

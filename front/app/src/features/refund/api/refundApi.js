@@ -27,3 +27,9 @@ export async function findRefundByNo(no) {
   const resp = await api.get(`/payment/refund/${no}`);
   return resp.data;
 }
+
+// 결제 1건의 연관 환불 단건 — 환불 없으면 빈 바디('' 또는 null) 반환
+export async function findRefundByPayNo(payNo) {
+  const resp = await api.get(`/payment/refund/pay/${payNo}`);
+  return resp.data;
+}

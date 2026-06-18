@@ -157,10 +157,14 @@ function RsvnDetailPage() {
         <SectionTitle>공간 정보</SectionTitle>
         <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
           <div style={{
-            width: 56, height: 56, background: COLOR.cream, borderRadius: 10,
+            width: 72, height: 72, background: COLOR.cream, borderRadius: 10,
             display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 26,
+            overflow: 'hidden', flexShrink: 0,
           }}>
-            {spaceRoute === 'workstays' ? '🌲' : spaceRoute === 'coworking-offices' ? '🏢' : '🏠'}
+            {rsvn.thumbnailUrl
+              ? <img src={rsvn.thumbnailUrl} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+              : (spaceRoute === 'workstays' ? '🌲' : spaceRoute === 'coworking-offices' ? '🏢' : '🏠')
+            }
           </div>
           <div style={{ flex: 1 }}>
             {rsvn.spaceType && <RsvnStatusBadge type="type" label={rsvn.spaceType} />}

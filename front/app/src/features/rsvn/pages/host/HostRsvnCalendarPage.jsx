@@ -161,7 +161,7 @@ function HostRsvnCalendarPage() {
     list.forEach((item) => {
       if (!item.checkIn) return;
       const s = typeof item.status === 'object' ? item.status?.name : item.status;
-      if (s === 'R' || s === 'C') return;
+      if (s !== 'S' && s !== 'E') return;
       const d = dayjs(item.checkIn);
       if (d.year() === current.year() && d.month() === current.month()) {
         const day = d.date();
@@ -196,7 +196,7 @@ function HostRsvnCalendarPage() {
       .filter((item) => {
         if (!item.checkIn) return false;
         const s = typeof item.status === 'object' ? item.status?.name : item.status;
-        if (s === 'R' || s === 'C') return false;
+        if (s !== 'S' && s !== 'E') return false;
         return dayjs(item.checkIn).isSame(day, 'day');
       })
       .map((item) => ({ type: 'rsvn', title: `${item.guestName} · ${item.spaceName}`, no: item.no, data: item }));
@@ -214,27 +214,14 @@ function HostRsvnCalendarPage() {
     return [...rsvnEvs, ...blackoutEvs];
   };
 
-  const thisMonthRsvns = list.filter((item) => {
-    if (!item.checkIn) return false;
-    const d = dayjs(item.checkIn);
-    return d.year() === current.year() && d.month() === current.month();
-  });
-  const confirmedCount = thisMonthRsvns.filter((i) => {
+  const confirmedCount = list.filter((i) => {
     const s = typeof i.status === 'object' ? i.status?.name : i.status;
     return s === 'S';
   }).length;
-  const doneCount = thisMonthRsvns.filter((i) => {
+  const doneCount = list.filter((i) => {
     const s = typeof i.status === 'object' ? i.status?.name : i.status;
     return s === 'E';
   }).length;
-
-  const now = dayjs();
-  const upcoming = list
-    .filter((i) => {
-      const s = typeof i.status === 'object' ? i.status?.name : i.status;
-      return s === 'S' && i.checkIn && dayjs(i.checkIn).isAfter(now);
-    })
-    .sort((a, b) => dayjs(a.checkIn).diff(dayjs(b.checkIn)))[0];
 
   const goMonth = (dir) => {
     setSlideDir(dir > 0 ? 'left' : 'right');
@@ -269,15 +256,9 @@ function HostRsvnCalendarPage() {
       maxWidth={1200}
     >
       <StatCards>
-        <StatCard><StatLabel>이번 달 예약</StatLabel><StatValue $color={COLOR.terra}>{thisMonthRsvns.length}건</StatValue></StatCard>
+        <StatCard><StatLabel>전체 예약</StatLabel><StatValue $color={COLOR.terra}>{list.length}건</StatValue></StatCard>
         <StatCard><StatLabel>확정</StatLabel><StatValue>{confirmedCount}건</StatValue></StatCard>
         <StatCard><StatLabel>완료</StatLabel><StatValue>{doneCount}건</StatValue></StatCard>
-        <StatCard>
-          <StatLabel>가장 가까운 일정</StatLabel>
-          <StatValue $color={COLOR.green} style={{ fontSize: 16 }}>
-            {upcoming ? dayjs(upcoming.checkIn).format('M/D') : '—'}
-          </StatValue>
-        </StatCard>
       </StatCards>
 
       <SectionBox>

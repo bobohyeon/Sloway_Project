@@ -36,9 +36,15 @@ function parseToken(token) {
 const token = localStorage.getItem('accessToken');
 const initialUser = parseToken(token);
 
+// 토큰엔 프로필 사진이 없으므로 별도 저장해 둔 imgUrl을 머지한다.
+// (이게 있어야 새로고침 후에도 헤더에 사진이 유지됨)
+if (initialUser) {
+  initialUser.imgUrl = localStorage.getItem('profileImgUrl') ?? null;
+}
+
 const initialState = {
   isAuthenticated: !!initialUser,
-  user: initialUser, // { memberNo, email, role } 또는 null
+  user: initialUser, // { memberNo, email, role, name, imgUrl } 또는 null
 };
 
 // ─── 슬라이스 정의 ────────────────────────────────────────
@@ -62,6 +68,23 @@ const authSlice = createSlice({
     },
 
     /**
+     * 프로필 사진 URL 갱신 — 인증과 분리된 단일 경로(SSOT).
+     * 로그인 직후·프로필 수정 후 모두 이걸 호출하면 헤더가 함께 갱신된다.
+     * 토큰엔 사진이 없으므로 localStorage에도 영속(새로고침 유지).
+     */
+    setProfileImage(state, action) {
+      const imgUrl = action.payload || null; // 빈 문자열/undefined → null (사진 제거)
+      if (state.user) {
+        state.user.imgUrl = imgUrl;
+      }
+      if (imgUrl) {
+        localStorage.setItem('profileImgUrl', imgUrl);
+      } else {
+        localStorage.removeItem('profileImgUrl');
+      }
+    },
+
+    /**
      * 로그아웃 — Redux + localStorage 클리어.
      */
     logout(state) {
@@ -70,9 +93,10 @@ const authSlice = createSlice({
 
       localStorage.removeItem('accessToken');
       localStorage.removeItem('refreshToken');
+      localStorage.removeItem('profileImgUrl'); // 계정 전환 시 이전 사진 잔류 방지
     },
   },
 });
 
-export const { login, logout } = authSlice.actions;
+export const { login, logout, setProfileImage } = authSlice.actions;
 export default authSlice.reducer;

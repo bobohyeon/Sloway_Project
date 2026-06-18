@@ -50,6 +50,12 @@ public class SettleService {
     public SettleResDto createSettle(SettleCreateReqDto reqDto) {
         HostEntity host = hostRepository.findById(reqDto.getHostNo())
                 .orElseThrow(() -> new CustomException(HostErrorCode.HOST_NOT_FOUND));
+        // 멱등 가드 — 같은 호스트+기간 정산이 이미 있으면 재생성 스킵(스케줄러 재실행 시 이중 가산 방지)
+        if (settleRepository.existsByHostAndPeriod(host.getNo(), reqDto.getSettleStartDate(), reqDto.getSettleEndDate())) {
+            log.info("이미 생성된 정산 — 스킵 hostNo={}, {}~{}",
+                    host.getNo(), reqDto.getSettleStartDate(), reqDto.getSettleEndDate());
+            return null;
+        }
         List<HostPlaceEntity> hostPlaces =
                 hostPlaceRepository.findByHostEntityNoAndStatus(host.getNo(), ApprovalStatus.A);
         List<Long> officeNos = hostPlaces.stream()

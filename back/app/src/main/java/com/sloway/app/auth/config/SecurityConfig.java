@@ -145,6 +145,7 @@ public class SecurityConfig {
 
                                 // ══ 예약 도메인 (/api/reservation) ══════════════════════════
                                 // ⚠️ host·admin 구체 경로 먼저, 포괄 USER가 맨 뒤 (USER /** 가 host·admin 안 가리게).
+                                .requestMatchers(HttpMethod.GET, "/api/reservation/blocked-dates").permitAll() //보현추가(0618)
                                 .requestMatchers(HttpMethod.GET, "/api/reservation/host", "/api/reservation/host/**").hasRole("HOST")
                                 .requestMatchers(HttpMethod.POST, "/api/reservation/*/reject").hasRole("HOST")
                                 .requestMatchers(HttpMethod.GET, "/api/reservation/admin/**").hasRole("ADMIN")

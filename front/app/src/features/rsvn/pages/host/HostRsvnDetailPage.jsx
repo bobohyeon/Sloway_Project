@@ -1,4 +1,4 @@
-import { useNavigate, useParams, useLocation } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 import styled from 'styled-components';
 import PageLayout from '../../../../app/layouts/page/PageLayout';
 import RsvnStatusBadge from '../../components/user/RsvnStatusBadge';
@@ -12,7 +12,7 @@ import {
   COLOR,
 } from '../../components/user/RsvnStyled';
 import { ApproveBtn } from '../../components/host/HostRsvnStyled';
-import { findOneRsvn, rejectRsvn } from '../../api/rsvnApi';
+import { findOneRsvnForHost, rejectRsvn } from '../../api/rsvnApi';
 import { useEffect, useState } from 'react';
 
 const SpaceThumb = styled.div`
@@ -78,12 +78,10 @@ function formatDate(checkIn, checkOut) {
 function HostRsvnDetailPage() {
   const navigate = useNavigate();
   const { id } = useParams();
-  const location = useLocation();
-  const [rsvn, setRsvn] = useState(location.state?.rsvn ?? null);
+  const [rsvn, setRsvn] = useState(null);
 
   useEffect(() => {
-    if (rsvn) return;
-    findOneRsvn(id).then(setRsvn);
+    findOneRsvnForHost(id).then(setRsvn);
   }, [id]);
 
   const handleReject = async () => {

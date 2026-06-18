@@ -21,7 +21,7 @@ public class SettleScheduler {
     private final SettleService settleService;
     private final HostRepository hostRepository;
 
-    @Scheduled(cron = "0 0 0 */4 * *")
+    @Scheduled(cron = "0 0 0 */4 * *", zone = "Asia/Seoul")
     public void settleBatch() {
         LocalDate end = LocalDate.now().minusDays(1);
         LocalDate start = end.minusDays(3);

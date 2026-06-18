@@ -73,7 +73,8 @@ const toPaymentForUI = (resDto) => {
     method: methodInfo.label,
     methodIcon: methodInfo.icon,
     emoji: '🏠',
-    space: `예약 #${resDto.rsvnNo}`,
+    thumbnail: resDto.thumbnail ?? null,
+    space: resDto.spaceName ?? `예약 #${resDto.rsvnNo}`,
     paidAt: formatPaidAt(resDto.approvedAt ?? resDto.createdAt),
     amount: resDto.finalAmt ?? 0,
   };

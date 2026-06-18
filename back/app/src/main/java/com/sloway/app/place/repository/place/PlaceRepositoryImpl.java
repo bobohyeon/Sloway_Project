@@ -10,7 +10,14 @@ import com.sloway.app.place.dto.request.place.PlaceUpdateReqDto;
 import com.sloway.app.place.dto.response.place.*;
 import com.sloway.app.place.entity.cashing.PlaceSummary;
 import com.sloway.app.place.entity.hostPlace.QHostPlaceEntity;
+import com.sloway.app.place.entity.office.QOfficeEntity;
+import com.sloway.app.place.entity.office.QOfficePeriodEntity;
 import com.sloway.app.place.entity.place.PlaceStatus;
+import com.sloway.app.place.entity.place.QPlaceEntity;
+import com.sloway.app.place.entity.station.QStationEntity;
+import com.sloway.app.place.entity.workStay.QWorkStayEntity;
+import com.sloway.app.reservation.rsvn.entity.QRsvnEntity;
+import com.sloway.app.review.review.entity.QReviewEntity;
 import lombok.RequiredArgsConstructor;
 
 import java.time.LocalDateTime;
@@ -151,12 +158,66 @@ public class PlaceRepositoryImpl implements PlaceRepositoryCustom {
     @Override
     public List<PlaceListRespDto> findPlaceListByMemberNo(Long memberNo) {
         QHostPlaceEntity subHp = new QHostPlaceEntity("subHp");
+        QReviewEntity subReview = new QReviewEntity("subReview");
+        QRsvnEntity subRsvn = new QRsvnEntity("subRsvn");
+        QStationEntity subStation = new QStationEntity("subStation");
+        QOfficeEntity subOffice = new QOfficeEntity("subOffice");
+        QWorkStayEntity subWorkStay = new QWorkStayEntity("subWorkStay");
+        QOfficePeriodEntity subOfficePeriod = new QOfficePeriodEntity("subOfficePeriod");
 
-        // 1. 최신 이력(status)을 구하기 위한 서브쿼리 정의
+        // 1. 최신 HOST_PLACE 이력 서브쿼리
         JPQLQuery<Long> latestHostPlaceNo = JPAExpressions
                 .select(subHp.no.max())
                 .from(subHp)
                 .where(subHp.placeEntity.eq(placeEntity));
+
+        // 2. STATION 리뷰 수
+        JPQLQuery<Long> stationReviewCount = JPAExpressions
+                .select(subReview.no.count())
+                .from(subReview)
+                .innerJoin(subRsvn).on(subReview.rsvnNo.eq(subRsvn))
+                .innerJoin(subStation).on(subRsvn.stationNo.eq(subStation))
+                .where(subStation.placeEntity.eq(placeEntity));
+
+        // 3. OFFICE 리뷰 수
+        JPQLQuery<Long> officeReviewCount = JPAExpressions
+                .select(subReview.no.count())
+                .from(subReview)
+                .innerJoin(subRsvn).on(subReview.rsvnNo.eq(subRsvn))
+                .innerJoin(subOffice).on(subRsvn.officeNo.eq(subOffice))
+                .where(subOffice.placeEntity.eq(placeEntity));
+
+        // 4. WORK_STAY 리뷰 수
+        JPQLQuery<Long> workStayReviewCount = JPAExpressions
+                .select(subReview.no.count())
+                .from(subReview)
+                .innerJoin(subRsvn).on(subReview.rsvnNo.eq(subRsvn))
+                .innerJoin(subWorkStay).on(subRsvn.workStayNo.eq(subWorkStay))
+                .where(subWorkStay.placeEntity.eq(placeEntity));
+
+        // 5. 리뷰 수 CASE 표현식
+        NumberExpression<Long> reviewCountExpression = Expressions.numberTemplate(Long.class,
+                "CASE WHEN {0} = 'STATION' THEN ({1}) " +
+                        "     WHEN {0} = 'OFFICE' THEN ({2}) " +
+                        "     WHEN {0} = 'WORK_STAY' THEN ({3}) " +
+                        "     ELSE 0 END",
+                placeEntity.type,
+                stationReviewCount,
+                officeReviewCount,
+                workStayReviewCount
+        );
+
+        // 6. 가격 CASE 표현식
+        NumberExpression<Integer> priceExpression = Expressions.numberTemplate(Integer.class,
+                "CASE WHEN {0} = 'WORK_STAY' THEN ({1}) " +
+                        "     WHEN {0} = 'STATION' THEN ({2}) " +
+                        "     WHEN {0} = 'OFFICE' THEN ({3}) " +
+                        "     ELSE 0 END",
+                placeEntity.type,
+                JPAExpressions.select(workStayEntity.monPrice.min()).from(workStayEntity).where(workStayEntity.placeEntity.eq(placeEntity)),
+                JPAExpressions.select(stationEntity.monPrice.min()).from(stationEntity).where(stationEntity.placeEntity.eq(placeEntity)),
+                JPAExpressions.select(officePeriodEntity.price.min()).from(officePeriodEntity).innerJoin(officePeriodEntity.officeEntity, officeEntity).where(officeEntity.placeEntity.eq(placeEntity))
+        );
 
         return queryFactory
                 .select(Projections.constructor(PlaceListRespDto.class,
@@ -165,47 +226,117 @@ public class PlaceRepositoryImpl implements PlaceRepositoryCustom {
                         hostPlaceEntity.status.stringValue(),
                         placeEntity.title,
                         placeEntity.address,
-                        placeSummary.avgScore.avg().coalesce(0.0),
-                        placeSummary.rsvnCount.avg().intValue().coalesce(0),
-                        placeSummary.rsvnCount.avg().intValue().coalesce(0),
-                        getPriceExpression(), // 앞서 바꾼 numberTemplate 메서드
+                        placeSummary.avgScore.coalesce(0.0),
+                        reviewCountExpression.intValue().coalesce(0),
+                        placeSummary.rsvnCount.sum().intValue().coalesce(0),
+                        priceExpression,
                         imgPlaceEntity.currentUrl.min()
                 ))
                 .from(placeEntity)
-                // 2. 조인 구조 최적화
-                .innerJoin(hostPlaceEntity).on(hostPlaceEntity.placeEntity.eq(placeEntity)
-                        .and(hostPlaceEntity.no.eq(latestHostPlaceNo)))
+                // HOST_PLACE 최신 이력 조인
+                .innerJoin(hostPlaceEntity).on(
+                        hostPlaceEntity.placeEntity.eq(placeEntity)
+                                .and(hostPlaceEntity.no.eq(latestHostPlaceNo))
+                )
+                // HOST 테이블 조인
                 .innerJoin(hostEntity).on(hostPlaceEntity.hostEntity.eq(hostEntity))
-                .leftJoin(placeSummary).on(placeSummary.placeNo.eq(placeEntity.no)
-                        .and(placeSummary.type.eq(placeEntity.type)))
-                .leftJoin(imgPlaceEntity).on(imgPlaceEntity.placeEntity.eq(placeEntity).and(imgPlaceEntity.sort.eq(1)))
+                // place_summary 조인
+                .leftJoin(placeSummary).on(
+                        placeSummary.placeNo.eq(placeEntity.no)
+                                .and(placeSummary.type.eq(placeEntity.type))
+                )
+                // 이미지 조인
+                .leftJoin(imgPlaceEntity).on(
+                        imgPlaceEntity.placeEntity.eq(placeEntity)
+                                .and(imgPlaceEntity.sort.eq(1))
+                )
                 .where(
                         placeEntity.delYn.eq("N"),
                         hostEntity.memberNo.eq(memberNo)
                 )
-                // 3. GROUP BY 절에 hostPlaceEntity.no 추가
+                // GROUP BY 절 (reviewCountExpression과 priceExpression도 포함)
                 .groupBy(
                         placeEntity.no,
                         placeEntity.type,
+                        placeSummary.placeNo,
+                        placeSummary.type,
+                        placeSummary.avgScore,
                         hostPlaceEntity.no,
                         hostPlaceEntity.status,
                         placeEntity.title,
-                        placeEntity.address
+                        placeEntity.address,
+                        reviewCountExpression,
+                        priceExpression
                 )
                 .orderBy(hostPlaceEntity.no.desc())
                 .fetch();
     }
 
-    private NumberExpression<Integer> getPriceExpression() {
+// ======= 헬퍼 메서드 =======
+
+    private NumberExpression<Long> getReviewCountExpression(
+            QPlaceEntity placeEntity,
+            QReviewEntity reviewEntity,
+            QRsvnEntity rsvnEntity,
+            QStationEntity stationEntity,
+            QOfficeEntity officeEntity,
+            QWorkStayEntity workStayEntity) {
+
+        QReviewEntity subReview = new QReviewEntity("subReview");
+        QRsvnEntity subRsvn = new QRsvnEntity("subRsvn");
+        QStationEntity subStation = new QStationEntity("subStation");
+        QOfficeEntity subOffice = new QOfficeEntity("subOffice");
+        QWorkStayEntity subWorkStay = new QWorkStayEntity("subWorkStay");
+
+        JPQLQuery<Long> stationReviewCount = JPAExpressions
+                .select(subReview.no.count())
+                .from(subReview)
+                .innerJoin(subRsvn).on(subReview.rsvnNo.eq(subRsvn))
+                .innerJoin(subStation).on(subRsvn.stationNo.eq(subStation))
+                .where(subStation.placeEntity.eq(placeEntity));
+
+        JPQLQuery<Long> officeReviewCount = JPAExpressions
+                .select(subReview.no.count())
+                .from(subReview)
+                .innerJoin(subRsvn).on(subReview.rsvnNo.eq(subRsvn))
+                .innerJoin(subOffice).on(subRsvn.officeNo.eq(subOffice))
+                .where(subOffice.placeEntity.eq(placeEntity));
+
+        JPQLQuery<Long> workStayReviewCount = JPAExpressions
+                .select(subReview.no.count())
+                .from(subReview)
+                .innerJoin(subRsvn).on(subReview.rsvnNo.eq(subRsvn))
+                .innerJoin(subWorkStay).on(subRsvn.workStayNo.eq(subWorkStay))
+                .where(subWorkStay.placeEntity.eq(placeEntity));
+
+        return Expressions.numberTemplate(Long.class,
+                "CASE WHEN {0} = 'STATION' THEN ({1}) " +
+                        "     WHEN {0} = 'OFFICE' THEN ({2}) " +
+                        "     WHEN {0} = 'WORK_STAY' THEN ({3}) " +
+                        "     ELSE 0 END",
+                placeEntity.type,
+                stationReviewCount,
+                officeReviewCount,
+                workStayReviewCount
+        );
+    }
+
+    private NumberExpression<Integer> getPriceExpression(
+            QPlaceEntity placeEntity,
+            QWorkStayEntity workStayEntity,
+            QStationEntity stationEntity,
+            QOfficePeriodEntity officePeriodEntity,
+            QOfficeEntity officeEntity) {
+
         return Expressions.numberTemplate(Integer.class,
                 "CASE WHEN {0} = 'WORK_STAY' THEN ({1}) " +
                         "     WHEN {0} = 'STATION' THEN ({2}) " +
                         "     WHEN {0} = 'OFFICE' THEN ({3}) " +
                         "     ELSE 0 END",
-                placeEntity.type, // {0}
-                JPAExpressions.select(workStayEntity.monPrice.min()).from(workStayEntity).where(workStayEntity.placeEntity.eq(placeEntity)), // {1}
-                JPAExpressions.select(stationEntity.monPrice.min()).from(stationEntity).where(stationEntity.placeEntity.eq(placeEntity)), // {2}
-                JPAExpressions.select(officePeriodEntity.price.min()).from(officePeriodEntity).join(officePeriodEntity.officeEntity, officeEntity).where(officeEntity.placeEntity.eq(placeEntity)) // {3}
+                placeEntity.type,
+                JPAExpressions.select(workStayEntity.monPrice.min()).from(workStayEntity).where(workStayEntity.placeEntity.eq(placeEntity)),
+                JPAExpressions.select(stationEntity.monPrice.min()).from(stationEntity).where(stationEntity.placeEntity.eq(placeEntity)),
+                JPAExpressions.select(officePeriodEntity.price.min()).from(officePeriodEntity).innerJoin(officePeriodEntity.officeEntity, officeEntity).where(officeEntity.placeEntity.eq(placeEntity))
         );
     }
 

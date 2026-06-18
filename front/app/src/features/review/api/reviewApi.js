@@ -73,9 +73,9 @@ export async function fetchHostReviewStats() {
 
 // ─── 호스트 답글 (기존) ──────────────────────────────────────
 
-export async function findReviewsByHost(placeNo, minScore, period) {
+export async function findReviewsByHost(placeNo, entityNo, spaceType, minScore, period) {
   const res = await api.get('/host/reply/reviews', {
-    params: { placeNo, minScore, period },
+    params: { placeNo, entityNo, spaceType, minScore, period },
   });
   return res.data;
 }

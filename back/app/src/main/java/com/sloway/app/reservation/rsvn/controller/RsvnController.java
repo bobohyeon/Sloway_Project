@@ -7,6 +7,7 @@ import com.sloway.app.payment.refund.common.RefundReason;
 import com.sloway.app.reservation.RsvnErrorCode;
 import com.sloway.app.reservation.rsvn.dto.request.RsvnReqDto;
 import com.sloway.app.reservation.rsvn.dto.response.HostReservationStatsResDto;
+import com.sloway.app.reservation.rsvn.dto.response.BlockedDateResDto;
 import com.sloway.app.reservation.rsvn.dto.response.HostSpaceResDto;
 import com.sloway.app.reservation.rsvn.dto.response.RsvnResDto;
 import com.sloway.app.reservation.rsvn.entity.RsvnStatus;
@@ -91,12 +92,29 @@ public class RsvnController {
         return ResponseEntity.ok(dtoList);
     }
 
-    //내 예약 정보 상세 조회
+    //내 예약 정보 상세 조회 (회원용)
     @GetMapping("/{no}")
     public ResponseEntity<RsvnResDto> findOne(
             @AuthenticationPrincipal CustomUserDetails userDetails
             , @PathVariable Long no){
         RsvnResDto dto = rsvnService.findOne(userDetails.getMemberNo(), no);
+        return ResponseEntity.ok(dto);
+    }
+
+    //공간별 확정 예약 날짜 조회 (로그인 불필요 — 공간 상세 페이지 예약박스)
+    @GetMapping("/blocked-dates")
+    public ResponseEntity<List<BlockedDateResDto>> findBlockedDates(
+            @RequestParam Long entityNo,
+            @RequestParam String type) {
+        return ResponseEntity.ok(rsvnService.findBlockedDates(entityNo, type));
+    }
+
+    //예약 상세 조회 (호스트용 — memberNo 체크 없이 예약번호로만 조회)
+    @GetMapping("/host/{no}")
+    public ResponseEntity<RsvnResDto> findOneForHost(
+            @AuthenticationPrincipal CustomUserDetails userDetails
+            , @PathVariable Long no){
+        RsvnResDto dto = rsvnService.findOneForHost(no);
         return ResponseEntity.ok(dto);
     }
 

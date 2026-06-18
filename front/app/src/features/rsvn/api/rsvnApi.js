@@ -10,6 +10,16 @@ export async function findOneRsvn(id) {
   return res.data;
 }
 
+export async function findOneRsvnForHost(id) {
+  const res = await api.get(`/reservation/host/${id}`);
+  return res.data;
+}
+
+export async function findBlockedDates(entityNo, type) {
+  const res = await api.get('/reservation/blocked-dates', { params: { entityNo, type } });
+  return res.data; // [{ startDate, endDate }]
+}
+
 export async function cancelRsvn(id, refundReason) {
   const params = refundReason ? { refundReason } : {};
   await api.post(`/reservation/${id}/cancel`, null, { params });

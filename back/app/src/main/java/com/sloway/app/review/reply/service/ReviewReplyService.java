@@ -47,10 +47,18 @@ public class ReviewReplyService {
             throw new CustomException(ReviewErrorCode.UNAUTHORIZED_REPLY);
         }
 
-        PlaceEntity place = placeRepository.findByNo(filterDto.getPlaceNo())
-                .orElseThrow(()-> new CustomException(RsvnErrorCode.PLACE_NOT_FOUND));
-
-        List<ReviewEntity> dtoList = reviewRepository.findByHostFilter(place, filterDto.getMinScore(), filterDto.getPeriod());
+        List<ReviewEntity> dtoList;
+        if (filterDto.getEntityNo() != null && filterDto.getSpaceType() != null) {
+            // 공간하위상세(entityNo) 단위 필터
+            dtoList = reviewRepository.findByEntityFilter(
+                    filterDto.getEntityNo(), filterDto.getSpaceType(),
+                    filterDto.getMinScore(), filterDto.getPeriod());
+        } else {
+            // 상위 공간(placeNo) 단위 필터 (기존 방식)
+            PlaceEntity place = placeRepository.findByNo(filterDto.getPlaceNo())
+                    .orElseThrow(()-> new CustomException(RsvnErrorCode.PLACE_NOT_FOUND));
+            dtoList = reviewRepository.findByHostFilter(place, filterDto.getMinScore(), filterDto.getPeriod());
+        }
 
         return dtoList.stream()
                 .map(entity -> ReviewResDto.from(entity,

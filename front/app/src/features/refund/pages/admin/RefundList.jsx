@@ -48,6 +48,7 @@ const toRefundCardItem = (refund) => {
     userName: refund.memberName ?? `회원 #${refund.rsvnNo}`,
     spaceName: refund.spaceName ?? `예약 #${refund.rsvnNo}`,
     spaceEmoji: '🏠',
+    thumbnail: refund.thumbnail ?? null,
     method: '-',
     paidAmount: refundAmtNumber,
     refundAmount: refundAmtNumber,

@@ -45,7 +45,17 @@ public class RefundRepositoryImpl implements RefundRepositoryCustom {
                 .where(
                         qRefundEntity.rsvnNo.memberNo.no.eq(memberNo)
                 )
+                .orderBy(qRefundEntity.no.desc())
                 .fetch();
+    }
+
+    @Override
+    public RefundEntity findByPay(Long payNo) {
+        // existsByPayAndStatus 와 동일 조건. 단건 + 없으면 null 이라 fetchFirst (중복 row 에도 안전)
+        return jpaQueryFactory
+                .selectFrom(qRefundEntity)
+                .where(qRefundEntity.payNo.no.eq(payNo))
+                .fetchFirst();
     }
 
     @Override

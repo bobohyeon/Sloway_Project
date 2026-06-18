@@ -55,6 +55,18 @@ public class PointRepositoryImpl implements PointRepositoryCustom {
     }
 
     @Override
+    public List<PointEntity> findExpiredHoldingPoints(LocalDateTime now) {
+        return jpaQueryFactory
+                .selectFrom(qPointEntity)
+                .where(
+                        qPointEntity.status.in(PointStatus.WAIT, PointStatus.SAVE),
+                        qPointEntity.expiredAt.isNotNull(),
+                        qPointEntity.expiredAt.lt(now)
+                )
+                .fetch();
+    }
+
+    @Override
     public List<PointEntity> findPointsByMemberNo(Long memberNo) {
         return jpaQueryFactory
                 .selectFrom(qPointEntity)

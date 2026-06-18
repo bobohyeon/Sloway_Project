@@ -16,6 +16,7 @@ import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Repository;
 
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
 
@@ -38,6 +39,18 @@ public class SettleRepositoryImpl implements SettleRepositoryCustom {
                         .orderBy(qSettleEntity.no.desc())
                         .fetchFirst()
         );
+    }
+
+    @Override
+    public boolean existsByHostAndPeriod(Long hostNo, LocalDate start, LocalDate end) {
+        return jpaQueryFactory
+                .selectFrom(qSettleEntity)
+                .where(
+                        qSettleEntity.hostNo.no.eq(hostNo),
+                        qSettleEntity.settleStartDate.eq(start),
+                        qSettleEntity.settleEndDate.eq(end)
+                )
+                .fetchFirst() != null;
     }
 
     @Override

@@ -7,7 +7,7 @@ import EmailVerifyField from '../../components/user/EmailVerifyField';
 import ProfileImageField from '../../components/user/ProfileImageField';
 import { useMyPage } from '../../hooks/useMyPage';
 import { updateMyPage, changeMyEmail } from '../../api/userApi';
-import { logout } from '../../../auth/store/authSlice';
+import { logout, setProfileImage } from '../../../auth/store/authSlice';
 
 // ─── 검증 규칙 ──────────────────────────────────────────────
 const NAME_MIN = 2;
@@ -186,10 +186,11 @@ function ProfileEditPage() {
 
     setSaving(true);
     try {
-      await updateMyPage(
+      const result = await updateMyPage(
         { name: form.name.trim(), phone: form.phone.replace(/-/g, '') },
         imageFile
       );
+      dispatch(setProfileImage(result.imgUrl)); // 수정 직후 헤더 즉시 갱신 (사진 교체/제거 모두 반영)
       alert('저장되었습니다.');
       navigate('/user/profile');
     } catch (err) {

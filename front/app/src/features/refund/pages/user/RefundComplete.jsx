@@ -94,9 +94,15 @@ export default function RefundComplete() {
 
       <Content>
         <SpaceCard>
-          <SpaceEmoji>🏠</SpaceEmoji>
+          <SpaceEmoji>
+            {pay.thumbnail ? (
+              <img src={pay.thumbnail} alt={pay.spaceName} />
+            ) : (
+              '🏠'
+            )}
+          </SpaceEmoji>
           <SpaceInfo>
-            <SpaceName>예약 #{pay.rsvnNo}</SpaceName>
+            <SpaceName>{pay.spaceName ?? `예약 #${pay.rsvnNo}`}</SpaceName>
             <SpaceMeta>
               결제번호: PAY-{String(pay.no).padStart(6, '0')}
             </SpaceMeta>
@@ -163,6 +169,13 @@ const SpaceEmoji = styled.div`
   justify-content: center;
   font-size: 1.8rem;
   flex-shrink: 0;
+  overflow: hidden;
+
+  img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
 `;
 
 const SpaceInfo = styled.div`

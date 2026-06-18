@@ -8,7 +8,7 @@ import EmailVerifyField from '../../components/user/EmailVerifyField';
 import ProfileImageField from '../../components/user/ProfileImageField';
 import { useHostMyPage } from '../../hooks/useHostMyPage';
 import { updateHostMyPage, changeHostEmail } from '../../api/hostApi';
-import { logout } from '../../../auth/store/authSlice';
+import { logout, setProfileImage } from '../../../auth/store/authSlice';
 
 // ─── Styled Components ─────────────────────────────────────
 const Form = styled.form`
@@ -179,7 +179,7 @@ function HostProfileEditPage() {
     if (saving) return;
     setSaving(true);
     try {
-      await updateHostMyPage(
+      const result = await updateHostMyPage(
         {
           businessName: form.businessName.trim(),
           name: form.name.trim(),
@@ -187,6 +187,7 @@ function HostProfileEditPage() {
         },
         imageFile
       );
+      dispatch(setProfileImage(result.imgUrl)); // 수정 직후 헤더 즉시 갱신
       alert('저장되었습니다.');
       navigate('/host/profile');
     } catch (err) {

@@ -80,11 +80,10 @@ const RejectBtn = styled.button`
 
 const TABS = [
   { label: '전체', status: null },
-  { label: '결제대기', status: 'P' },
   { label: '확정', status: 'S' },
   { label: '완료', status: 'E' },
   { label: '거절', status: 'R' },
-  { label: '취소', status: 'C' },
+  { label: '환불', status: 'C' },
 ];
 
 const STATUS_LABEL = { P: '결제대기', S: '확정', E: '완료', R: '거절', C: '취소' };
@@ -96,7 +95,7 @@ const STATUS_STYLE = {
   C: { bg: '#FFF0F0', color: '#C0392B' },
 };
 
-const SPACE_TYPE_ICON = { 워크앤스테이: '🌲', 오피스: '🧱', 숙소: '🌴' };
+const SPACE_TYPE_ICON = { WORK_STAY: '🌲', OFFICE: '🧱', STATION: '🌴' };
 
 function HostRsvnListPage() {
   const navigate = useNavigate();
@@ -164,13 +163,13 @@ function HostRsvnListPage() {
           <StatLabel>전체 예약</StatLabel>
           <StatValue>{list.length}건</StatValue>
         </StatCard>
-        <StatCard style={{ cursor: 'pointer' }} onClick={() => setActiveTab(2)}>
+        <StatCard style={{ cursor: 'pointer' }} onClick={() => setActiveTab(1)}>
           <StatLabel>확정</StatLabel>
-          <StatValue $color={COLOR.green}>{counts[2]}건</StatValue>
+          <StatValue $color={COLOR.green}>{counts[1]}건</StatValue>
         </StatCard>
-        <StatCard style={{ cursor: 'pointer' }} onClick={() => setActiveTab(3)}>
+        <StatCard style={{ cursor: 'pointer' }} onClick={() => setActiveTab(2)}>
           <StatLabel>완료</StatLabel>
-          <StatValue>{counts[3]}건</StatValue>
+          <StatValue>{counts[2]}건</StatValue>
         </StatCard>
         <StatCard style={{ cursor: 'pointer' }} onClick={() => navigate('/host/settlement/dashboard')}>
           <StatLabel>이번 달 매출 →</StatLabel>
@@ -209,10 +208,14 @@ function HostRsvnListPage() {
         return (
           <Card
             key={item.no}
-            onClick={() => navigate(`/host/reservation/list/${item.no}`, { state: { rsvn: item } })}
+            onClick={() => navigate(`/host/reservation/list/${item.no}`)}
           >
             <CardRow>
-              <Thumb>{icon}</Thumb>
+              <Thumb>
+                {item.thumbnailUrl
+                  ? <img src={item.thumbnailUrl} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: 10 }} />
+                  : icon}
+              </Thumb>
               <CardBody>
                 <TagRow>
                   <RsvnStatusBadge type="type" label={item.spaceType} />

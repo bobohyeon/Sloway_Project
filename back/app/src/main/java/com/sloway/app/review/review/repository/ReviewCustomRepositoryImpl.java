@@ -87,6 +87,23 @@ public class ReviewCustomRepositoryImpl implements ReviewCustomRepository {
                 .fetchOne();
     }
 
+    @Override
+    public List<ReviewEntity> findByEntityFilter(Long entityNo, String spaceType, Integer minScore, PeriodType period) {
+        BooleanExpression entityCond = switch (spaceType != null ? spaceType : "") {
+            case "OFFICE"    -> office.no.eq(entityNo);
+            case "WORK_STAY" -> workStay.no.eq(entityNo);
+            default          -> station.no.eq(entityNo);
+        };
+        return queryFactory
+                .selectFrom(review)
+                .join(review.rsvnNo, rsvn)
+                .leftJoin(rsvn.officeNo, office)
+                .leftJoin(rsvn.stationNo, station)
+                .leftJoin(rsvn.workStayNo, workStay)
+                .where(entityCond, review.delYn.eq("N"), min(minScore), periodBoolean(period))
+                .fetch();
+    }
+
     //최소 평점 필터
     private BooleanExpression min(Integer minScore){ return minScore == null ? null : review.scoreTotal.goe(minScore);}
 

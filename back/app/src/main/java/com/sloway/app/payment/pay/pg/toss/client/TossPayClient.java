@@ -11,6 +11,7 @@ import org.springframework.http.MediaType;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestTemplate;
 
+import java.util.HashMap;
 import java.util.Map;
 
 // 토스페이먼츠 연동 클라이언트 — 카카오와 달리 서버측은 confirm 1단계
@@ -43,15 +44,20 @@ public class TossPayClient {
         return restTemplate.postForObject(baseUrl + "/v1/payments/confirm", entity, TossConfirmResDto.class);
     }
 
-    // 결제 취소: paymentKey로 토스에 취소 요청 (전액 취소). 카카오 cancel과 짝 — 환불 시 method 보고 분기 호출
-    public void cancel(String paymentKey, String cancelReason) {
+    // 결제 취소: paymentKey로 토스에 취소 요청. 카카오 cancel과 짝 — 환불 시 method 보고 분기 호출
+    // cancelAmount 지정 시 부분취소, null이면 전액취소(환불율 적용된 부분환불 대응)
+    public void cancel(String paymentKey, String cancelReason, Integer cancelAmount) {
         HttpHeaders headers = new HttpHeaders();
         headers.setBasicAuth(secretKey, ""); // confirm과 동일한 Basic 인증
         headers.setContentType(MediaType.APPLICATION_JSON);
 
-        // 전액 취소는 cancelReason만 필수 (부분취소면 cancelAmount 추가)
-        Map<String, String> body = Map.of("cancelReason", cancelReason);
-        HttpEntity<Map<String, String>> entity = new HttpEntity<>(body, headers);
+        // cancelReason 필수 + cancelAmount 있으면 부분취소(없으면 전액)
+        Map<String, Object> body = new HashMap<>();
+        body.put("cancelReason", cancelReason);
+        if (cancelAmount != null) {
+            body.put("cancelAmount", cancelAmount);
+        }
+        HttpEntity<Map<String, Object>> entity = new HttpEntity<>(body, headers);
 
         // POST /v1/payments/{paymentKey}/cancel — paymentKey 는 PayEntity.tid 에 저장된 값
         restTemplate.postForObject(baseUrl + "/v1/payments/" + paymentKey + "/cancel", entity, TossConfirmResDto.class);

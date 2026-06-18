@@ -90,6 +90,7 @@ export default function PaymentComplete() {
     bookingId: `SW-PAY-${String(result.no).padStart(6, '0')}`,
     name: result.spaceName ?? '예약 공간',
     emoji: '🏠',
+    thumbnail: result.thumbnail ?? null,
     dates: formatStayRange(result.checkIn, result.checkOut),
     checkIn: formatPaidAt(result.checkIn),
     amount: result.finalAmt,
