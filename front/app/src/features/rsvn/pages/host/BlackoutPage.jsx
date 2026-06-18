@@ -111,6 +111,11 @@ function BlackoutPage() {
     [placeGroups, selectedPlaceNo]
   );
 
+  const hasDupSubNames = useMemo(() => {
+    const nameSet = new Set(subSpaces.map((s) => s.spaceName));
+    return nameSet.size < subSpaces.length;
+  }, [subSpaces]);
+
   // 호스트 공간 목록 로드 → 첫 번째 상위/하위 자동 선택
   useEffect(() => {
     async function loadSpaces() {
@@ -214,17 +219,13 @@ function BlackoutPage() {
           onChange={handleSpaceChange}
           disabled={subSpaces.length === 0}
         >
-          {(() => {
-            const nameSet = new Set(subSpaces.map((s) => s.spaceName));
-            const hasDup = nameSet.size < subSpaces.length;
-            return subSpaces.map((s) => (
-              <option key={s.entityNo} value={s.entityNo}>
-                {hasDup
-                  ? `${s.spaceName} · ${SPACE_TYPE_LABEL[s.spaceType] ?? s.spaceType}`
-                  : s.spaceName}
-              </option>
-            ));
-          })()}
+          {subSpaces.map((s) => (
+            <option key={s.entityNo} value={s.entityNo}>
+              {hasDupSubNames
+                ? `${s.spaceName} · ${SPACE_TYPE_LABEL[s.spaceType] ?? s.spaceType}`
+                : s.spaceName}
+            </option>
+          ))}
         </SpaceSelect>
       </FilterRow>
 
