@@ -13,6 +13,9 @@ public interface ReviewCustomRepository {
 
     List<ReviewEntity> findByHostFilter(PlaceEntity placeEntity, Integer minScore, PeriodType period);
 
+    // entityNo(하위 공간) + minScore + period 복합 필터 (공간하위상세 단위 답글 관리용)
+    List<ReviewEntity> findByEntityFilter(Long entityNo, String spaceType, Integer minScore, PeriodType period);
+
     // 호스트 공간(placeNo 목록)의 리뷰 평균 평점·개수 — Tuple(avg(Double), count(Long))
     Tuple findHostReviewStats(List<Long> placeNos);
 }

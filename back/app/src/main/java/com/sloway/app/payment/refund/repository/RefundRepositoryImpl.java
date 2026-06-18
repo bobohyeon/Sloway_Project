@@ -45,6 +45,7 @@ public class RefundRepositoryImpl implements RefundRepositoryCustom {
                 .where(
                         qRefundEntity.rsvnNo.memberNo.no.eq(memberNo)
                 )
+                .orderBy(qRefundEntity.no.desc())
                 .fetch();
     }
 

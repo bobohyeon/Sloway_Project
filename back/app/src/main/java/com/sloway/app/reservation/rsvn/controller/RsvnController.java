@@ -91,12 +91,21 @@ public class RsvnController {
         return ResponseEntity.ok(dtoList);
     }
 
-    //내 예약 정보 상세 조회
+    //내 예약 정보 상세 조회 (회원용)
     @GetMapping("/{no}")
     public ResponseEntity<RsvnResDto> findOne(
             @AuthenticationPrincipal CustomUserDetails userDetails
             , @PathVariable Long no){
         RsvnResDto dto = rsvnService.findOne(userDetails.getMemberNo(), no);
+        return ResponseEntity.ok(dto);
+    }
+
+    //예약 상세 조회 (호스트용 — memberNo 체크 없이 예약번호로만 조회)
+    @GetMapping("/host/{no}")
+    public ResponseEntity<RsvnResDto> findOneForHost(
+            @AuthenticationPrincipal CustomUserDetails userDetails
+            , @PathVariable Long no){
+        RsvnResDto dto = rsvnService.findOneForHost(no);
         return ResponseEntity.ok(dto);
     }
 

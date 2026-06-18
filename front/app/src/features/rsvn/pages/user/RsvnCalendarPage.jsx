@@ -197,6 +197,7 @@ function RsvnCalendarPage() {
   // 해당 날짜에 걸쳐있는 예약 목록 반환
   const getEventsForDate = (date) =>
     rsvns.filter((r) => {
+      if (r.status !== 'S' && r.status !== 'E') return false;
       const ci = dayjs(r.checkIn).startOf('day');
       const co = dayjs(r.checkOut).startOf('day');
       return !date.isBefore(ci) && !date.isAfter(co);
@@ -220,11 +221,8 @@ function RsvnCalendarPage() {
   // 주 달력 7일 계산
   const weekDays = Array.from({ length: 7 }, (_, i) => weekStart.add(i, 'day'));
 
-  // 이번 달 예약 통계
-  const thisMonthRsvns = rsvns.filter((r) => dayjs(r.checkIn).isSame(current, 'month'));
-  const nearestRsvn = rsvns
-    .filter((r) => r.status === 'S' && dayjs(r.checkIn).isAfter(dayjs()))
-    .sort((a, b) => dayjs(a.checkIn).valueOf() - dayjs(b.checkIn).valueOf())[0];
+  const confirmedCount = rsvns.filter((r) => r.status === 'S').length;
+  const doneCount = rsvns.filter((r) => r.status === 'E').length;
 
   return (
     <PageLayout
@@ -240,22 +238,16 @@ function RsvnCalendarPage() {
     >
       <StatCards>
         <StatCard>
-          <StatLabel>이번 달 예약</StatLabel>
-          <StatValue $color={COLOR.terra}>{thisMonthRsvns.length}</StatValue>
+          <StatLabel>전체 예약</StatLabel>
+          <StatValue $color={COLOR.terra}>{rsvns.length}</StatValue>
         </StatCard>
         <StatCard>
           <StatLabel>확정</StatLabel>
-          <StatValue>{thisMonthRsvns.filter((r) => r.status === 'S').length}</StatValue>
+          <StatValue>{confirmedCount}</StatValue>
         </StatCard>
         <StatCard>
           <StatLabel>이용완료</StatLabel>
-          <StatValue>{thisMonthRsvns.filter((r) => r.status === 'E').length}</StatValue>
-        </StatCard>
-        <StatCard>
-          <StatLabel>가장 가까운 일정</StatLabel>
-          <StatValue $color={COLOR.green} style={{ fontSize: 16 }}>
-            {nearestRsvn ? `★ ${dayjs(nearestRsvn.checkIn).format('M/D')}` : '-'}
-          </StatValue>
+          <StatValue>{doneCount}</StatValue>
         </StatCard>
       </StatCards>
 
@@ -332,7 +324,6 @@ function RsvnCalendarPage() {
         <Legend>
           <LegendItem><LegendDot $color={COLOR.green} />확정</LegendItem>
           <LegendItem><LegendDot $color={COLOR.gray400} />이용완료</LegendItem>
-          <LegendItem><LegendDot $color={COLOR.red} />취소/거절</LegendItem>
         </Legend>
       </SectionBox>
     </PageLayout>

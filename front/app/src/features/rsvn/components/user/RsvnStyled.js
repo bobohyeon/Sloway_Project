@@ -224,7 +224,7 @@ export const SectionTitle = styled.h3`
 // ── 스탯 카드 ─────────────────────────────────
 export const StatCards = styled.div`
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
   gap: 12px;
   margin-bottom: 24px;
 `;

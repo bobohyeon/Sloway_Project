@@ -103,6 +103,7 @@ const toCardItem = (rsvn) => {
     code: `SW-${String(rsvn.no).padStart(8, '0')}`,
     price: `${rsvn.amt?.toLocaleString()}원`,
     icon: spaceRoute === 'workstays' ? '🌲' : spaceRoute === 'coworking-offices' ? '🏢' : '🏠',
+    thumbUrl: rsvn.thumbnailUrl ?? null,
     action: ACTION_MAP[rsvn.status] ?? null,
     spaceType: null, // 카드 클릭 시 예약 상세로 이동
   };

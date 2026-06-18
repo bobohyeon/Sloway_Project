@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { redirect, useNavigate } from 'react-router-dom';
 import styled, { keyframes } from 'styled-components';
 import PageLayout from '../../../../app/layouts/page/PageLayout';
@@ -144,6 +144,8 @@ const TABS = [
   { label: '답글 완료', status: 'done' },
 ];
 
+const SPACE_TYPE_LABEL = { OFFICE: '오피스', WORK_STAY: '워크앤스테이', STATION: '숙소' };
+
 function HostReviewPage() {
   const [activeTab, setActiveTab] = useState(0);
   const [keyword, setKeyword] = useState('');
@@ -152,30 +154,54 @@ function HostReviewPage() {
 
   const [reviews, setReviews] = useState([]);
   const [spaces, setSpaces] = useState([]);
-  const [placeNo, setPlaceNo] = useState('');
+  const [selectedPlaceNo, setSelectedPlaceNo] = useState(null); // 1단계: 상위 공간
+  const [selected, setSelected] = useState(null);               // 2단계: 하위 공간
   const [minScore, setMinScore] = useState('');
   const [period, setPeriod] = useState('');
   const [page, setPage] = useState(1);
 
-  // 마운트 시 호스트 공간 목록 로드 → 첫 번째 공간 자동 선택
+  // placeNo 기준으로 그룹핑
+  const placeGroups = useMemo(() => {
+    const map = new Map();
+    spaces.forEach((s) => {
+      if (!map.has(s.placeNo)) {
+        map.set(s.placeNo, { placeNo: s.placeNo, placeTitle: s.placeTitle ?? s.spaceName, items: [] });
+      }
+      map.get(s.placeNo).items.push(s);
+    });
+    return [...map.values()];
+  }, [spaces]);
+
+  // 선택된 상위 공간의 하위 공간 목록
+  const subSpaces = useMemo(
+    () => placeGroups.find((g) => g.placeNo === selectedPlaceNo)?.items ?? [],
+    [placeGroups, selectedPlaceNo]
+  );
+
+  // 마운트 시 공간 목록 로드 → 첫 번째 상위/하위 공간 자동 선택
   useEffect(() => {
     findHostSpaces()
       .then((data) => {
         setSpaces(data);
-        if (data.length > 0) setPlaceNo(String(data[0].placeNo));
+        if (data.length > 0) {
+          setSelectedPlaceNo(data[0].placeNo);
+          setSelected(data[0]);
+        }
       })
       .catch(() => {});
   }, []);
 
   useEffect(() => {
-    if (!placeNo) return;
-    findReview(placeNo, minScore, period);
-  }, [placeNo, minScore, period]);
+    if (!selected?.placeNo) return;
+    findReview(selected, minScore, period);
+  }, [selected, minScore, period]);
 
-  async function findReview(placeNo, minScore, period) {
+  async function findReview(sel, minScore, period) {
     try {
       const resp = await findReviewsByHost(
-        placeNo,
+        sel.placeNo,
+        sel.entityNo ?? null,
+        sel.spaceType ?? null,
         minScore || null,
         period || null
       );
@@ -221,7 +247,7 @@ function HostReviewPage() {
       } else {
         await saveReply(id, replyTexts[id]);
       }
-      await findReview(placeNo, minScore, period);
+      await findReview(selected, minScore, period);
       setEditingId(null);
       setReplyTexts((prev) => ({ ...prev, [id]: '' }));
     } catch {
@@ -249,13 +275,41 @@ function HostReviewPage() {
       </TabBar>
 
       <FilterRow>
-        <Select value={placeNo} onChange={(e) => { setPlaceNo(e.target.value); setPage(1); }}>
-          {spaces.length === 0 && <option value="">공간 없음</option>}
-          {spaces.map((s) => (
-            <option key={s.placeNo} value={s.placeNo}>{s.spaceName}</option>
+        {/* 1단계: 상위 공간명 */}
+        <Select
+          value={selectedPlaceNo ?? ''}
+          onChange={(e) => {
+            const placeNo = Number(e.target.value);
+            setSelectedPlaceNo(placeNo);
+            const group = placeGroups.find((g) => g.placeNo === placeNo);
+            const first = group?.items[0] ?? null;
+            setSelected(first);
+            setPage(1);
+          }}
+        >
+          {placeGroups.length === 0 && <option value="">공간 없음</option>}
+          {placeGroups.map((g) => (
+            <option key={g.placeNo} value={g.placeNo}>{g.placeTitle}</option>
           ))}
         </Select>
-        <Select value={period} onChange={(e) => setPeriod(e.target.value)}>
+        {/* 2단계: 하위 공간명 */}
+        <Select
+          value={selected ? `${selected.entityNo ?? selected.placeNo}_${selected.spaceType ?? ''}` : ''}
+          onChange={(e) => {
+            const found = subSpaces.find(
+              (s) => `${s.entityNo ?? s.placeNo}_${s.spaceType ?? ''}` === e.target.value
+            );
+            if (found) { setSelected(found); setPage(1); }
+          }}
+        >
+          {subSpaces.length === 0 && <option value="">하위 공간 없음</option>}
+          {subSpaces.map((s, i) => (
+            <option key={i} value={`${s.entityNo ?? s.placeNo}_${s.spaceType ?? ''}`}>
+              {s.spaceName}
+            </option>
+          ))}
+        </Select>
+        <Select value={period} onChange={(e) => { setPeriod(e.target.value); setPage(1); }}>
           <option value={''}>전체 기간</option>
           <option value={'THIS_MONTH'}>이번 달</option>
           <option value={'THREE_MONTHS'}>지난 3개월</option>
@@ -357,7 +411,7 @@ function HostReviewPage() {
                       style={{ marginLeft: 8, color: '#c0626a' }}
                       onClick={() => {
                         deleteReply(existingReply.no).then(() =>
-                          findReview(placeNo, minScore, period)
+                          findReview(selected, minScore, period)
                         );
                       }}
                     >

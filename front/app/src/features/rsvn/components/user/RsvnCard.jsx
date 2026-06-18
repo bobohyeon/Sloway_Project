@@ -71,7 +71,11 @@ function RsvnCard({ item }) {
   return (
     <Card onClick={handleCardClick}>
       <CardRow>
-        <Thumb>{item.icon}</Thumb>
+        <Thumb>
+          {item.thumbUrl
+            ? <img src={item.thumbUrl} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: 10 }} />
+            : item.icon}
+        </Thumb>
         <CardBody>
           <TagRow>
             <RsvnStatusBadge type="type" label={item.type} />

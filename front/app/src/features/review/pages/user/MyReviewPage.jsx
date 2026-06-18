@@ -18,6 +18,7 @@ import {
 import RsvnStatusBadge from '../../../rsvn/components/user/RsvnStatusBadge';
 import { findMyReviews } from '../../api/reviewApi';
 import { findReviewable } from '../../../rsvn/api/rsvnApi';
+import { Pagination } from '../../../pay_shared/components/Pagination';
 
 const fadeInUp = keyframes`
   from { opacity: 0; transform: translateY(10px); }
@@ -81,10 +82,13 @@ function calcDday(checkOut) {
   return `D-${diff}`;
 }
 
+const PAGE_SIZE = 10;
+
 function MyReviewPage() {
   const [activeTab, setActiveTab] = useState(0);
   const [myReviews, setMyReviews] = useState([]);
   const [reviewable, setReviewable] = useState([]);
+  const [page, setPage] = useState(1);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -109,6 +113,9 @@ function MyReviewPage() {
     { label: '작성 완료', count: myReviews.length },
   ];
 
+  const totalPages = Math.ceil(myReviews.length / PAGE_SIZE);
+  const pagedReviews = myReviews.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
+
   const formatDate = (dt) => dt?.slice(0, 10).replaceAll('-', '.') ?? '';
 
   return (
@@ -122,7 +129,7 @@ function MyReviewPage() {
           <TabBtn
             key={idx}
             $active={activeTab === idx}
-            onClick={() => setActiveTab(idx)}
+            onClick={() => { setActiveTab(idx); setPage(1); }}
           >
             {tab.label}
             <TabCount $active={activeTab === idx}>{tab.count}</TabCount>
@@ -178,7 +185,7 @@ function MyReviewPage() {
               작성한 리뷰가 없어요
             </div>
           )}
-          {myReviews.map((item) => (
+          {pagedReviews.map((item) => (
             <Card key={item.no} onClick={() => navigate(`/review/${item.no}`)}>
               <CardRow>
                 <Thumb>📝</Thumb>
@@ -225,6 +232,11 @@ function MyReviewPage() {
               </CardRow>
             </Card>
           ))}
+          <Pagination
+            currentPage={page}
+            totalPages={totalPages}
+            onChange={(p) => { setPage(p); window.scrollTo(0, 0); }}
+          />
         </>
       )}
     </PageLayout>
