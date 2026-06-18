@@ -178,7 +178,6 @@ export default function AdminPaymentList() {
           value={stats.refunded.toLocaleString()}
           unit="건"
           subText="취소된 결제"
-          highlight={stats.refunded > 0}
         />
       </StatGrid>
 
