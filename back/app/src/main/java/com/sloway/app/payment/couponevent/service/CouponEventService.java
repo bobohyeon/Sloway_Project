@@ -57,7 +57,8 @@ public class CouponEventService {
 
     @Transactional
     public CouponResDto downloadCoupon(Long eventNo, Long memberNo) {
-        CouponEventEntity couponEventEntity = couponEventRepository.findById(eventNo)
+        // 비관적 락 — 동시 다운로드를 직렬화해 재고 초과발급·중복발급 방지
+        CouponEventEntity couponEventEntity = couponEventRepository.findByIdForUpdate(eventNo)
                 .orElseThrow(() -> new CustomException(CouponEventErrorCode.COUPONEVENT_NOT_FOUND));
         couponEventEntity.validateDownloadable();   // 종료/소진된 이벤트 발급 차단
         // 같은 회원이 같은 이벤트를 이미 받았으면 중복 발급 차단

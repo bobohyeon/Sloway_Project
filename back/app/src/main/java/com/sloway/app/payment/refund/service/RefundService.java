@@ -114,17 +114,18 @@ public class RefundService {
         // 적립 포인트 선 취소 후 복원
         pointService.cancelEarnedPoint(payEntity);
         pointService.refundUsedPoint(payEntity);
-        // 카카오/토스 결제 취소 호출
+        // 카카오/토스 결제 취소 호출 — 환불율 적용된 실제 환불액으로 부분취소(전액 아님)
+        int cancelAmount = refundEntity.getRefundAmt().intValue();
         PayMethod method = payEntity.getMethod();
         if (method == PayMethod.KAKAOPAY) {
             KakaoCancelReqDto cancelReqDto = KakaoCancelReqDto.builder()
                     .tid(payEntity.getTid())
-                    .cancelAmount(payEntity.getFinalAmt())
+                    .cancelAmount(cancelAmount)
                     .cancelTaxFreeAmount(0)
                     .build();
             kakaoPayClient.cancel(cancelReqDto);
         } else if (method == PayMethod.TOSSPAY) {
-            tossPayClient.cancel(payEntity.getTid(), "고객 환불 요청");
+            tossPayClient.cancel(payEntity.getTid(), "고객 환불 요청", cancelAmount);
         }
         payEntity.cancelPay();
         refundEntity.completeRefund();

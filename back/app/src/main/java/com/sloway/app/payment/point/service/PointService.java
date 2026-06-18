@@ -72,6 +72,11 @@ public class PointService {
         if (pointSaveReqDto.getAmount() > payEntity.getFinalAmt() * 30 / 100) {
             throw new CustomException(PointErrorCode.POINT_EXCEED_LIMIT);
         }
+        // 보유 잔액 검증 — usePointInternal과 동일 정책(잔액 부족 시 마이너스 row 방지)
+        int currentPoint = calcBalance(pointSaveReqDto.getMemberNo());
+        if (currentPoint < pointSaveReqDto.getAmount()) {
+            throw new CustomException(PointErrorCode.POINT_INSUFFICIENT);
+        }
         PointEntity entity = pointSaveReqDto.toEntity(payEntity, memberEntity);
         entity.applyUseAmount(-pointSaveReqDto.getAmount());
         return PointResDto.from(pointRepository.save(entity));
@@ -190,6 +195,13 @@ public class PointService {
         pointList.stream()
                 .filter(p -> p.getStatus() == PointStatus.WAIT || p.getStatus() == PointStatus.SAVE)
                 .forEach(PointEntity::cancel);
+    }
+
+    // 유효기간 지난 보유 포인트(WAIT/SAVE)를 EXPIRATION으로 전이 → calcBalance에서 자동 제외
+    @Transactional
+    public void expirePointsScheduled() {
+        List<PointEntity> expiredList = pointRepository.findExpiredHoldingPoints(LocalDateTime.now());
+        expiredList.forEach(PointEntity::expire);
     }
 
     @Transactional

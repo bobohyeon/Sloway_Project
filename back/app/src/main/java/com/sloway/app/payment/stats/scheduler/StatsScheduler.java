@@ -17,7 +17,7 @@ public class StatsScheduler {
 
     private final StatsService statsService;
 
-    @Scheduled(cron = "0 0/30 * * * *")
+    @Scheduled(cron = "0 0/30 * * * *", zone = "Asia/Seoul")
     public void loadDailyStats() {
         statsService.loadDailyStats(LocalDate.now());
         statsService.loadDailyStats(LocalDate.now().minusDays(1));
