@@ -327,6 +327,12 @@ public class PayService {
         int usedPoint = payCreateReqDto.getUsedPoint() == null
                 ? 0 : payCreateReqDto.getUsedPoint();
         validUsedPoint(usedPoint);                     // 포인트 음수 방어
+        // 포인트 사전 검증 — approve가 아니라 ready 단계에서 한도(30%)·최소·잔액 체크
+        // (프론트 우회·한도초과 시 카카오 승인 후 터지는 정합성 붕괴 방지)
+        if (usedPoint > 0) {
+            int basisAmt = payCreateReqDto.getBaseAmt() + payCreateReqDto.getAddAmt() - dcAmt;
+            pointService.validatePointUsage(loginMemberNo, usedPoint, basisAmt);
+        }
         // 결제 총액에서 쿠폰·포인트를 차감한 실제 결제 금액
         int finalAmt = payCreateReqDto.getBaseAmt() + payCreateReqDto.getAddAmt()
                 - dcAmt - usedPoint;

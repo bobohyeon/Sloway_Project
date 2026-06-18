@@ -167,13 +167,19 @@ export default function BookingPaymentPage() {
     nights,
   };
 
-  const { subtotal, couponDiscount, total, earnPoints, canPay } =
+  const { subtotal, couponDiscount, total, earnPoints, canPay, maxUsablePoint } =
     useCheckoutCalc({
       baseAmt: rsvn?.amt,
       selectedCoupon,
       points,
       agrees,
+      heldPoints,
     });
+
+  // 쿠폰 변경 등으로 한도가 줄면 입력 포인트를 한도까지 자동으로 내림(승인 단계 초과 에러 방지)
+  useEffect(() => {
+    if (points > maxUsablePoint) setPoints(maxUsablePoint);
+  }, [maxUsablePoint, points, setPoints]);
 
   const onPayClick = async () => {
     if (!canPay || paying) return;
@@ -242,6 +248,7 @@ export default function BookingPaymentPage() {
             heldPoints={heldPoints}
             points={points}
             onChange={setPoints}
+            maxUsable={maxUsablePoint}
           />
 
           <PaymentMethodList

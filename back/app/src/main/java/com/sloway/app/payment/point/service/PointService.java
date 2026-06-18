@@ -97,22 +97,27 @@ public class PointService {
     }
 
 
-    @Transactional
-    public void usePointInternal(Long memberNo, Integer amount, PayEntity payEntity) {
+    // 포인트 사용 정책 검증 — 최소(1,000)·한도(기준액 30%)·보유 잔액.
+    // 결제 ready 단계 사전검증과 approve 단계 실제 차감 양쪽에서 공통 사용(승인 후 한도초과로 터지는 것 방지)
+    public void validatePointUsage(Long memberNo, int amount, int basisAmt) {
         if (amount < 1000) {
             throw new CustomException(PointErrorCode.POINT_BELOW_MIN);
         }
-        int dcAmtSafe = payEntity.getDcAmt() == null ? 0 : payEntity.getDcAmt();
-        int basisAmt = payEntity.getBaseAmt() + payEntity.getAddAmt() - dcAmtSafe;
         int pointLimit = (basisAmt * 30) / 100;
         if (amount > pointLimit) {
             throw new CustomException(PointErrorCode.POINT_EXCEED_LIMIT);
         }
-        MemberEntity memberEntity = findMember(memberNo);
-        int currentPoint = calcBalance(memberNo);
-        if (currentPoint < amount) {
+        if (calcBalance(memberNo) < amount) {
             throw new CustomException(PointErrorCode.POINT_INSUFFICIENT);
         }
+    }
+
+    @Transactional
+    public void usePointInternal(Long memberNo, Integer amount, PayEntity payEntity) {
+        int dcAmtSafe = payEntity.getDcAmt() == null ? 0 : payEntity.getDcAmt();
+        int basisAmt = payEntity.getBaseAmt() + payEntity.getAddAmt() - dcAmtSafe;
+        validatePointUsage(memberNo, amount, basisAmt);
+        MemberEntity memberEntity = findMember(memberNo);
         PointEntity entity = PointEntity.builder()
                 .memberNo(memberEntity)
                 .payNo(payEntity)
