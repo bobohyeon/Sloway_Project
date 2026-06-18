@@ -35,7 +35,13 @@ export function RefundRequestCard({ request, onClick }) {
         <SpaceSection>
           <SpaceLabel>예약 공간</SpaceLabel>
           <SpaceWrap>
-            <SpaceEmoji>{request.spaceEmoji}</SpaceEmoji>
+            <SpaceEmoji>
+              {request.thumbnail ? (
+                <img src={request.thumbnail} alt={request.spaceName} />
+              ) : (
+                request.spaceEmoji
+              )}
+            </SpaceEmoji>
             <SpaceName>{request.spaceName}</SpaceName>
           </SpaceWrap>
         </SpaceSection>
@@ -155,7 +161,21 @@ const SpaceWrap = styled.div`
 `
 
 const SpaceEmoji = styled.span`
+  width: 28px;
+  height: 28px;
+  flex-shrink: 0;
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   font-size: 1.1rem;
+
+  img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
 `
 
 const SpaceName = styled.span`

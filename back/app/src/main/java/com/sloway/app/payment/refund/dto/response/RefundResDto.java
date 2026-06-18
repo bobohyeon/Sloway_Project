@@ -4,12 +4,16 @@ import com.sloway.app.payment.refund.common.RefundRate;
 import com.sloway.app.payment.refund.common.RefundReason;
 import com.sloway.app.payment.refund.common.RefundStatus;
 import com.sloway.app.payment.refund.entity.RefundEntity;
+import com.sloway.app.place.entity.office.ImgOfficeEntity;
+import com.sloway.app.place.entity.station.ImgStationEntity;
+import com.sloway.app.place.entity.workStay.ImgWorkStayEntity;
 import com.sloway.app.reservation.rsvn.entity.RsvnEntity;
 import lombok.Builder;
 import lombok.Getter;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.Comparator;
 
 @Getter
 @Builder
@@ -30,6 +34,7 @@ public class RefundResDto {
     // 예약 → 회원·공간 join (단건 상세 표시용). 회원/공간 도메인이 채워져 연동 가능
     private String memberName;   // 환불 요청 회원 이름
     private String spaceName;    // 예약 공간명(office/station/work 중)
+    private String thumbnail;    // 예약 공간 대표 썸네일 URL(sort 최소 이미지)
     private LocalDateTime checkIn;
     private LocalDateTime checkOut;
 
@@ -49,6 +54,7 @@ public class RefundResDto {
                 .modifiedAt(entity.getModifiedAt())
                 .memberName(rsvn.getMemberNo().getName())
                 .spaceName(resolveSpaceName(rsvn))
+                .thumbnail(resolveThumbnail(rsvn))
                 .checkIn(rsvn.getCheckIn())
                 .checkOut(rsvn.getCheckOut())
                 .build();
@@ -59,6 +65,26 @@ public class RefundResDto {
         if (rsvn.getOfficeNo() != null) return rsvn.getOfficeNo().getTitle();
         if (rsvn.getStationNo() != null) return rsvn.getStationNo().getTitle();
         if (rsvn.getWorkStayNo() != null) return rsvn.getWorkStayNo().getTitle();
+        return null;
+    }
+
+    // 예약 공간의 대표 썸네일 — 채워진 공간 타입의 images 중 sort 최소(첫 번째) 이미지 URL
+    private static String resolveThumbnail(RsvnEntity rsvn) {
+        if (rsvn.getOfficeNo() != null) {
+            return rsvn.getOfficeNo().getImages().stream()
+                    .min(Comparator.comparing(ImgOfficeEntity::getSort))
+                    .map(ImgOfficeEntity::getCurrentUrl).orElse(null);
+        }
+        if (rsvn.getStationNo() != null) {
+            return rsvn.getStationNo().getImages().stream()
+                    .min(Comparator.comparing(ImgStationEntity::getSort))
+                    .map(ImgStationEntity::getCurrentUrl).orElse(null);
+        }
+        if (rsvn.getWorkStayNo() != null) {
+            return rsvn.getWorkStayNo().getImages().stream()
+                    .min(Comparator.comparing(ImgWorkStayEntity::getSort))
+                    .map(ImgWorkStayEntity::getCurrentUrl).orElse(null);
+        }
         return null;
     }
 }

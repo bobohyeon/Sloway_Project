@@ -157,6 +157,8 @@ export default function BookingPaymentPage() {
 
   const booking = rsvn && {
     emoji: '🏠',
+    // 예약 응답에 썸네일이 있으면 사용, 없으면 이모지 폴백(예약 도메인 응답 의존)
+    thumbnail: rsvn.thumbnail ?? null,
     type: rsvn.spaceType,
     name: rsvn.spaceName,
     loc: '',

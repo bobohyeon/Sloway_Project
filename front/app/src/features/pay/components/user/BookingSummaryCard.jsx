@@ -17,6 +17,13 @@ const Image = styled.div`
   justify-content: center;
   font-size: 3rem;
   flex-shrink: 0;
+  overflow: hidden;
+
+  img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
 `;
 
 const Body = styled.div`
@@ -67,7 +74,13 @@ export function BookingSummaryCard({ booking }) {
   return (
     <Card padded>
       <Wrap>
-        <Image>{booking.emoji}</Image>
+        <Image>
+          {booking.thumbnail ? (
+            <img src={booking.thumbnail} alt={booking.name} />
+          ) : (
+            booking.emoji
+          )}
+        </Image>
         <Body>
           <Badge variant="sage" size="sm">
             {booking.type}
