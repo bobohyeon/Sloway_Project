@@ -18,6 +18,9 @@ public interface RefundRepositoryCustom {
 
     List<RefundEntity> findByMember(Long memberNo);
 
+    // 결제 1건의 연관 환불 단건 조회 — 환불 없는 결제도 있으므로 없으면 null
+    RefundEntity findByPay(Long payNo);
+
     // 어드민 환불 목록 — fetch join(N+1 제거) + 탭/기간 필터 + 서버 페이징
     Page<RefundResDto> findRefundAll(PageRequest pageRequest, String tab, LocalDateTime from);
 
