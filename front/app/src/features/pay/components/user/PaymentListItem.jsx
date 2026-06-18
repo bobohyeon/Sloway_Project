@@ -12,7 +12,13 @@ export function PaymentListItem({ payment, onClick, onReceiptClick }) {
 
   return (
     <Wrap onClick={() => onClick?.(payment)}>
-      <Image>{payment.emoji}</Image>
+      <Image>
+        {payment.thumbnail ? (
+          <img src={payment.thumbnail} alt={payment.space} />
+        ) : (
+          payment.emoji
+        )}
+      </Image>
 
       <Body>
         <TopRow>
@@ -69,6 +75,13 @@ const Image = styled.div`
   justify-content: center;
   font-size: 2rem;
   flex-shrink: 0;
+  overflow: hidden;
+
+  img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
 `;
 
 const Body = styled.div`

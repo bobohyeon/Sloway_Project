@@ -238,7 +238,13 @@ export default function RefundDetail() {
           <Section title="예약 공간">
             <InfoCard padded>
               <SpaceHeader>
-                <SpaceEmoji>🏠</SpaceEmoji>
+                <SpaceEmoji>
+                  {refund.thumbnail ? (
+                    <img src={refund.thumbnail} alt={refund.spaceName} />
+                  ) : (
+                    '🏠'
+                  )}
+                </SpaceEmoji>
                 <SpaceMain>
                   <SpaceName>{refund.spaceName ?? '공간 정보 없음'}</SpaceName>
                 </SpaceMain>
@@ -417,6 +423,14 @@ const SpaceEmoji = styled.div`
   align-items: center;
   justify-content: center;
   font-size: 1.3rem;
+  flex-shrink: 0;
+  overflow: hidden;
+
+  img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
 `;
 
 const SpaceMain = styled.div`
