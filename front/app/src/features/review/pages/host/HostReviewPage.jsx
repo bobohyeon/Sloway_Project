@@ -316,7 +316,6 @@ function HostReviewPage() {
                 : s.spaceName}
             </option>
           ))}
-          ))}
         </Select>
         <Select value={period} onChange={(e) => { setPeriod(e.target.value); setPage(1); }}>
           <option value={''}>전체 기간</option>
