@@ -6,6 +6,17 @@ import { useState } from 'react';
 import NotificationList from '../../../features/notification/components/NotificationList';
 import { useNotification } from './../../../features/notification/hooks/useNotification';
 
+/**
+ * 아바타에 띄울 이름 첫 글자를 뽑는다.
+ * Array.from을 쓰는 이유: 이모지·일부 문자는 서로게이트 페어(2칸)라
+ * source[0]로 자르면 깨질 수 있어 코드포인트 단위로 자른다.
+ */
+function getInitial(user) {
+  const source = user?.name ?? user?.email ?? '';
+  const first = Array.from(source)[0] ?? 'U';
+  return first.toUpperCase();
+}
+
 const HeaderWrapper = styled.div`
   display: flex;
   justify-content: space-between;
@@ -82,42 +93,34 @@ const Badge = styled.span`
   border-radius: 50%;
 `;
 
-const UserButton = styled.button`
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  background: none;
-  border: 1px solid #d0c8b8;
-  border-radius: 20px;
-  padding: 5px 14px 5px 6px;
-  cursor: pointer;
-  transition: background-color 0.2s;
-
-  &:hover {
-    background-color: rgba(255, 255, 255, 0.5);
-  }
-`;
-
-const Avatar = styled.div`
-  width: 28px;
-  height: 28px;
+// 헤더 우측 프로필 = 원형 아바타 버튼 하나.
+// 긴 이름을 그대로 넣으면 깨지므로, 이름 텍스트 대신 첫 글자(또는 사진)만 노출한다.
+const AvatarButton = styled.button`
+  width: 36px;
+  height: 36px;
   border-radius: 50%;
+  border: 1px solid #d0c8b8;
   background-color: #a8b89f;
   color: #fff;
+  font-size: 14px;
+  font-weight: bold;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 13px;
-  font-weight: bold;
+  cursor: pointer;
+  padding: 0;
+  overflow: hidden; /* 사진이 원 밖으로 삐져나오지 않게 */
+  transition: box-shadow 0.2s;
+
+  &:hover {
+    box-shadow: 0 0 0 2px rgba(45, 106, 79, 0.3);
+  }
 `;
 
-const UserName = styled.span`
-  font-size: 13px;
-  color: #333;
-  max-width: 160px;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+const AvatarImage = styled.img`
+  width: 100%;
+  height: 100%;
+  object-fit: cover; /* 비율 유지하며 원을 꽉 채움 */
 `;
 
 const LogoutBtn = styled.button`
@@ -171,9 +174,14 @@ function Header() {
   const navigate = useNavigate();
   const { isAuthenticated, user, myPagePath, handleLogout } = useAuth();
   const [isNotiOpen, setIsNotiOpen] = useState(false);
+  const [isAvatarError, setIsAvatarError] = useState(false);
   const { notifications, handleRowClick } = useNotification(user?.role);
   const hasNotifications =
     Array.isArray(notifications) && notifications.length > 0;
+
+  // redux user.imgUrl(로그인·프로필수정 시 채워짐)이 있고 로딩 실패가 아닐 때만 사진 노출.
+  // 없으면 이름 첫 글자로 폴백.
+  const showAvatarImage = Boolean(user?.imgUrl) && !isAvatarError;
 
   return (
     <HeaderWrapper>
@@ -210,15 +218,20 @@ function Header() {
               )}
             </div>
 
-            <UserButton
+            <AvatarButton
               onClick={() => navigate(myPagePath)}
               title="마이페이지로 이동"
             >
-              <Avatar>
-                {(user?.name ?? user?.email)?.[0]?.toUpperCase() ?? 'U'}
-              </Avatar>
-              <UserName>{user?.name ?? user?.email}</UserName>
-            </UserButton>
+              {showAvatarImage ? (
+                <AvatarImage
+                  src={user.imgUrl}
+                  alt="프로필"
+                  onError={() => setIsAvatarError(true)} // 사진 깨지면 글자로 폴백
+                />
+              ) : (
+                getInitial(user)
+              )}
+            </AvatarButton>
 
             <LogoutBtn onClick={() => handleLogout('/')}>로그아웃</LogoutBtn>
           </>

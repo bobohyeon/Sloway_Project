@@ -25,6 +25,7 @@ public class CustomUserDetails implements UserDetails {
     private final String password;
     private final MemberRole role;
     private final String name;   // 표시용 (nullable 허용)
+    private final String imgUrl; // 프로필 사진 URL (nullable — 미설정 회원/host/admin)
 
     /**
      * Spring Security 권한.
@@ -36,22 +37,29 @@ public class CustomUserDetails implements UserDetails {
      */
     /** 정식 생성자 (전체 필드) */
     public CustomUserDetails(Long memberNo, String email, String password,
-                             MemberRole role, String name) {
+                             MemberRole role, String name, String imgUrl) {
         this.memberNo = memberNo;
         this.email = email;
         this.password = password;
         this.role = role;
         this.name = name;
+        this.imgUrl = imgUrl;
     }
 
-    /** 로그인용 (name 없이) — 기존 호출부 호환 */
+    /** 로그인용 (imgUrl 없이) — host/admin 등 기존 호출부 호환 */
+    public CustomUserDetails(Long memberNo, String email, String password,
+                             MemberRole role, String name) {
+        this(memberNo, email, password, role, name, null);
+    }
+
+    /** 로그인용 (name·imgUrl 없이) — 기존 호출부 호환 */
     public CustomUserDetails(Long memberNo, String email, String password, MemberRole role) {
-        this(memberNo, email, password, role, null);
+        this(memberNo, email, password, role, null, null);
     }
 
-    /** 토큰 재구성용 (password·name 없이) — JwtAuthenticationFilter 호환 */
+    /** 토큰 재구성용 (password·name·imgUrl 없이) — JwtAuthenticationFilter 호환 */
     public CustomUserDetails(Long memberNo, String email, MemberRole role) {
-        this(memberNo, email, null, role, null);
+        this(memberNo, email, null, role, null, null);
     }
 
     @Override

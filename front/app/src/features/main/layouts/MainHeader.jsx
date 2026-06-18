@@ -1,6 +1,18 @@
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import styled from 'styled-components';
 import { useAuth } from '../../auth/hooks/useAuth';
+
+/**
+ * 아바타에 띄울 이름 첫 글자를 뽑는다.
+ * Array.from을 쓰는 이유: 이모지·일부 문자는 서로게이트 페어(2칸)라
+ * source[0]로 자르면 깨질 수 있어 코드포인트 단위로 자른다.
+ */
+function getInitial(user) {
+  const source = user?.name ?? user?.email ?? '';
+  const first = Array.from(source)[0] ?? 'U';
+  return first.toUpperCase();
+}
 const HeaderWrapper = styled.header`
   display: flex;
   justify-content: space-between;
@@ -81,42 +93,33 @@ const UserArea = styled.div`
   gap: 12px;
 `;
 
-const UserChip = styled.button`
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  background: none;
-  border: 1px solid #d0c8b8;
-  border-radius: 20px;
-  padding: 5px 14px 5px 6px; /* ← Header의 UserButton과 동일하게 */
-  cursor: pointer;
-  transition: background 0.2s;
-  &:hover {
-    background: rgba(255, 255, 255, 0.6);
-  }
-`;
-
-const Avatar = styled.div`
-  width: 28px;
-  height: 28px;
-  flex-shrink: 0;
+// 프로필 = 원형 아바타 버튼 하나. (Header.jsx의 AvatarButton과 동일 패턴)
+const AvatarButton = styled.button`
+  width: 36px;
+  height: 36px;
   border-radius: 50%;
+  border: 1px solid #d0c8b8;
   background: #a8b89f;
   color: #fff;
+  font-size: 14px;
+  font-weight: bold;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 13px;
-  font-weight: bold;
+  cursor: pointer;
+  padding: 0;
+  overflow: hidden; /* 사진이 원 밖으로 삐져나오지 않게 */
+  transition: box-shadow 0.2s;
+
+  &:hover {
+    box-shadow: 0 0 0 2px rgba(45, 106, 79, 0.3);
+  }
 `;
 
-const UserEmail = styled.span`
-  font-size: 13px;
-  color: #333;
-  max-width: 160px;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+const AvatarImage = styled.img`
+  width: 100%;
+  height: 100%;
+  object-fit: cover; /* 비율 유지하며 원을 꽉 채움 */
 `;
 
 const LogoutBtn = styled.button`
@@ -147,9 +150,13 @@ const MYPAGE_PATH = {
 function MainHeader({ activePage = 'home' }) {
   const navigate = useNavigate();
   const { isAuthenticated, user, myPagePath, handleLogout } = useAuth();
+  const [isAvatarError, setIsAvatarError] = useState(false);
 
   // role이 예상 밖(또는 null)이면 일반회원 마이페이지로 폴백
   const goMyPage = () => navigate(myPagePath);
+
+  // 프로필 사진 필드가 채워졌고 로딩 실패가 아닐 때만 사진 노출 (없으면 글자)
+  const showAvatarImage = Boolean(user?.imgUrl) && !isAvatarError;
 
   return (
     <HeaderWrapper>
@@ -176,12 +183,17 @@ function MainHeader({ activePage = 'home' }) {
 
         {isAuthenticated ? (
           <UserArea>
-            <UserChip onClick={goMyPage} title="마이페이지로 이동">
-              <Avatar>
-                {(user?.name ?? user?.email).toUpperCase() ?? 'U'}
-              </Avatar>
-              <UserEmail>{user?.name ?? user?.email}</UserEmail>
-            </UserChip>
+            <AvatarButton onClick={goMyPage} title="마이페이지로 이동">
+              {showAvatarImage ? (
+                <AvatarImage
+                  src={user.imgUrl}
+                  alt="프로필"
+                  onError={() => setIsAvatarError(true)} // 사진 깨지면 글자로 폴백
+                />
+              ) : (
+                getInitial(user)
+              )}
+            </AvatarButton>
             <LogoutBtn onClick={() => handleLogout('/')}>로그아웃</LogoutBtn>
           </UserArea>
         ) : (
