@@ -64,11 +64,17 @@ public class PayResDto {
                 .build();
     }
 
-    // 예약에 연결된 공간 타입(office/station/work) 중 채워진 것의 title 반환
+    // 예약 공간명 — "상위 공간(Place) - 공간타입명" 형식 (예: "콘레드 - 킹 디럭스 코너 스위트")
     private static String resolveSpaceName(RsvnEntity rsvn) {
-        if (rsvn.getOfficeNo() != null) return rsvn.getOfficeNo().getTitle();
-        if (rsvn.getStationNo() != null) return rsvn.getStationNo().getTitle();
-        if (rsvn.getWorkStayNo() != null) return rsvn.getWorkStayNo().getTitle();
+        if (rsvn.getOfficeNo() != null) {
+            return rsvn.getOfficeNo().getPlaceEntity().getTitle() + " - " + rsvn.getOfficeNo().getTitle();
+        }
+        if (rsvn.getStationNo() != null) {
+            return rsvn.getStationNo().getPlaceEntity().getTitle() + " - " + rsvn.getStationNo().getTitle();
+        }
+        if (rsvn.getWorkStayNo() != null) {
+            return rsvn.getWorkStayNo().getPlaceEntity().getTitle() + " - " + rsvn.getWorkStayNo().getTitle();
+        }
         return null;
     }
 
