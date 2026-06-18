@@ -41,6 +41,7 @@ const BookingCard = styled.div`
 
   &:hover {
     background-color: #fafafa;
+    cursor: pointer;
   }
 `;
 
