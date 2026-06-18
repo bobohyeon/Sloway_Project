@@ -9,6 +9,8 @@ import lombok.Setter;
 public class ReviewHostFilterReqDto {
 
     private Long placeNo;
+    private Long entityNo;    // 공간하위상세 번호 (office/station/workStay)
+    private String spaceType; // 하위 공간 타입 (OFFICE, STATION, WORK_STAY)
     private Integer minScore;
     private PeriodType period;
 

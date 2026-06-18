@@ -19,8 +19,8 @@ import java.util.Optional;
 
 public interface RsvnRepository extends JpaRepository<RsvnEntity, Long> {
 
-    //내 예약 목록 조회
-    List<RsvnEntity> findByMemberNo(MemberEntity memberNo);
+    //내 예약 목록 조회 (최신순)
+    List<RsvnEntity> findByMemberNoOrderByCreatedAtDesc(MemberEntity memberNo);
 
     //내 예약 상세 조회
     Optional<RsvnEntity> findByNoAndMemberNo(Long no, MemberEntity memberNo);

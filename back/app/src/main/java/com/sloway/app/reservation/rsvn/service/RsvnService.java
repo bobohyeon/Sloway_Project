@@ -126,7 +126,7 @@ public class RsvnService {
                 new CustomException(RsvnErrorCode.MEMBER_NOT_FOUND)
         );
 
-        List<RsvnEntity> list = rsvnRepository.findByMemberNo(member);
+        List<RsvnEntity> list = rsvnRepository.findByMemberNoOrderByCreatedAtDesc(member);
         // 예약들의 payNo 를 한 번에 조회(N+1 제거)
         Map<Long, Long> payNoMap =
                 findCompletePayNoMap(list.stream().map(RsvnEntity::getNo).toList());
@@ -145,6 +145,14 @@ public class RsvnService {
 
         Long payNo = findCompletePayNo(entity.getNo());
 
+        return RsvnResDto.from(entity, payNo);
+    }
+
+    //예약 상세 조회 (호스트용 — memberNo 체크 없이 rsvnNo로만 조회)
+    public RsvnResDto findOneForHost(Long rsvnNo) {
+        RsvnEntity entity = rsvnRepository.findById(rsvnNo)
+                .orElseThrow(() -> new CustomException(RsvnErrorCode.RESERVATION_NOT_FOUND));
+        Long payNo = findCompletePayNo(entity.getNo());
         return RsvnResDto.from(entity, payNo);
     }
 

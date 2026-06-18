@@ -61,7 +61,7 @@ const userMenuGroups = [
       },
       {
         url: '/user/reservation/cancel',
-        str: '취소·환불 내역',
+        str: '환불 내역',
         icon: <FaUndoAlt />,
       },
     ],

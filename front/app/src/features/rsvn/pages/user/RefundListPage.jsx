@@ -27,7 +27,6 @@ const fadeInUp = keyframes`
 const TABS = [
   { label: '전체', status: null },
   { label: '환불 완료', status: 'COMPLETED' },
-  { label: '환불 요청', status: 'REQUESTED' },
 ];
 
 const STATUS_LABEL = { REQUESTED: '환불 요청', APPROVED: '환불 승인', COMPLETED: '환불 완료' };
@@ -54,7 +53,11 @@ const SummaryBox = styled.div`
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   text-align: center;
-  margin-top: 20px;
+  position: sticky;
+  bottom: 0;
+  z-index: 10;
+  border-top: 1px solid ${COLOR.gray200};
+  margin-top: 8px;
 `;
 
 const SumVal = styled.div`
@@ -104,8 +107,8 @@ function RefundListPage() {
 
   return (
     <PageLayout
-      title="취소·환불 내역"
-      description="내가 취소했거나 환불된 예약의 처리 현황을 한눈에 볼 수 있어요"
+      title="환불 내역"
+      description="환불 처리 현황을 한눈에 볼 수 있어요"
       maxWidth={960}
     >
       <TabBar>
@@ -133,11 +136,12 @@ function RefundListPage() {
               <TagRow>
                 <RsvnStatusBadge type="status" label={STATUS_LABEL[item.status] ?? item.status} />
               </TagRow>
-              <CardTitle>예약 #{item.rsvnNo}</CardTitle>
+              <CardTitle>{item.spaceName ?? '공간'}</CardTitle>
               <CardMeta>
-                <span>{formatCode(item)}</span>
+                <span>예약 #{item.rsvnNo}</span>
                 <span>·</span>
-                <span>신청 {formatDate(item.requestedAt)} · {REASON_LABEL[item.refundReason] ?? item.refundReason}</span>
+                <span>신청 {formatDate(item.requestedAt)}</span>
+                {item.refundReason && <><span>·</span><span>{REASON_LABEL[item.refundReason] ?? item.refundReason}</span></>}
               </CardMeta>
             </CardBody>
             <CardRight>
