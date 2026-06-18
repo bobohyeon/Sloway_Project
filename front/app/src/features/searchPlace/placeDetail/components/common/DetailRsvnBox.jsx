@@ -104,6 +104,7 @@ function DetailRsvnBox({
   rsvnDto,
   roomName = null,
   blackouts = [],
+  reservedRanges = [],
   exceptionPeriods = [],
   officePriceSlots = [],
   chargeAdd = 0,
@@ -135,10 +136,15 @@ function DetailRsvnBox({
   const hasExtra =
     checkIn && checkOut && (chargeAdd ?? 0) > 0 && guests > baseCnt;
 
-  const isBlocked = useMemo(
+  const isBlackout = useMemo(
     () => hasOverlap(checkIn, checkOut, blackouts),
     [checkIn, checkOut, blackouts]
   );
+  const isReserved = useMemo(
+    () => hasOverlap(checkIn, checkOut, reservedRanges),
+    [checkIn, checkOut, reservedRanges]
+  );
+  const isBlocked = isBlackout || isReserved;
 
   const minDate = type === 'office' ? undefined : dayjs().format('YYYY-MM-DD');
   const minCheckOut =
@@ -245,7 +251,8 @@ function DetailRsvnBox({
         </>
       )}
 
-      {isBlocked && <ErrorMsg>이 기간은 이용 불가 기간입니다.</ErrorMsg>}
+      {isBlackout && <ErrorMsg>이 기간은 이용 불가 기간입니다.</ErrorMsg>}
+      {isReserved && !isBlackout && <ErrorMsg>이 기간에는 이미 예약이 있습니다.</ErrorMsg>}
 
       <InfoRow>
         <InfoLabel>인원</InfoLabel>

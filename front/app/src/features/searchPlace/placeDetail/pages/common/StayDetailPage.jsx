@@ -8,6 +8,7 @@ import { findReviewsByPlace } from '../../../../review/api/reviewApi';
 import { getStationDetail } from '../../../api/searchApi';
 import { saveRecentViewed } from '../../../recentPlace/api/recentApi';
 import { findBlackoutsByEntity } from '../../../../rsvn/api/blackoutApi';
+import { findBlockedDates } from '../../../../rsvn/api/rsvnApi';
 
 function StayDetailPage() {
   const { id } = useParams();
@@ -19,6 +20,7 @@ function StayDetailPage() {
   const [space, setSpace] = useState(null);
   const [reviews, setReviews] = useState([]);
   const [blackouts, setBlackouts] = useState([]);
+  const [reservedRanges, setReservedRanges] = useState([]);
   const [error, setError] = useState(false);
 
   const nights =
@@ -39,6 +41,7 @@ function StayDetailPage() {
           findReviewsByPlace(Number(id), 'STATION'),
           findBlackoutsByEntity(Number(id)),
         ]);
+        const blockedData = await findBlockedDates(Number(id), 'STATION').catch(() => []);
         const avgScore =
           reviewData.length > 0
             ? Math.round(
@@ -53,6 +56,7 @@ function StayDetailPage() {
         });
         setReviews(reviewData);
         setBlackouts(blackoutData ?? []);
+        setReservedRanges(blockedData);
         saveRecentViewed(spaceData.placeNo).catch(() => {});
       } catch (e) {
         console.error('데이터 조회 실패', e);
@@ -88,6 +92,7 @@ function StayDetailPage() {
           onCheckOutChange={setCheckOut}
           onGuestsChange={setGuests}
           blackouts={blackouts}
+          reservedRanges={reservedRanges}
           exceptionPeriods={space?.exceptionPeriods ?? []}
           baseCnt={space?.baseCnt ?? 1}
           maxCnt={space?.maxCnt ?? 8}

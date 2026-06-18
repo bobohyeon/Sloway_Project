@@ -8,6 +8,7 @@ import { findReviewsByPlace } from '../../../../review/api/reviewApi';
 import { getOfficeDetail } from '../../../api/searchApi';
 import { saveRecentViewed } from '../../../recentPlace/api/recentApi';
 import { findBlackoutsByEntity } from '../../../../rsvn/api/blackoutApi';
+import { findBlockedDates } from '../../../../rsvn/api/rsvnApi';
 
 function OfficeDetailPage() {
   const { id } = useParams();
@@ -19,6 +20,7 @@ function OfficeDetailPage() {
   const [space, setSpace] = useState(null);
   const [reviews, setReviews] = useState([]);
   const [blackouts, setBlackouts] = useState([]);
+  const [reservedRanges, setReservedRanges] = useState([]);
   const [error, setError] = useState(false);
 
   const hours =
@@ -37,6 +39,7 @@ function OfficeDetailPage() {
           findReviewsByPlace(Number(id), 'OFFICE'),
           findBlackoutsByEntity(Number(id)),
         ]);
+        const blockedData = await findBlockedDates(Number(id), 'OFFICE').catch(() => []);
         const avgScore =
           reviewData.length > 0
             ? Math.round(
@@ -51,6 +54,7 @@ function OfficeDetailPage() {
         });
         setReviews(reviewData);
         setBlackouts(blackoutData ?? []);
+        setReservedRanges(blockedData);
         saveRecentViewed(spaceData.placeNo).catch(() => {});
       } catch (e) {
         console.error('데이터 조회 실패', e);
@@ -89,6 +93,7 @@ function OfficeDetailPage() {
           onCheckOutChange={setCheckOut}
           onGuestsChange={setGuests}
           blackouts={blackouts}
+          reservedRanges={reservedRanges}
           exceptionPeriods={space?.exceptionPeriods ?? []}
           officePriceSlots={space?.officePriceSlots ?? []}
           baseCnt={space?.baseCnt ?? 1}
