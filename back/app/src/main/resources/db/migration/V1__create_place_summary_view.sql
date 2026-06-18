@@ -3,7 +3,6 @@ DROP TABLE IF EXISTS place_summary;
 -- 기존에 존재하는 Materialized view 삭제
 DROP MATERIALIZED VIEW IF EXISTS place_summary;
 
-
 -- Materialized View 생성
 CREATE MATERIALIZED VIEW place_summary AS
 
@@ -56,7 +55,7 @@ SELECT
                 WHEN p.type = 'STATION' THEN s.no
                 WHEN p.type = 'OFFICE' THEN o.no
                 ELSE w.no
-            END
+                END
     ) as target_no,
     MAX(p.title || ' ' || COALESCE(s.title, o.title, w.title)) as title,
     MAX(p.address) as address,
@@ -67,7 +66,13 @@ SELECT
                     CASE
                         WHEN COALESCE(rs.rsvn_cnt, 0) = 0 THEN 0.0
                         ELSE ((rs.rsvn_cnt * 0.7) + (COALESCE(rs.avg_score, 0.0) * 0.3)) * 100
-                    END)::int
+                        END
+                        +
+                    CASE
+                        WHEN p.created_at >= NOW() - INTERVAL '7 days' THEN 50
+                        ELSE 0
+                        END
+            )::int
     ) as final_score,
     MAX(COALESCE(rs.rsvn_cnt, 0)) as rsvn_count,
     MAX(COALESCE(rs.avg_score, 0.0)) as avg_score,
@@ -76,26 +81,26 @@ SELECT
     NOW() as updated_at
 FROM place p
          LEFT JOIN station s
-             ON p.type = 'STATION'
-             AND s.place_no = p.no
+                   ON p.type = 'STATION'
+                       AND s.place_no = p.no
          LEFT JOIN office o
-             ON p.type = 'OFFICE'
-             AND o.place_no = p.no
+                   ON p.type = 'OFFICE'
+                       AND o.place_no = p.no
          LEFT JOIN work_stay w
-             ON p.type = 'WORK_STAY'
-             AND w.place_no = p.no
+                   ON p.type = 'WORK_STAY'
+                       AND w.place_no = p.no
          LEFT JOIN RsvnStats rs
-             ON rs.place_no = p.no
-    AND rs.type = p.type
-    AND (
-            (p.type = 'STATION' AND rs.station_no = s.no)
-                OR (p.type = 'OFFICE' AND rs.office_no = o.no)
-                OR (p.type = 'WORK_STAY' AND rs.work_stay_no = w.no)
-            )
+                   ON rs.place_no = p.no
+                       AND rs.type = p.type
+                       AND (
+                          (p.type = 'STATION' AND rs.station_no = s.no)
+                              OR (p.type = 'OFFICE' AND rs.office_no = o.no)
+                              OR (p.type = 'WORK_STAY' AND rs.work_stay_no = w.no)
+                          )
          LEFT JOIN ImgInfo i ON i.place_no = p.no
          LEFT JOIN AmenityInfo am ON am.work_no = w.no
          LEFT JOIN OfficeMinPrice op ON op.office_no = o.no
 WHERE p.status = 'I'
 GROUP BY p.no, p.type, s.no, o.no, w.no;
 -- REFRESH CONCURRENTLY를 위한 인덱스 생성
-CREATE UNIQUE INDEX idx_place_summary_unique ON place_summary (place_no, type);
+CREATE UNIQUE INDEX idx_place_summary_unique ON place_summary (place_no, type, target_no);

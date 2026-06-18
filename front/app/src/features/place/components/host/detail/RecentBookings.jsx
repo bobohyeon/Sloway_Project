@@ -128,7 +128,7 @@ function RecentBookings({ bookings = [] }) {
                 <span>📅 {formatBookingPeriod(booking.bookingPeriod)}</span>
               </div>
             </BookingInfo>
-            <PriceArea>{booking.totalPrice}원</PriceArea>
+            <PriceArea>{booking.totalPrice.toLocaleString()}원</PriceArea>
           </BookingCard>
         ))
       ) : (
