@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import styled from 'styled-components';
 import PageLayout from '../../../../app/layouts/page/PageLayout';
@@ -8,7 +8,7 @@ import { findHostSpaces } from '../../api/rsvnApi';
 
 const FilterRow = styled.div`
   display: flex;
-  justify-content: space-between;
+  justify-content: flex-start;
   align-items: center;
   margin-bottom: 14px;
   gap: 10px;
@@ -83,22 +83,42 @@ const EmptyBox = styled.div`
 
 const REASON_LABEL = { M: '정비/보수', C: '청소', P: '개인이용', E: '기타' };
 const REASON_ICON  = { M: '🔧', C: '🧹', P: '🏠', E: '📋' };
+const SPACE_TYPE_LABEL = { OFFICE: '오피스', WORK_STAY: '워크앤스테이', STATION: '숙소' };
 
 const formatDt = (dt) => dt?.slice(0, 10).replaceAll('-', '.') ?? '';
 
 function BlackoutPage() {
   const navigate = useNavigate();
   const [spaces, setSpaces] = useState([]);
-  const [selectedSpace, setSelectedSpace] = useState(null); // { entityNo, spaceName }
+  const [selectedPlaceNo, setSelectedPlaceNo] = useState(null); // 1단계: 상위 공간
+  const [selectedSpace, setSelectedSpace] = useState(null);     // 2단계: 하위 공간
   const [items, setItems] = useState([]);
 
-  // 호스트 공간 목록 로드
+  // placeNo 기준으로 그룹핑
+  const placeGroups = useMemo(() => {
+    const map = new Map();
+    spaces.forEach((s) => {
+      if (!map.has(s.placeNo)) {
+        map.set(s.placeNo, { placeNo: s.placeNo, placeTitle: s.placeTitle ?? s.spaceName, items: [] });
+      }
+      map.get(s.placeNo).items.push(s);
+    });
+    return [...map.values()];
+  }, [spaces]);
+
+  const subSpaces = useMemo(
+    () => placeGroups.find((g) => g.placeNo === selectedPlaceNo)?.items ?? [],
+    [placeGroups, selectedPlaceNo]
+  );
+
+  // 호스트 공간 목록 로드 → 첫 번째 상위/하위 자동 선택
   useEffect(() => {
     async function loadSpaces() {
       try {
         const data = await findHostSpaces();
         setSpaces(data);
         if (data.length > 0) {
+          setSelectedPlaceNo(data[0].placeNo);
           setSelectedSpace(data[0]);
           const blackouts = await findBlackouts(data[0].entityNo);
           setItems(blackouts);
@@ -110,10 +130,27 @@ function BlackoutPage() {
     loadSpaces();
   }, []);
 
-  // 공간 변경 시 blackout 재조회
+  // 1단계 공간 변경
+  const handlePlaceChange = async (e) => {
+    const placeNo = Number(e.target.value);
+    setSelectedPlaceNo(placeNo);
+    const group = placeGroups.find((g) => g.placeNo === placeNo);
+    const first = group?.items[0] ?? null;
+    setSelectedSpace(first);
+    if (first) {
+      try {
+        const data = await findBlackouts(first.entityNo);
+        setItems(data);
+      } catch {
+        setItems([]);
+      }
+    }
+  };
+
+  // 2단계 하위 공간 변경
   const handleSpaceChange = async (e) => {
     const entityNo = Number(e.target.value);
-    const space = spaces.find((s) => s.entityNo === entityNo);
+    const space = subSpaces.find((s) => s.entityNo === entityNo);
     setSelectedSpace(space);
     try {
       const data = await findBlackouts(entityNo);
@@ -158,17 +195,36 @@ function BlackoutPage() {
       </InfoBanner>
 
       <FilterRow>
+        {/* 1단계: 상위 공간명 */}
+        <SpaceSelect
+          value={selectedPlaceNo ?? ''}
+          onChange={handlePlaceChange}
+          disabled={placeGroups.length === 0}
+        >
+          {placeGroups.length === 0
+            ? <option>등록된 공간이 없어요</option>
+            : placeGroups.map((g) => (
+                <option key={g.placeNo} value={g.placeNo}>{g.placeTitle}</option>
+              ))
+          }
+        </SpaceSelect>
+        {/* 2단계: 하위 공간명 */}
         <SpaceSelect
           value={selectedSpace?.entityNo ?? ''}
           onChange={handleSpaceChange}
-          disabled={spaces.length === 0}
+          disabled={subSpaces.length === 0}
         >
-          {spaces.length === 0
-            ? <option>등록된 공간이 없어요</option>
-            : spaces.map((s) => (
-                <option key={s.entityNo} value={s.entityNo}>{s.spaceName}</option>
-              ))
-          }
+          {(() => {
+            const nameSet = new Set(subSpaces.map((s) => s.spaceName));
+            const hasDup = nameSet.size < subSpaces.length;
+            return subSpaces.map((s) => (
+              <option key={s.entityNo} value={s.entityNo}>
+                {hasDup
+                  ? `${s.spaceName} · ${SPACE_TYPE_LABEL[s.spaceType] ?? s.spaceType}`
+                  : s.spaceName}
+              </option>
+            ));
+          })()}
         </SpaceSelect>
       </FilterRow>
 
