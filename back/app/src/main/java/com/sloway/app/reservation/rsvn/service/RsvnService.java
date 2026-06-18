@@ -26,6 +26,7 @@ import com.sloway.app.reservation.blackOut.entity.BlackOutEntity;
 import com.sloway.app.reservation.blackOut.repository.BlackOutRepository;
 import com.sloway.app.reservation.rsvn.dto.request.RsvnReqDto;
 import com.sloway.app.reservation.rsvn.dto.response.HostReservationStatsResDto;
+import com.sloway.app.reservation.rsvn.dto.response.BlockedDateResDto;
 import com.sloway.app.reservation.rsvn.dto.response.HostSpaceResDto;
 import com.sloway.app.reservation.rsvn.dto.response.RsvnResDto;
 import com.sloway.app.reservation.rsvn.entity.RsvnEntity;
@@ -146,6 +147,14 @@ public class RsvnService {
         Long payNo = findCompletePayNo(entity.getNo());
 
         return RsvnResDto.from(entity, payNo);
+    }
+
+    //공간별 확정 예약 날짜 조회 (프론트 예약박스 충돌 체크용)
+    public List<BlockedDateResDto> findBlockedDates(Long entityNo, String type) {
+        return rsvnRepository.findConfirmedByEntityNo(entityNo, type)
+                .stream()
+                .map(BlockedDateResDto::from)
+                .collect(Collectors.toList());
     }
 
     //예약 상세 조회 (호스트용 — memberNo 체크 없이 rsvnNo로만 조회)
