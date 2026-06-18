@@ -172,11 +172,12 @@ function HostReviewPage() {
     return [...map.values()];
   }, [spaces]);
 
-  // 선택된 상위 공간의 하위 공간 목록
-  const subSpaces = useMemo(
-    () => placeGroups.find((g) => g.placeNo === selectedPlaceNo)?.items ?? [],
-    [placeGroups, selectedPlaceNo]
-  );
+  // 선택된 상위 공간의 하위 공간 목록 (placeTitle과 동일한 spaceName 제외)
+  const subSpaces = useMemo(() => {
+    const group = placeGroups.find((g) => g.placeNo === selectedPlaceNo);
+    if (!group) return [];
+    return group.items.filter((s) => s.spaceName !== group.placeTitle);
+  }, [placeGroups, selectedPlaceNo]);
 
   // 하위 공간명 중복 여부 (중복 시 spaceType 함께 표시)
   const hasDupSubNames = useMemo(() => {

@@ -106,10 +106,12 @@ function BlackoutPage() {
     return [...map.values()];
   }, [spaces]);
 
-  const subSpaces = useMemo(
-    () => placeGroups.find((g) => g.placeNo === selectedPlaceNo)?.items ?? [],
-    [placeGroups, selectedPlaceNo]
-  );
+  const subSpaces = useMemo(() => {
+    const group = placeGroups.find((g) => g.placeNo === selectedPlaceNo);
+    if (!group) return [];
+    // placeTitle과 동일한 spaceName은 상위 공간 자체이므로 제외
+    return group.items.filter((s) => s.spaceName !== group.placeTitle);
+  }, [placeGroups, selectedPlaceNo]);
 
   const hasDupSubNames = useMemo(() => {
     const nameSet = new Set(subSpaces.map((s) => s.spaceName));
