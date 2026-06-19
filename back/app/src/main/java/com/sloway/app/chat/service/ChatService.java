@@ -49,18 +49,26 @@ public class ChatService {
 
         MemberEntity userMember = rsvn.getMemberNo();
 
-        // 공간으로 호스트 조회
+        // 공간으로 호스트 조회 + entityNo/placeType 추출
         Optional<HostPlaceEntity> hostPlaceOpt = Optional.empty();
         String spaceName = null;
+        Long entityNo = null;
+        String placeType = null;
         if (rsvn.getWorkStayNo() != null) {
             hostPlaceOpt = hostPlaceRepository.findByWorkStayEntity(rsvn.getWorkStayNo());
             spaceName = rsvn.getWorkStayNo().getPlaceEntity().getTitle();
+            entityNo = rsvn.getWorkStayNo().getNo();
+            placeType = "WORK_STAY";
         } else if (rsvn.getOfficeNo() != null) {
             hostPlaceOpt = hostPlaceRepository.findByOfficeEntity(rsvn.getOfficeNo());
             spaceName = rsvn.getOfficeNo().getPlaceEntity().getTitle();
+            entityNo = rsvn.getOfficeNo().getNo();
+            placeType = "OFFICE";
         } else if (rsvn.getStationNo() != null) {
             hostPlaceOpt = hostPlaceRepository.findByStationEntity(rsvn.getStationNo());
             spaceName = rsvn.getStationNo().getPlaceEntity().getTitle();
+            entityNo = rsvn.getStationNo().getNo();
+            placeType = "STATION";
         }
 
         HostPlaceEntity hostPlace = hostPlaceOpt
@@ -69,17 +77,21 @@ public class ChatService {
         MemberEntity hostMember = memberRepository.findById(hostPlace.getHostEntity().getMemberNo())
                 .orElseThrow(() -> new CustomException(ChatErrorCode.MEMBER_NOT_FOUND));
 
-        // effectively final capture for lambda
         final String finalSpaceName = spaceName;
+        final Long finalEntityNo = entityNo;
+        final String finalPlaceType = placeType;
 
-        // 기존 방 조회(나간 경우 rejoin) 또는 신규 생성
-        ChatRoomEntity room = chatRoomRepository.findByHostAndUser(hostMember, userMember)
+        // 공간별로 분리된 방 조회(나간 경우 rejoin) 또는 신규 생성
+        ChatRoomEntity room = chatRoomRepository
+                .findByHostAndUserAndEntityNoAndPlaceType(hostMember, userMember, finalEntityNo, finalPlaceType)
                 .map(r -> { r.rejoin(); return r; })
                 .orElseGet(() -> chatRoomRepository.save(
                         ChatRoomEntity.builder()
                                 .host(hostMember)
                                 .user(userMember)
                                 .spaceName(finalSpaceName)
+                                .entityNo(finalEntityNo)
+                                .placeType(finalPlaceType)
                                 .build()));
 
         return buildRoomRes(room, requesterMemberNo);
@@ -121,14 +133,19 @@ public class ChatService {
 
         MemberEntity userMember = getMember(requesterMemberNo);
         final String finalSpaceName = spaceName;
+        final Long finalEntityNo = entityNo;
+        final String finalPlaceType = placeType.toUpperCase();
 
-        ChatRoomEntity room = chatRoomRepository.findByHostAndUser(hostMember, userMember)
+        ChatRoomEntity room = chatRoomRepository
+                .findByHostAndUserAndEntityNoAndPlaceType(hostMember, userMember, finalEntityNo, finalPlaceType)
                 .map(r -> { r.rejoin(); return r; })
                 .orElseGet(() -> chatRoomRepository.save(
                         ChatRoomEntity.builder()
                                 .host(hostMember)
                                 .user(userMember)
                                 .spaceName(finalSpaceName)
+                                .entityNo(finalEntityNo)
+                                .placeType(finalPlaceType)
                                 .build()));
 
         return buildRoomRes(room, requesterMemberNo);

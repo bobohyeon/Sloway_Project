@@ -28,6 +28,12 @@ public class ChatRoomEntity extends BaseEntity {
     @Column(length = 200)
     private String spaceName;
 
+    @Column(name = "ENTITY_NO")
+    private Long entityNo;
+
+    @Column(name = "PLACE_TYPE", length = 20)
+    private String placeType;
+
     @Builder.Default
     @Column(name = "USER_LEFT", nullable = false)
     private boolean userLeft = false;
