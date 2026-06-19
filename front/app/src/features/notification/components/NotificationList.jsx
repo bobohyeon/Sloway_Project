@@ -17,6 +17,9 @@ const NotificationItem = styled.li`
   padding: 10px 0;
   border-bottom: 1px solid #eee;
   font-size: 13px;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
   &:last-child {
     border-bottom: none;
   }
@@ -34,7 +37,28 @@ const NotificationItem = styled.li`
   }
 `;
 
-const NotificationList = ({ notifications, handleRowClick }) => {
+const ContentWrapper = styled.div`
+  flex: 1;
+  cursor: pointer;
+`;
+
+const DeleteButton = styled.button`
+  background: none;
+  border: none;
+  color: #999;
+  font-size: 18px;
+  cursor: pointer;
+  padding: 0 0 0 8px;
+  margin-left: 8px;
+  flex-shrink: 0;
+
+  &:hover {
+    color: #e74c3c;
+    transition: color 0.2s;
+  }
+`;
+
+const NotificationList = ({ notifications, handleRowClick, handleDelete }) => {
   if (!Array.isArray(notifications)) return null;
 
   return (
@@ -43,10 +67,18 @@ const NotificationList = ({ notifications, handleRowClick }) => {
       <ul>
         {notifications.length > 0 ? (
           notifications.map((n, index) => (
-            <NotificationItem key={index} onClick={() => handleRowClick(n)}>
-              <strong>{n.title}</strong>
-              <p>{n.description}</p>
-              <small>{n.timeLabel}</small>
+            <NotificationItem key={index}>
+              <ContentWrapper onClick={() => handleRowClick(n)}>
+                <strong>{n.title}</strong>
+                <p>{n.description}</p>
+                <small>{n.timeLabel}</small>
+              </ContentWrapper>
+              <DeleteButton
+                onClick={(e) => handleDelete(e, n.id)}
+                title="알림 삭제"
+              >
+                ✕
+              </DeleteButton>
             </NotificationItem>
           ))
         ) : (

@@ -175,7 +175,9 @@ function Header() {
   const { isAuthenticated, user, myPagePath, handleLogout } = useAuth();
   const [isNotiOpen, setIsNotiOpen] = useState(false);
   const [isAvatarError, setIsAvatarError] = useState(false);
-  const { notifications, handleRowClick } = useNotification(user?.role);
+  const { notifications, handleRowClick, handleDelete } = useNotification(
+    user?.role
+  );
   const hasNotifications =
     Array.isArray(notifications) && notifications.length > 0;
 
@@ -213,6 +215,7 @@ function Header() {
                   <NotificationList
                     notifications={notifications}
                     handleRowClick={handleRowClick}
+                    handleDelete={handleDelete}
                   />
                 </DropdownContainer>
               )}
