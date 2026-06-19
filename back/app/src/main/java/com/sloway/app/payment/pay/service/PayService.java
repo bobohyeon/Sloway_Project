@@ -22,6 +22,7 @@ import com.sloway.app.payment.pay.pg.toss.client.TossPayClient;
 import com.sloway.app.payment.pay.pg.toss.dto.request.TossConfirmReqDto;
 import com.sloway.app.payment.pay.pg.toss.dto.response.TossConfirmResDto;
 import com.sloway.app.payment.pay.repository.PayRepository;
+import com.sloway.app.payment.refund.repository.RefundRepository;
 import com.sloway.app.payment.point.common.PointErrorCode;
 import com.sloway.app.payment.point.service.PointService;
 import com.sloway.app.reservation.RsvnErrorCode;
@@ -46,6 +47,7 @@ import java.util.Objects;
 public class PayService {
 
     private final PayRepository payRepository;
+    private final RefundRepository refundRepository;
     private final CouponRepository couponRepository;
     private final RsvnRepository rsvnRepository;
     private final PointService pointService;
@@ -192,7 +194,11 @@ public class PayService {
     }
 
     public PayStatsResDto findPayStats(String period) {
-        return payRepository.findPayStats(toFrom(period));
+        PayStatsResDto base = payRepository.findPayStats(toFrom(period));
+        // 환불 건수는 결제(PAY) CANCELED가 아니라 환불(refund) 테이블 완료 건수 기준 — 환불 관리 화면과 동일 SSOT.
+        // (PAY 취소가 누락된 비정합 데이터가 있어도 환불 관리와 건수가 일치하도록)
+        long refundCount = refundRepository.findRefundStats().getCompleted();
+        return base.toBuilder().refunded(refundCount).build();
     }
 
     private PayStatus toStatus(String tab) {
