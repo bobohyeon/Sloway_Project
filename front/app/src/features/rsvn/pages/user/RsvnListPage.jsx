@@ -102,6 +102,7 @@ const toCardItem = (rsvn) => {
     id: rsvn.no,
     type: rsvn.spaceType ?? '공간',
     status: STATUS_LABEL[rsvn.status] ?? rsvn.status,
+    refunded: rsvn.refunded,
     dday,
     title,
     date: `${ci.format('M월 D일')} ~ ${co.format('M월 D일')}`,

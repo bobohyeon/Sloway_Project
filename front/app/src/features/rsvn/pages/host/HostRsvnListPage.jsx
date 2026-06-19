@@ -78,14 +78,15 @@ const RejectBtn = styled.button`
 const getStatus = (i) =>
   typeof i.status === 'object' ? (i.status?.name ?? i.status) : i.status;
 
-// 취소(C)는 환불 여부(refunded)로 '취소'(결제 전 취소) vs '환불'(결제 후 취소) 분리
+// 거절(R)/취소(C)는 "누가 끝냈나" 기준, 환불은 "돈이 돌아갔나" 기준의 가로지르는 뷰
+// → 거절+환불, 결제후취소+환불 은 두 탭에 겹쳐서 나옴 (출처는 상태로 구분: R=거절발, C=취소발)
 const TABS = [
   { label: '전체', match: () => true },
   { label: '확정', match: (i) => getStatus(i) === 'S' },
   { label: '완료', match: (i) => getStatus(i) === 'E' },
   { label: '거절', match: (i) => getStatus(i) === 'R' },
-  { label: '취소', match: (i) => getStatus(i) === 'C' && !i.refunded },
-  { label: '환불', match: (i) => getStatus(i) === 'C' && i.refunded },
+  { label: '취소', match: (i) => getStatus(i) === 'C' },
+  { label: '환불', match: (i) => !!i.refunded },
 ];
 
 const STATUS_LABEL = {
@@ -229,7 +230,8 @@ function HostRsvnListPage() {
         const sc = statusCode(item);
         const st = STATUS_STYLE[sc] ?? { bg: '#f0f0f0', color: '#666' };
         // 취소(C)는 환불 여부로 라벨 분리
-        const statusText = sc === 'C' ? (item.refunded ? '환불' : '취소') : (STATUS_LABEL[sc] ?? sc);
+        // 상태 라벨은 "끝낸 주체"(거절/취소/확정/완료) 그대로, 환불 여부는 옆에 별도 뱃지로 표시
+        const statusText = STATUS_LABEL[sc] ?? sc;
         const icon = SPACE_TYPE_ICON[item.spaceType] ?? '🏠';
         return (
           <Card
@@ -268,6 +270,21 @@ function HostRsvnListPage() {
                   >
                     {statusText}
                   </span>
+                  {/* 환불 발생 시: 거절발(R)/취소발(C) 무엇이든 '환불' 뱃지 추가 표시 */}
+                  {item.refunded && (
+                    <span
+                      style={{
+                        fontSize: 11,
+                        fontWeight: 600,
+                        padding: '2px 7px',
+                        borderRadius: 4,
+                        background: '#FFF0F0',
+                        color: '#C0392B',
+                      }}
+                    >
+                      환불
+                    </span>
+                  )}
                 </TagRow>
                 <CardTitle>
                   {item.guestName} · {item.spaceName}
