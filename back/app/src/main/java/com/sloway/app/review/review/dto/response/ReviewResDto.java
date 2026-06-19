@@ -1,5 +1,6 @@
 package com.sloway.app.review.review.dto.response;
 
+import com.sloway.app.place.entity.place.ImgPlaceEntity;
 import com.sloway.app.reservation.rsvn.entity.RsvnEntity;
 import com.sloway.app.review.reply.dto.response.ReviewReplyResDto;
 import com.sloway.app.review.review.entity.ReviewEntity;
@@ -7,6 +8,7 @@ import lombok.Builder;
 import lombok.Getter;
 
 import java.time.LocalDateTime;
+import java.util.Comparator;
 import java.util.List;
 
 @Getter
@@ -29,22 +31,47 @@ public class ReviewResDto {
     private LocalDateTime checkIn;
     private LocalDateTime checkOut;
 
+    private Long helpfulCount;
 
-    public static ReviewResDto from(ReviewEntity entity, List<ReviewReplyResDto> replies, List<String> imageUrls) {
+    private String thumbnailUrl;
+
+
+    public static ReviewResDto from(ReviewEntity entity, List<ReviewReplyResDto> replies,
+                                    List<String> imageUrls){
+        return from(entity, replies, imageUrls,0L);
+    }
+    public static ReviewResDto from(
+            ReviewEntity entity, List<ReviewReplyResDto> replies,
+            List<String> imageUrls, Long helpfulCount
+    ){
         RsvnEntity rsvn = entity.getRsvnNo();
 
         // office / workStay / station 중 하나에서 공간 이름·타입 추출
         String spaceName = null;
         String spaceType = null;
+        String thumbnailUrl = null;
+
         if (rsvn.getOfficeNo() != null) {
             spaceName = rsvn.getOfficeNo().getPlaceEntity().getTitle();
             spaceType = rsvn.getOfficeNo().getPlaceEntity().getType();
+            thumbnailUrl = rsvn.getOfficeNo().getPlaceEntity().getImages().
+                    stream().min(Comparator.comparing(ImgPlaceEntity::getSort
+                    , Comparator.nullsLast(Integer::compareTo)))
+                    .map(ImgPlaceEntity::getCurrentUrl).orElse(null);
         } else if (rsvn.getWorkStayNo() != null) {
             spaceName = rsvn.getWorkStayNo().getPlaceEntity().getTitle();
             spaceType = rsvn.getWorkStayNo().getPlaceEntity().getType();
+            thumbnailUrl = rsvn.getWorkStayNo().getPlaceEntity().getImages().
+                    stream().min(Comparator.comparing(ImgPlaceEntity::getSort
+                            , Comparator.nullsLast(Integer::compareTo)))
+                    .map(ImgPlaceEntity::getCurrentUrl).orElse(null);
         } else if (rsvn.getStationNo() != null) {
             spaceName = rsvn.getStationNo().getPlaceEntity().getTitle();
             spaceType = rsvn.getStationNo().getPlaceEntity().getType();
+            thumbnailUrl = rsvn.getStationNo().getPlaceEntity().getImages().
+                    stream().min(Comparator.comparing(ImgPlaceEntity::getSort
+                            , Comparator.nullsLast(Integer::compareTo)))
+                    .map(ImgPlaceEntity::getCurrentUrl).orElse(null);
         }
 
         return ReviewResDto.builder()
@@ -63,6 +90,8 @@ public class ReviewResDto {
                 .imageUrls(imageUrls)
                 .checkIn(rsvn.getCheckIn())
                 .checkOut(rsvn.getCheckOut())
+                .helpfulCount(helpfulCount)
+                .thumbnailUrl(thumbnailUrl)
                 .build();
     }
 }

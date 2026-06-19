@@ -199,7 +199,11 @@ function MyReviewPage() {
           {pagedReviews.map((item) => (
             <Card key={item.no} onClick={() => navigate(`/review/${item.no}`)}>
               <CardRow>
-                <Thumb>{TYPE_ICON[item.spaceType] ?? '📝'}</Thumb>
+                <Thumb>
+                  {item.thumbnailUrl
+                    ? <img src={item.thumbnailUrl} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: 10 }} />
+                    : (TYPE_ICON[item.spaceType] ?? '📝')}
+                </Thumb>
                 <CardBody>
                   <TagRow>
                     <RsvnStatusBadge
@@ -226,6 +230,7 @@ function MyReviewPage() {
                       이용일 · {formatDate(item.checkIn)} ~{' '}
                       {formatDate(item.checkOut)}
                     </span>
+                    <span>· 👍 도움돼요 {item.helpfulCount ?? 0}</span>
                   </CardMeta>
                   <div
                     style={{
