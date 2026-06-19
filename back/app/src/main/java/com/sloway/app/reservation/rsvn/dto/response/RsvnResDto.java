@@ -35,13 +35,20 @@ public class RsvnResDto {
     private boolean hasReview;
 
     private String roomName;
+    private boolean refunded;
+
 
 
     public static RsvnResDto from(RsvnEntity entity, Long payNo){
-        return from(entity, payNo, false);
+        return from(entity, payNo, false, false);
     }
 
     public static RsvnResDto from(RsvnEntity entity, Long payNo, boolean hasReview){
+        return from(entity, payNo, hasReview, false);
+    }
+
+    public static RsvnResDto from(RsvnEntity entity, Long payNo,
+                                  boolean hasReview, boolean refunded){
         String spaceName = null;
         String spaceType = null;
         String thumbnailUrl = null;
@@ -95,6 +102,7 @@ public class RsvnResDto {
                 .createdAt(entity.getCreatedAt())
                 .hasReview(hasReview)
                 .roomName(roomName)
+                .refunded(refunded)
                 .build();
     }
 }
