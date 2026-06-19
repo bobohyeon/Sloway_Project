@@ -100,10 +100,24 @@ public class RsvnService {
                     new CustomException(RsvnErrorCode.PLACE_NOT_FOUND));
         }
 
-        checkBlackOut(office, station, workStay, dto.getCheckIn(), dto.getCheckOut());
+        LocalDateTime checkIn = null;
+        LocalDateTime checkOut = null;
+
+        if(office != null){
+            checkIn = dto.getCheckIn();
+            checkOut = dto.getCheckOut();
+        } else if(workStay != null){
+            checkIn = dto.getCheckIn().toLocalDate().atTime(workStay.getCheckinTime().toLocalTime());
+            checkOut = dto.getCheckOut().toLocalDate().atTime(workStay.getCheckoutTime().toLocalTime());
+        } else if(station != null){
+            checkIn = dto.getCheckIn().toLocalDate().atTime(station.getCheckinTime().toLocalTime());
+            checkOut = dto.getCheckOut().toLocalDate().atTime(station.getCheckoutTime().toLocalTime());
+        }
+
+        checkBlackOut(office, station, workStay, checkIn, checkOut);
         // 같은 공간·기간에 확정(S) 예약이 이미 있으면 중복 차단
         if (rsvnRepository.countOverlappingRsvn(office, station, workStay,
-                dto.getCheckIn(), dto.getCheckOut(), RsvnStatus.S) > 0) {
+                checkIn, checkOut, RsvnStatus.S) > 0) {
             throw new CustomException(RsvnErrorCode.RSVN_EXISTS_IN_PERIOD);
         }
 
@@ -116,8 +130,8 @@ public class RsvnService {
                         .count(dto.getCount())
                         .amt(dto.getAmt())
                         .special(dto.getSpecial())
-                        .checkIn(dto.getCheckIn())
-                        .checkOut(dto.getCheckOut())
+                        .checkIn(checkIn)
+                        .checkOut(checkOut)
                         .build()
         );
 
