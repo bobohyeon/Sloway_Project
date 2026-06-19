@@ -116,8 +116,13 @@ export default function RefundList() {
   const tabs = useMemo(
     () => [
       { value: 'all', label: '전체', count: stats.total },
-      { value: 'completed', label: '완료', count: stats.completed },
-      { value: 'host_rejected', label: '호스트거절', count: stats.hostRejected },
+      // 회원 취소 = 전체 - 호스트 거절 (환불은 회원취소 ∪ 호스트거절로 양분됨)
+      {
+        value: 'member_cancel',
+        label: '회원 취소',
+        count: stats.total - stats.hostRejected,
+      },
+      { value: 'host_rejected', label: '호스트 거절', count: stats.hostRejected },
     ],
     [stats]
   );

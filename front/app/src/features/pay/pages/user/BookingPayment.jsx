@@ -134,7 +134,8 @@ export default function BookingPaymentPage() {
           findCouponsByMemberNo(memberNo),
           findPointBalanceByMemberNo(memberNo),
         ]);
-        setCoupons(couponList.map(toCouponForUI));
+        // 결제 화면에서는 사용 가능한 쿠폰만 노출 (USED/EXPIRED 는 쿠폰함에서만 보임)
+        setCoupons(couponList.map(toCouponForUI).filter((c) => c.available));
         setHeldPoints(balanceResDto.balance);
       } catch (err) {
         console.error('쿠폰·포인트 로드 실패', err);
