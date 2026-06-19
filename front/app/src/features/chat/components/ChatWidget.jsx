@@ -23,7 +23,7 @@ import {
   leaveUserChatRoom,
   leaveHostChatRoom,
 } from '../api/chatApi';
-import { searchSpaces } from '../../searchPlace/api/searchApi';
+import { searchSpaces, findRoomsByPlaceNo } from '../../searchPlace/api/searchApi';
 import { findHostRsvns } from '../../rsvn/api/rsvnApi';
 
 const WS_URL = import.meta.env.DEV
@@ -71,6 +71,10 @@ export default function ChatWidget() {
   const [placeSearching, setPlaceSearching] = useState(false);
   const [creating, setCreating] = useState(false);
   const placeTimerRef = useRef(null);
+
+  // 공간 선택 후 객실 선택 단계
+  const [roomPickList, setRoomPickList] = useState([]);
+  const [roomPickLoading, setRoomPickLoading] = useState(false);
 
   // ─── 예약 목록 검색 (host create view) ──────────────────────────────────
   const [rsvnQuery, setRsvnQuery] = useState('');
@@ -370,22 +374,56 @@ export default function ChatWidget() {
     return () => clearTimeout(placeTimerRef.current);
   }, [placeQuery, view]);
 
+  // 공간 카드 클릭 → 객실 목록 조회 후 선택 단계로
   const handleSelectPlace = useCallback(
     async (place) => {
       if (creating) return;
+      setRoomPickLoading(true);
+      try {
+        const rooms = await findRoomsByPlaceNo(place.placeNo, place.type);
+        if (rooms.length === 0) {
+          alert('등록된 객실이 없습니다.');
+          return;
+        }
+        if (rooms.length === 1) {
+          setCreating(true);
+          const room = await userCreateOrGetRoomByPlace(rooms[0].entityNo, rooms[0].type);
+          setPlaceQuery('');
+          setPlaceResults([]);
+          openRoom({
+            roomId: room.roomId,
+            counterpartName: room.counterpartName,
+            spaceName: room.spaceName,
+            unreadCount: room.unreadCount || 0,
+          });
+        } else {
+          setRoomPickList(rooms);
+          setPlaceQuery('');
+          setPlaceResults([]);
+        }
+      } catch {
+        alert('채팅방을 만들 수 없어요. 잠시 후 다시 시도해주세요.');
+      } finally {
+        setRoomPickLoading(false);
+        setCreating(false);
+      }
+    },
+    [creating, openRoom]
+  );
+
+  // 객실 선택 → 채팅방 생성
+  const handleSelectRoom = useCallback(
+    async (room) => {
+      if (creating) return;
       setCreating(true);
       try {
-        const room = await userCreateOrGetRoomByPlace(
-          place.placeNo,
-          place.type
-        );
-        setPlaceQuery('');
-        setPlaceResults([]);
+        const chatRoom = await userCreateOrGetRoomByPlace(room.entityNo, room.type);
+        setRoomPickList([]);
         openRoom({
-          roomId: room.roomId,
-          counterpartName: room.counterpartName,
-          spaceName: room.spaceName,
-          unreadCount: room.unreadCount || 0,
+          roomId: chatRoom.roomId,
+          counterpartName: chatRoom.counterpartName,
+          spaceName: chatRoom.spaceName,
+          unreadCount: chatRoom.unreadCount || 0,
         });
       } catch {
         alert('채팅방을 만들 수 없어요. 잠시 후 다시 시도해주세요.');
@@ -399,6 +437,7 @@ export default function ChatWidget() {
   const openCreate = () => {
     setPlaceQuery('');
     setPlaceResults([]);
+    setRoomPickList([]);
     setRsvnQuery('');
     setView('create');
   };
@@ -567,36 +606,66 @@ export default function ChatWidget() {
           {/* ── 공간 검색 뷰 (user) ── */}
           {view === 'create' && chatRole === 'user' && (
             <CreateArea>
-              <SearchInput
-                autoFocus
-                placeholder="공간 이름 검색..."
-                value={placeQuery}
-                onChange={(e) => setPlaceQuery(e.target.value)}
-              />
-              {placeSearching && <EmptyMsg>검색 중...</EmptyMsg>}
-              {!placeSearching && placeQuery && placeResults.length === 0 && (
-                <EmptyMsg>검색 결과가 없어요</EmptyMsg>
+              {roomPickList.length > 0 ? (
+                <>
+                  <BackBtn
+                    onClick={() => setRoomPickList([])}
+                    style={{ alignSelf: 'flex-start', marginBottom: 8 }}
+                  >
+                    <FaArrowLeft size={11} /> 공간 선택으로
+                  </BackBtn>
+                  <EmptyMsg style={{ padding: '8px 0' }}>
+                    객실을 선택해주세요
+                  </EmptyMsg>
+                  {roomPickList.map((room) => (
+                    <PlaceRow
+                      key={room.entityNo}
+                      onClick={() => handleSelectRoom(room)}
+                    >
+                      <PlaceInfo>
+                        <PlaceName>{room.title}</PlaceName>
+                        <PlaceAddr>최대 {room.maxCnt}명</PlaceAddr>
+                      </PlaceInfo>
+                      <PlaceType>선택</PlaceType>
+                    </PlaceRow>
+                  ))}
+                </>
+              ) : (
+                <>
+                  <SearchInput
+                    autoFocus
+                    placeholder="공간 이름 검색..."
+                    value={placeQuery}
+                    onChange={(e) => setPlaceQuery(e.target.value)}
+                  />
+                  {(placeSearching || roomPickLoading) && (
+                    <EmptyMsg>검색 중...</EmptyMsg>
+                  )}
+                  {!placeSearching && !roomPickLoading && placeQuery && placeResults.length === 0 && (
+                    <EmptyMsg>검색 결과가 없어요</EmptyMsg>
+                  )}
+                  {!placeSearching && !roomPickLoading && !placeQuery && (
+                    <EmptyMsg style={{ marginTop: 12 }}>
+                      공간 이름을 입력하세요
+                    </EmptyMsg>
+                  )}
+                  {placeResults.map((p) => (
+                    <PlaceRow key={p.placeNo} onClick={() => handleSelectPlace(p)}>
+                      <PlaceInfo>
+                        <PlaceName>{p.title}</PlaceName>
+                        <PlaceAddr>{p.address}</PlaceAddr>
+                      </PlaceInfo>
+                      <PlaceType>
+                        {p.type === 'WORK_STAY'
+                          ? '워크앤스테이'
+                          : p.type === 'OFFICE'
+                            ? '오피스'
+                            : '숙소'}
+                      </PlaceType>
+                    </PlaceRow>
+                  ))}
+                </>
               )}
-              {!placeSearching && !placeQuery && (
-                <EmptyMsg style={{ marginTop: 12 }}>
-                  공간 이름을 입력하세요
-                </EmptyMsg>
-              )}
-              {placeResults.map((p) => (
-                <PlaceRow key={p.placeNo} onClick={() => handleSelectPlace(p)}>
-                  <PlaceInfo>
-                    <PlaceName>{p.title}</PlaceName>
-                    <PlaceAddr>{p.address}</PlaceAddr>
-                  </PlaceInfo>
-                  <PlaceType>
-                    {p.type === 'WORK_STAY'
-                      ? '워크앤스테이'
-                      : p.type === 'OFFICE'
-                        ? '오피스'
-                        : '숙소'}
-                  </PlaceType>
-                </PlaceRow>
-              ))}
             </CreateArea>
           )}
 
