@@ -109,7 +109,7 @@ public class ReviewService {
     public List<ReviewResDto> findAll(Long entityNo, String type){
         return reviewRepository.findByEntityNo(entityNo, type)
                 .stream()
-                .map(entity -> ReviewResDto.from(entity, toReplyDtos(entity)))
+                .map(entity -> ReviewResDto.from(entity, toReplyDtos(entity), toImageUrls(entity)))
                 .toList();
     }
 
@@ -117,7 +117,7 @@ public class ReviewService {
     public ReviewResDto findOne(Long no){
         ReviewEntity entity = reviewRepository.findByNoAndDelYn(no, "N")
                 .orElseThrow(()->new CustomException(ReviewErrorCode.REVIEW_NOT_FOUND));
-        return ReviewResDto.from(entity, toReplyDtos(entity));
+        return ReviewResDto.from(entity, toReplyDtos(entity), toImageUrls(entity));
     }
 
     //리뷰 수정
@@ -150,7 +150,7 @@ public class ReviewService {
     public List<ReviewResDto> findMyReviews(Long memberNo) {
         return reviewRepository.findMyReviews(memberNo)
                 .stream()
-                .map(entity -> ReviewResDto.from(entity, toReplyDtos(entity)))
+                .map(entity -> ReviewResDto.from(entity, toReplyDtos(entity), toImageUrls(entity)))
                 .toList();
     }
 
@@ -167,6 +167,14 @@ public class ReviewService {
         return reviewReplyRepository.findByReviewNoAndDelAtIsNull(entity)
                 .stream()
                 .map(ReviewReplyResDto::from)
+                .toList();
+    }
+
+    // 리뷰 첨부 이미지 URL 목록 조회
+    private List<String> toImageUrls(ReviewEntity entity) {
+        return reviewImgRepository.findByReviewNo(entity)
+                .stream()
+                .map(ReviewImgEntity::getCurrentUrl)
                 .toList();
     }
 
