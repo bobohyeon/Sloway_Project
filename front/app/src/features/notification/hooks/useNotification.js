@@ -60,5 +60,16 @@ export const useNotification = (role) => {
     }
   }
 
-  return { notifications, handleRowClick };
+  async function handleDelete(e, notificationNo) {
+    e.stopPropagation(); // 클릭 이벤트 전파 방지
+    try {
+      await api.get(`/notifications/delete/${notificationNo}`);
+      setNotifications((prev) => prev.filter((n) => n.id !== notificationNo));
+      console.log('알림 삭제 성공');
+    } catch (error) {
+      console.error('알림 삭제 실패', error);
+    }
+  }
+
+  return { notifications, handleRowClick, handleDelete };
 };

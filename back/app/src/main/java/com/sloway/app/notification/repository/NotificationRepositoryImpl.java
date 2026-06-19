@@ -21,6 +21,7 @@ public class NotificationRepositoryImpl implements NotificationRepositoryCustom{
         List<NotificationEntity> entities = queryFactory
                 .selectFrom(notificationEntity)
                 .where(notificationEntity.memberNo.eq(memberNo)
+                        .and(notificationEntity.delYn.eq("N"))
                         .and(notificationEntity.read.isFalse()))
                 .orderBy(notificationEntity.createdAt.desc())
                 .fetch();
