@@ -23,7 +23,6 @@ WITH RsvnStats AS (
         (p.type = 'STATION' AND r.station_no = s.no)
         OR (p.type = 'OFFICE' AND r.office_no = o.no)
         OR (p.type = 'WORK_STAY' AND r.work_stay_no = w.no)
-        AND r.status = 'S'
     )
         INNER JOIN rsvn rcnt ON r.no = rcnt.no AND rcnt.status = 'S'
     LEFT JOIN review rev ON rev.rsvn_no = r.no
