@@ -111,6 +111,7 @@ function HostRsvnListPage() {
         setList(data);
       } catch (e) {
         console.error(e);
+        alert('예약 목록을 불러오지 못했습니다.');
       }
     }
     load();
