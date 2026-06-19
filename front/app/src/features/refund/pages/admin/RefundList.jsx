@@ -151,14 +151,6 @@ export default function RefundList() {
           subText="누적"
         />
         <SettlementStatCard
-          icon="⏳"
-          label="처리 중"
-          value={stats.processing.toLocaleString()}
-          unit="건"
-          subText="승인 대기"
-          highlight={stats.processing > 0}
-        />
-        <SettlementStatCard
           icon="✓"
           label="처리 완료"
           value={stats.completed.toLocaleString()}
@@ -216,15 +208,11 @@ export default function RefundList() {
 
 const StatGrid = styled.div`
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
+  grid-template-columns: repeat(3, 1fr);
   gap: var(--space-3);
   margin-bottom: var(--space-5);
 
-  @media (max-width: 960px) {
-    grid-template-columns: repeat(2, 1fr);
-  }
-
-  @media (max-width: 480px) {
+  @media (max-width: 720px) {
     grid-template-columns: 1fr;
   }
 `;
