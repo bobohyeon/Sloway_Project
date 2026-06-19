@@ -175,13 +175,15 @@ const ReplyText = styled.p`
 const ImgRow = styled.div`
   display: flex;
   gap: 8px;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;       /* 줄바꿈 X */
+  overflow-x: auto;        /* 넘치면 가로 스크롤 */
+  padding-bottom: 4px;     /* 스크롤바 자리 */
   margin-bottom: 16px;
 `;
 
 const ImgSlot = styled.div`
-  width: 100px;
-  height: 100px;
+  width: 80px;
+  height: 80px;
   border-radius: 8px;
   overflow: hidden;
   flex-shrink: 0;
