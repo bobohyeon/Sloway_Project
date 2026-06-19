@@ -74,4 +74,16 @@ public class NotificationApiController {
         List<NotificationResDto> dto = notificationService.getNewList(memberNo);
         return ResponseEntity.ok(dto);
     }
+
+    @GetMapping("/delete/{id}")
+    public ResponseEntity<Void> deleteNotification(@PathVariable Long id, @AuthenticationPrincipal CustomUserDetails userDetails) throws AuthenticationException {
+        Long memberNo = userDetails.getMemberNo();
+        if (memberNo == null){
+            throw new AuthenticationException("[로그인 먼저]");
+        }
+
+        notificationService.deleteNotification  (id, memberNo);
+
+        return ResponseEntity.ok().build();
+    }
 }

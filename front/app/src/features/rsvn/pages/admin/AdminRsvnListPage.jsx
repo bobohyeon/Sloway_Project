@@ -20,7 +20,6 @@ import { getPageNumbers } from '../../../account/utils/pagination';
 const STATUS_LABEL = { P: '결제대기', S: '확정', E: '완료', R: '거절', C: '취소' };
 const STATUS_TABS = [
   { label: '전체', status: null },
-  { label: '결제대기', status: 'P' },
   { label: '확정', status: 'S' },
   { label: '완료', status: 'E' },
   { label: '거절', status: 'R' },
@@ -112,7 +111,7 @@ function AdminRsvnListPage() {
   );
 
   // TabBar 배지: stats에서 각 탭 건수 표시
-  const statKey = { 0: 'TOTAL', 1: 'P', 2: 'S', 3: 'E', 4: 'R', 5: 'C' };
+  const statKey = { 0: 'TOTAL', 1: 'S', 2: 'E', 3: 'R', 4: 'C' };
   const counts = STATUS_TABS.map((_, idx) => stats[statKey[idx]] ?? null);
 
   // 서버 totalElements 기준으로 총 페이지 수 계산
@@ -127,13 +126,10 @@ function AdminRsvnListPage() {
         <StatCard onClick={() => { setActiveTab(0); setPage(1); }} style={{ cursor: 'pointer' }}>
           <StatLabel>전체 예약</StatLabel><StatValue>{stats.TOTAL ?? '-'}건</StatValue>
         </StatCard>
-        <StatCard onClick={() => { setActiveTab(2); setPage(1); }} style={{ cursor: 'pointer' }}>
+        <StatCard onClick={() => { setActiveTab(1); setPage(1); }} style={{ cursor: 'pointer' }}>
           <StatLabel>확정</StatLabel><StatValue $color={COLOR.green}>{stats.S ?? '-'}건</StatValue>
         </StatCard>
-        <StatCard onClick={() => { setActiveTab(1); setPage(1); }} style={{ cursor: 'pointer' }}>
-          <StatLabel>결제대기</StatLabel><StatValue $color={COLOR.orange}>{stats.P ?? '-'}건</StatValue>
-        </StatCard>
-        <StatCard onClick={() => { setActiveTab(5); setPage(1); }} style={{ cursor: 'pointer' }}>
+        <StatCard onClick={() => { setActiveTab(4); setPage(1); }} style={{ cursor: 'pointer' }}>
           <StatLabel>취소</StatLabel><StatValue $color={COLOR.red}>{stats.C ?? '-'}건</StatValue>
         </StatCard>
       </StatCards>

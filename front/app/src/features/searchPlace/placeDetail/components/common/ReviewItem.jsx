@@ -15,8 +15,13 @@ function ReviewItem({ review, showSpaceChip = false }) {
   const [expanded, setExpanded] = useState(false);
   const [helpCount, setHelpCount] = useState(review.helpful || 0);
   const [myHelpfulNo, setMyHelpfulNo] = useState(null); // 내가 누른 도움돼요 entity no (없으면 null)
-  const [zoomImg, setZoomImg] = useState(null);         // 클릭한 리뷰 이미지 (라이트박스용)
+  const [zoomIdx, setZoomIdx] = useState(null);         // 라이트박스에서 보고 있는 이미지 index (null = 닫힘)
   const helped = myHelpfulNo != null;
+
+  const imgs = review.imgs ?? [];
+  // 순환 네비게이션: 마지막에서 다음 → 처음, 처음에서 이전 → 마지막
+  const showPrev = (e) => { e.stopPropagation(); setZoomIdx((i) => (i - 1 + imgs.length) % imgs.length); };
+  const showNext = (e) => { e.stopPropagation(); setZoomIdx((i) => (i + 1) % imgs.length); };
 
   const reviewNo = review.id ?? review.no;
   const isLoggedIn = !!localStorage.getItem('accessToken');
@@ -118,7 +123,7 @@ function ReviewItem({ review, showSpaceChip = false }) {
               {review.imgs.map((url, i) => (
                 <ImgSlot
                   key={i}
-                  onClick={(e) => { e.stopPropagation(); setZoomImg(url); }}
+                  onClick={(e) => { e.stopPropagation(); setZoomIdx(i); }}
                   style={{ cursor: 'pointer' }}
                 >
                   <img
@@ -163,10 +168,17 @@ function ReviewItem({ review, showSpaceChip = false }) {
         {expanded ? '접기 ▲' : '더보기 ▼'}
       </ToggleBtn>
 
-      {/* 이미지 확대 라이트박스 — 배경 클릭 시 닫힘 */}
-      {zoomImg && (
-        <Lightbox onClick={(e) => { e.stopPropagation(); setZoomImg(null); }}>
-          <img src={zoomImg} alt="리뷰 이미지 확대" />
+      {/* 이미지 확대 라이트박스 — 배경 클릭 시 닫힘, ◀▶ 로 넘기기 */}
+      {zoomIdx !== null && imgs[zoomIdx] && (
+        <Lightbox onClick={(e) => { e.stopPropagation(); setZoomIdx(null); }}>
+          {imgs.length > 1 && <NavBtn $left onClick={showPrev}>‹</NavBtn>}
+          <img
+            src={imgs[zoomIdx]}
+            alt="리뷰 이미지 확대"
+            onClick={(e) => e.stopPropagation()}
+          />
+          {imgs.length > 1 && <NavBtn $right onClick={showNext}>›</NavBtn>}
+          {imgs.length > 1 && <ImgCounter>{zoomIdx + 1} / {imgs.length}</ImgCounter>}
         </Lightbox>
       )}
     </Card>
@@ -331,12 +343,14 @@ const ImgRow = styled.div`
   display: flex;
   gap: 8px;
   margin-bottom: 16px;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;       /* 줄바꿈 X */
+  overflow-x: auto;        /* 넘치면 가로 스크롤 */
+  padding-bottom: 4px;     /* 스크롤바 자리 */
 `;
 
 const ImgSlot = styled.div`
-  width: 72px;
-  height: 72px;
+  width: 60px;
+  height: 60px;
   border-radius: 8px;
   background: ${COLOR.gray200};
   display: flex;
@@ -361,6 +375,39 @@ const Lightbox = styled.div`
     max-height: 90vh;
     border-radius: 8px;
   }
+`;
+
+const NavBtn = styled.button`
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  ${({ $left }) => $left && 'left: 20px;'}
+  ${({ $right }) => $right && 'right: 20px;'}
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  border: none;
+  background: rgba(255, 255, 255, 0.2);
+  color: #fff;
+  font-size: 28px;
+  line-height: 1;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  &:hover { background: rgba(255, 255, 255, 0.35); }
+`;
+
+const ImgCounter = styled.div`
+  position: absolute;
+  bottom: 24px;
+  left: 50%;
+  transform: translateX(-50%);
+  color: #fff;
+  font-size: 14px;
+  background: rgba(0, 0, 0, 0.4);
+  padding: 4px 12px;
+  border-radius: 20px;
 `;
 
 const MetaRow = styled.div`

@@ -34,6 +34,9 @@ public class RsvnResDto {
 
     private boolean hasReview;
 
+    private String roomName;
+
+
     public static RsvnResDto from(RsvnEntity entity, Long payNo){
         return from(entity, payNo, false);
     }
@@ -42,10 +45,13 @@ public class RsvnResDto {
         String spaceName = null;
         String spaceType = null;
         String thumbnailUrl = null;
+        String roomName = null;
+
 
         if (entity.getOfficeNo() != null) {
             spaceName = entity.getOfficeNo().getPlaceEntity().getTitle();
             spaceType = entity.getOfficeNo().getPlaceEntity().getType();
+            roomName = entity.getOfficeNo().getTitle();
             thumbnailUrl = entity.getOfficeNo().getPlaceEntity().getImages().stream()
                     .min(Comparator.comparing(ImgPlaceEntity::getSort, Comparator.nullsLast(Integer::compareTo)))
                     .map(ImgPlaceEntity::getCurrentUrl)
@@ -53,6 +59,7 @@ public class RsvnResDto {
         } else if (entity.getWorkStayNo() != null) {
             spaceName = entity.getWorkStayNo().getPlaceEntity().getTitle();
             spaceType = entity.getWorkStayNo().getPlaceEntity().getType();
+            roomName = entity.getWorkStayNo().getTitle();
             thumbnailUrl = entity.getWorkStayNo().getPlaceEntity().getImages().stream()
                     .min(Comparator.comparing(ImgPlaceEntity::getSort, Comparator.nullsLast(Integer::compareTo)))
                     .map(ImgPlaceEntity::getCurrentUrl)
@@ -60,6 +67,7 @@ public class RsvnResDto {
         } else if (entity.getStationNo() != null) {
             spaceName = entity.getStationNo().getPlaceEntity().getTitle();
             spaceType = entity.getStationNo().getPlaceEntity().getType();
+            roomName = entity.getStationNo().getTitle();
             thumbnailUrl = entity.getStationNo().getPlaceEntity().getImages().stream()
                     .min(Comparator.comparing(ImgPlaceEntity::getSort, Comparator.nullsLast(Integer::compareTo)))
                     .map(ImgPlaceEntity::getCurrentUrl)
@@ -86,6 +94,7 @@ public class RsvnResDto {
                 .status(entity.getStatus())
                 .createdAt(entity.getCreatedAt())
                 .hasReview(hasReview)
+                .roomName(roomName)
                 .build();
     }
 }

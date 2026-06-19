@@ -12,6 +12,8 @@ import com.sloway.app.place.entity.amenity.office.QOfficeAmenityEntity;
 import com.sloway.app.place.entity.amenity.station.QStationAmenityEntity;
 import com.sloway.app.place.entity.amenity.workStay.QWorkAmenityEntity;
 import com.sloway.app.place.entity.amenity.workStay.workOffice.QWorkOfficeAmenityEntity;
+import com.sloway.app.place.entity.hostPlace.ApprovalStatus;
+import com.sloway.app.place.entity.hostPlace.QHostPlaceEntity;
 import com.sloway.app.place.entity.office.QOfficeEntity;
 import com.sloway.app.place.entity.office.QOfficePeriodEntity;
 import com.sloway.app.place.entity.place.QImgPlaceEntity;
@@ -59,6 +61,7 @@ public class SearchCustomRepositoryImpl implements SearchCustomRepository{
     private static final QWorkOfficeAmenityEntity woa = QWorkOfficeAmenityEntity.workOfficeAmenityEntity;
     private static final QWorkOfficeEntity wo = QWorkOfficeEntity.workOfficeEntity;
     private static final QStationAmenityEntity sa = QStationAmenityEntity.stationAmenityEntity;
+    private static final QHostPlaceEntity hp = QHostPlaceEntity.hostPlaceEntity;
 
 
     public Page<SearchResDto> search(SearchReqDto dto, Pageable pageable) {
@@ -89,7 +92,7 @@ public class SearchCustomRepositoryImpl implements SearchCustomRepository{
                         )
                 )
                 .from(p)
-                .where(typeEq(dto.getPlaceType()), regionContains(dto.getRegion()), amenitiesFilter(dto.getAmenities()))
+                .where(approvedOnly(), typeEq(dto.getPlaceType()), regionContains(dto.getRegion()), amenitiesFilter(dto.getAmenities()))
                 .orderBy(sortOrder((dto.getSort())))
                 .offset(pageable.getOffset())
                 .limit(pageable.getPageSize())
@@ -98,11 +101,20 @@ public class SearchCustomRepositoryImpl implements SearchCustomRepository{
         Long total = queryFactory
                 .select(p.count())
                 .from(p)
-                .where(typeEq(dto.getPlaceType()),regionContains(dto.getRegion()),amenitiesFilter(dto.getAmenities()))
+                .where(approvedOnly(), typeEq(dto.getPlaceType()), regionContains(dto.getRegion()), amenitiesFilter(dto.getAmenities()))
                 .fetchOne();
 
         return new PageImpl<>(content,pageable,total == null ? 0: total);
     }
+    // 검수 승인된 공간만 조회 by 현종
+    private BooleanExpression approvedOnly() {
+        return JPAExpressions
+                .selectOne()
+                .from(hp)
+                .where(hp.placeEntity.eq(p), hp.status.eq(ApprovalStatus.A))
+                .exists();
+    }
+
     // 공간타입 필터
     private BooleanExpression typeEq(String type){
         return type == null ? null : p.type.eq(type);
