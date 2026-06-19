@@ -74,12 +74,18 @@ const RejectBtn = styled.button`
   }
 `;
 
+// status 가 enum 객체로 올 수 있어 문자열로 정규화
+const getStatus = (i) =>
+  typeof i.status === 'object' ? (i.status?.name ?? i.status) : i.status;
+
+// 취소(C)는 환불 여부(refunded)로 '취소'(결제 전 취소) vs '환불'(결제 후 취소) 분리
 const TABS = [
-  { label: '전체', status: null },
-  { label: '확정', status: 'S' },
-  { label: '완료', status: 'E' },
-  { label: '거절', status: 'R' },
-  { label: '환불', status: 'C' },
+  { label: '전체', match: () => true },
+  { label: '확정', match: (i) => getStatus(i) === 'S' },
+  { label: '완료', match: (i) => getStatus(i) === 'E' },
+  { label: '거절', match: (i) => getStatus(i) === 'R' },
+  { label: '취소', match: (i) => getStatus(i) === 'C' && !i.refunded },
+  { label: '환불', match: (i) => getStatus(i) === 'C' && i.refunded },
 ];
 
 const STATUS_LABEL = {
@@ -138,14 +144,10 @@ function HostRsvnListPage() {
   };
 
   const filtered = list
-    .filter((i) => activeTab === 0 || statusCode(i) === TABS[activeTab].status)
+    .filter((i) => TABS[activeTab].match(i))
     .filter((i) => !keyword || (i.guestName ?? '').includes(keyword));
 
-  const counts = TABS.map((tab, idx) =>
-    idx === 0
-      ? list.length
-      : list.filter((i) => statusCode(i) === tab.status).length
-  );
+  const counts = TABS.map((tab) => list.filter((i) => tab.match(i)).length);
 
   const totalPages = Math.ceil(filtered.length / 10);
   const paged = filtered.slice((page - 1) * 10, page * 10);
@@ -169,7 +171,7 @@ function HostRsvnListPage() {
       <StatCards>
         <StatCard style={{ cursor: 'pointer' }} onClick={() => setActiveTab(0)}>
           <StatLabel>전체 예약</StatLabel>
-          <StatValue>{list.length}건</StatValue>
+          <StatValue>{counts[0]}건</StatValue>
         </StatCard>
         <StatCard style={{ cursor: 'pointer' }} onClick={() => setActiveTab(1)}>
           <StatLabel>확정</StatLabel>
@@ -178,6 +180,10 @@ function HostRsvnListPage() {
         <StatCard style={{ cursor: 'pointer' }} onClick={() => setActiveTab(2)}>
           <StatLabel>완료</StatLabel>
           <StatValue>{counts[2]}건</StatValue>
+        </StatCard>
+        <StatCard style={{ cursor: 'pointer' }} onClick={() => setActiveTab(5)}>
+          <StatLabel>환불</StatLabel>
+          <StatValue $color={COLOR.red}>{counts[5]}건</StatValue>
         </StatCard>
       </StatCards>
 
@@ -222,6 +228,8 @@ function HostRsvnListPage() {
       {paged.map((item) => {
         const sc = statusCode(item);
         const st = STATUS_STYLE[sc] ?? { bg: '#f0f0f0', color: '#666' };
+        // 취소(C)는 환불 여부로 라벨 분리
+        const statusText = sc === 'C' ? (item.refunded ? '환불' : '취소') : (STATUS_LABEL[sc] ?? sc);
         const icon = SPACE_TYPE_ICON[item.spaceType] ?? '🏠';
         return (
           <Card
@@ -258,7 +266,7 @@ function HostRsvnListPage() {
                       color: st.color,
                     }}
                   >
-                    {STATUS_LABEL[sc] ?? sc}
+                    {statusText}
                   </span>
                 </TagRow>
                 <CardTitle>

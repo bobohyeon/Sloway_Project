@@ -9,7 +9,9 @@ import com.sloway.app.payment.pay.common.PayStatus;
 import com.sloway.app.payment.pay.entity.PayEntity;
 import com.sloway.app.payment.pay.repository.PayRepository;
 import com.sloway.app.payment.refund.common.RefundReason;
+import com.sloway.app.payment.refund.entity.RefundEntity;
 import com.sloway.app.payment.refund.service.RefundService;
+import com.sloway.app.payment.refund.repository.RefundRepository;
 import com.sloway.app.place.entity.office.OfficeEntity;
 import com.sloway.app.place.entity.place.ImgPlaceEntity;
 import com.sloway.app.place.entity.place.PlaceEntity;
@@ -60,6 +62,7 @@ public class RsvnService {
     private final StationRepository stationRepository;
     private final PayRepository payRepository;
     private final RefundService refundService;
+    private final RefundRepository refundRepository;
     private final HostRepository hostRepository;
     private final HostPlaceRepository hostPlaceRepository;
     private final ImgPlaceRepository imgPlaceRepository;
@@ -283,8 +286,14 @@ public class RsvnService {
         // 예약들의 payNo 를 한 번에 조회(N+1 제거)
         Map<Long, Long> payNoMap =
                 findCompletePayNoMap(sorted.stream().map(RsvnEntity::getNo).toList());
+
+        Set<Long> refunded = refundRepository.findByRsvnNoIn(sorted).stream()
+                .map(refundEntity -> refundEntity.getRsvnNo().getNo())
+                .collect(Collectors.toSet());
+
         return sorted.stream()
-                .map(entity -> RsvnResDto.from(entity, payNoMap.get(entity.getNo())))
+                .map(entity -> RsvnResDto.from(entity, payNoMap.get(entity.getNo()),
+                        false, refunded.contains(entity.getNo())))
                 .toList();
     }
 
@@ -417,10 +426,10 @@ public class RsvnService {
 
         validateHostOwnership(host, entity);
 
-        entity.reject();
         if (payNo != null) {
             refundService.createRefundByHost(payNo);
         }
+        entity.reject();
     }
 
     // 호스트 소유 공간 검증 (내부 헬퍼)
