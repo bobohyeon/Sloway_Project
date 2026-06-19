@@ -32,7 +32,13 @@ public class RsvnResDto {
 
     private String thumbnailUrl;
 
+    private boolean hasReview;
+
     public static RsvnResDto from(RsvnEntity entity, Long payNo){
+        return from(entity, payNo, false);
+    }
+
+    public static RsvnResDto from(RsvnEntity entity, Long payNo, boolean hasReview){
         String spaceName = null;
         String spaceType = null;
         String thumbnailUrl = null;
@@ -79,6 +85,7 @@ public class RsvnResDto {
                 .checkOut(entity.getCheckOut())
                 .status(entity.getStatus())
                 .createdAt(entity.getCreatedAt())
+                .hasReview(hasReview)
                 .build();
     }
 }
