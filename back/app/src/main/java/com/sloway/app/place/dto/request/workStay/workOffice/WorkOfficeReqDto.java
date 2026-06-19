@@ -15,6 +15,7 @@ import java.util.stream.Collectors;
 public class WorkOfficeReqDto {
 
     private Long workNo;
+    private int cnt;
     private List<AmenityDto> facilityList;
 
     @Getter
@@ -23,9 +24,10 @@ public class WorkOfficeReqDto {
         private Long amenityNo;
     }
 
-    public WorkOfficeEntity toEntity(WorkStayEntity workStay, List<AmenityEntity> amenities) {
+    public WorkOfficeEntity toEntity(WorkStayEntity workStay, int cnt, List<AmenityEntity> amenities) {
         WorkOfficeEntity workOffice = WorkOfficeEntity.builder()
                 .workStayEntity(workStay)
+                .cnt(cnt)
                 .build();
 
         // 1. 편의시설 (다대다 또는 중간 엔티티 연결)
