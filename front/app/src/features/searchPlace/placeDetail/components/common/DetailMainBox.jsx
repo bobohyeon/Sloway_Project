@@ -28,8 +28,8 @@ function toReviewItem(dto) {
       { label: '집중도',     val: dto.scoreFocus ?? 0 },
     ].filter((s) => s.val > 0),
     text: dto.content ?? '',
-    helpful: 0,
-    imgs: 0,
+    helpful: dto.helpfulCount ?? 0, // 백엔드 도움돼요 수 (없으면 0)
+    imgs: dto.imageUrls ?? [], // 백엔드가 주는 이미지 URL 배열 그대로 전달 (없으면 빈 배열)
     reply: dto.replies?.[0]
       ? {
           hostName: '호스트',

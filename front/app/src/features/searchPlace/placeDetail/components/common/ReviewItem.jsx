@@ -81,14 +81,18 @@ function ReviewItem({ review, showSpaceChip = false }) {
       {/* 펼친 후 추가 내용 */}
       {expanded && (
         <>
-          {/* 사진 */}
-          {review.imgs > 0 && (
+          {/* 사진 — imgs는 이제 URL 배열 */}
+          {review.imgs?.length > 0 && (
             <ImgRow>
-              {Array(review.imgs)
-                .fill(0)
-                .map((_, i) => (
-                  <ImgSlot key={i}>📷</ImgSlot>
-                ))}
+              {review.imgs.map((url, i) => (
+                <ImgSlot key={i}>
+                  <img
+                    src={url}
+                    alt="리뷰 이미지"
+                    style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: 8 }}
+                  />
+                </ImgSlot>
+              ))}
             </ImgRow>
           )}
 
