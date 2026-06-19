@@ -82,7 +82,7 @@ public class WorkStayService {
 
         // 2. WorkStay 및 WorkOffice 저장
         WorkStayEntity savedEntity = workStayRepository.save(dto.toEntity(place, amenityEntities));
-        WorkOfficeEntity savedOfficeEntity = workOfficeRepository.save(officeDto.toEntity(savedEntity, officeAmenityEntities));
+        WorkOfficeEntity savedOfficeEntity = workOfficeRepository.save(officeDto.toEntity(savedEntity, officeDto.getCnt(), officeAmenityEntities));
 
         // 3. 검수 저장
         hostPlaceService.insertHostPlace("W", memberNo, savedEntity.getNo());
