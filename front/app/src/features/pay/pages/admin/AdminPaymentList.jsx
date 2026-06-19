@@ -81,6 +81,7 @@ export default function AdminPaymentList() {
     completed: 0,
     completedAmt: 0,
     refunded: 0,
+    canceledPay: 0,
     failed: 0,
   });
   const [selectedTab, setSelectedTab] = useState('all');
@@ -129,7 +130,8 @@ export default function AdminPaymentList() {
     const counts = {
       all: stats.total,
       completed: stats.completed,
-      refunded: stats.refunded,
+      // 환불 탭 카운트는 목록(findPayAll=PAY.CANCELED)과 맞춤. 카드(stats.refunded)는 실제 환불 건수
+      refunded: stats.canceledPay,
     };
     return TABS.map((t) => ({ ...t, count: counts[t.value] }));
   }, [stats]);
