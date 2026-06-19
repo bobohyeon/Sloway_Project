@@ -116,8 +116,13 @@ export default function RefundList() {
   const tabs = useMemo(
     () => [
       { value: 'all', label: '전체', count: stats.total },
-      { value: 'completed', label: '완료', count: stats.completed },
-      { value: 'host_rejected', label: '호스트거절', count: stats.hostRejected },
+      // 회원 취소 = 전체 - 호스트 거절 (환불은 회원취소 ∪ 호스트거절로 양분됨)
+      {
+        value: 'member_cancel',
+        label: '회원 취소',
+        count: stats.total - stats.hostRejected,
+      },
+      { value: 'host_rejected', label: '호스트 거절', count: stats.hostRejected },
     ],
     [stats]
   );
@@ -144,14 +149,6 @@ export default function RefundList() {
           value={stats.total.toLocaleString()}
           unit="건"
           subText="누적"
-        />
-        <SettlementStatCard
-          icon="⏳"
-          label="처리 중"
-          value={stats.processing.toLocaleString()}
-          unit="건"
-          subText="승인 대기"
-          highlight={stats.processing > 0}
         />
         <SettlementStatCard
           icon="✓"
@@ -211,15 +208,11 @@ export default function RefundList() {
 
 const StatGrid = styled.div`
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
+  grid-template-columns: repeat(3, 1fr);
   gap: var(--space-3);
   margin-bottom: var(--space-5);
 
-  @media (max-width: 960px) {
-    grid-template-columns: repeat(2, 1fr);
-  }
-
-  @media (max-width: 480px) {
+  @media (max-width: 720px) {
     grid-template-columns: 1fr;
   }
 `;

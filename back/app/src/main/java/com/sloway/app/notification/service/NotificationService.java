@@ -10,6 +10,7 @@ import com.sloway.app.notification.entity.*;
 import com.sloway.app.notification.error.NotificationErrorCode;
 import com.sloway.app.notification.event.NotificationEvent;
 import com.sloway.app.notification.repository.*;
+import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -23,6 +24,7 @@ import org.springframework.transaction.event.TransactionPhase;
 import org.springframework.transaction.event.TransactionalEventListener;
 
 import java.util.List;
+import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
@@ -141,5 +143,14 @@ public class NotificationService {
 
     public List<NotificationResDto> getNewList(Long memberNo) {
         return notificationRepository.findByMemberNoAndReadAtIsNull(memberNo);
+    }
+
+    @Transactional
+    public void deleteNotification(Long id, Long memberNo) {
+        NotificationEntity notification = notificationRepository.findByIdAndMemberNoAndDelYn(id, memberNo, "N")
+                .orElseThrow(() -> new EntityNotFoundException("[NOTIFICATION-280]notification not found for delete"));
+
+        notification.delete();
+        notificationRepository.save(notification);
     }
 }

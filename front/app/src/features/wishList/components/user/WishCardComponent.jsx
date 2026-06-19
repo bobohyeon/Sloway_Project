@@ -128,21 +128,13 @@ const WishCardComponent = ({ data, onToggleWish }) => {
     }, 500);
   };
 
-  const pathMap = {
-    WORK_STAY: 'workstays',
-    OFFICE: 'coworking-offices',
-    STATION: 'stations',
-  };
-
   return (
     <Grid>
       {data.map((item) => (
         <Card
           key={item.no}
           $isDeleting={deletingId === item.no} // 삭제 중인지 여부 전달
-          onClick={() =>
-            navigate(`/${pathMap[item.type] || 'accommodations'}/${item.no}`)
-          }
+          onClick={() => navigate(`/spaces/${item.placeNo}/rooms`)}
         >
           <ImageBox>
             {item.thumbnail ? (

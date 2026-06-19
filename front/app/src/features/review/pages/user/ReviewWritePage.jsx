@@ -147,7 +147,11 @@ const CharCount = styled.div`
 function ReviewWritePage() {
   const navigate = useNavigate();
   const location = useLocation();
-  const rsvnNo = location.state?.rsvnNo;
+  const { rsvnNo, spaceName, spaceType, checkIn, checkOut, thumbnailUrl } = location.state ?? {};
+
+  const TYPE_LABEL = { WORK_STAY: '워크앤스테이', OFFICE: '오피스', STATION: '숙소' };
+  const TYPE_ICON  = { WORK_STAY: '🌲', OFFICE: '💻', STATION: '🛌' };
+  const formatDate = (dt) => dt?.slice(0, 10).replaceAll('-', '.') ?? '';
 
   const [scores, setScores] = useState([0, 0, 0, 0]);
   const [text, setText] = useState('');
@@ -230,17 +234,20 @@ function ReviewWritePage() {
               alignItems: 'center',
               justifyContent: 'center',
               fontSize: 24,
+              overflow: 'hidden',
             }}
           >
-            🌲
+            {thumbnailUrl
+              ? <img src={thumbnailUrl} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+              : TYPE_ICON[spaceType] ?? '🏠'}
           </div>
           <div>
-            <RsvnStatusBadge type="type" label="워크앤스테이" />
+            <RsvnStatusBadge type="type" label={TYPE_LABEL[spaceType] ?? spaceType ?? '공간'} />
             <div style={{ fontSize: 15, fontWeight: 700, margin: '4px 0 2px' }}>
-              청평 숲속 파인뷰 스테이
+              {spaceName ?? '공간명 없음'}
             </div>
             <div style={{ fontSize: 12, color: COLOR.gray400 }}>
-              📅 이용일 · 2026.04.18 ~ 2026.04.20
+              📅 이용일 · {formatDate(checkIn)} ~ {formatDate(checkOut)}
             </div>
           </div>
         </div>

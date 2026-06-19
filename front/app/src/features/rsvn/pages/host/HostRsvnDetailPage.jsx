@@ -133,6 +133,7 @@ function HostRsvnDetailPage() {
                 type="status"
                 label={STATUS_LABEL[statusCode(rsvn.status)] ?? statusCode(rsvn.status)}
               />
+              {rsvn.refunded && <RsvnStatusBadge type="status" label="환불" />}
             </div>
             <div style={{ fontSize: 18, fontWeight: 700 }}>{rsvn.spaceName}</div>
             <div style={{ fontSize: 12, color: COLOR.gray400, marginTop: 4 }}>

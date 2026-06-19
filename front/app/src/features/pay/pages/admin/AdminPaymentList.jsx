@@ -81,6 +81,7 @@ export default function AdminPaymentList() {
     completed: 0,
     completedAmt: 0,
     refunded: 0,
+    canceledPay: 0,
     failed: 0,
   });
   const [selectedTab, setSelectedTab] = useState('all');
@@ -101,18 +102,19 @@ export default function AdminPaymentList() {
     load();
   }, [page, selectedTab, selectedPeriod]);
 
-  // 통계 — 기간만 의존(탭과 무관하게 항상 전체 상태별 집계라 카드 4개가 정확)
+  // 통계 — 전체 누적 집계(카드 라벨 "누적"과 일치, 환불 관리 findRefundStats 와 동일 기준).
+  // 기간/탭과 무관하게 1회 로드 — 기간 필터는 아래 목록(findPayAll)에만 적용
   useEffect(() => {
     const loadStats = async () => {
       try {
-        const data = await findPayStats(selectedPeriod);
+        const data = await findPayStats('all');
         setStats(data);
       } catch (err) {
         console.error('결제 통계 조회 실패', err);
       }
     };
     loadStats();
-  }, [selectedPeriod]);
+  }, []);
 
   // 탭/기간 바꾸면 1페이지로 리셋(안 하면 5페이지에서 탭 바꿔 빈 결과 뜨는 버그)
   const handleTabChange = (tab) => {
@@ -128,7 +130,8 @@ export default function AdminPaymentList() {
     const counts = {
       all: stats.total,
       completed: stats.completed,
-      refunded: stats.refunded,
+      // 환불 탭 카운트는 목록(findPayAll=PAY.CANCELED)과 맞춤. 카드(stats.refunded)는 실제 환불 건수
+      refunded: stats.canceledPay,
     };
     return TABS.map((t) => ({ ...t, count: counts[t.value] }));
   }, [stats]);

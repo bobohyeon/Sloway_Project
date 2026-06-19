@@ -124,9 +124,11 @@ function RsvnDetailPage() {
   const ci = dayjs(rsvn.checkIn);
   const co = dayjs(rsvn.checkOut);
   const nights = co.diff(ci, 'day');
+  const dtFormat = 'YYYY.MM.DD (ddd) HH:mm';
+  const isExpired = dayjs().isAfter(co); // 체크아웃이 지났으면 스케줄러 미처리여도 프론트에서 방어
   const diff = ci.diff(dayjs(), 'day');
-  const dday = rsvn.status === 'S'
-    ? (diff >= 0 ? `D-${diff}` : `D+${Math.abs(diff)}`)
+  const dday = rsvn.status === 'S' && !isExpired
+    ? (diff >= 0 ? `Dday-${diff}` : `Dday+${Math.abs(diff)}`)
     : null;
 
   const spaceRoute = rsvn.officeNo ? 'coworking-offices'
@@ -145,6 +147,7 @@ function RsvnDetailPage() {
       <StatusBanner>
         <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
           <RsvnStatusBadge type="status" label={STATUS_LABEL[rsvn.status] ?? rsvn.status} />
+          {rsvn.refunded && <RsvnStatusBadge type="status" label="환불" />}
           <span style={{ fontSize: 13, fontWeight: 700 }}>
             예약번호 SW-{String(rsvn.no).padStart(8, '0')}
           </span>
@@ -189,11 +192,11 @@ function RsvnDetailPage() {
         <InfoGrid>
           <InfoItem>
             <InfoLabel>체크인</InfoLabel>
-            <InfoValue>{ci.format('YYYY.MM.DD (ddd) HH:mm')}</InfoValue>
+            <InfoValue>{ci.format(dtFormat)}</InfoValue>
           </InfoItem>
           <InfoItem>
             <InfoLabel>체크아웃</InfoLabel>
-            <InfoValue>{co.format('YYYY.MM.DD (ddd) HH:mm')}</InfoValue>
+            <InfoValue>{co.format(dtFormat)}</InfoValue>
           </InfoItem>
           <InfoItem>
             <InfoLabel>기간</InfoLabel>
@@ -223,8 +226,8 @@ function RsvnDetailPage() {
         {/* 쿠폰·할인·결제수단 상세는 결제 도메인(4번) 연동 후 추가 예정 */}
       </SectionBox>
 
-      {/* 하단 버튼 — 예약확정 상태일 때만 */}
-      {rsvn.status === 'S' && (
+      {/* 하단 버튼 — 예약확정 + 체크아웃 이전일 때만 */}
+      {rsvn.status === 'S' && !isExpired && (
         <BottomBar>
           <RefundBtn onClick={handleRefund}>
             예약 취소 / 환불 신청

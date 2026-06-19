@@ -9,6 +9,7 @@ import com.sloway.app.reservation.rsvn.repository.RsvnRepository;
 import com.sloway.app.review.ReviewErrorCode;
 import com.sloway.app.review.reply.dto.response.ReviewReplyResDto;
 import com.sloway.app.review.reply.repository.ReviewReplyRepository;
+import com.sloway.app.review.helpful.repository.HelpfulRepository;
 import com.sloway.app.review.review.dto.request.ReviewCreateReqDto;
 import com.sloway.app.review.review.dto.request.ReviewEditReqDto;
 import com.querydsl.core.Tuple;
@@ -46,6 +47,7 @@ public class ReviewService {
     private final ReviewImgRepository reviewImgRepository;
     private final HostPlaceRepository hostPlaceRepository;
     private final HostRepository hostRepository;
+    private final HelpfulRepository helpfulRepository;
 
     //리뷰 작성
     @Transactional
@@ -109,7 +111,8 @@ public class ReviewService {
     public List<ReviewResDto> findAll(Long entityNo, String type){
         return reviewRepository.findByEntityNo(entityNo, type)
                 .stream()
-                .map(entity -> ReviewResDto.from(entity, toReplyDtos(entity)))
+                .map(entity -> ReviewResDto
+                        .from(entity, toReplyDtos(entity), toImageUrls(entity), toHelpfulCount(entity)))
                 .toList();
     }
 
@@ -117,7 +120,7 @@ public class ReviewService {
     public ReviewResDto findOne(Long no){
         ReviewEntity entity = reviewRepository.findByNoAndDelYn(no, "N")
                 .orElseThrow(()->new CustomException(ReviewErrorCode.REVIEW_NOT_FOUND));
-        return ReviewResDto.from(entity, toReplyDtos(entity));
+        return ReviewResDto.from(entity, toReplyDtos(entity), toImageUrls(entity));
     }
 
     //리뷰 수정
@@ -150,7 +153,9 @@ public class ReviewService {
     public List<ReviewResDto> findMyReviews(Long memberNo) {
         return reviewRepository.findMyReviews(memberNo)
                 .stream()
-                .map(entity -> ReviewResDto.from(entity, toReplyDtos(entity)))
+                // TODO: findAll 과 똑같이 from 을 4-arg 로 호출 → 네 번째 인자에 toHelpfulCount(entity) 추가
+                .map(entity -> ReviewResDto.from(
+                        entity, toReplyDtos(entity), toImageUrls(entity), toHelpfulCount(entity)))
                 .toList();
     }
 
@@ -168,6 +173,19 @@ public class ReviewService {
                 .stream()
                 .map(ReviewReplyResDto::from)
                 .toList();
+    }
+
+    // 리뷰 첨부 이미지 URL 목록 조회
+    private List<String> toImageUrls(ReviewEntity entity) {
+        return reviewImgRepository.findByReviewNo(entity)
+                .stream()
+                .map(ReviewImgEntity::getCurrentUrl)
+                .toList();
+    }
+
+    //도움되요 수 카운트
+    private Long toHelpfulCount(ReviewEntity entity){
+        return helpfulRepository.countByReviewNo(entity);
     }
 
     //리뷰 삭제

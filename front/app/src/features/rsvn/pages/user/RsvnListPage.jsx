@@ -85,7 +85,7 @@ const toCardItem = (rsvn) => {
   const co = dayjs(rsvn.checkOut);
   const diff = ci.diff(dayjs(), 'day');
   const dday = rsvn.status === 'S'
-    ? (diff >= 0 ? `D-${diff}` : `D+${Math.abs(diff)}`)
+    ? (diff === 0 ? 'D-DAY' : diff > 0 ? `D-${diff}` : `D+${Math.abs(diff)}`)
     : null;
 
   const spaceRoute = rsvn.officeNo ? 'coworking-offices'
@@ -93,18 +93,25 @@ const toCardItem = (rsvn) => {
     : rsvn.stationNo ? 'stations'
     : null;
 
+  // 공간명 + 상세공간명 (방 이름이 따로 있고 공간명과 다를 때만 붙임)
+  const title = rsvn.roomName && rsvn.roomName !== rsvn.spaceName
+    ? `${rsvn.spaceName} · ${rsvn.roomName}`
+    : (rsvn.spaceName ?? `예약 ${rsvn.no}`);
+
   return {
     id: rsvn.no,
     type: rsvn.spaceType ?? '공간',
     status: STATUS_LABEL[rsvn.status] ?? rsvn.status,
+    refunded: rsvn.refunded,
     dday,
-    title: rsvn.spaceName ?? `예약 ${rsvn.no}`,
+    title,
     date: `${ci.format('M월 D일')} ~ ${co.format('M월 D일')}`,
     code: `SW-${String(rsvn.no).padStart(8, '0')}`,
     price: `${rsvn.amt?.toLocaleString()}원`,
     icon: spaceRoute === 'workstays' ? '🌲' : spaceRoute === 'coworking-offices' ? '🏢' : '🏠',
     thumbUrl: rsvn.thumbnailUrl ?? null,
-    action: ACTION_MAP[rsvn.status] ?? null,
+    // 이용완료(E)지만 이미 리뷰를 쓴 예약이면 '리뷰 작성' 버튼 숨김 (백엔드 hasReview 기준)
+    action: rsvn.status === 'E' && rsvn.hasReview ? null : (ACTION_MAP[rsvn.status] ?? null),
     spaceType: null, // 카드 클릭 시 예약 상세로 이동
   };
 };

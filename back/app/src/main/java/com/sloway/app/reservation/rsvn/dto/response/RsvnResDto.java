@@ -32,14 +32,33 @@ public class RsvnResDto {
 
     private String thumbnailUrl;
 
+    private boolean hasReview;
+
+    private String roomName;
+    private boolean refunded;
+
+
+
     public static RsvnResDto from(RsvnEntity entity, Long payNo){
+        return from(entity, payNo, false, false);
+    }
+
+    public static RsvnResDto from(RsvnEntity entity, Long payNo, boolean hasReview){
+        return from(entity, payNo, hasReview, false);
+    }
+
+    public static RsvnResDto from(RsvnEntity entity, Long payNo,
+                                  boolean hasReview, boolean refunded){
         String spaceName = null;
         String spaceType = null;
         String thumbnailUrl = null;
+        String roomName = null;
+
 
         if (entity.getOfficeNo() != null) {
             spaceName = entity.getOfficeNo().getPlaceEntity().getTitle();
             spaceType = entity.getOfficeNo().getPlaceEntity().getType();
+            roomName = entity.getOfficeNo().getTitle();
             thumbnailUrl = entity.getOfficeNo().getPlaceEntity().getImages().stream()
                     .min(Comparator.comparing(ImgPlaceEntity::getSort, Comparator.nullsLast(Integer::compareTo)))
                     .map(ImgPlaceEntity::getCurrentUrl)
@@ -47,6 +66,7 @@ public class RsvnResDto {
         } else if (entity.getWorkStayNo() != null) {
             spaceName = entity.getWorkStayNo().getPlaceEntity().getTitle();
             spaceType = entity.getWorkStayNo().getPlaceEntity().getType();
+            roomName = entity.getWorkStayNo().getTitle();
             thumbnailUrl = entity.getWorkStayNo().getPlaceEntity().getImages().stream()
                     .min(Comparator.comparing(ImgPlaceEntity::getSort, Comparator.nullsLast(Integer::compareTo)))
                     .map(ImgPlaceEntity::getCurrentUrl)
@@ -54,6 +74,7 @@ public class RsvnResDto {
         } else if (entity.getStationNo() != null) {
             spaceName = entity.getStationNo().getPlaceEntity().getTitle();
             spaceType = entity.getStationNo().getPlaceEntity().getType();
+            roomName = entity.getStationNo().getTitle();
             thumbnailUrl = entity.getStationNo().getPlaceEntity().getImages().stream()
                     .min(Comparator.comparing(ImgPlaceEntity::getSort, Comparator.nullsLast(Integer::compareTo)))
                     .map(ImgPlaceEntity::getCurrentUrl)
@@ -79,6 +100,9 @@ public class RsvnResDto {
                 .checkOut(entity.getCheckOut())
                 .status(entity.getStatus())
                 .createdAt(entity.getCreatedAt())
+                .hasReview(hasReview)
+                .roomName(roomName)
+                .refunded(refunded)
                 .build();
     }
 }

@@ -145,7 +145,11 @@ function MyReviewPage() {
           {reviewable.map((item) => (
             <Card key={item.no} style={{ cursor: 'default' }}>
               <CardRow>
-                <Thumb>{TYPE_ICON[item.spaceType] ?? '🏠'}</Thumb>
+                <Thumb>
+                  {item.thumbnailUrl
+                    ? <img src={item.thumbnailUrl} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: 10 }} />
+                    : TYPE_ICON[item.spaceType] ?? '🏠'}
+                </Thumb>
                 <CardBody>
                   <TagRow>
                     <RsvnStatusBadge type="type" label={TYPE_LABEL[item.spaceType] ?? item.spaceType} />
@@ -159,7 +163,14 @@ function MyReviewPage() {
                 <WriteBtn
                   onClick={() =>
                     navigate('/user/review/write', {
-                      state: { rsvnNo: item.no },
+                      state: {
+                        rsvnNo: item.no,
+                        spaceName: item.spaceName,
+                        spaceType: item.spaceType,
+                        checkIn: item.checkIn,
+                        checkOut: item.checkOut,
+                        thumbnailUrl: item.thumbnailUrl,
+                      },
                     })
                   }
                 >
@@ -188,7 +199,11 @@ function MyReviewPage() {
           {pagedReviews.map((item) => (
             <Card key={item.no} onClick={() => navigate(`/review/${item.no}`)}>
               <CardRow>
-                <Thumb>📝</Thumb>
+                <Thumb>
+                  {item.thumbnailUrl
+                    ? <img src={item.thumbnailUrl} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: 10 }} />
+                    : (TYPE_ICON[item.spaceType] ?? '📝')}
+                </Thumb>
                 <CardBody>
                   <TagRow>
                     <RsvnStatusBadge
@@ -215,6 +230,7 @@ function MyReviewPage() {
                       이용일 · {formatDate(item.checkIn)} ~{' '}
                       {formatDate(item.checkOut)}
                     </span>
+                    <span>· 👍 도움돼요 {item.helpfulCount ?? 0}</span>
                   </CardMeta>
                   <div
                     style={{

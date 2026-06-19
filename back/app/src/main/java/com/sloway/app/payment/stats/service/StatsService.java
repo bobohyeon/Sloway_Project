@@ -264,7 +264,10 @@ public class StatsService {
         Map<RsvnStatus, Long> counts = statsRepositoryCustom.countRsvnGroupByStatus(start, end);
         long confirmed = counts.getOrDefault(RsvnStatus.S, 0L);
         long complete = counts.getOrDefault(RsvnStatus.E, 0L);
-        long cancel = counts.getOrDefault(RsvnStatus.C, 0L);
+        // 환불 카드 = 실제 환불(refund) 테이블 완료 건수. RsvnStatus.C(예약 취소)는 결제 전 취소까지 포함하므로
+        // 환불이 아닌 건이 섞인다 → 환불 관리 화면과 동일 SSOT(refund 테이블)로 집계
+        Long refundCount = refundRepository.sumBetween(start, end).get(0, Long.class);
+        long cancel = refundCount == null ? 0L : refundCount;
         long total = counts.values().stream().mapToLong(Long::longValue).sum();
 
         List<MonthlyTrendResDto> trend = buildTrend(ym, months, (s, e)
@@ -297,7 +300,7 @@ public class StatsService {
         // 신규 회원 (stats가 이미 회원 테이블 집계 — 기존 메서드 재활용)
         Long newMemberCount = statsRepositoryCustom.countMemberByCreatedAtBetween(start, end);
 
-        // 오늘 결제 건 — 결제수단별 집계의 count 합산 (COMPLETED+CANCELED = 성공 결제)
+        // 오늘 결제 건 — 결제수단별 집계의 count 합산 (성공 결제 COMPLETED 만, 취소건 제외)
         long payCount = payRepository.sumByMethodBetween(start, end).stream()
                 .mapToLong(t -> {
                     Long c = t.get(1, Long.class);

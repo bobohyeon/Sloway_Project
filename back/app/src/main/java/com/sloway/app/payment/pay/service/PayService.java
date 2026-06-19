@@ -22,6 +22,7 @@ import com.sloway.app.payment.pay.pg.toss.client.TossPayClient;
 import com.sloway.app.payment.pay.pg.toss.dto.request.TossConfirmReqDto;
 import com.sloway.app.payment.pay.pg.toss.dto.response.TossConfirmResDto;
 import com.sloway.app.payment.pay.repository.PayRepository;
+import com.sloway.app.payment.refund.repository.RefundRepository;
 import com.sloway.app.payment.point.common.PointErrorCode;
 import com.sloway.app.payment.point.service.PointService;
 import com.sloway.app.reservation.RsvnErrorCode;
@@ -46,6 +47,7 @@ import java.util.Objects;
 public class PayService {
 
     private final PayRepository payRepository;
+    private final RefundRepository refundRepository;
     private final CouponRepository couponRepository;
     private final RsvnRepository rsvnRepository;
     private final PointService pointService;
@@ -191,9 +193,17 @@ public class PayService {
         return payRepository.findPayAll(pageRequest, toStatus(tab), toFrom(period));
     }
 
-    public PayStatsResDto findPayStats(String period) {
-        return payRepository.findPayStats(toFrom(period));
-    }
+     public PayStatsResDto findPayStats(String period) {
+      PayStatsResDto base = payRepository.findPayStats(toFrom(period));
+      // 카드(refunded)는 실제 환불(refund 테이블) 완료 건수 — 환불 관리 화면과 동일 SSOT.
+      // 탭(canceledPay)은 Repository가 채운 PAY.CANCELED 건수 그대로 보존 — 환불 탭 목록(findPayAll)과 일치.
+      long refundCount = refundRepository.findRefundStats().getCompleted();
+      return base.toBuilder()
+              .canceledPay(base.getRefunded())
+              .refunded(refundCount)
+              .build();
+  }
+
 
     private PayStatus toStatus(String tab) {
         if (tab == null) return null;

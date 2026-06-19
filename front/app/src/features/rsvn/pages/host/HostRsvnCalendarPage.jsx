@@ -149,6 +149,7 @@ function HostRsvnCalendarPage() {
         setBlackouts(bos);
       } catch (e) {
         console.error(e);
+        alert('일정을 불러오지 못했습니다.');
       }
     }
     load();

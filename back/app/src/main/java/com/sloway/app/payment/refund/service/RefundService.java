@@ -58,10 +58,7 @@ public class RefundService {
         RefundEntity refundEntity = refundCreateReqDto.toEntity(payEntity, rsvn);
         RefundRate rate = refundRate(refundEntity);
         validDuplicate(payEntity);   // 이미 환불된 건은 중복 환불 차단
-        if (RefundRate.DDAY == rate) {
-            log.warn("환불 기간 만료 : payNo:{},rsvnNo:{}", refundCreateReqDto.getPayNo(), refundCreateReqDto.getRsvnNo());
-            throw new CustomException(RefundErrorCode.REFUND_PERIOD_EXPIRED);
-        }
+        // 당일(DDAY)은 환불율 0% — 거부하지 않고 0원 환불로 처리(예약은 취소됨, 환불액만 0원)
         // 남은 기간별 환불율(rate)을 결제액(finalAmt)에 적용해 환불액 산정
         BigDecimal finalAmt = BigDecimal.valueOf(payEntity.getFinalAmt());
         BigDecimal rateBd = BigDecimal.valueOf(rate.getRate());
@@ -115,17 +112,20 @@ public class RefundService {
         pointService.cancelEarnedPoint(payEntity);
         pointService.refundUsedPoint(payEntity);
         // 카카오/토스 결제 취소 호출 — 환불율 적용된 실제 환불액으로 부분취소(전액 아님)
+        // 당일 환불(0원)은 PG 취소 스킵 — 카카오/토스는 0원 취소 요청 시 에러를 반환함
         int cancelAmount = refundEntity.getRefundAmt().intValue();
-        PayMethod method = payEntity.getMethod();
-        if (method == PayMethod.KAKAOPAY) {
-            KakaoCancelReqDto cancelReqDto = KakaoCancelReqDto.builder()
-                    .tid(payEntity.getTid())
-                    .cancelAmount(cancelAmount)
-                    .cancelTaxFreeAmount(0)
-                    .build();
-            kakaoPayClient.cancel(cancelReqDto);
-        } else if (method == PayMethod.TOSSPAY) {
-            tossPayClient.cancel(payEntity.getTid(), "고객 환불 요청", cancelAmount);
+        if (cancelAmount > 0) {
+            PayMethod method = payEntity.getMethod();
+            if (method == PayMethod.KAKAOPAY) {
+                KakaoCancelReqDto cancelReqDto = KakaoCancelReqDto.builder()
+                        .tid(payEntity.getTid())
+                        .cancelAmount(cancelAmount)
+                        .cancelTaxFreeAmount(0)
+                        .build();
+                kakaoPayClient.cancel(cancelReqDto);
+            } else if (method == PayMethod.TOSSPAY) {
+                tossPayClient.cancel(payEntity.getTid(), "고객 환불 요청", cancelAmount);
+            }
         }
         payEntity.cancelPay();
         refundEntity.completeRefund();
