@@ -33,6 +33,7 @@ import com.sloway.app.reservation.rsvn.entity.RsvnEntity;
 import com.sloway.app.reservation.rsvn.entity.RsvnStatus;
 import com.sloway.app.reservation.rsvn.repository.RsvnRepository;
 import com.sloway.app.review.ReviewErrorCode;
+import com.sloway.app.review.review.repository.ReviewRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
@@ -62,6 +63,7 @@ public class RsvnService {
     private final HostPlaceRepository hostPlaceRepository;
     private final ImgPlaceRepository imgPlaceRepository;
     private final BlackOutRepository blackOutRepository;
+    private final ReviewRepository reviewRepository;
 
     @Transactional
     public long save(Long memberNo, RsvnReqDto dto) {
@@ -429,6 +431,7 @@ public class RsvnService {
         List<RsvnEntity> reviewable = rsvnRepository.findByMemberNoAndStatus(member, RsvnStatus.E)
                 .stream()
                 .filter(entity -> LocalDateTime.now().isBefore(entity.getCheckOut().plusDays(14)))
+                .filter(entity -> !reviewRepository.existsByRsvnNoAndDelYn(entity, "N"))
                 .toList();
         // 예약들의 payNo 를 한 번에 조회(N+1 제거)
         java.util.Map<Long, Long> payNoMap =
