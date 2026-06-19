@@ -85,7 +85,7 @@ const toCardItem = (rsvn) => {
   const co = dayjs(rsvn.checkOut);
   const diff = ci.diff(dayjs(), 'day');
   const dday = rsvn.status === 'S'
-    ? (diff >= 0 ? `D-${diff}` : `D+${Math.abs(diff)}`)
+    ? (diff === 0 ? 'D-DAY' : diff > 0 ? `D-${diff}` : `D+${Math.abs(diff)}`)
     : null;
 
   const spaceRoute = rsvn.officeNo ? 'coworking-offices'
@@ -93,12 +93,17 @@ const toCardItem = (rsvn) => {
     : rsvn.stationNo ? 'stations'
     : null;
 
+  // 공간명 + 상세공간명 (방 이름이 따로 있고 공간명과 다를 때만 붙임)
+  const title = rsvn.roomName && rsvn.roomName !== rsvn.spaceName
+    ? `${rsvn.spaceName} · ${rsvn.roomName}`
+    : (rsvn.spaceName ?? `예약 ${rsvn.no}`);
+
   return {
     id: rsvn.no,
     type: rsvn.spaceType ?? '공간',
     status: STATUS_LABEL[rsvn.status] ?? rsvn.status,
     dday,
-    title: rsvn.spaceName ?? `예약 ${rsvn.no}`,
+    title,
     date: `${ci.format('M월 D일')} ~ ${co.format('M월 D일')}`,
     code: `SW-${String(rsvn.no).padStart(8, '0')}`,
     price: `${rsvn.amt?.toLocaleString()}원`,

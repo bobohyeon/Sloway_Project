@@ -30,10 +30,9 @@ public class ReviewResDto {
     private List<String> imageUrls;           // 리뷰 첨부 이미지 URL 목록
     private LocalDateTime checkIn;
     private LocalDateTime checkOut;
-
     private Long helpfulCount;
-
     private String thumbnailUrl;
+    private String memberImgUrl;
 
 
     public static ReviewResDto from(ReviewEntity entity, List<ReviewReplyResDto> replies,
@@ -78,6 +77,7 @@ public class ReviewResDto {
                 .no(entity.getNo())
                 .rsvnNo(rsvn.getNo())
                 .memberName(rsvn.getMemberNo().getName())
+                .memberImgUrl(rsvn.getMemberNo().getImgUrl())
                 .spaceName(spaceName)
                 .spaceType(spaceType)
                 .scoreTotal(entity.getScoreTotal())

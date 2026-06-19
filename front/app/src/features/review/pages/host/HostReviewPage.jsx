@@ -358,7 +358,11 @@ function HostReviewPage() {
         return (
           <Card key={item.no} style={{ cursor: 'default' }}>
             <CardRow>
-              <Thumb>{item.spaceType?.[0]}</Thumb>
+              <Thumb>
+                {item.memberImgUrl
+                  ? <img src={item.memberImgUrl} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: '50%' }} />
+                  : (item.memberName?.[0] ?? '?')}
+              </Thumb>
               <CardBody>
                 <TagRow>
                   <span

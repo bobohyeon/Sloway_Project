@@ -179,15 +179,6 @@ function HostRsvnListPage() {
           <StatLabel>완료</StatLabel>
           <StatValue>{counts[2]}건</StatValue>
         </StatCard>
-        <StatCard
-          style={{ cursor: 'pointer' }}
-          onClick={() => navigate('/host/settlement/dashboard')}
-        >
-          <StatLabel>이번 달 매출 →</StatLabel>
-          <StatValue $color={COLOR.terra} style={{ fontSize: 18 }}>
-            —
-          </StatValue>
-        </StatCard>
       </StatCards>
 
       <TabBar>
