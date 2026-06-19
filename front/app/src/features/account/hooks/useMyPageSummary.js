@@ -29,8 +29,13 @@ export function useMyPageSummary(memberNo) {
       if (!alive) return;
 
       if (pointR.status === 'fulfilled') setPoint(pointR.value?.balance ?? 0);
-      if (couponR.status === 'fulfilled')
-        setCouponCount(couponR.value?.length ?? 0);
+      if (couponR.status === 'fulfilled') {
+        // 쿠폰함 응답은 전체(사용완료/만료 포함)라 네브바엔 사용 가능한 쿠폰만 카운트
+        const available = (couponR.value ?? []).filter(
+          (c) => c.status === 'AVAILABLE'
+        );
+        setCouponCount(available.length);
+      }
 
       setLoading(false);
     })();
