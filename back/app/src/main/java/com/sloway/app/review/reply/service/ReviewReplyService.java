@@ -16,6 +16,8 @@ import com.sloway.app.review.reply.repository.ReviewReplyRepository;
 import com.sloway.app.review.review.dto.request.ReviewHostFilterReqDto;
 import com.sloway.app.review.review.dto.response.ReviewResDto;
 import com.sloway.app.review.review.entity.ReviewEntity;
+import com.sloway.app.review.review.entity.ReviewImgEntity;
+import com.sloway.app.review.review.repository.ReviewImgRepository;
 import com.sloway.app.review.review.repository.ReviewRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -32,6 +34,7 @@ public class ReviewReplyService {
 
     private final ReviewReplyRepository reviewReplyRepository;
     private final ReviewRepository reviewRepository;
+    private final ReviewImgRepository reviewImgRepository;
     private final HostRepository hostRepository;
     private final HostPlaceRepository hostPlaceRepository;
     private final PlaceRepository placeRepository;
@@ -63,7 +66,9 @@ public class ReviewReplyService {
         return dtoList.stream()
                 .map(entity -> ReviewResDto.from(entity,
                         reviewReplyRepository.findByReviewNoAndDelAtIsNull(entity)
-                                .stream().map(ReviewReplyResDto::from).toList()))
+                                .stream().map(ReviewReplyResDto::from).toList(),
+                        reviewImgRepository.findByReviewNo(entity)
+                                .stream().map(img -> img.getCurrentUrl()).toList()))
                 .toList();
     }
 

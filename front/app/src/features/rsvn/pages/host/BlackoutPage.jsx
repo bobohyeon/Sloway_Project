@@ -132,7 +132,6 @@ function BlackoutPage() {
         }
       } catch (e) {
         console.error(e);
-        alert('공간 목록을 불러오지 못했습니다.');
       }
     }
     loadSpaces();
