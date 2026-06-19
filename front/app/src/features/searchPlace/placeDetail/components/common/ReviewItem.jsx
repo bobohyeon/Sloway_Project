@@ -331,12 +331,14 @@ const ImgRow = styled.div`
   display: flex;
   gap: 8px;
   margin-bottom: 16px;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;       /* 줄바꿈 X */
+  overflow-x: auto;        /* 넘치면 가로 스크롤 */
+  padding-bottom: 4px;     /* 스크롤바 자리 */
 `;
 
 const ImgSlot = styled.div`
-  width: 72px;
-  height: 72px;
+  width: 60px;
+  height: 60px;
   border-radius: 8px;
   background: ${COLOR.gray200};
   display: flex;

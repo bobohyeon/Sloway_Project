@@ -313,7 +313,7 @@ public class RsvnService {
             RsvnStatus status = (RsvnStatus) row[0];
             long cnt = (long) row[1];
             result.put(status.name(), cnt);
-            total += cnt;
+            if (status != RsvnStatus.P) total += cnt;
         }
         result.put("TOTAL", total);
         return result;
@@ -323,7 +323,7 @@ public class RsvnService {
     public Page<RsvnResDto> findAllForAdmin(Pageable pageable, RsvnStatus status) {
         Page<RsvnEntity> all = (status != null)
                 ? rsvnRepository.findByStatus(status, pageable)
-                : rsvnRepository.findAll(pageable);
+                : rsvnRepository.findByStatusNot(RsvnStatus.P, pageable);
         Map<Long, Long> payNoMap = findCompletePayNoMap(all.getContent().stream().map(RsvnEntity::getNo).toList());
         return all.map(entity -> RsvnResDto.from(entity, payNoMap.get(entity.getNo())));
     }

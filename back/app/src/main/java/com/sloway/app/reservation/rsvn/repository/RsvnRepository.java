@@ -42,6 +42,9 @@ public interface RsvnRepository extends JpaRepository<RsvnEntity, Long> {
     // 어드민 — 상태별 페이징 조회
     Page<RsvnEntity> findByStatus(RsvnStatus status, Pageable pageable);
 
+    // 어드민 — 특정 상태 제외 페이징 조회 (결제대기 P 제외용)
+    Page<RsvnEntity> findByStatusNot(RsvnStatus status, Pageable pageable);
+
     // 어드민 — 상태별 건수 집계 (단일 GROUP BY 쿼리)
     @Query("SELECT r.status, COUNT(r) FROM RsvnEntity r GROUP BY r.status")
     List<Object[]> countGroupByStatus();
