@@ -104,25 +104,25 @@ public class ChatService {
         Optional<HostPlaceEntity> hostPlaceOpt;
         String spaceName;
 
-        // entityNo는 프론트 검색 결과의 placeNo (PlaceEntity.no) → findByPlaceNo로 조회
+        // entityNo는 각 엔티티 자체 PK (station.no / workStay.no / office.no)
         switch (placeType.toUpperCase()) {
             case "WORK_STAY" -> {
-                WorkStayEntity ws = workStayRepository.findByPlaceNo(entityNo)
+                WorkStayEntity ws = workStayRepository.findById(entityNo)
                         .orElseThrow(() -> new CustomException(ChatErrorCode.PLACE_NOT_FOUND));
                 hostPlaceOpt = hostPlaceRepository.findByWorkStayEntity(ws);
-                spaceName = ws.getPlaceEntity().getTitle();
+                spaceName = ws.getTitle();
             }
             case "OFFICE" -> {
-                OfficeEntity office = officeRepository.findByPlaceNo(entityNo)
+                OfficeEntity office = officeRepository.findById(entityNo)
                         .orElseThrow(() -> new CustomException(ChatErrorCode.PLACE_NOT_FOUND));
                 hostPlaceOpt = hostPlaceRepository.findByOfficeEntity(office);
-                spaceName = office.getPlaceEntity().getTitle();
+                spaceName = office.getTitle();
             }
             case "STATION" -> {
-                StationEntity station = stationRepository.findByPlaceNo(entityNo)
+                StationEntity station = stationRepository.findById(entityNo)
                         .orElseThrow(() -> new CustomException(ChatErrorCode.PLACE_NOT_FOUND));
                 hostPlaceOpt = hostPlaceRepository.findByStationEntity(station);
-                spaceName = station.getPlaceEntity().getTitle();
+                spaceName = station.getTitle();
             }
             default -> throw new CustomException(ChatErrorCode.PLACE_NOT_FOUND);
         }
