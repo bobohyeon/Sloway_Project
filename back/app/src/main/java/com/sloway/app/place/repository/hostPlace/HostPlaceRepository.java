@@ -26,4 +26,10 @@ public interface HostPlaceRepository extends JpaRepository<HostPlaceEntity, Long
     Optional<HostPlaceEntity> findByWorkStayEntity(WorkStayEntity workStayEntity);
     Optional<HostPlaceEntity> findByOfficeEntity(OfficeEntity officeEntity);
     Optional<HostPlaceEntity> findByStationEntity(StationEntity stationEntity);
+
+    // 같은 공간에 대해 재신청 등으로 HOST_PLACE 행이 여러 개 존재할 수 있어
+    // findBy*Entity 단독 사용 시 NonUniqueResultException 발생 → 승인(A) 행만 조회하도록 status 조건 추가 by 현종
+    Optional<HostPlaceEntity> findByWorkStayEntityAndStatus(WorkStayEntity workStayEntity, ApprovalStatus status);
+    Optional<HostPlaceEntity> findByOfficeEntityAndStatus(OfficeEntity officeEntity, ApprovalStatus status);
+    Optional<HostPlaceEntity> findByStationEntityAndStatus(StationEntity stationEntity, ApprovalStatus status);
 }
