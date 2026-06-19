@@ -54,20 +54,21 @@ public class ChatService {
         String spaceName = null;
         Long entityNo = null;
         String placeType = null;
+        // entityNo는 PlaceEntity.no 기준으로 통일 (공간 검색 경로와 동일)
         if (rsvn.getWorkStayNo() != null) {
             hostPlaceOpt = hostPlaceRepository.findByWorkStayEntity(rsvn.getWorkStayNo());
             spaceName = rsvn.getWorkStayNo().getPlaceEntity().getTitle();
-            entityNo = rsvn.getWorkStayNo().getNo();
+            entityNo = rsvn.getWorkStayNo().getPlaceEntity().getNo();
             placeType = "WORK_STAY";
         } else if (rsvn.getOfficeNo() != null) {
             hostPlaceOpt = hostPlaceRepository.findByOfficeEntity(rsvn.getOfficeNo());
             spaceName = rsvn.getOfficeNo().getPlaceEntity().getTitle();
-            entityNo = rsvn.getOfficeNo().getNo();
+            entityNo = rsvn.getOfficeNo().getPlaceEntity().getNo();
             placeType = "OFFICE";
         } else if (rsvn.getStationNo() != null) {
             hostPlaceOpt = hostPlaceRepository.findByStationEntity(rsvn.getStationNo());
             spaceName = rsvn.getStationNo().getPlaceEntity().getTitle();
-            entityNo = rsvn.getStationNo().getNo();
+            entityNo = rsvn.getStationNo().getPlaceEntity().getNo();
             placeType = "STATION";
         }
 
@@ -103,21 +104,22 @@ public class ChatService {
         Optional<HostPlaceEntity> hostPlaceOpt;
         String spaceName;
 
+        // entityNo는 프론트 검색 결과의 placeNo (PlaceEntity.no) → findByPlaceNo로 조회
         switch (placeType.toUpperCase()) {
             case "WORK_STAY" -> {
-                WorkStayEntity ws = workStayRepository.findById(entityNo)
+                WorkStayEntity ws = workStayRepository.findByPlaceNo(entityNo)
                         .orElseThrow(() -> new CustomException(ChatErrorCode.PLACE_NOT_FOUND));
                 hostPlaceOpt = hostPlaceRepository.findByWorkStayEntity(ws);
                 spaceName = ws.getPlaceEntity().getTitle();
             }
             case "OFFICE" -> {
-                OfficeEntity office = officeRepository.findById(entityNo)
+                OfficeEntity office = officeRepository.findByPlaceNo(entityNo)
                         .orElseThrow(() -> new CustomException(ChatErrorCode.PLACE_NOT_FOUND));
                 hostPlaceOpt = hostPlaceRepository.findByOfficeEntity(office);
                 spaceName = office.getPlaceEntity().getTitle();
             }
             case "STATION" -> {
-                StationEntity station = stationRepository.findById(entityNo)
+                StationEntity station = stationRepository.findByPlaceNo(entityNo)
                         .orElseThrow(() -> new CustomException(ChatErrorCode.PLACE_NOT_FOUND));
                 hostPlaceOpt = hostPlaceRepository.findByStationEntity(station);
                 spaceName = station.getPlaceEntity().getTitle();
