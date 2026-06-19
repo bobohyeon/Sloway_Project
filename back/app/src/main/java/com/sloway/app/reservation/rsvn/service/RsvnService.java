@@ -33,6 +33,7 @@ import com.sloway.app.reservation.rsvn.entity.RsvnEntity;
 import com.sloway.app.reservation.rsvn.entity.RsvnStatus;
 import com.sloway.app.reservation.rsvn.repository.RsvnRepository;
 import com.sloway.app.review.ReviewErrorCode;
+import com.sloway.app.review.review.entity.ReviewEntity;
 import com.sloway.app.review.review.repository.ReviewRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -133,8 +134,16 @@ public class RsvnService {
         // 예약들의 payNo 를 한 번에 조회(N+1 제거)
         Map<Long, Long> payNoMap =
                 findCompletePayNoMap(list.stream().map(RsvnEntity::getNo).toList());
+
+        Set<Long> reviewRsvnNo = reviewRepository.findMyReviews(memberNo)
+                .stream()
+                .map(review -> review.getRsvnNo().getNo())
+                .collect(Collectors.toSet());
+
         return list.stream()
-                .map(entity -> RsvnResDto.from(entity, payNoMap.get(entity.getNo())))
+                .map(entity -> RsvnResDto.from(
+                        entity, payNoMap.get(entity.getNo()),
+                        reviewRsvnNo.contains(entity.getNo())))
                 .toList();
     }
 

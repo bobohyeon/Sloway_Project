@@ -104,7 +104,8 @@ const toCardItem = (rsvn) => {
     price: `${rsvn.amt?.toLocaleString()}원`,
     icon: spaceRoute === 'workstays' ? '🌲' : spaceRoute === 'coworking-offices' ? '🏢' : '🏠',
     thumbUrl: rsvn.thumbnailUrl ?? null,
-    action: ACTION_MAP[rsvn.status] ?? null,
+    // 이용완료(E)지만 이미 리뷰를 쓴 예약이면 '리뷰 작성' 버튼 숨김 (백엔드 hasReview 기준)
+    action: rsvn.status === 'E' && rsvn.hasReview ? null : (ACTION_MAP[rsvn.status] ?? null),
     spaceType: null, // 카드 클릭 시 예약 상세로 이동
   };
 };
