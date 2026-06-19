@@ -1,7 +1,8 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import styled from 'styled-components';
 import { COLOR } from '../../../../rsvn/components/user/RsvnStyled';
+import { saveHelpful, deleteHelpful, findMyHelpfulNo } from '../../../../review/api/reviewApi';
 
 /**
  * ReviewItem - 리뷰 1개 (토글로 상세 펼치기/접기)
@@ -12,13 +13,42 @@ import { COLOR } from '../../../../rsvn/components/user/RsvnStyled';
 function ReviewItem({ review, showSpaceChip = false }) {
   const navigate = useNavigate();
   const [expanded, setExpanded] = useState(false);
-  const [helped, setHelped] = useState(false);
   const [helpCount, setHelpCount] = useState(review.helpful || 0);
+  const [myHelpfulNo, setMyHelpfulNo] = useState(null); // 내가 누른 도움돼요 entity no (없으면 null)
+  const [zoomImg, setZoomImg] = useState(null);         // 클릭한 리뷰 이미지 (라이트박스용)
+  const helped = myHelpfulNo != null;
 
-  const toggleHelp = (e) => {
+  const reviewNo = review.id ?? review.no;
+  const isLoggedIn = !!localStorage.getItem('accessToken');
+
+  // 마운트 시 "내가 이 리뷰에 도움돼요를 눌렀는지" 백엔드에서 확인 (새로고침해도 상태 유지)
+  useEffect(() => {
+    if (!isLoggedIn || !reviewNo) return;
+    findMyHelpfulNo(reviewNo).then((no) => setMyHelpfulNo(no || null)).catch(() => {});
+  }, [reviewNo, isLoggedIn]);
+
+  const toggleHelp = async (e) => {
     e.stopPropagation();
-    setHelped((v) => !v);
-    setHelpCount((c) => (helped ? c - 1 : c + 1));
+    if (!isLoggedIn) {
+      alert('로그인 후 이용해주세요.');
+      return;
+    }
+    try {
+      if (helped) {
+        // 이미 누른 상태 → 취소 (entity no 로 삭제)
+        await deleteHelpful(myHelpfulNo);
+        setMyHelpfulNo(null);
+        setHelpCount((c) => c - 1);
+      } else {
+        // 등록 → POST 응답엔 body 가 없어서, 새로 생긴 no 를 다시 조회해 확보 (취소에 필요)
+        await saveHelpful(reviewNo);
+        const newNo = await findMyHelpfulNo(reviewNo);
+        setMyHelpfulNo(newNo || null);
+        setHelpCount((c) => c + 1);
+      }
+    } catch (err) {
+      console.error('도움돼요 처리 실패', err);
+    }
   };
 
   const toggleExpand = () => {
@@ -56,6 +86,7 @@ function ReviewItem({ review, showSpaceChip = false }) {
             {'☆'.repeat(5 - review.scores[0].val)}
           </Stars>
           <ScoreNum>{review.scores[0].val}.0</ScoreNum>
+          <HelpfulCount>👍 도움돼요 {helpCount}</HelpfulCount>
         </SimpleScore>
       )}
 
@@ -85,7 +116,11 @@ function ReviewItem({ review, showSpaceChip = false }) {
           {review.imgs?.length > 0 && (
             <ImgRow>
               {review.imgs.map((url, i) => (
-                <ImgSlot key={i}>
+                <ImgSlot
+                  key={i}
+                  onClick={(e) => { e.stopPropagation(); setZoomImg(url); }}
+                  style={{ cursor: 'pointer' }}
+                >
                   <img
                     src={url}
                     alt="리뷰 이미지"
@@ -127,6 +162,13 @@ function ReviewItem({ review, showSpaceChip = false }) {
       <ToggleBtn onClick={toggleExpand}>
         {expanded ? '접기 ▲' : '더보기 ▼'}
       </ToggleBtn>
+
+      {/* 이미지 확대 라이트박스 — 배경 클릭 시 닫힘 */}
+      {zoomImg && (
+        <Lightbox onClick={(e) => { e.stopPropagation(); setZoomImg(null); }}>
+          <img src={zoomImg} alt="리뷰 이미지 확대" />
+        </Lightbox>
+      )}
     </Card>
   );
 }
@@ -257,6 +299,12 @@ const ScoreNum = styled.span`
   color: #c97d4c;
 `;
 
+const HelpfulCount = styled.span`
+  margin-left: auto;
+  font-size: 12px;
+  color: ${COLOR.gray600};
+`;
+
 const ScoreVal = styled.span`
   font-size: 13px;
   font-weight: 600;
@@ -296,6 +344,23 @@ const ImgSlot = styled.div`
   justify-content: center;
   font-size: 24px;
   flex-shrink: 0;
+`;
+
+const Lightbox = styled.div`
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.8);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  cursor: zoom-out;
+
+  img {
+    max-width: 90vw;
+    max-height: 90vh;
+    border-radius: 8px;
+  }
 `;
 
 const MetaRow = styled.div`
