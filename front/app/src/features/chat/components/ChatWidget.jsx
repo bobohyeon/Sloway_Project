@@ -1,6 +1,12 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import styled from 'styled-components';
-import { FaCommentDots, FaArrowLeft, FaTimes, FaPaperPlane, FaSignOutAlt } from 'react-icons/fa';
+import {
+  FaCommentDots,
+  FaArrowLeft,
+  FaTimes,
+  FaPaperPlane,
+  FaSignOutAlt,
+} from 'react-icons/fa';
 import { useSelector } from 'react-redux';
 import { Client } from '@stomp/stompjs';
 import SockJS from 'sockjs-client';
@@ -39,7 +45,8 @@ function fmtMsgTime(iso) {
 
 export default function ChatWidget() {
   const user = useSelector((s) => s.auth.user);
-  const chatRole = user?.role === 'H' ? 'host' : user?.role === 'U' ? 'user' : null;
+  const chatRole =
+    user?.role === 'H' ? 'host' : user?.role === 'U' ? 'user' : null;
 
   // ─── 패널 상태 ───────────────────────────────────────────────────────────
   const [isOpen, setIsOpen] = useState(false);
@@ -74,6 +81,7 @@ export default function ChatWidget() {
   const stompRef = useRef(null);
   const roomsRef = useRef([]);
   const loadRoomsRef = useRef(null);
+  const subscriptionsRef = useRef(new Set());
 
   // ─── 방 목록 로드 + WS 구독 ──────────────────────────────────────────────
   const loadRooms = useCallback(() => {
@@ -87,8 +95,12 @@ export default function ChatWidget() {
       .catch(() => {});
   }, [chatRole]);
 
-  useEffect(() => { roomsRef.current = rooms; }, [rooms]);
-  useEffect(() => { loadRoomsRef.current = loadRooms; }, [loadRooms]);
+  useEffect(() => {
+    roomsRef.current = rooms;
+  }, [rooms]);
+  useEffect(() => {
+    loadRoomsRef.current = loadRooms;
+  }, [loadRooms]);
 
   // 마운트 시 방 목록 + WS 뱃지 구독
   useEffect(() => {
@@ -108,6 +120,7 @@ export default function ChatWidget() {
           reconnectDelay: 5000,
           onConnect: () => {
             data.forEach((room) => {
+              subscriptionsRef.current.add(room.roomId);
               client.subscribe(`/sub/${room.roomId}`, (frame) => {
                 const msg = JSON.parse(frame.body);
 
@@ -118,7 +131,8 @@ export default function ChatWidget() {
                   );
                   // 내 방 unread는 실시간으로 읽음 처리
                   if (msg.senderNo !== user.memberNo) {
-                    const mark = chatRole === 'host' ? markHostChatRead : markUserChatRead;
+                    const mark =
+                      chatRole === 'host' ? markHostChatRead : markUserChatRead;
                     mark(room.roomId).catch(() => {});
                   }
                 } else if (msg.senderNo !== user.memberNo) {
@@ -131,7 +145,12 @@ export default function ChatWidget() {
                     setRooms((prev) =>
                       prev.map((r) =>
                         r.roomId === room.roomId
-                          ? { ...r, lastMessage: msg.content, lastMessageTime: msg.createdAt, unreadCount: r.unreadCount + 1 }
+                          ? {
+                              ...r,
+                              lastMessage: msg.content,
+                              lastMessageTime: msg.createdAt,
+                              unreadCount: r.unreadCount + 1,
+                            }
                           : r
                       )
                     );
@@ -157,6 +176,47 @@ export default function ChatWidget() {
     if (isOpen && view === 'list') loadRooms();
   }, [isOpen, view, loadRooms]);
 
+  // 새로 생성된 방에 WS 구독 추가 (마운트 이후 생긴 방은 초기 구독 목록에 없음)
+  const subscribeRoom = useCallback(
+    (roomId) => {
+      if (!stompRef.current?.connected || subscriptionsRef.current.has(roomId))
+        return;
+      subscriptionsRef.current.add(roomId);
+      stompRef.current.subscribe(`/sub/${roomId}`, (frame) => {
+        const msg = JSON.parse(frame.body);
+        if (activeRoomRef.current === roomId) {
+          setMessages((prev) =>
+            prev.some((m) => m.id === msg.id) ? prev : [...prev, msg]
+          );
+          if (msg.senderNo !== user?.memberNo) {
+            const mark =
+              chatRole === 'host' ? markHostChatRead : markUserChatRead;
+            mark(roomId).catch(() => {});
+          }
+        } else if (msg.senderNo !== user?.memberNo) {
+          setTotalUnread((prev) => prev + 1);
+          if (!roomsRef.current.some((r) => r.roomId === roomId)) {
+            loadRoomsRef.current?.();
+          } else {
+            setRooms((prev) =>
+              prev.map((r) =>
+                r.roomId === roomId
+                  ? {
+                      ...r,
+                      lastMessage: msg.content,
+                      lastMessageTime: msg.createdAt,
+                      unreadCount: r.unreadCount + 1,
+                    }
+                  : r
+              )
+            );
+          }
+        }
+      });
+    },
+    [chatRole, user?.memberNo]
+  );
+
   // ─── 채팅방 열기 ─────────────────────────────────────────────────────────
   const openRoom = useCallback(
     (room) => {
@@ -165,9 +225,12 @@ export default function ChatWidget() {
       setMessages([]);
       setMsgLoading(true);
       setView('detail');
+      subscribeRoom(room.roomId);
 
-      const fetchMsgs = chatRole === 'host' ? getHostChatMessages : getUserChatMessages;
-      const markRead = chatRole === 'host' ? markHostChatRead : markUserChatRead;
+      const fetchMsgs =
+        chatRole === 'host' ? getHostChatMessages : getUserChatMessages;
+      const markRead =
+        chatRole === 'host' ? markHostChatRead : markUserChatRead;
 
       fetchMsgs(room.roomId)
         .then((data) => setMessages(data))
@@ -179,10 +242,12 @@ export default function ChatWidget() {
       // 뱃지 즉시 차감
       setTotalUnread((prev) => Math.max(0, prev - (room.unreadCount || 0)));
       setRooms((prev) =>
-        prev.map((r) => (r.roomId === room.roomId ? { ...r, unreadCount: 0 } : r))
+        prev.map((r) =>
+          r.roomId === room.roomId ? { ...r, unreadCount: 0 } : r
+        )
       );
     },
-    [chatRole]
+    [chatRole, subscribeRoom]
   );
 
   // 목록으로 돌아가기
@@ -198,11 +263,18 @@ export default function ChatWidget() {
   // 채팅방 나가기
   const handleLeave = useCallback(async () => {
     if (!activeRoom) return;
-    if (!window.confirm('채팅방을 나가시겠습니까?\n나간 채팅방은 목록에서 사라집니다.')) return;
+    if (
+      !window.confirm(
+        '채팅방을 나가시겠습니까?\n나간 채팅방은 목록에서 사라집니다.'
+      )
+    )
+      return;
     const leave = chatRole === 'host' ? leaveHostChatRoom : leaveUserChatRoom;
     try {
       await leave(activeRoom.roomId);
-      setTotalUnread((prev) => Math.max(0, prev - (activeRoom.unreadCount || 0)));
+      setTotalUnread((prev) =>
+        Math.max(0, prev - (activeRoom.unreadCount || 0))
+      );
       setRooms((prev) => prev.filter((r) => r.roomId !== activeRoom.roomId));
       setView('list');
       setActiveRoom(null);
@@ -260,7 +332,12 @@ export default function ChatWidget() {
       try {
         const room = await hostCreateOrGetRoom(item.no);
         setRsvnQuery('');
-        openRoom({ roomId: room.roomId, counterpartName: room.counterpartName, spaceName: room.spaceName, unreadCount: room.unreadCount || 0 });
+        openRoom({
+          roomId: room.roomId,
+          counterpartName: room.counterpartName,
+          spaceName: room.spaceName,
+          unreadCount: room.unreadCount || 0,
+        });
       } catch {
         alert('채팅방을 만들 수 없어요. 잠시 후 다시 시도해주세요.');
       } finally {
@@ -274,13 +351,18 @@ export default function ChatWidget() {
   useEffect(() => {
     if (view !== 'create') return;
     clearTimeout(placeTimerRef.current);
-    if (!placeQuery.trim()) { setPlaceResults([]); return; }
+    if (!placeQuery.trim()) {
+      setPlaceResults([]);
+      return;
+    }
     setPlaceSearching(true);
     placeTimerRef.current = setTimeout(() => {
       searchSpaces({})
         .then((data) => {
           const kw = placeQuery.trim().toLowerCase();
-          setPlaceResults(data.filter((p) => p.title?.toLowerCase().includes(kw)).slice(0, 10));
+          setPlaceResults(
+            data.filter((p) => p.title?.toLowerCase().includes(kw)).slice(0, 10)
+          );
         })
         .catch(() => setPlaceResults([]))
         .finally(() => setPlaceSearching(false));
@@ -293,10 +375,18 @@ export default function ChatWidget() {
       if (creating) return;
       setCreating(true);
       try {
-        const room = await userCreateOrGetRoomByPlace(place.placeNo, place.type);
+        const room = await userCreateOrGetRoomByPlace(
+          place.placeNo,
+          place.type
+        );
         setPlaceQuery('');
         setPlaceResults([]);
-        openRoom({ roomId: room.roomId, counterpartName: room.counterpartName, spaceName: room.spaceName, unreadCount: room.unreadCount || 0 });
+        openRoom({
+          roomId: room.roomId,
+          counterpartName: room.counterpartName,
+          spaceName: room.spaceName,
+          unreadCount: room.unreadCount || 0,
+        });
       } catch {
         alert('채팅방을 만들 수 없어요. 잠시 후 다시 시도해주세요.');
       } finally {
@@ -327,10 +417,12 @@ export default function ChatWidget() {
   // ─── 패널 헤더 타이틀 ────────────────────────────────────────────────────
   const panelTitle =
     view === 'detail'
-      ? activeRoom?.counterpartName ?? '채팅'
+      ? (activeRoom?.counterpartName ?? '채팅')
       : view === 'create'
-      ? (chatRole === 'host' ? '예약 목록' : '공간 검색')
-      : '채팅';
+        ? chatRole === 'host'
+          ? '예약 목록'
+          : '공간 검색'
+        : '채팅';
 
   return (
     <WidgetWrap>
@@ -370,24 +462,34 @@ export default function ChatWidget() {
                 ) : (
                   rooms.map((room) => (
                     <RoomRow key={room.roomId} onClick={() => openRoom(room)}>
-                      <RoomAvatar>{room.counterpartName?.[0] ?? '?'}</RoomAvatar>
+                      <RoomAvatar>
+                        {room.counterpartName?.[0] ?? '?'}
+                      </RoomAvatar>
                       <RoomContent>
                         <RoomTop>
-                          <RoomName $unread={room.unreadCount > 0}>{room.counterpartName}</RoomName>
+                          <RoomName $unread={room.unreadCount > 0}>
+                            {room.counterpartName}
+                          </RoomName>
                           <RoomTime>{fmtTime(room.lastMessageTime)}</RoomTime>
                         </RoomTop>
-                        {room.spaceName && <RoomSpace>{room.spaceName}</RoomSpace>}
+                        {room.spaceName && (
+                          <RoomSpace>{room.spaceName}</RoomSpace>
+                        )}
                         <RoomLast $unread={room.unreadCount > 0}>
                           {room.lastMessage ?? '대화를 시작해보세요'}
                         </RoomLast>
                       </RoomContent>
-                      {room.unreadCount > 0 && <UnreadDot>{room.unreadCount}</UnreadDot>}
+                      {room.unreadCount > 0 && (
+                        <UnreadDot>{room.unreadCount}</UnreadDot>
+                      )}
                     </RoomRow>
                   ))
                 )}
               </RoomListArea>
               <ListFooter>
-                <CreateRoomBtn onClick={openCreate}>+ 채팅방 만들기</CreateRoomBtn>
+                <CreateRoomBtn onClick={openCreate}>
+                  + 채팅방 만들기
+                </CreateRoomBtn>
               </ListFooter>
             </>
           )}
@@ -405,7 +507,10 @@ export default function ChatWidget() {
                     const isMe = msg.senderNo === user?.memberNo;
                     const showDate =
                       idx === 0 ||
-                      !dayjs(msg.createdAt).isSame(dayjs(messages[idx - 1].createdAt), 'day');
+                      !dayjs(msg.createdAt).isSame(
+                        dayjs(messages[idx - 1].createdAt),
+                        'day'
+                      );
                     return (
                       <div key={msg.id ?? `t${idx}`}>
                         {showDate && (
@@ -424,7 +529,9 @@ export default function ChatWidget() {
                           </MyRow>
                         ) : (
                           <OtherRow>
-                            <MiniAvatar>{msg.senderName?.[0] ?? '?'}</MiniAvatar>
+                            <MiniAvatar>
+                              {msg.senderName?.[0] ?? '?'}
+                            </MiniAvatar>
                             <OtherBubbleWrap>
                               <OtherBubble>{msg.content}</OtherBubble>
                               <MsgTime>{fmtMsgTime(msg.createdAt)}</MsgTime>
@@ -471,7 +578,9 @@ export default function ChatWidget() {
                 <EmptyMsg>검색 결과가 없어요</EmptyMsg>
               )}
               {!placeSearching && !placeQuery && (
-                <EmptyMsg style={{ marginTop: 12 }}>공간 이름을 입력하세요</EmptyMsg>
+                <EmptyMsg style={{ marginTop: 12 }}>
+                  공간 이름을 입력하세요
+                </EmptyMsg>
               )}
               {placeResults.map((p) => (
                 <PlaceRow key={p.placeNo} onClick={() => handleSelectPlace(p)}>
@@ -480,7 +589,11 @@ export default function ChatWidget() {
                     <PlaceAddr>{p.address}</PlaceAddr>
                   </PlaceInfo>
                   <PlaceType>
-                    {p.type === 'WORK_STAY' ? '워크앤스테이' : p.type === 'OFFICE' ? '코워킹' : '숙소'}
+                    {p.type === 'WORK_STAY'
+                      ? '워크앤스테이'
+                      : p.type === 'OFFICE'
+                        ? '오피스'
+                        : '숙소'}
                   </PlaceType>
                 </PlaceRow>
               ))}
@@ -500,25 +613,40 @@ export default function ChatWidget() {
               {!rsvnLoading && rsvnList.length === 0 && (
                 <EmptyMsg>예약 내역이 없어요</EmptyMsg>
               )}
-              {!rsvnLoading && rsvnList
-                .filter((r) =>
-                  !rsvnQuery ||
-                  (r.guestName ?? '').includes(rsvnQuery) ||
-                  (r.spaceName ?? '').includes(rsvnQuery)
-                )
-                .map((r) => (
-                  <PlaceRow key={r.no} onClick={() => handleSelectRsvn(r)}>
-                    <PlaceInfo>
-                      <PlaceName>{r.guestName} · {r.spaceName}</PlaceName>
-                      <PlaceAddr>
-                        {r.checkIn ? r.checkIn.slice(0, 10).replaceAll('-', '.') : ''}
-                        {r.checkOut ? ` ~ ${r.checkOut.slice(0, 10).replaceAll('-', '.')}` : ''}
-                      </PlaceAddr>
-                    </PlaceInfo>
-                    <PlaceType>{({ S: '확정', E: '완료', P: '대기', R: '거절', C: '취소' })[r.status] ?? r.status}</PlaceType>
-                  </PlaceRow>
-                ))
-              }
+              {!rsvnLoading &&
+                rsvnList
+                  .filter(
+                    (r) =>
+                      !rsvnQuery ||
+                      (r.guestName ?? '').includes(rsvnQuery) ||
+                      (r.spaceName ?? '').includes(rsvnQuery)
+                  )
+                  .map((r) => (
+                    <PlaceRow key={r.no} onClick={() => handleSelectRsvn(r)}>
+                      <PlaceInfo>
+                        <PlaceName>
+                          {r.guestName} · {r.spaceName}
+                        </PlaceName>
+                        <PlaceAddr>
+                          {r.checkIn
+                            ? r.checkIn.slice(0, 10).replaceAll('-', '.')
+                            : ''}
+                          {r.checkOut
+                            ? ` ~ ${r.checkOut.slice(0, 10).replaceAll('-', '.')}`
+                            : ''}
+                        </PlaceAddr>
+                      </PlaceInfo>
+                      <PlaceType>
+                        {{
+                          S: '확정',
+                          E: '완료',
+                          P: '대기',
+                          R: '거절',
+                          C: '취소',
+                        }[r.status] ?? r.status}
+                      </PlaceType>
+                    </PlaceRow>
+                  ))}
             </CreateArea>
           )}
         </Panel>
@@ -561,7 +689,9 @@ const ChatBtn = styled.button`
   align-items: center;
   justify-content: center;
   box-shadow: 0 4px 16px rgba(0, 0, 0, 0.18);
-  transition: background 150ms, transform 150ms;
+  transition:
+    background 150ms,
+    transform 150ms;
   flex-shrink: 0;
 
   &:hover {
@@ -626,7 +756,9 @@ const BackBtn = styled.button`
   display: flex;
   align-items: center;
   flex-shrink: 0;
-  &:hover { color: #2d3b2e; }
+  &:hover {
+    color: #2d3b2e;
+  }
 `;
 
 const PanelTitle = styled.span`
@@ -664,7 +796,9 @@ const LeaveBtn = styled.button`
   display: flex;
   align-items: center;
   flex-shrink: 0;
-  &:hover { color: #a05a4e; }
+  &:hover {
+    color: #a05a4e;
+  }
 `;
 
 const CloseBtn = styled.button`
@@ -676,7 +810,9 @@ const CloseBtn = styled.button`
   display: flex;
   align-items: center;
   flex-shrink: 0;
-  &:hover { color: #555; }
+  &:hover {
+    color: #555;
+  }
 `;
 
 /* ── 목록 뷰 ── */
@@ -684,8 +820,13 @@ const CloseBtn = styled.button`
 const RoomListArea = styled.div`
   flex: 1;
   overflow-y: auto;
-  &::-webkit-scrollbar { width: 4px; }
-  &::-webkit-scrollbar-thumb { background: #ddd; border-radius: 4px; }
+  &::-webkit-scrollbar {
+    width: 4px;
+  }
+  &::-webkit-scrollbar-thumb {
+    background: #ddd;
+    border-radius: 4px;
+  }
 `;
 
 const EmptyMsg = styled.p`
@@ -702,7 +843,9 @@ const RoomRow = styled.div`
   padding: 11px 14px;
   cursor: pointer;
   transition: background 100ms;
-  &:hover { background: #f9f6f0; }
+  &:hover {
+    background: #f9f6f0;
+  }
 `;
 
 const RoomAvatar = styled.div`
@@ -793,7 +936,9 @@ const CreateRoomBtn = styled.button`
   font-weight: 600;
   cursor: pointer;
   transition: filter 150ms;
-  &:hover { filter: brightness(0.92); }
+  &:hover {
+    filter: brightness(0.92);
+  }
 `;
 
 /* ── 채팅 상세 뷰 ── */
@@ -806,8 +951,13 @@ const MessageArea = styled.div`
   flex-direction: column;
   gap: 2px;
   background: #fafaf8;
-  &::-webkit-scrollbar { width: 4px; }
-  &::-webkit-scrollbar-thumb { background: #ddd; border-radius: 4px; }
+  &::-webkit-scrollbar {
+    width: 4px;
+  }
+  &::-webkit-scrollbar-thumb {
+    background: #ddd;
+    border-radius: 4px;
+  }
 `;
 
 const DateLine = styled.div`
@@ -815,7 +965,7 @@ const DateLine = styled.div`
   font-size: 0.7rem;
   color: #bbb;
   margin: 10px 0 6px;
-  background: rgba(0,0,0,0.04);
+  background: rgba(0, 0, 0, 0.04);
   border-radius: 999px;
   padding: 2px 10px;
   align-self: center;
@@ -912,8 +1062,12 @@ const MsgInput = styled.input`
   color: #333;
   font-family: inherit;
   outline: none;
-  &:focus { border-color: #a8b89f; }
-  &::placeholder { color: #ccc; }
+  &:focus {
+    border-color: #a8b89f;
+  }
+  &::placeholder {
+    color: #ccc;
+  }
 `;
 
 const SendBtn = styled.button`
@@ -940,8 +1094,13 @@ const CreateArea = styled.div`
   display: flex;
   flex-direction: column;
   gap: 4px;
-  &::-webkit-scrollbar { width: 4px; }
-  &::-webkit-scrollbar-thumb { background: #ddd; border-radius: 4px; }
+  &::-webkit-scrollbar {
+    width: 4px;
+  }
+  &::-webkit-scrollbar-thumb {
+    background: #ddd;
+    border-radius: 4px;
+  }
 `;
 
 const SearchInput = styled.input`
@@ -956,8 +1115,12 @@ const SearchInput = styled.input`
   outline: none;
   box-sizing: border-box;
   flex-shrink: 0;
-  &:focus { border-color: #a8b89f; }
-  &::placeholder { color: #ccc; }
+  &:focus {
+    border-color: #a8b89f;
+  }
+  &::placeholder {
+    color: #ccc;
+  }
 `;
 
 const PlaceRow = styled.div`
@@ -969,7 +1132,9 @@ const PlaceRow = styled.div`
   border-radius: 8px;
   cursor: pointer;
   transition: background 100ms;
-  &:hover { background: #f4f0e8; }
+  &:hover {
+    background: #f4f0e8;
+  }
 `;
 
 const PlaceInfo = styled.div`
