@@ -24,7 +24,7 @@ import {
   leaveHostChatRoom,
 } from '../api/chatApi';
 import { searchSpaces, findRoomsByPlaceNo } from '../../searchPlace/api/searchApi';
-import { findHostRsvns } from '../../rsvn/api/rsvnApi';
+import { findHostRsvns, findMyRsvns } from '../../rsvn/api/rsvnApi';
 
 const WS_URL = import.meta.env.DEV
   ? 'http://localhost:8080/ws'
@@ -80,6 +80,11 @@ export default function ChatWidget() {
   const [rsvnQuery, setRsvnQuery] = useState('');
   const [rsvnList, setRsvnList] = useState([]);
   const [rsvnLoading, setRsvnLoading] = useState(false);
+
+  // ─── 내 예약 공간 탭 (user create view) ──────────────────────────────────
+  const [createTab, setCreateTab] = useState('search'); // 'search' | 'rsvn'
+  const [myRsvns, setMyRsvns] = useState([]);
+  const [myRsvnsLoading, setMyRsvnsLoading] = useState(false);
 
   // ─── WebSocket ───────────────────────────────────────────────────────────
   const stompRef = useRef(null);
@@ -319,6 +324,28 @@ export default function ChatWidget() {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages.length]);
 
+  // ─── 유저 예약 공간 로드 ─────────────────────────────────────────────────
+  useEffect(() => {
+    if (view !== 'create' || chatRole !== 'user' || createTab !== 'rsvn') return;
+    setMyRsvnsLoading(true);
+    findMyRsvns()
+      .then((data) => {
+        const seen = new Set();
+        const unique = data.filter((r) => {
+          const entityNo = r.workStayNo ?? r.officeNo ?? r.stationNo;
+          const type = r.workStayNo ? 'WORK_STAY' : r.officeNo ? 'OFFICE' : r.stationNo ? 'STATION' : null;
+          if (!entityNo || !type) return false;
+          const key = `${entityNo}-${type}`;
+          if (seen.has(key)) return false;
+          seen.add(key);
+          return true;
+        });
+        setMyRsvns(unique);
+      })
+      .catch(() => setMyRsvns([]))
+      .finally(() => setMyRsvnsLoading(false));
+  }, [view, chatRole, createTab]);
+
   // ─── 호스트 예약 목록 로드 ───────────────────────────────────────────────
   useEffect(() => {
     if (view !== 'create' || chatRole !== 'host') return;
@@ -328,6 +355,30 @@ export default function ChatWidget() {
       .catch(() => setRsvnList([]))
       .finally(() => setRsvnLoading(false));
   }, [view, chatRole]);
+
+  const handleSelectUserRsvn = useCallback(
+    async (rsvn) => {
+      if (creating) return;
+      const entityNo = rsvn.workStayNo ?? rsvn.officeNo ?? rsvn.stationNo;
+      const placeType = rsvn.workStayNo ? 'WORK_STAY' : rsvn.officeNo ? 'OFFICE' : 'STATION';
+      if (!entityNo) return;
+      setCreating(true);
+      try {
+        const room = await userCreateOrGetRoomByPlace(entityNo, placeType);
+        openRoom({
+          roomId: room.roomId,
+          counterpartName: room.counterpartName,
+          spaceName: room.spaceName,
+          unreadCount: room.unreadCount || 0,
+        });
+      } catch {
+        alert('채팅방을 만들 수 없어요. 잠시 후 다시 시도해주세요.');
+      } finally {
+        setCreating(false);
+      }
+    },
+    [creating, openRoom]
+  );
 
   const handleSelectRsvn = useCallback(
     async (item) => {
@@ -439,6 +490,8 @@ export default function ChatWidget() {
     setPlaceResults([]);
     setRoomPickList([]);
     setRsvnQuery('');
+    setCreateTab('search');
+    setMyRsvns([]);
     setView('create');
   };
 
@@ -460,7 +513,9 @@ export default function ChatWidget() {
       : view === 'create'
         ? chatRole === 'host'
           ? '예약 목록'
-          : '공간 검색'
+          : createTab === 'rsvn'
+            ? '내 예약 공간'
+            : '공간 검색'
         : '채팅';
 
   return (
@@ -606,64 +661,109 @@ export default function ChatWidget() {
           {/* ── 공간 검색 뷰 (user) ── */}
           {view === 'create' && chatRole === 'user' && (
             <CreateArea>
-              {roomPickList.length > 0 ? (
-                <>
-                  <BackBtn
-                    onClick={() => setRoomPickList([])}
-                    style={{ alignSelf: 'flex-start', marginBottom: 8 }}
-                  >
-                    <FaArrowLeft size={11} /> 공간 선택으로
-                  </BackBtn>
-                  <EmptyMsg style={{ padding: '8px 0' }}>
-                    객실을 선택해주세요
-                  </EmptyMsg>
-                  {roomPickList.map((room) => (
-                    <PlaceRow
-                      key={room.entityNo}
-                      onClick={() => handleSelectRoom(room)}
+              {/* 탭 */}
+              <CreateTabBar>
+                <CreateTabBtn
+                  $active={createTab === 'search'}
+                  onClick={() => { setCreateTab('search'); setRoomPickList([]); }}
+                >
+                  공간 검색
+                </CreateTabBtn>
+                <CreateTabBtn
+                  $active={createTab === 'rsvn'}
+                  onClick={() => setCreateTab('rsvn')}
+                >
+                  내 예약
+                </CreateTabBtn>
+              </CreateTabBar>
+
+              {/* 공간 검색 탭 */}
+              {createTab === 'search' && (
+                roomPickList.length > 0 ? (
+                  <>
+                    <BackBtn
+                      onClick={() => setRoomPickList([])}
+                      style={{ alignSelf: 'flex-start', marginBottom: 8 }}
                     >
-                      <PlaceInfo>
-                        <PlaceName>{room.title}</PlaceName>
-                        <PlaceAddr>최대 {room.maxCnt}명</PlaceAddr>
-                      </PlaceInfo>
-                      <PlaceType>선택</PlaceType>
-                    </PlaceRow>
-                  ))}
-                </>
-              ) : (
-                <>
-                  <SearchInput
-                    autoFocus
-                    placeholder="공간 이름 검색..."
-                    value={placeQuery}
-                    onChange={(e) => setPlaceQuery(e.target.value)}
-                  />
-                  {(placeSearching || roomPickLoading) && (
-                    <EmptyMsg>검색 중...</EmptyMsg>
-                  )}
-                  {!placeSearching && !roomPickLoading && placeQuery && placeResults.length === 0 && (
-                    <EmptyMsg>검색 결과가 없어요</EmptyMsg>
-                  )}
-                  {!placeSearching && !roomPickLoading && !placeQuery && (
-                    <EmptyMsg style={{ marginTop: 12 }}>
-                      공간 이름을 입력하세요
+                      <FaArrowLeft size={11} /> 공간 선택으로
+                    </BackBtn>
+                    <EmptyMsg style={{ padding: '8px 0' }}>
+                      객실을 선택해주세요
                     </EmptyMsg>
+                    {roomPickList.map((room) => (
+                      <PlaceRow
+                        key={room.entityNo}
+                        onClick={() => handleSelectRoom(room)}
+                      >
+                        <PlaceInfo>
+                          <PlaceName>{room.title}</PlaceName>
+                          <PlaceAddr>최대 {room.maxCnt}명</PlaceAddr>
+                        </PlaceInfo>
+                        <PlaceType>선택</PlaceType>
+                      </PlaceRow>
+                    ))}
+                  </>
+                ) : (
+                  <>
+                    <SearchInput
+                      autoFocus
+                      placeholder="공간 이름 검색..."
+                      value={placeQuery}
+                      onChange={(e) => setPlaceQuery(e.target.value)}
+                    />
+                    {(placeSearching || roomPickLoading) && (
+                      <EmptyMsg>검색 중...</EmptyMsg>
+                    )}
+                    {!placeSearching && !roomPickLoading && placeQuery && placeResults.length === 0 && (
+                      <EmptyMsg>검색 결과가 없어요</EmptyMsg>
+                    )}
+                    {!placeSearching && !roomPickLoading && !placeQuery && (
+                      <EmptyMsg style={{ marginTop: 12 }}>
+                        공간 이름을 입력하세요
+                      </EmptyMsg>
+                    )}
+                    {placeResults.map((p) => (
+                      <PlaceRow key={p.placeNo} onClick={() => handleSelectPlace(p)}>
+                        <PlaceInfo>
+                          <PlaceName>{p.title}</PlaceName>
+                          <PlaceAddr>{p.address}</PlaceAddr>
+                        </PlaceInfo>
+                        <PlaceType>
+                          {p.type === 'WORK_STAY'
+                            ? '워크앤스테이'
+                            : p.type === 'OFFICE'
+                              ? '오피스'
+                              : '숙소'}
+                        </PlaceType>
+                      </PlaceRow>
+                    ))}
+                  </>
+                )
+              )}
+
+              {/* 내 예약 탭 */}
+              {createTab === 'rsvn' && (
+                <>
+                  {myRsvnsLoading && <EmptyMsg>불러오는 중...</EmptyMsg>}
+                  {!myRsvnsLoading && myRsvns.length === 0 && (
+                    <EmptyMsg>예약한 공간이 없어요</EmptyMsg>
                   )}
-                  {placeResults.map((p) => (
-                    <PlaceRow key={p.placeNo} onClick={() => handleSelectPlace(p)}>
-                      <PlaceInfo>
-                        <PlaceName>{p.title}</PlaceName>
-                        <PlaceAddr>{p.address}</PlaceAddr>
-                      </PlaceInfo>
-                      <PlaceType>
-                        {p.type === 'WORK_STAY'
-                          ? '워크앤스테이'
-                          : p.type === 'OFFICE'
-                            ? '오피스'
-                            : '숙소'}
-                      </PlaceType>
-                    </PlaceRow>
-                  ))}
+                  {!myRsvnsLoading && myRsvns.map((rsvn) => {
+                    const STATUS_LABEL = { P: '결제대기', S: '예약확정', E: '이용완료', C: '취소', R: '거절' };
+                    const statusLabel = STATUS_LABEL[rsvn.status] ?? rsvn.status;
+                    const dateStr = rsvn.checkIn
+                      ? `${dayjs(rsvn.checkIn).format('M.D')} ~ ${dayjs(rsvn.checkOut).format('M.D')}`
+                      : '';
+                    return (
+                      <PlaceRow key={rsvn.no} onClick={() => handleSelectUserRsvn(rsvn)}>
+                        <PlaceInfo>
+                          <PlaceName>{rsvn.spaceName}</PlaceName>
+                          <PlaceAddr>{dateStr}</PlaceAddr>
+                        </PlaceInfo>
+                        <RsvnStatusBadge $status={rsvn.status}>{statusLabel}</RsvnStatusBadge>
+                      </PlaceRow>
+                    );
+                  })}
                 </>
               )}
             </CreateArea>
@@ -1237,4 +1337,47 @@ const PlaceType = styled.span`
   background: #a8b89f;
   color: #fff;
   font-weight: 600;
+`;
+
+const CreateTabBar = styled.div`
+  display: flex;
+  gap: 6px;
+  flex-shrink: 0;
+  margin-bottom: 6px;
+`;
+
+const CreateTabBtn = styled.button`
+  flex: 1;
+  padding: 7px 0;
+  border-radius: 8px;
+  border: 1px solid ${(p) => (p.$active ? '#a8b89f' : '#e0d8c8')};
+  background: ${(p) => (p.$active ? '#a8b89f' : '#fff')};
+  color: ${(p) => (p.$active ? '#fff' : '#888')};
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 120ms;
+  font-family: inherit;
+  &:hover {
+    border-color: #a8b89f;
+    color: ${(p) => (p.$active ? '#fff' : '#a8b89f')};
+  }
+`;
+
+const STATUS_COLORS = {
+  S: { bg: '#e8f4ec', color: '#2d6a4f' },
+  P: { bg: '#fff3e0', color: '#b45309' },
+  E: { bg: '#f0f0f0', color: '#666' },
+  C: { bg: '#fde8e8', color: '#c0392b' },
+  R: { bg: '#fde8e8', color: '#c0392b' },
+};
+
+const RsvnStatusBadge = styled.span`
+  flex-shrink: 0;
+  font-size: 0.68rem;
+  padding: 3px 7px;
+  border-radius: 999px;
+  font-weight: 600;
+  background: ${(p) => STATUS_COLORS[p.$status]?.bg ?? '#f0f0f0'};
+  color: ${(p) => STATUS_COLORS[p.$status]?.color ?? '#666'};
 `;
