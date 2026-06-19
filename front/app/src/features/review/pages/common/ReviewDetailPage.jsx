@@ -172,6 +172,22 @@ const ReplyText = styled.p`
   line-height: 1.6;
 `;
 
+const ImgRow = styled.div`
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-bottom: 16px;
+`;
+
+const ImgSlot = styled.div`
+  width: 100px;
+  height: 100px;
+  border-radius: 8px;
+  overflow: hidden;
+  flex-shrink: 0;
+  background: ${COLOR.gray100};
+`;
+
 const SCORE_LABELS = ['종합 만족도', '업무 환경', '편의시설', '집중도'];
 
 function ReviewDetailPage() {
@@ -283,6 +299,17 @@ function ReviewDetailPage() {
 
       {/* 리뷰 본문 */}
       <ReviewText>{review.content}</ReviewText>
+
+      {/* 첨부 이미지 */}
+      {review.imageUrls?.length > 0 && (
+        <ImgRow>
+          {review.imageUrls.map((url, i) => (
+            <ImgSlot key={i}>
+              <img src={url} alt={`리뷰 이미지 ${i + 1}`} style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: 8 }} />
+            </ImgSlot>
+          ))}
+        </ImgRow>
+      )}
 
       {/* 도움돼요 + 신고 */}
       <MetaRow>

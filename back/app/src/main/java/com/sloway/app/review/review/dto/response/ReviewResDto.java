@@ -25,11 +25,12 @@ public class ReviewResDto {
     private String content;
     private LocalDateTime createdAt;
     private List<ReviewReplyResDto> replies;  // 호스트 답글 목록
+    private List<String> imageUrls;           // 리뷰 첨부 이미지 URL 목록
     private LocalDateTime checkIn;
     private LocalDateTime checkOut;
 
 
-    public static ReviewResDto from(ReviewEntity entity, List<ReviewReplyResDto> replies) {
+    public static ReviewResDto from(ReviewEntity entity, List<ReviewReplyResDto> replies, List<String> imageUrls) {
         RsvnEntity rsvn = entity.getRsvnNo();
 
         // office / workStay / station 중 하나에서 공간 이름·타입 추출
@@ -58,9 +59,10 @@ public class ReviewResDto {
                 .scoreFocus(entity.getScoreFocus())
                 .content(entity.getContent())
                 .createdAt(entity.getCreatedAt())
+                .replies(replies)
+                .imageUrls(imageUrls)
                 .checkIn(rsvn.getCheckIn())
                 .checkOut(rsvn.getCheckOut())
-                .replies(replies)
                 .build();
     }
 }
