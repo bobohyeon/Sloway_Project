@@ -9,7 +9,6 @@ import org.springframework.http.HttpStatus;
 @RequiredArgsConstructor
 public enum RefundErrorCode implements ErrorCode {
 
-    REFUND_PERIOD_EXPIRED(HttpStatus.BAD_REQUEST, "환불 가능 기간이 지났습니다."),
     REFUND_NOT_FOUND(HttpStatus.NOT_FOUND, "환불 정보를 조회할 수 없습니다."),
     REFUND_NOT_REQUESTED(HttpStatus.BAD_REQUEST, "환불 요청 상태가 아닙니다."),
     REFUND_NOT_APPROVED(HttpStatus.BAD_REQUEST, "환불 승인 상태가 아닙니다."),

@@ -37,7 +37,9 @@ export default function BookingStats() {
       })
       .catch((e) => {
         if (alive)
-          setError(e?.response?.data?.message ?? '예약 통계 조회에 실패했습니다.');
+          setError(
+            e?.response?.data?.message ?? '예약 통계 조회에 실패했습니다.'
+          );
       })
       .finally(() => {
         if (alive) setLoading(false);
@@ -83,7 +85,7 @@ export default function BookingStats() {
           icon={<FaCheckCircle />}
         />
         <StatCard
-          label="취소"
+          label="환불"
           value={Number(stats?.canceled ?? 0).toLocaleString()}
           unit="건"
           icon={<FaTimesCircle />}
@@ -98,7 +100,10 @@ export default function BookingStats() {
 
       <ChartBlock>
         {trendChartData.length > 0 ? (
-          <VerticalBarChart title={`${rangeLabel(months)} 예약 추이`} data={trendChartData} />
+          <VerticalBarChart
+            title={`${rangeLabel(months)} 예약 추이`}
+            data={trendChartData}
+          />
         ) : (
           <Section title={`${rangeLabel(months)} 예약 추이`}>
             <EmptyCard padded>표시할 예약 추이 데이터가 없습니다.</EmptyCard>

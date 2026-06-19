@@ -99,10 +99,11 @@ public class RefundRepositoryImpl implements RefundRepositoryCustom {
         return c == null ? 0 : c;
     }
 
-    // 탭 → where 조건. all/null=전체, completed=COMPLETED, host_rejected=호스트 거절
+    // 탭 → where 조건. all/null=전체, member_cancel=회원 자발 취소, host_rejected=호스트 거절
     private BooleanExpression tabFilter(String tab) {
         if (tab == null || tab.equals("all")) return null;
-        if (tab.equals("completed")) return qRefundEntity.status.eq(RefundStatus.COMPLETED);
+        // 회원 취소 = 사유(refundReason)가 있는 환불(호스트 거절은 사유 null) → 호스트 거절의 보수
+        if (tab.equals("member_cancel")) return qRefundEntity.refundReason.isNotNull();
         if (tab.equals("host_rejected")) return hostRejectedCond();
         return null;
     }

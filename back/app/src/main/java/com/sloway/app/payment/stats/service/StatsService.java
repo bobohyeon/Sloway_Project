@@ -297,7 +297,7 @@ public class StatsService {
         // 신규 회원 (stats가 이미 회원 테이블 집계 — 기존 메서드 재활용)
         Long newMemberCount = statsRepositoryCustom.countMemberByCreatedAtBetween(start, end);
 
-        // 오늘 결제 건 — 결제수단별 집계의 count 합산 (COMPLETED+CANCELED = 성공 결제)
+        // 오늘 결제 건 — 결제수단별 집계의 count 합산 (성공 결제 COMPLETED 만, 취소건 제외)
         long payCount = payRepository.sumByMethodBetween(start, end).stream()
                 .mapToLong(t -> {
                     Long c = t.get(1, Long.class);

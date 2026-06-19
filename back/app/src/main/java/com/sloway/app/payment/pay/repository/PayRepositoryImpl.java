@@ -3,6 +3,7 @@ package com.sloway.app.payment.pay.repository;
 import com.querydsl.core.Tuple;
 import com.querydsl.core.types.Projections;
 import com.querydsl.core.types.dsl.BooleanExpression;
+import com.querydsl.core.types.dsl.CaseBuilder;
 import com.querydsl.core.types.dsl.NumberExpression;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import com.sloway.app.payment.pay.common.PayStatus;
@@ -36,6 +37,9 @@ public class PayRepositoryImpl implements PayRepositoryCustom {
                 .where(
                         qPayEntity.rsvnNo.memberNo.no.eq(memberNo)
                 )
+                // 최신순 고정 — 정렬 없으면 PostgreSQL 임의 순서라 최신순도 깨지고,
+                // 환불(cancelPay)로 UPDATE된 row 가 뒤로 밀려 1페이지에서 안 보인다
+                .orderBy(qPayEntity.no.desc())
                 .fetch();
         return payEntityList;
     }
@@ -66,12 +70,16 @@ public class PayRepositoryImpl implements PayRepositoryCustom {
         return jpaQueryFactory
                 .select(
                         qPayEntity.method,
-                        qPayEntity.count(),
+                        // 건수는 성공 결제(COMPLETED)만 — 취소건은 매출 gross엔 포함돼도
+                        // "결제 건수"엔 제외(호스트 통계 COMPLETED 기준과 일치)
+                        new CaseBuilder()
+                                .when(qPayEntity.status.eq(PayStatus.COMPLETED)).then(1L).otherwise(0L)
+                                .sum(),
                         qPayEntity.finalAmt.sum().longValue()
                 )
                 .from(qPayEntity)
                 .where(
-                        // 총매출(gross) = 한 번이라도 결제 성공한 건. 환불(CANCELED)도 포함해야
+                        // 총매출(gross) = 한 번이라도 결제 성공한 건. 환불(CANCELED)도 금액엔 포함해야
                         // "총매출 - 환불 = 순매출"이 성립. (READY/FAILED 만 제외)
                         qPayEntity.status.in(PayStatus.COMPLETED, PayStatus.CANCELED),
                         qPayEntity.createdAt.between(startDateTime, endDateTime)
