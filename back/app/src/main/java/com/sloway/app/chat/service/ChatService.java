@@ -57,17 +57,17 @@ public class ChatService {
         String placeType = null;
         // entityNo는 PlaceEntity.no 기준으로 통일 (공간 검색 경로와 동일)
         if (rsvn.getWorkStayNo() != null) {
-            hostPlaceOpt = hostPlaceRepository.findByWorkStayEntityAndStatus(rsvn.getWorkStayNo(), ApprovalStatus.A);
+            hostPlaceOpt = hostPlaceRepository.findFirstByWorkStayEntityAndStatus(rsvn.getWorkStayNo(), ApprovalStatus.A);
             spaceName = rsvn.getWorkStayNo().getPlaceEntity().getTitle();
             entityNo = rsvn.getWorkStayNo().getPlaceEntity().getNo();
             placeType = "WORK_STAY";
         } else if (rsvn.getOfficeNo() != null) {
-            hostPlaceOpt = hostPlaceRepository.findByOfficeEntityAndStatus(rsvn.getOfficeNo(), ApprovalStatus.A);
+            hostPlaceOpt = hostPlaceRepository.findFirstByOfficeEntityAndStatus(rsvn.getOfficeNo(), ApprovalStatus.A);
             spaceName = rsvn.getOfficeNo().getPlaceEntity().getTitle();
             entityNo = rsvn.getOfficeNo().getPlaceEntity().getNo();
             placeType = "OFFICE";
         } else if (rsvn.getStationNo() != null) {
-            hostPlaceOpt = hostPlaceRepository.findByStationEntityAndStatus(rsvn.getStationNo(), ApprovalStatus.A);
+            hostPlaceOpt = hostPlaceRepository.findFirstByStationEntityAndStatus(rsvn.getStationNo(), ApprovalStatus.A);
             spaceName = rsvn.getStationNo().getPlaceEntity().getTitle();
             entityNo = rsvn.getStationNo().getPlaceEntity().getNo();
             placeType = "STATION";
@@ -110,19 +110,19 @@ public class ChatService {
             case "WORK_STAY" -> {
                 WorkStayEntity ws = workStayRepository.findById(entityNo)
                         .orElseThrow(() -> new CustomException(ChatErrorCode.PLACE_NOT_FOUND));
-                hostPlaceOpt = hostPlaceRepository.findByWorkStayEntityAndStatus(ws, ApprovalStatus.A);
+                hostPlaceOpt = hostPlaceRepository.findFirstByWorkStayEntityAndStatus(ws, ApprovalStatus.A);
                 spaceName = ws.getTitle();
             }
             case "OFFICE" -> {
                 OfficeEntity office = officeRepository.findById(entityNo)
                         .orElseThrow(() -> new CustomException(ChatErrorCode.PLACE_NOT_FOUND));
-                hostPlaceOpt = hostPlaceRepository.findByOfficeEntityAndStatus(office, ApprovalStatus.A);
+                hostPlaceOpt = hostPlaceRepository.findFirstByOfficeEntityAndStatus(office, ApprovalStatus.A);
                 spaceName = office.getTitle();
             }
             case "STATION" -> {
                 StationEntity station = stationRepository.findById(entityNo)
                         .orElseThrow(() -> new CustomException(ChatErrorCode.PLACE_NOT_FOUND));
-                hostPlaceOpt = hostPlaceRepository.findByStationEntityAndStatus(station, ApprovalStatus.A);
+                hostPlaceOpt = hostPlaceRepository.findFirstByStationEntityAndStatus(station, ApprovalStatus.A);
                 spaceName = station.getTitle();
             }
             default -> throw new CustomException(ChatErrorCode.PLACE_NOT_FOUND);
