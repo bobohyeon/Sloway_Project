@@ -13,10 +13,12 @@ import {
   markUserChatRead,
   markHostChatRead,
   userCreateOrGetRoomByPlace,
+  hostCreateOrGetRoom,
   leaveUserChatRoom,
   leaveHostChatRoom,
 } from '../api/chatApi';
 import { searchSpaces } from '../../searchPlace/api/searchApi';
+import { findHostRsvns } from '../../rsvn/api/rsvnApi';
 
 const WS_URL = import.meta.env.DEV
   ? 'http://localhost:8080/ws'
@@ -56,12 +58,17 @@ export default function ChatWidget() {
   const messagesEndRef = useRef(null);
   const inputRef = useRef(null);
 
-  // ─── 공간 검색 (create view) ─────────────────────────────────────────────
+  // ─── 공간 검색 (user create view) ──────────────────────────────────────
   const [placeQuery, setPlaceQuery] = useState('');
   const [placeResults, setPlaceResults] = useState([]);
   const [placeSearching, setPlaceSearching] = useState(false);
   const [creating, setCreating] = useState(false);
   const placeTimerRef = useRef(null);
+
+  // ─── 예약 목록 검색 (host create view) ──────────────────────────────────
+  const [rsvnQuery, setRsvnQuery] = useState('');
+  const [rsvnList, setRsvnList] = useState([]);
+  const [rsvnLoading, setRsvnLoading] = useState(false);
 
   // ─── WebSocket ───────────────────────────────────────────────────────────
   const stompRef = useRef(null);
@@ -236,6 +243,33 @@ export default function ChatWidget() {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages.length]);
 
+  // ─── 호스트 예약 목록 로드 ───────────────────────────────────────────────
+  useEffect(() => {
+    if (view !== 'create' || chatRole !== 'host') return;
+    setRsvnLoading(true);
+    findHostRsvns()
+      .then((data) => setRsvnList(data))
+      .catch(() => setRsvnList([]))
+      .finally(() => setRsvnLoading(false));
+  }, [view, chatRole]);
+
+  const handleSelectRsvn = useCallback(
+    async (item) => {
+      if (creating) return;
+      setCreating(true);
+      try {
+        const room = await hostCreateOrGetRoom(item.no);
+        setRsvnQuery('');
+        openRoom({ roomId: room.roomId, counterpartName: room.counterpartName, spaceName: room.spaceName, unreadCount: room.unreadCount || 0 });
+      } catch {
+        alert('채팅방을 만들 수 없어요. 잠시 후 다시 시도해주세요.');
+      } finally {
+        setCreating(false);
+      }
+    },
+    [creating, openRoom]
+  );
+
   // ─── 공간 검색 ───────────────────────────────────────────────────────────
   useEffect(() => {
     if (view !== 'create') return;
@@ -275,6 +309,7 @@ export default function ChatWidget() {
   const openCreate = () => {
     setPlaceQuery('');
     setPlaceResults([]);
+    setRsvnQuery('');
     setView('create');
   };
 
@@ -294,7 +329,7 @@ export default function ChatWidget() {
     view === 'detail'
       ? activeRoom?.counterpartName ?? '채팅'
       : view === 'create'
-      ? '공간 검색'
+      ? (chatRole === 'host' ? '예약 목록' : '공간 검색')
       : '채팅';
 
   return (
@@ -351,11 +386,9 @@ export default function ChatWidget() {
                   ))
                 )}
               </RoomListArea>
-              {chatRole === 'user' && (
-                <ListFooter>
-                  <CreateRoomBtn onClick={openCreate}>+ 채팅방 만들기</CreateRoomBtn>
-                </ListFooter>
-              )}
+              <ListFooter>
+                <CreateRoomBtn onClick={openCreate}>+ 채팅방 만들기</CreateRoomBtn>
+              </ListFooter>
             </>
           )}
 
@@ -424,8 +457,8 @@ export default function ChatWidget() {
             </>
           )}
 
-          {/* ── 공간 검색 뷰 ── */}
-          {view === 'create' && (
+          {/* ── 공간 검색 뷰 (user) ── */}
+          {view === 'create' && chatRole === 'user' && (
             <CreateArea>
               <SearchInput
                 autoFocus
@@ -441,7 +474,7 @@ export default function ChatWidget() {
                 <EmptyMsg style={{ marginTop: 12 }}>공간 이름을 입력하세요</EmptyMsg>
               )}
               {placeResults.map((p) => (
-                <PlaceRow key={p.entityNo} onClick={() => handleSelectPlace(p)}>
+                <PlaceRow key={p.placeNo} onClick={() => handleSelectPlace(p)}>
                   <PlaceInfo>
                     <PlaceName>{p.title}</PlaceName>
                     <PlaceAddr>{p.address}</PlaceAddr>
@@ -451,6 +484,41 @@ export default function ChatWidget() {
                   </PlaceType>
                 </PlaceRow>
               ))}
+            </CreateArea>
+          )}
+
+          {/* ── 예약 목록 뷰 (host) ── */}
+          {view === 'create' && chatRole === 'host' && (
+            <CreateArea>
+              <SearchInput
+                autoFocus
+                placeholder="예약자명 또는 공간명 검색..."
+                value={rsvnQuery}
+                onChange={(e) => setRsvnQuery(e.target.value)}
+              />
+              {rsvnLoading && <EmptyMsg>불러오는 중...</EmptyMsg>}
+              {!rsvnLoading && rsvnList.length === 0 && (
+                <EmptyMsg>예약 내역이 없어요</EmptyMsg>
+              )}
+              {!rsvnLoading && rsvnList
+                .filter((r) =>
+                  !rsvnQuery ||
+                  (r.guestName ?? '').includes(rsvnQuery) ||
+                  (r.spaceName ?? '').includes(rsvnQuery)
+                )
+                .map((r) => (
+                  <PlaceRow key={r.no} onClick={() => handleSelectRsvn(r)}>
+                    <PlaceInfo>
+                      <PlaceName>{r.guestName} · {r.spaceName}</PlaceName>
+                      <PlaceAddr>
+                        {r.checkIn ? r.checkIn.slice(0, 10).replaceAll('-', '.') : ''}
+                        {r.checkOut ? ` ~ ${r.checkOut.slice(0, 10).replaceAll('-', '.')}` : ''}
+                      </PlaceAddr>
+                    </PlaceInfo>
+                    <PlaceType>{({ S: '확정', E: '완료', P: '대기', R: '거절', C: '취소' })[r.status] ?? r.status}</PlaceType>
+                  </PlaceRow>
+                ))
+              }
             </CreateArea>
           )}
         </Panel>
