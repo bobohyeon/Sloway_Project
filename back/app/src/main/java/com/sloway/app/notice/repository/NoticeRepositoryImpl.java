@@ -30,7 +30,7 @@ public class NoticeRepositoryImpl implements NoticeRepositoryCustom {
 
         List<NoticeEntity> content = queryFactory
                 .selectFrom(q)
-                .where(categoryEq(category), keywordContains(keyword))
+                .where(q.delYn.eq("N"), categoryEq(category), keywordContains(keyword))
                 .orderBy(orders)
                 .offset(pageable.getOffset())
                 .limit(pageable.getPageSize())
@@ -39,7 +39,7 @@ public class NoticeRepositoryImpl implements NoticeRepositoryCustom {
         Long total = queryFactory
                 .select(q.count())
                 .from(q)
-                .where(categoryEq(category), keywordContains(keyword))
+                .where(q.delYn.eq("N"), categoryEq(category), keywordContains(keyword))
                 .fetchOne();
 
         return new PageImpl<>(content, pageable, total == null ? 0 : total);
