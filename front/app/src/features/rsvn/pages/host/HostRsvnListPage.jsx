@@ -41,7 +41,9 @@ const SearchInput = styled.input`
   outline: none;
   flex: 1;
   min-width: 160px;
-  &:focus { border-color: ${COLOR.sage}; }
+  &:focus {
+    border-color: ${COLOR.sage};
+  }
 `;
 
 const SearchBtn = styled.button`
@@ -53,17 +55,9 @@ const SearchBtn = styled.button`
   font-size: 13px;
   font-weight: 600;
   cursor: pointer;
-  &:hover { background: #1a3a2a; }
-`;
-
-const MsgBtn = styled.button`
-  font-size: 12px;
-  padding: 5px 12px;
-  border-radius: 6px;
-  border: 1px solid ${COLOR.gray200};
-  background: #fff;
-  cursor: pointer;
-  &:hover { border-color: ${COLOR.sage}; }
+  &:hover {
+    background: #1a3a2a;
+  }
 `;
 
 const RejectBtn = styled.button`
@@ -75,7 +69,9 @@ const RejectBtn = styled.button`
   color: #c0392b;
   cursor: pointer;
   margin-top: 4px;
-  &:hover { background: #fff0f0; }
+  &:hover {
+    background: #fff0f0;
+  }
 `;
 
 const TABS = [
@@ -86,7 +82,13 @@ const TABS = [
   { label: '환불', status: 'C' },
 ];
 
-const STATUS_LABEL = { P: '결제대기', S: '확정', E: '완료', R: '거절', C: '취소' };
+const STATUS_LABEL = {
+  P: '결제대기',
+  S: '확정',
+  E: '완료',
+  R: '거절',
+  C: '취소',
+};
 const STATUS_STYLE = {
   P: { bg: '#FFF9E6', color: '#B8860B' },
   S: { bg: '#EEF5EE', color: '#2D6A4F' },
@@ -118,7 +120,10 @@ function HostRsvnListPage() {
   }, []);
 
   // status 값이 enum 객체로 올 수 있으므로 문자열 변환
-  const statusCode = (item) => (typeof item.status === 'object' ? item.status?.name ?? item.status : item.status);
+  const statusCode = (item) =>
+    typeof item.status === 'object'
+      ? (item.status?.name ?? item.status)
+      : item.status;
 
   const handleReject = async (e, item) => {
     e.stopPropagation();
@@ -137,7 +142,9 @@ function HostRsvnListPage() {
     .filter((i) => !keyword || (i.guestName ?? '').includes(keyword));
 
   const counts = TABS.map((tab, idx) =>
-    idx === 0 ? list.length : list.filter((i) => statusCode(i) === tab.status).length
+    idx === 0
+      ? list.length
+      : list.filter((i) => statusCode(i) === tab.status).length
   );
 
   const totalPages = Math.ceil(filtered.length / 10);
@@ -172,15 +179,27 @@ function HostRsvnListPage() {
           <StatLabel>완료</StatLabel>
           <StatValue>{counts[2]}건</StatValue>
         </StatCard>
-        <StatCard style={{ cursor: 'pointer' }} onClick={() => navigate('/host/settlement/dashboard')}>
+        <StatCard
+          style={{ cursor: 'pointer' }}
+          onClick={() => navigate('/host/settlement/dashboard')}
+        >
           <StatLabel>이번 달 매출 →</StatLabel>
-          <StatValue $color={COLOR.terra} style={{ fontSize: 18 }}>—</StatValue>
+          <StatValue $color={COLOR.terra} style={{ fontSize: 18 }}>
+            —
+          </StatValue>
         </StatCard>
       </StatCards>
 
       <TabBar>
         {TABS.map((tab, idx) => (
-          <TabBtn key={idx} $active={activeTab === idx} onClick={() => { setActiveTab(idx); setPage(1); }}>
+          <TabBtn
+            key={idx}
+            $active={activeTab === idx}
+            onClick={() => {
+              setActiveTab(idx);
+              setPage(1);
+            }}
+          >
             {tab.label}
             <TabCount $active={activeTab === idx}>{counts[idx]}</TabCount>
           </TabBtn>
@@ -197,7 +216,14 @@ function HostRsvnListPage() {
       </FilterRow>
 
       {filtered.length === 0 && (
-        <div style={{ textAlign: 'center', padding: '40px 0', color: COLOR.gray400, fontSize: 14 }}>
+        <div
+          style={{
+            textAlign: 'center',
+            padding: '40px 0',
+            color: COLOR.gray400,
+            fontSize: 14,
+          }}
+        >
           조건에 맞는 예약이 없어요
         </div>
       )}
@@ -213,18 +239,40 @@ function HostRsvnListPage() {
           >
             <CardRow>
               <Thumb>
-                {item.thumbnailUrl
-                  ? <img src={item.thumbnailUrl} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: 10 }} />
-                  : icon}
+                {item.thumbnailUrl ? (
+                  <img
+                    src={item.thumbnailUrl}
+                    alt=""
+                    style={{
+                      width: '100%',
+                      height: '100%',
+                      objectFit: 'cover',
+                      borderRadius: 10,
+                    }}
+                  />
+                ) : (
+                  icon
+                )}
               </Thumb>
               <CardBody>
                 <TagRow>
                   <RsvnStatusBadge type="type" label={item.spaceType} />
-                  <span style={{ fontSize: 11, fontWeight: 600, padding: '2px 7px', borderRadius: 4, background: st.bg, color: st.color }}>
+                  <span
+                    style={{
+                      fontSize: 11,
+                      fontWeight: 600,
+                      padding: '2px 7px',
+                      borderRadius: 4,
+                      background: st.bg,
+                      color: st.color,
+                    }}
+                  >
                     {STATUS_LABEL[sc] ?? sc}
                   </span>
                 </TagRow>
-                <CardTitle>{item.guestName} · {item.spaceName}</CardTitle>
+                <CardTitle>
+                  {item.guestName} · {item.spaceName}
+                </CardTitle>
                 <CardMeta>
                   <span>예약 #{item.no}</span>
                   <span>·</span>
@@ -235,9 +283,6 @@ function HostRsvnListPage() {
               </CardBody>
               <CardRight>
                 <Price>{item.amt?.toLocaleString()}원</Price>
-                <MsgBtn onClick={(e) => { e.stopPropagation(); navigate('/host/chat'); }}>
-                  💬 메시지
-                </MsgBtn>
                 {sc === 'S' && new Date(item.checkIn) > new Date() && (
                   <RejectBtn onClick={(e) => handleReject(e, item)}>
                     거절
@@ -251,7 +296,10 @@ function HostRsvnListPage() {
       <Pagination
         currentPage={page}
         totalPages={totalPages}
-        onChange={(p) => { setPage(p); window.scrollTo(0, 0); }}
+        onChange={(p) => {
+          setPage(p);
+          window.scrollTo(0, 0);
+        }}
       />
     </PageLayout>
   );
