@@ -8,6 +8,7 @@ const STATUS = {
   확정: { bg: '#EEF5EE', color: '#2D6A4F' },
   거절: { bg: '#FFF3E0', color: '#E65100' },
   취소: { bg: '#FFF0F0', color: '#C0392B' },
+  환불: { bg: '#FFF0F0', color: '#C0392B' },
   완료: { bg: '#F0F0F0', color: '#666' },
   '처리 중': { bg: '#FFF3E0', color: '#E65100' },
   '환불 불가': { bg: '#FFF0F0', color: '#C0392B' },

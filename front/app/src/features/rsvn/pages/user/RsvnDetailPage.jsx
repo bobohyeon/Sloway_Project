@@ -147,6 +147,7 @@ function RsvnDetailPage() {
       <StatusBanner>
         <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
           <RsvnStatusBadge type="status" label={STATUS_LABEL[rsvn.status] ?? rsvn.status} />
+          {rsvn.refunded && <RsvnStatusBadge type="status" label="환불" />}
           <span style={{ fontSize: 13, fontWeight: 700 }}>
             예약번호 SW-{String(rsvn.no).padStart(8, '0')}
           </span>

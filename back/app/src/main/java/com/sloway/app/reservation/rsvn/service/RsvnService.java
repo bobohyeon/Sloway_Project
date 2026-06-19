@@ -9,7 +9,9 @@ import com.sloway.app.payment.pay.common.PayStatus;
 import com.sloway.app.payment.pay.entity.PayEntity;
 import com.sloway.app.payment.pay.repository.PayRepository;
 import com.sloway.app.payment.refund.common.RefundReason;
+import com.sloway.app.payment.refund.entity.RefundEntity;
 import com.sloway.app.payment.refund.service.RefundService;
+import com.sloway.app.payment.refund.repository.RefundRepository;
 import com.sloway.app.place.entity.office.OfficeEntity;
 import com.sloway.app.place.entity.place.ImgPlaceEntity;
 import com.sloway.app.place.entity.place.PlaceEntity;
@@ -60,6 +62,7 @@ public class RsvnService {
     private final StationRepository stationRepository;
     private final PayRepository payRepository;
     private final RefundService refundService;
+    private final RefundRepository refundRepository;
     private final HostRepository hostRepository;
     private final HostPlaceRepository hostPlaceRepository;
     private final ImgPlaceRepository imgPlaceRepository;
@@ -154,10 +157,13 @@ public class RsvnService {
                 .map(review -> review.getRsvnNo().getNo())
                 .collect(Collectors.toSet());
 
+        Set<Long> refundedRsvnNos = findRefundedRsvnNos(list);
+
         return list.stream()
                 .map(entity -> RsvnResDto.from(
                         entity, payNoMap.get(entity.getNo()),
-                        reviewRsvnNo.contains(entity.getNo())))
+                        reviewRsvnNo.contains(entity.getNo()),
+                        refundedRsvnNos.contains(entity.getNo())))
                 .toList();
     }
 
@@ -171,7 +177,7 @@ public class RsvnService {
 
         Long payNo = findCompletePayNo(entity.getNo());
 
-        return RsvnResDto.from(entity, payNo);
+        return RsvnResDto.from(entity, payNo, false, isRefunded(entity));
     }
 
     //공간별 확정 예약 날짜 조회 (프론트 예약박스 충돌 체크용)
@@ -187,7 +193,20 @@ public class RsvnService {
         RsvnEntity entity = rsvnRepository.findById(rsvnNo)
                 .orElseThrow(() -> new CustomException(RsvnErrorCode.RESERVATION_NOT_FOUND));
         Long payNo = findCompletePayNo(entity.getNo());
-        return RsvnResDto.from(entity, payNo);
+        return RsvnResDto.from(entity, payNo, false, isRefunded(entity));
+    }
+
+    // 환불 레코드가 있는 예약 번호 집합 (목록용 — 환불 여부 판별)
+    private Set<Long> findRefundedRsvnNos(List<RsvnEntity> rsvns) {
+        if (rsvns.isEmpty()) return java.util.Set.of();
+        return refundRepository.findByRsvnNoIn(rsvns).stream()
+                .map(r -> r.getRsvnNo().getNo())
+                .collect(Collectors.toSet());
+    }
+
+    // 단건 환불 여부 (상세용)
+    private boolean isRefunded(RsvnEntity rsvn) {
+        return !refundRepository.findByRsvnNoIn(java.util.List.of(rsvn)).isEmpty();
     }
 
     //호스트 — 내 공간 목록 조회 (placeNo + 공간명)
@@ -283,8 +302,14 @@ public class RsvnService {
         // 예약들의 payNo 를 한 번에 조회(N+1 제거)
         Map<Long, Long> payNoMap =
                 findCompletePayNoMap(sorted.stream().map(RsvnEntity::getNo).toList());
+
+        Set<Long> refunded = refundRepository.findByRsvnNoIn(sorted).stream()
+                .map(refundEntity -> refundEntity.getRsvnNo().getNo())
+                .collect(Collectors.toSet());
+
         return sorted.stream()
-                .map(entity -> RsvnResDto.from(entity, payNoMap.get(entity.getNo())))
+                .map(entity -> RsvnResDto.from(entity, payNoMap.get(entity.getNo()),
+                        false, refunded.contains(entity.getNo())))
                 .toList();
     }
 
@@ -325,7 +350,9 @@ public class RsvnService {
                 ? rsvnRepository.findByStatus(status, pageable)
                 : rsvnRepository.findByStatusNot(RsvnStatus.P, pageable);
         Map<Long, Long> payNoMap = findCompletePayNoMap(all.getContent().stream().map(RsvnEntity::getNo).toList());
-        return all.map(entity -> RsvnResDto.from(entity, payNoMap.get(entity.getNo())));
+        Set<Long> refundedRsvnNos = findRefundedRsvnNos(all.getContent());
+        return all.map(entity -> RsvnResDto.from(entity, payNoMap.get(entity.getNo()),
+                false, refundedRsvnNos.contains(entity.getNo())));
     }
 
 
@@ -417,10 +444,10 @@ public class RsvnService {
 
         validateHostOwnership(host, entity);
 
-        entity.reject();
         if (payNo != null) {
             refundService.createRefundByHost(payNo);
         }
+        entity.reject();
     }
 
     // 호스트 소유 공간 검증 (내부 헬퍼)

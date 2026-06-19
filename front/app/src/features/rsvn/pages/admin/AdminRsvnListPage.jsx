@@ -184,7 +184,10 @@ function AdminRsvnListPage() {
               <Td>{formatPeriod(item.checkIn, item.checkOut, item.spaceType)}</Td>
               <Td style={{ fontWeight: 700 }}>{item.amt?.toLocaleString()}원</Td>
               <Td style={{ fontSize: 12 }}>{formatDate(item.createdAt)}</Td>
-              <Td><RsvnStatusBadge type="status" label={STATUS_LABEL[statusCode(item.status)] ?? statusCode(item.status)} /></Td>
+              <Td>
+                <RsvnStatusBadge type="status" label={STATUS_LABEL[statusCode(item.status)] ?? statusCode(item.status)} />
+                {item.refunded && <RsvnStatusBadge type="status" label="환불" />}
+              </Td>
               <Td onClick={(e) => e.stopPropagation()}>
                 <CancelBtn
                   disabled={['C', 'R'].includes(statusCode(item.status))}

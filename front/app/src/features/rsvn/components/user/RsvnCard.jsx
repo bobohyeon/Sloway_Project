@@ -80,6 +80,7 @@ function RsvnCard({ item }) {
           <TagRow>
             <RsvnStatusBadge type="type" label={item.type} />
             <RsvnStatusBadge type="status" label={item.status} />
+            {item.refunded && <RsvnStatusBadge type="status" label="환불" />}
             {item.dday && <RsvnStatusBadge type="dday" label={item.dday} />}
           </TagRow>
           <CardTitle>{item.title}</CardTitle>
