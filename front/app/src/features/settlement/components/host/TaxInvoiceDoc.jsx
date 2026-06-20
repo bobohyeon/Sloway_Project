@@ -49,7 +49,7 @@ const TaxInvoiceDoc = forwardRef(({ settle }, ref) => {
           <PartyLabel>공급자</PartyLabel>
           <PartyRow>
             <PartyKey>상호</PartyKey>
-            <PartyVal>호스트 #{settle.hostNo}</PartyVal>
+            <PartyVal>{settle.hostName ?? `호스트 #${settle.hostNo}`}</PartyVal>
           </PartyRow>
           <PartyRow>
             <PartyKey>등록번호</PartyKey>
@@ -57,7 +57,7 @@ const TaxInvoiceDoc = forwardRef(({ settle }, ref) => {
           </PartyRow>
           <PartyRow>
             <PartyKey>대표자</PartyKey>
-            <PartyVal>호스트 #{settle.hostNo}</PartyVal>
+            <PartyVal>{settle.hostName ?? `호스트 #${settle.hostNo}`}</PartyVal>
           </PartyRow>
           <PartyRow>
             <PartyKey>업태/종목</PartyKey>

@@ -57,6 +57,7 @@ public class SettleRepositoryImpl implements SettleRepositoryCustom {
     public List<SettleEntity> findByHostNo(Long hostNo) {
         return jpaQueryFactory
                 .selectFrom(qSettleEntity)
+                .join(qSettleEntity.hostNo).fetchJoin()   // 사업자명 노출용 host 동시 로딩(N+1 방지)
                 .where(
                         qSettleEntity.hostNo.no.eq(hostNo)
                 )
@@ -77,6 +78,7 @@ public class SettleRepositoryImpl implements SettleRepositoryCustom {
     public Page<SettleResDto> findSettleAll(PageRequest pageRequest, SettleStatus status) {
         List<SettleEntity> settleEntityList = jpaQueryFactory
                 .selectFrom(qSettleEntity)
+                .join(qSettleEntity.hostNo).fetchJoin()   // 사업자명 노출용 host 동시 로딩(N+1 방지)
                 .where(statusEq(status))
                 .orderBy(qSettleEntity.no.desc())
                 .offset(pageRequest.getOffset())
