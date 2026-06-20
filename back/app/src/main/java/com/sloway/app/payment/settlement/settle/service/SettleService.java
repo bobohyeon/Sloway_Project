@@ -125,6 +125,7 @@ public class SettleService {
             case "WAITING" -> SettleStatus.WAITING;
             case "COMPLETE" -> SettleStatus.COMPLETE;
             case "INVOICE" -> SettleStatus.INVOICE;
+            case "CARRIED" -> SettleStatus.CARRIED;   // 이월 탭 — CARRIED 만 필터
             default -> null;
         };
     }
