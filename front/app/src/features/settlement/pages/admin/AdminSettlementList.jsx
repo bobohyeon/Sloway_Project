@@ -145,7 +145,7 @@ export default function AdminSettlementList() {
           content.map((s) => (
             <Row key={s.no} onClick={() => nav(`/admin/settlement/host/${s.no}`)}>
               <Col>#{s.no}</Col>
-              <Col>호스트 #{s.hostNo}</Col>
+              <Col>{s.hostName ?? `호스트 #${s.hostNo}`}</Col>
               <Col>
                 {fmtDate(s.settleStartDate)} ~ {fmtDate(s.settleEndDate)}
               </Col>

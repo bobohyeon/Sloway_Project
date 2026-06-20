@@ -74,7 +74,7 @@ export default function AdminSettlementDetail() {
         <SummaryCard padded>
           <SummaryRow>
             <SummaryLabel>호스트</SummaryLabel>
-            <SummaryValue>호스트 #{settle.hostNo}</SummaryValue>
+            <SummaryValue>{settle.hostName ?? `호스트 #${settle.hostNo}`}</SummaryValue>
           </SummaryRow>
           <SummaryRow>
             <SummaryLabel>회차 기간</SummaryLabel>

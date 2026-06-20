@@ -16,6 +16,7 @@ public class SettleResDto {
     private LocalDate settleStartDate;
     private LocalDate settleEndDate;
     private Long hostNo;
+    private String hostName;   // 호스트 사업자명 — 화면에 "호스트 #번호" 대신 노출
     private Integer totalAmt;
     private Integer feeAmt;
     private Integer refundAmt;
@@ -34,6 +35,7 @@ public class SettleResDto {
                 .settleStartDate(entity.getSettleStartDate())
                 .settleEndDate(entity.getSettleEndDate())
                 .hostNo(entity.getHostNo().getNo())
+                .hostName(entity.getHostNo().getBusinessName())   // FK 객체(LAZY)에서 사업자명 추출 — 트랜잭션 안에서 호출됨
                 .totalAmt(entity.getTotalAmt())
                 .feeAmt(entity.getFeeAmt())
                 .refundAmt(entity.getRefundAmt())
