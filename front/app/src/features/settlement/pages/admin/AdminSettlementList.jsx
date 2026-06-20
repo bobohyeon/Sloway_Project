@@ -17,6 +17,7 @@ const STATUS_META = {
   WAITING: { label: '정산 대기', color: 'var(--gray-400)' },
   COMPLETE: { label: '정산 완료', color: 'var(--sage)' },
   INVOICE: { label: '세금계산서 발행', color: '#0064FF' },
+  CARRIED: { label: '이월', color: '#E8804D' },
 };
 
 const FILTER_TABS = [
@@ -24,6 +25,7 @@ const FILTER_TABS = [
   { value: 'WAITING', label: '대기' },
   { value: 'COMPLETE', label: '완료' },
   { value: 'INVOICE', label: '세금계산서 발행' },
+  { value: 'CARRIED', label: '이월' },
 ];
 
 const won = (n) => `${Number(n ?? 0).toLocaleString()}원`;
