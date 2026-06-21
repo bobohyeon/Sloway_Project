@@ -171,7 +171,7 @@ public class PlaceApiController {
     @GetMapping("/recommend")
     public ResponseEntity<List<PlaceCardDto>> getRecommendPlace(){
         List<PlaceCardDto> dtoList = placeService.getRecommendPlace();
-
+        System.out.println("dtoList = " + dtoList);
         return ResponseEntity.ok(dtoList);
     }
 
