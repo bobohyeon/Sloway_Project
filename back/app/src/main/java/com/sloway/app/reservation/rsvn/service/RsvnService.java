@@ -148,9 +148,9 @@ public class RsvnService {
         );
 
         List<RsvnEntity> list = rsvnRepository.findByMemberNoOrderByCreatedAtDesc(member);
-        // 예약들의 payNo 를 한 번에 조회(N+1 제거)
-        Map<Long, Long> payNoMap =
-                findCompletePayNoMap(list.stream().map(RsvnEntity::getNo).toList());
+        // 예약들의 완료 결제(PAY)를 한 번에 조회(N+1 제거) — finalAmt/usedPoint/dcAmt 매핑용
+        Map<Long, PayEntity> payMap =
+                findCompletePayMap(list.stream().map(RsvnEntity::getNo).toList());
 
         Set<Long> reviewRsvnNo = reviewRepository.findMyReviews(memberNo)
                 .stream()
@@ -160,8 +160,8 @@ public class RsvnService {
         Set<Long> refundedRsvnNos = findRefundedRsvnNos(list);
 
         return list.stream()
-                .map(entity -> RsvnResDto.from(
-                        entity, payNoMap.get(entity.getNo()),
+                .map(entity -> toResDtoWithPay(
+                        entity, payMap.get(entity.getNo()),
                         reviewRsvnNo.contains(entity.getNo()),
                         refundedRsvnNos.contains(entity.getNo())))
                 .toList();
@@ -175,9 +175,9 @@ public class RsvnService {
         RsvnEntity entity = rsvnRepository.findByNoAndMemberNo(rsvnNo, member)
                 .orElseThrow(() -> new CustomException(RsvnErrorCode.RESERVATION_NOT_FOUND));
 
-        Long payNo = findCompletePayNo(entity.getNo());
+        PayEntity pay = findCompletePay(entity.getNo());
 
-        return RsvnResDto.from(entity, payNo, false, isRefunded(entity));
+        return toResDtoWithPay(entity, pay, false, isRefunded(entity));
     }
 
     //공간별 확정 예약 날짜 조회 (프론트 예약박스 충돌 체크용)
@@ -405,28 +405,47 @@ public class RsvnService {
         entity.cancel();
     }
 
-    //예약완료조회 (단건 — findOne 등에서 사용)
+    //예약완료조회 (단건 — payNo만 필요한 호출부용) — 완료 결제 PayEntity 에서 payNo 추출
     public Long findCompletePayNo(Long rsvnNo){
-        List<PayEntity> pay = payRepository.findByRsvn(rsvnNo);
-
-        Long completedPay = pay.stream()
-                .filter(p -> p.getStatus() == PayStatus.COMPLETED)
-                .map(PayEntity::getNo)
-                .findFirst()
-                .orElse(null);
-        return completedPay;
+        PayEntity pay = findCompletePay(rsvnNo);
+        return pay != null ? pay.getNo() : null;
     }
 
-    // 여러 예약의 완료결제 payNo 를 한 번에 조회 → Map<rsvnNo, payNo> (목록 조회 N+1 제거용)
+    // 완료 결제 PayEntity 단건 (없으면 null) — finalAmt/usedPoint/dcAmt 매핑용
+    private PayEntity findCompletePay(Long rsvnNo){
+        return payRepository.findByRsvn(rsvnNo).stream()
+                .filter(p -> p.getStatus() == PayStatus.COMPLETED)
+                .findFirst()
+                .orElse(null);
+    }
+
+    // 여러 예약의 완료결제 payNo 를 한 번에 조회 → Map<rsvnNo, payNo> (호스트/어드민 목록용)
     private Map<Long, Long> findCompletePayNoMap(List<Long> rsvnNos) {
+        return findCompletePayMap(rsvnNos).entrySet().stream()
+                .collect(java.util.stream.Collectors.toMap(
+                        Map.Entry::getKey, e -> e.getValue().getNo()));
+    }
+
+    // 여러 예약의 완료결제 PayEntity 를 한 번에 조회 → Map<rsvnNo, PayEntity> (목록 N+1 제거용)
+    private Map<Long, PayEntity> findCompletePayMap(List<Long> rsvnNos) {
         if (rsvnNos.isEmpty()) return java.util.Map.of();
         return payRepository.findByRsvnNoIn(rsvnNos).stream()
                 .filter(p -> p.getStatus() == PayStatus.COMPLETED)
                 .collect(java.util.stream.Collectors.toMap(
                         p -> p.getRsvnNo().getNo(),   // 예약 FK 의 PK
-                        PayEntity::getNo,
+                        p -> p,
                         (a, b) -> a                    // 한 예약에 완료결제 여러 건이면 첫 건
                 ));
+    }
+
+    // RsvnResDto + PAY 결제정보(finalAmt/usedPoint/dcAmt) 매핑 (pay null 안전)
+    private RsvnResDto toResDtoWithPay(RsvnEntity entity, PayEntity pay,
+                                       boolean hasReview, boolean refunded) {
+        Long payNo = pay != null ? pay.getNo() : null;
+        Integer finalAmt = pay != null ? pay.getFinalAmt() : null;
+        Integer usedPoint = pay != null ? pay.getUsedPoint() : null;
+        Integer dcAmt = pay != null ? pay.getDcAmt() : null;
+        return RsvnResDto.from(entity, payNo, finalAmt, usedPoint, dcAmt, hasReview, refunded);
     }
 
 

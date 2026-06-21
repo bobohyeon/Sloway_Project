@@ -22,6 +22,7 @@ import com.sloway.app.place.entity.office.QOfficeEntity;
 import com.sloway.app.place.entity.office.QOfficePeriodEntity;
 import com.sloway.app.place.entity.station.QStationEntity;
 import com.sloway.app.place.entity.workStay.QWorkStayEntity;
+import com.sloway.app.place.entity.place.QImgPlaceEntity;
 import lombok.RequiredArgsConstructor;
 
 import java.util.List;
@@ -33,6 +34,8 @@ public class LikeRespositoryImpl implements LikeRespositoryCustom {
 
     @Override
     public List<LikeRespDto> findByMemberNo(Long memberNo) {
+        // 대표 썸네일(min sort) 판정용 별도 별칭
+        QImgPlaceEntity imgSub = new QImgPlaceEntity("imgSub");
         // 1. 각 타입별 최저가 서브쿼리 (별도 메소드로 분리하거나 변수로 선언)
         // 메인 쿼리의 placeEntity와 조인하여 값을 가져오도록 구성
         var minPriceExpression = new CaseBuilder()
@@ -77,7 +80,15 @@ public class LikeRespositoryImpl implements LikeRespositoryCustom {
                 ))
                 .from(likeEntity)
                 .join(likeEntity.placeEntity, placeEntity)
-                .leftJoin(imgPlaceEntity).on(imgPlaceEntity.placeEntity.eq(placeEntity).and(imgPlaceEntity.sort.eq(0)))
+                // place 대표 썸네일 = 그 place 이미지 중 sort 최소값 (검색결과 썸네일과 동일 기준).
+                // 기존 sort=0 고정은 sort 가 1부터 시작하는 데이터에서 썸네일이 안 잡혔음.
+                .leftJoin(imgPlaceEntity).on(
+                        imgPlaceEntity.placeEntity.eq(placeEntity)
+                                .and(imgPlaceEntity.sort.eq(
+                                        JPAExpressions.select(imgSub.sort.min())
+                                                .from(imgSub)
+                                                .where(imgSub.placeEntity.eq(placeEntity))
+                                )))
                 .join(likeEntity.userEntity, userEntity)
                 .where(userEntity.memberNo.eq(memberNo))
                 .orderBy(likeEntity.no.desc())

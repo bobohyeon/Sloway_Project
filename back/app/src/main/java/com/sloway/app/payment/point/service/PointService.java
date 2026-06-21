@@ -211,7 +211,9 @@ public class PointService {
 
     @Transactional
     public void confirmEarnPointsScheduled() {
-        List<PointEntity> pointEntityList = pointRepository.findExpiredWaitForEarn(LocalDateTime.now().minusDays(7));
+        // 정책: 이용 완료(체크아웃) 시 적립 확정 — 별도 대기 기간 없음.
+        // 체크아웃 후에는 환불 경로가 없어(취소=ALREADY_COMPLETED, 환불=DDAY 차단) 대기 버퍼 불필요.
+        List<PointEntity> pointEntityList = pointRepository.findExpiredWaitForEarn(LocalDateTime.now());
         pointEntityList.stream()
                 .filter(p -> p.getStatus() == PointStatus.WAIT)
                 .forEach(PointEntity::confirmEarn);
