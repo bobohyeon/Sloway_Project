@@ -31,11 +31,17 @@ const fadeOut = keyframes`
 
 const Card = styled.div`
   /* 기존 스타일 유지 */
+  background-color : #f8f8f8;
   border: 1px solid #eee;
   border-radius: 12px;
   overflow: hidden;
   cursor: pointer;
-  transition: transform 0.2s;
+  transition: transform 0.2s, box-shadow 0.3s;
+
+  &:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.15);
+  }
 
   ${(props) =>
     props.$isDeleting &&
@@ -47,7 +53,7 @@ const Card = styled.div`
 const ImageBox = styled.div`
   position: relative;
   height: 180px;
-  background: #f5f5f5;
+  background: #eeeeee;
   display: flex;
   align-items: center;
   justify-content: center;
