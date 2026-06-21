@@ -175,7 +175,9 @@ public class PlaceRepositoryImpl implements PlaceRepositoryCustom {
         JPQLQuery<Double> avgReviewScore = JPAExpressions
                 .select(placeSummary.avgScore.avg())
                 .from(placeSummary)
-                .where(placeSummary.placeNo.eq(placeEntity.no));
+                .where(placeSummary.placeNo.eq(placeEntity.no),
+                        placeSummary.avgScore.isNotNull(),  // NULL 제외
+                        placeSummary.avgScore.gt(0.0));
 
         // 3. STATION 리뷰 수
         JPQLQuery<Long> stationReviewCount = JPAExpressions
