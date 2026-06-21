@@ -58,7 +58,11 @@ public class RefundService {
         RefundEntity refundEntity = refundCreateReqDto.toEntity(payEntity, rsvn);
         RefundRate rate = refundRate(refundEntity);
         validDuplicate(payEntity);   // 이미 환불된 건은 중복 환불 차단
-        // 당일(DDAY)은 환불율 0% — 거부하지 않고 0원 환불로 처리(예약은 취소됨, 환불액만 0원)
+        // 당일(DDAY)은 취소·환불 불가 — 0원 환불 처리하지 않고 거부 (정책 변경: 당일 취소 차단)
+        // ※ 호스트 거절(createRefundByHost)은 RefundRate.FULL 이라 이 가드에 안 걸림
+        if (rate == RefundRate.DDAY) {
+            throw new CustomException(RefundErrorCode.REFUND_DDAY_NOT_ALLOWED);
+        }
         // 남은 기간별 환불율(rate)을 결제액(finalAmt)에 적용해 환불액 산정
         BigDecimal finalAmt = BigDecimal.valueOf(payEntity.getFinalAmt());
         BigDecimal rateBd = BigDecimal.valueOf(rate.getRate());
