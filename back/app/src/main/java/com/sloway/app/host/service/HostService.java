@@ -94,7 +94,10 @@ public class HostService {
         if (request.getPhone() != null && !request.getPhone().isBlank()) {
             member.changePhone(request.getPhone());
         }
-        //프로필 이미지가 들어왔을 때만 S3 업로드 +URL 교체
+        // 프로필 이미지 (PATCH 규칙: null=유지 / ""=제거 / 새 파일=교체)
+        if (request.getImgUrl() != null) {
+            member.updateImgUrl(request.getImgUrl()); // 빈 문자열이면 사진 제거
+        }
         if (profileImage != null && !profileImage.isEmpty()) {
             try {
                 String imgUrl = s3Service.upload(profileImage, "member-profile");
