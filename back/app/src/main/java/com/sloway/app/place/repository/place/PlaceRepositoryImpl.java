@@ -450,7 +450,7 @@ public class PlaceRepositoryImpl implements PlaceRepositoryCustom {
                         Expressions.numberTemplate(Double.class,
                                         "AVG(CASE WHEN {0} > 0.0 THEN {0} ELSE NULL END)",
                                         placeSummary.avgScore)
-                                .as("avgReviewScore"),  // ← 0.0 제외
+                                .as("avgReviewScore"),
                         placeSummary.status
                 ))
                 .from(placeSummary)
