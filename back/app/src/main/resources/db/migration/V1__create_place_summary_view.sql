@@ -6,6 +6,8 @@ DROP MATERIALIZED VIEW IF EXISTS place_summary;
 -- Materialized View 생성
 CREATE MATERIALIZED VIEW place_summary AS
 
+select * from place_summary;
+
 WITH RsvnStats AS (
     SELECT
         p.no as place_no,
@@ -14,38 +16,47 @@ WITH RsvnStats AS (
         o.no as office_no,
         w.no as work_stay_no,
         COUNT(DISTINCT r.no) AS rsvn_cnt,
-        AVG(rev.score_total) AS avg_score
+        COALESCE(AVG(rev.score_total), 0.0) AS avg_score
     FROM place p
-    LEFT JOIN station s ON p.type = 'STATION' AND s.place_no = p.no
-    LEFT JOIN office o ON p.type = 'OFFICE' AND o.place_no = p.no
-    LEFT JOIN work_stay w ON p.type = 'WORK_STAY' AND w.place_no = p.no
-    LEFT JOIN rsvn r ON (
-        (p.type = 'STATION' AND r.station_no = s.no)
-        OR (p.type = 'OFFICE' AND r.office_no = o.no)
-        OR (p.type = 'WORK_STAY' AND r.work_stay_no = w.no)
-    )
-        INNER JOIN rsvn rcnt ON r.no = rcnt.no AND rcnt.status = 'S'
-    LEFT JOIN review rev ON rev.rsvn_no = r.no
+             LEFT JOIN station s
+                       ON p.type = 'STATION'
+                           AND s.place_no = p.no
+             LEFT JOIN office o
+                       ON p.type = 'OFFICE'
+                           AND o.place_no = p.no
+             LEFT JOIN work_stay w
+                       ON p.type = 'WORK_STAY'
+                           AND w.place_no = p.no
+             LEFT JOIN rsvn r ON (
+                                     (p.type = 'STATION' AND r.station_no = s.no)
+                                         OR (p.type = 'OFFICE' AND r.office_no = o.no)
+                                         OR (p.type = 'WORK_STAY' AND r.work_stay_no = w.no)
+                                     )
+        AND r.status IN ('S', 'E')
+             LEFT JOIN review rev
+                       ON rev.rsvn_no = r.no
+                           AND r.status = 'E'
     GROUP BY p.no, p.type, s.no, o.no, w.no
+    ORDER BY p.no
 ),
-ImgInfo AS (
-    SELECT DISTINCT ON (place_no) place_no, current_url
-    FROM img_place
-    WHERE sort = 1
-    ORDER BY place_no
-),
-AmenityInfo AS (
-    SELECT wa.work_no, STRING_AGG(a.name, ',') as names
-    FROM work_amenity wa
+     ImgInfo AS (
+         SELECT DISTINCT ON (place_no) place_no, current_url
+FROM img_place
+WHERE sort = 1
+ORDER BY place_no
+    ),
+    AmenityInfo AS (
+SELECT wa.work_no, STRING_AGG(a.name, ',') as names
+FROM work_amenity wa
     JOIN amenity a ON a.no = wa.amenity_no
-    GROUP BY wa.work_no
-),
-OfficeMinPrice AS (
-    SELECT office_no, MIN(price) as min_price
-    FROM office_period
-    WHERE exception_start_date IS NULL
-    GROUP BY office_no
-)
+GROUP BY wa.work_no
+    ),
+    OfficeMinPrice AS (
+SELECT office_no, MIN(price) as min_price
+FROM office_period
+WHERE exception_start_date IS NULL
+GROUP BY office_no
+    )
 SELECT
     p.no as place_no,
     p.type,
@@ -101,5 +112,8 @@ FROM place p
          LEFT JOIN OfficeMinPrice op ON op.office_no = o.no
 WHERE p.status = 'I'
 GROUP BY p.no, p.type, s.no, o.no, w.no;
+
+
+
 -- REFRESH CONCURRENTLY를 위한 인덱스 생성
 CREATE UNIQUE INDEX idx_place_summary_unique ON place_summary (place_no, type, target_no);
