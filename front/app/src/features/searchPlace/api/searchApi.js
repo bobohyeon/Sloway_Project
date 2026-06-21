@@ -42,7 +42,7 @@ export async function findRoomsByPlaceNo(placeNo, type) {
   return res.data;
 }
 
-export async function searchSpaces({ region, placeType, sort, checkIn, checkOut, guestCount } = {}) {
+export async function searchSpaces({ region, placeType, sort, checkIn, checkOut, guestCount, amenities } = {}) {
   const params = {};
   if (region && region !== '전체') params.region = REGION_MAP[region];
   if (placeType && placeType !== '전체') params.placeType = placeType;
@@ -53,8 +53,13 @@ export async function searchSpaces({ region, placeType, sort, checkIn, checkOut,
     params.checkOut = checkOut;
   }
   if (guestCount) params.guestCount = guestCount;
+  if (amenities && amenities.length > 0) params.amenities = amenities;
 
-  const res = await api.get('/spaces/search', { params });
+  const res = await api.get('/spaces/search', {
+    params,
+    // amenities 배열을 amenities=1&amenities=2 형태로 직렬화 (인덱스 없이)
+    paramsSerializer: { indexes: null },
+  });
   // 백엔드가 Page<SearchResDto> 반환 — content 배열만 꺼냄
   return res.data.content ?? res.data;
 }
