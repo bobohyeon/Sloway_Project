@@ -83,7 +83,9 @@ const SPACE_ROUTE = { office: 'coworking-offices', workstay: 'workstays', statio
 const toCardItem = (rsvn) => {
   const ci = dayjs(rsvn.checkIn);
   const co = dayjs(rsvn.checkOut);
-  const diff = ci.diff(dayjs(), 'day');
+  // 달력 날짜 기준 D-day (시간 무시) — 백엔드 환불 정책(toLocalDate 비교)과 일치.
+  // ci.diff(now,'day')는 24시간 절삭이라, 자정으로 저장된 '내일' 예약을 D-DAY로 하루 일찍 표시하는 버그.
+  const diff = ci.startOf('day').diff(dayjs().startOf('day'), 'day');
   const dday = rsvn.status === 'S'
     ? (diff === 0 ? 'D-DAY' : diff > 0 ? `D-${diff}` : `D+${Math.abs(diff)}`)
     : null;

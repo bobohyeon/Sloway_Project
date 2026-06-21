@@ -73,12 +73,23 @@ export default function RefundRequest() {
     load();
   }, [payNo, navigate]);
 
+  // 이용 당일(또는 지난 날)이면 취소·환불 불가 — 백엔드 DDAY 기준(체크인까지 1일 미만)과 일치
+  const dateOnly = (d) => {
+    const x = new Date(d);
+    x.setHours(0, 0, 0, 0);
+    return x;
+  };
+  const isDDayOrPast =
+    pay?.checkIn != null &&
+    Math.round((dateOnly(pay.checkIn) - dateOnly(new Date())) / 86400000) <= 0;
+
   // 환불 금액은 프론트에서 계산하지 않는다 — 백엔드가 예약 일정 기준 SSOT로 산정.
   const canSubmit =
     pay &&
     agreed &&
     reason !== null &&
     (reason !== 'etc' || (reasonDetail && reasonDetail.length >= 10)) &&
+    !isDDayOrPast &&
     !submitting;
 
   const handleSubmit = async () => {
@@ -114,6 +125,13 @@ export default function RefundRequest() {
       backLabel="결제 상세"
       maxWidth={800}
     >
+      {isDDayOrPast && (
+        <DDayNotice>
+          ⚠️ 이용 당일에는 취소·환불이 불가능합니다. 부득이한 경우 고객센터로
+          문의해주세요.
+        </DDayNotice>
+      )}
+
       <Section>
         <RefundSummaryCard paidAmount={pay.finalAmt ?? 0} />
       </Section>
@@ -147,6 +165,20 @@ export default function RefundRequest() {
 
 const Section = styled.div`
   margin-bottom: var(--space-5);
+`;
+
+const DDayNotice = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: #fff4f4;
+  border: 1px solid #f5c2c0;
+  border-radius: var(--radius-md);
+  padding: 14px 16px;
+  margin-bottom: var(--space-5);
+  font-size: 14px;
+  color: #c0392b;
+  line-height: 1.5;
 `;
 
 const Actions = styled.div`
