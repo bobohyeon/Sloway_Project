@@ -76,7 +76,6 @@ export default function SpaceStats() {
           value={Number(stats?.total ?? 0).toLocaleString()}
           unit="개"
           icon={<FaHome />}
-          highlight
         />
         <StatCard
           label="신규 등록"

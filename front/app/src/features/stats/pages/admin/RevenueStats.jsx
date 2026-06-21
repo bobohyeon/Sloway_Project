@@ -85,7 +85,6 @@ export default function RevenueStats() {
           value={Number(summary?.totalAmt ?? 0).toLocaleString()}
           unit="원"
           icon={<FaCoins />}
-          highlight
         />
         <StatCard
           label="환불 총액"

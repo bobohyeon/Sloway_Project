@@ -74,7 +74,6 @@ export default function MemberStats() {
           value={Number(stats?.total ?? 0).toLocaleString()}
           unit="명"
           icon={<FaUsers />}
-          highlight
         />
         <StatCard
           label="신규 가입"
