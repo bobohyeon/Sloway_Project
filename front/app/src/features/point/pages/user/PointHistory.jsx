@@ -14,7 +14,7 @@ const PAGE_SIZE = 10;
 
 const POLICIES = [
   { label: '적립률', value: '결제 금액의 1%' },
-  { label: '적립 시점', value: '이용 완료 후 7일 뒤 확정' },
+  { label: '적립 시점', value: '이용 완료 시 적립' },
   { label: '유효 기간', value: '적립일로부터 1년' },
   { label: '최소 사용', value: '1,000P 이상' },
   { label: '최대 사용', value: '결제 금액의 30%까지' },
