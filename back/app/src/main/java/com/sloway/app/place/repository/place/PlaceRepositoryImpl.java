@@ -436,6 +436,10 @@ public class PlaceRepositoryImpl implements PlaceRepositoryCustom {
 
     @Override
     public List<PlaceCardDto> getTop4PlacesByType() {
+        NumberExpression<Double> avgReviewScoreExpr = Expressions.numberTemplate(Double.class,
+                "COALESCE(AVG(CASE WHEN {0} > 0 THEN {0} END), 0.0)",
+                placeSummary.avgScore);
+
         return queryFactory
                 .select(Projections.fields(PlaceCardDto.class,
                         placeSummary.placeNo.as("masterNo"),
@@ -447,17 +451,19 @@ public class PlaceRepositoryImpl implements PlaceRepositoryCustom {
                         placeSummary.price.min().as("price"),
                         placeSummary.finalScore.avg().castToNum(Integer.class).as("finalScore"),
                         placeSummary.rsvnCount.sum().as("totalReservations"),
-                        Expressions.numberTemplate(Double.class,
-                                        "AVG(CASE WHEN {0} > 0.0 THEN {0} ELSE NULL END)",
-                                        placeSummary.avgScore)
-                                .as("avgReviewScore"),
+                        avgReviewScoreExpr.as("avgReviewScore"),
                         placeSummary.status
                 ))
                 .from(placeSummary)
                 .leftJoin(placeEntity).on(placeSummary.placeNo.eq(placeEntity.no))
                 .where(placeSummary.status.eq("I"))
                 .groupBy(
-                        placeSummary.placeNo
+                        placeSummary.placeNo,
+                        placeEntity.title,
+                        placeSummary.type,
+                        placeSummary.currentUrl,
+                        placeSummary.address,
+                        placeSummary.status
                 )
                 .orderBy(placeSummary.finalScore.avg().desc())
                 .limit(4)
