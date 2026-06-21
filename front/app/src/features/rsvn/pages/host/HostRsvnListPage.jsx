@@ -172,7 +172,8 @@ function HostRsvnListPage() {
       <StatCards>
         <StatCard style={{ cursor: 'pointer' }} onClick={() => setActiveTab(0)}>
           <StatLabel>전체 예약</StatLabel>
-          <StatValue>{counts[0]}건</StatValue>
+          {/* 전체 예약 = 확정(S)+완료(E)만. 결제대기·취소·거절 제외 (어드민 통계와 동일 기준) */}
+          <StatValue>{counts[1] + counts[2]}건</StatValue>
         </StatCard>
         <StatCard style={{ cursor: 'pointer' }} onClick={() => setActiveTab(1)}>
           <StatLabel>확정</StatLabel>

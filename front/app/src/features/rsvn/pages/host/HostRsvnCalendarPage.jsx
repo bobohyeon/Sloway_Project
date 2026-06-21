@@ -257,7 +257,8 @@ function HostRsvnCalendarPage() {
       maxWidth={1200}
     >
       <StatCards>
-        <StatCard><StatLabel>전체 예약</StatLabel><StatValue $color={COLOR.terra}>{list.length}건</StatValue></StatCard>
+        {/* 전체 예약 = 확정(S)+완료(E)만. 결제대기·취소·거절 제외 (어드민·목록 통계와 동일 기준) */}
+        <StatCard><StatLabel>전체 예약</StatLabel><StatValue $color={COLOR.terra}>{confirmedCount + doneCount}건</StatValue></StatCard>
         <StatCard><StatLabel>확정</StatLabel><StatValue>{confirmedCount}건</StatValue></StatCard>
         <StatCard><StatLabel>완료</StatLabel><StatValue>{doneCount}건</StatValue></StatCard>
       </StatCards>
