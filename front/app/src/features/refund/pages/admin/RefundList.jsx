@@ -145,17 +145,17 @@ export default function RefundList() {
       <StatGrid>
         <SettlementStatCard
           icon="📊"
-          label="총 환불 요청"
+          label="총 환불"
           value={stats.total.toLocaleString()}
           unit="건"
-          subText="누적"
+          subText="환불 완료 기준"
         />
         <SettlementStatCard
-          icon="✓"
-          label="처리 완료"
-          value={stats.completed.toLocaleString()}
+          icon="👤"
+          label="회원 취소"
+          value={(stats.total - stats.hostRejected).toLocaleString()}
           unit="건"
-          subText="환불 완료"
+          subText="회원 자발 취소"
         />
         <SettlementStatCard
           icon="🏠"

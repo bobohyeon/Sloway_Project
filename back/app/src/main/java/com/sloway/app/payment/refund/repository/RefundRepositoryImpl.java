@@ -87,7 +87,9 @@ public class RefundRepositoryImpl implements RefundRepositoryCustom {
     @Override
     public RefundStatsResDto findRefundStats() {
         return RefundStatsResDto.builder()
-                .total(countWhere(null))
+                // 총 환불 = 실제 환불 완료(COMPLETED)만. 진행중(REQUESTED/APPROVED)은 아직 환불 안 된 상태라 제외.
+                // (예약 통계에서 결제대기·취소·거절을 전체에서 뺀 것과 동일한 기준)
+                .total(countWhere(qRefundEntity.status.eq(RefundStatus.COMPLETED)))
                 .processing(countWhere(qRefundEntity.status.in(RefundStatus.REQUESTED, RefundStatus.APPROVED)))
                 .completed(countWhere(qRefundEntity.status.eq(RefundStatus.COMPLETED)))
                 .hostRejected(countWhere(hostRejectedCond()))

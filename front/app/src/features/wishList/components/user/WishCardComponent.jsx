@@ -96,11 +96,8 @@ const Content = styled.div`
   }
   .price-row {
     display: flex;
-    justify-content: space-between;
+    justify-content: flex-end;
     align-items: center;
-    .rating {
-      font-weight: 500;
-    }
     .price {
       font-weight: bold;
       font-size: 1.1rem;
@@ -163,7 +160,6 @@ const WishCardComponent = ({ data, onToggleWish }) => {
             <div className="title">{item.placeTitle}</div>
             <div className="info">📍 {item.address}</div>
             <div className="price-row">
-              <span className="rating">⭐ {item.rating}</span>
               <span className="price">
                 {item.price?.toLocaleString()}원
                 <span className="unit">

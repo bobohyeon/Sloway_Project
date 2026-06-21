@@ -175,7 +175,9 @@ public class PlaceRepositoryImpl implements PlaceRepositoryCustom {
         JPQLQuery<Double> avgReviewScore = JPAExpressions
                 .select(placeSummary.avgScore.avg())
                 .from(placeSummary)
-                .where(placeSummary.placeNo.eq(placeEntity.no));
+                .where(placeSummary.placeNo.eq(placeEntity.no),
+                        placeSummary.avgScore.isNotNull(),  // NULL 제외
+                        placeSummary.avgScore.gt(0.0));
 
         // 3. STATION 리뷰 수
         JPQLQuery<Long> stationReviewCount = JPAExpressions
@@ -434,6 +436,10 @@ public class PlaceRepositoryImpl implements PlaceRepositoryCustom {
 
     @Override
     public List<PlaceCardDto> getTop4PlacesByType() {
+        NumberExpression<Double> avgReviewScoreExpr = Expressions.numberTemplate(Double.class,
+                "COALESCE(AVG(CASE WHEN {0} > 0 THEN {0} END), 0.0)",
+                placeSummary.avgScore);
+
         return queryFactory
                 .select(Projections.fields(PlaceCardDto.class,
                         placeSummary.placeNo.as("masterNo"),
@@ -445,7 +451,7 @@ public class PlaceRepositoryImpl implements PlaceRepositoryCustom {
                         placeSummary.price.min().as("price"),
                         placeSummary.finalScore.avg().castToNum(Integer.class).as("finalScore"),
                         placeSummary.rsvnCount.sum().as("totalReservations"),
-                        placeSummary.avgScore.avg().as("avgReviewScore"),
+                        avgReviewScoreExpr.as("avgReviewScore"),
                         placeSummary.status
                 ))
                 .from(placeSummary)
@@ -454,7 +460,6 @@ public class PlaceRepositoryImpl implements PlaceRepositoryCustom {
                 .groupBy(
                         placeSummary.placeNo,
                         placeEntity.title,
-                        placeSummary.avgScore,
                         placeSummary.type,
                         placeSummary.currentUrl,
                         placeSummary.address,

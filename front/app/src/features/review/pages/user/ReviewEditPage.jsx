@@ -144,6 +144,7 @@ function ReviewEditPage() {
         setText(data.content);
         setSpaceName(data.spaceName);
         setSpaceType(data.spaceType);
+        setPhotos(data.imageUrls ?? []);   // 기존 첨부 사진 로드 (응답 필드명: imageUrls)
 
         const checkIn = data.checkIn?.slice(0, 10).replaceAll('-', '.');
         const checkOut = data.checkOut?.slice(0, 10).replaceAll('-', '.');
@@ -170,7 +171,7 @@ function ReviewEditPage() {
         scoreAmenity: scores[2],
         scoreFocus: scores[3],
         content: text,
-        imgUrls: [],
+        imgUrls: photos,
       });
       navigate('/user/review');
     } catch {

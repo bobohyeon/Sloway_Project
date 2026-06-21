@@ -126,9 +126,12 @@ function RsvnDetailPage() {
   const nights = co.diff(ci, 'day');
   const dtFormat = 'YYYY.MM.DD (ddd) HH:mm';
   const isExpired = dayjs().isAfter(co); // 체크아웃이 지났으면 스케줄러 미처리여도 프론트에서 방어
-  const diff = ci.diff(dayjs(), 'day');
+  // 달력 날짜 기준 D-day (시간 무시) — 백엔드 환불 정책(toLocalDate 비교)과 일치.
+  // ci.diff(now,'day')는 24시간 절삭이라, 자정으로 저장된 '내일' 예약을 D-day로 하루 일찍 표시하는 버그.
+  const diff = ci.startOf('day').diff(dayjs().startOf('day'), 'day');
+  // 목록 카드(RsvnListPage)와 동일한 표기로 통일 — 당일 D-DAY / 이후 D-N / 지난 후 D+N
   const dday = rsvn.status === 'S' && !isExpired
-    ? (diff >= 0 ? `Dday-${diff}` : `Dday+${Math.abs(diff)}`)
+    ? (diff === 0 ? 'D-DAY' : diff > 0 ? `D-${diff}` : `D+${Math.abs(diff)}`)
     : null;
 
   const spaceRoute = rsvn.officeNo ? 'coworking-offices'
