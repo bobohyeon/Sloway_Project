@@ -56,10 +56,20 @@ const PRICE_RANGES = [
   { label: '15~25만원', min: 150000, max: 250000 },
   { label: '25만원 이상', min: 250000, max: Infinity },
 ];
+// DB 실제 편의시설 명칭 기준
 const AMENITY_OPTIONS = {
-  공통: ['회의실', '와이파이', '공용PC', '반려동물 동반', '공용라운지'],
-  숙박: ['주방', '편의용품', '세탁기', '스타일러'],
-  오피스: ['주차', '프린터', '웹캠', '빔프로젝터'],
+  공통: ['WIFI', '금연'],
+  공유: ['폰부스', '에어컨', '난방', '테라스', '반려동물 동반', '주차'],
+  오피스: ['회의실', '세미나실', 'PC', '빔프로젝터', '복사기', '프린터기'],
+  숙박: ['TV', '취사가능', '룸서비스', '어메니티'],
+};
+
+// 편의시설 명칭 → DB amenity id 매핑 (서버 필터용)
+const AMENITY_ID_MAP = {
+  'WIFI': 1, '폰부스': 2, '에어컨': 3, '난방': 4, '테라스': 5,
+  '회의실': 6, '세미나실': 7, 'PC': 8, '빔프로젝터': 9, 'TV': 10,
+  '취사가능': 11, '룸서비스': 12, '어메니티': 13, '반려동물 동반': 14,
+  '복사기': 15, '프린터기': 16, '금연': 17, '주차': 18,
 };
 
 const Layout = styled.div`
@@ -346,14 +356,21 @@ function SearchResultPage() {
     if (state?.checkOut) setCheckOut(state.checkOut);
   }, [state]);
 
-  // 타입·지역·정렬·날짜 변경 시 API 재조회
+  // 타입·지역·정렬·날짜·인원·편의시설 변경 시 API 재조회
   useEffect(() => {
     async function load() {
       setLoading(true);
       try {
         const placeType = activeTab > 0 ? TAB_TO_TYPE[TYPE_TABS[activeTab]] : null;
+        // 선택된 편의시설 명칭 → DB id 배열 (매핑 안 되는 값은 제거)
+        const amenityIds = amenities.map(a => AMENITY_ID_MAP[a]).filter(Boolean);
+
         const [data, likedRes] = await Promise.all([
-          searchSpaces({ region, placeType, sort, checkIn, checkOut }),
+          searchSpaces({
+            region, placeType, sort, checkIn, checkOut,
+            guestCount: guests,
+            amenities: amenityIds,
+          }),
           fetchLikePlaceList().catch(() => ({ data: [] })), // 미로그인 시 빈 배열
         ]);
         const likedMap = new Map((likedRes.data ?? []).map(l => [l.placeNo, l.no]));
@@ -366,7 +383,7 @@ function SearchResultPage() {
       }
     }
     load();
-  }, [activeTab, region, sort, checkIn, checkOut]);
+  }, [activeTab, region, sort, checkIn, checkOut, guests, amenities]);
 
   const toggleAmenity = (a) =>
     setAmenities((prev) =>
