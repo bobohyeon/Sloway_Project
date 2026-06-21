@@ -147,6 +147,7 @@ function HostProfileEditPage() {
 
   // 프로필 이미지
   const [imageFile, setImageFile] = useState(null);
+  const [imageRemoved, setImageRemoved] = useState(false);
 
   // 이메일 변경 (별도)
   const [newEmail, setNewEmail] = useState('');
@@ -169,8 +170,9 @@ function HostProfileEditPage() {
     setForm((prev) => ({ ...prev, [name]: value }));
   };
 
-  const handleImageChange = (file) => {
+  const handleImageChange = (file, removed = false) => {
     setImageFile(file);
+    setImageRemoved(removed); // "사진 삭제" 클릭 시 true → 빈문자열로 제거 신호
   };
 
   // ── 기본 정보 저장 (상호명·이름·휴대폰·프로필 이미지) ──
@@ -179,14 +181,17 @@ function HostProfileEditPage() {
     if (saving) return;
     setSaving(true);
     try {
-      const result = await updateHostMyPage(
-        {
-          businessName: form.businessName.trim(),
-          name: form.name.trim(),
-          phone: form.phone.replace(/-/g, ''), // 하이픈 제거 (varchar 11)
-        },
-        imageFile
-      );
+      const dto = {
+        businessName: form.businessName.trim(),
+        name: form.name.trim(),
+        phone: form.phone.replace(/-/g, ''), // 하이픈 제거 (varchar 11)
+      };
+      // 새 파일 없이 "삭제"만 눌렀으면 빈문자열로 제거 신호 (null=유지, ""=제거)
+      if (!imageFile && imageRemoved) {
+        dto.imgUrl = '';
+      }
+
+      const result = await updateHostMyPage(dto, imageFile);
       dispatch(setProfileImage(result.imgUrl)); // 수정 직후 헤더 즉시 갱신
       alert('저장되었습니다.');
       navigate('/host/profile');
