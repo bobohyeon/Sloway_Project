@@ -338,7 +338,10 @@ public class RsvnService {
             RsvnStatus status = (RsvnStatus) row[0];
             long cnt = (long) row[1];
             result.put(status.name(), cnt);
-            if (status != RsvnStatus.P) total += cnt;
+            // 전체 예약 건수 = 확정(S)+이용완료(E)만. 결제대기(P)·취소(C)·거절(R) 제외
+            if (status != RsvnStatus.P && status != RsvnStatus.C && status != RsvnStatus.R) {
+                total += cnt;
+            }
         }
         result.put("TOTAL", total);
         return result;
