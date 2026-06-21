@@ -9,6 +9,7 @@ const STATUS_META = {
   WAITING: { label: '정산 대기', color: 'var(--gray-400)' },
   COMPLETE: { label: '정산 완료', color: 'var(--sage)' },
   INVOICE: { label: '세금계산서 발행', color: '#0064FF' },
+  CARRIED: { label: '이월', color: '#E8804D' },
 };
 
 const won = (n) => `${Number(n ?? 0).toLocaleString()}원`;
@@ -73,7 +74,7 @@ export default function AdminSettlementDetail() {
         <SummaryCard padded>
           <SummaryRow>
             <SummaryLabel>호스트</SummaryLabel>
-            <SummaryValue>호스트 #{settle.hostNo}</SummaryValue>
+            <SummaryValue>{settle.hostName ?? `호스트 #${settle.hostNo}`}</SummaryValue>
           </SummaryRow>
           <SummaryRow>
             <SummaryLabel>회차 기간</SummaryLabel>
