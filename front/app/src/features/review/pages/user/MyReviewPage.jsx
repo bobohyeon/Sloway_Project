@@ -79,7 +79,7 @@ function calcDday(checkOut) {
   const deadline = new Date(checkOut);
   deadline.setDate(deadline.getDate() + 14);
   const diff = Math.ceil((deadline - new Date()) / (1000 * 60 * 60 * 24));
-  return `D-${diff}`;
+  return `작성 D-${diff}`;
 }
 
 const PAGE_SIZE = 10;
