@@ -5,9 +5,6 @@ DROP MATERIALIZED VIEW IF EXISTS place_summary;
 
 -- Materialized View 생성
 CREATE MATERIALIZED VIEW place_summary AS
-
-select * from place_summary;
-
 WITH RsvnStats AS (
     SELECT
         p.no as place_no,
