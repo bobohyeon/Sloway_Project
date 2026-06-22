@@ -125,7 +125,7 @@ public class ReviewService {
 
     //리뷰 수정
     @Transactional
-    public void editReview(Long memberNo, Long no, ReviewEditReqDto editReqDto){
+    public void editReview(Long memberNo, Long no, ReviewEditReqDto editReqDto, List<MultipartFile> images){
         ReviewEntity entity = reviewRepository.findByNoAndDelYn(no, "N")
                 .orElseThrow(()->new CustomException(ReviewErrorCode.REVIEW_NOT_FOUND));
         if(!entity.getRsvnNo().getMemberNo().getNo().equals(memberNo)){
@@ -147,6 +147,29 @@ public class ReviewService {
                 editReqDto.getScoreAmenity(),
                 editReqDto.getScoreFocus()
         );
+
+        // 이미지 동기화 ① 유지 목록(imgUrls)에 없는 기존 이미지는 S3 + DB 에서 삭제
+        List<String> keepUrls = editReqDto.getImgUrls() != null ? editReqDto.getImgUrls() : List.of();
+        for (ReviewImgEntity img : reviewImgRepository.findByReviewNo(entity)) {
+            if (!keepUrls.contains(img.getCurrentUrl())) {
+                s3Service.delete(img.getCurrentUrl());
+                reviewImgRepository.delete(img);
+            }
+        }
+        // 이미지 동기화 ② 새로 첨부된 파일 업로드 (작성 로직과 동일)
+        if (images != null) {
+            for (MultipartFile image : images) {
+                try {
+                    String url = s3Service.upload(image, "review");
+                    reviewImgRepository.save(ReviewImgEntity.builder()
+                            .reviewNo(entity)
+                            .currentUrl(url)
+                            .build());
+                } catch (IOException e) {
+                    throw new CustomException(ReviewErrorCode.IMAGE_UPLOAD_FAILED);
+                }
+            }
+        }
     }
 
     // 내 리뷰 목록

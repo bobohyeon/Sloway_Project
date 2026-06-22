@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import styled from 'styled-components';
 import PageLayout from '../../../../app/layouts/page/PageLayout';
@@ -130,6 +130,17 @@ function ReviewEditPage() {
   const [spaceType, setSpaceType] = useState(null);
   const [spaceName, setSpaceName] = useState(null);
   const [usedDate, setUsedDate] = useState('');
+  const fileInputRef = useRef(null);
+
+  // 새 사진 추가 (photos 에 File 객체로 push — 기존 사진은 URL 문자열)
+  const handleFileChange = (e) => {
+    const file = e.target.files[0];
+    if (!file || photos.length >= 5) {
+      return;
+    }
+    setPhotos((p) => [...p, file]);
+    e.target.value = '';
+  };
 
   useEffect(() => {
     const fetchReview = async () => {
@@ -164,15 +175,31 @@ function ReviewEditPage() {
   };
 
   async function handleSubmit() {
+    // 기존 사진(URL 문자열) = 유지 목록 / 새 사진(File 객체) = 업로드 대상 으로 분리
+    const keepUrls = photos.filter((p) => typeof p === 'string');
+    const newFiles = photos.filter((p) => typeof p !== 'string');
+
+    const formData = new FormData();
+    formData.append(
+      'dto',
+      new Blob(
+        [
+          JSON.stringify({
+            scoreTotal: scores[0],
+            scoreOffice: scores[1],
+            scoreAmenity: scores[2],
+            scoreFocus: scores[3],
+            content: text,
+            imgUrls: keepUrls, // 유지할 기존 이미지 URL 목록 (여기 없는 기존 사진은 백엔드가 삭제)
+          }),
+        ],
+        { type: 'application/json' }
+      )
+    );
+    newFiles.forEach((file) => formData.append('images', file));
+
     try {
-      await editReview(id, {
-        scoreTotal: scores[0],
-        scoreOffice: scores[1],
-        scoreAmenity: scores[2],
-        scoreFocus: scores[3],
-        content: text,
-        imgUrls: photos,
-      });
+      await editReview(id, formData);
       navigate('/user/review');
     } catch {
       alert('수정에 실패했어요');
@@ -266,9 +293,25 @@ function ReviewEditPage() {
           최대 5장까지 업로드 가능해요
         </div>
         <PhotoGrid>
-          {photos.map((_, i) => (
-            <PhotoSlot key={i} $filled>
-              <span style={{ fontSize: 28 }}>📷</span>
+          <input
+            type="file"
+            accept="image/*"
+            ref={fileInputRef}
+            style={{ display: 'none' }}
+            onChange={handleFileChange}
+          />
+          {photos.map((photo, i) => (
+            <PhotoSlot key={i} $filled style={{ overflow: 'hidden', padding: 0 }}>
+              <img
+                src={typeof photo === 'string' ? photo : URL.createObjectURL(photo)}
+                alt={`리뷰 사진 ${i + 1}`}
+                style={{
+                  width: '100%',
+                  height: '100%',
+                  objectFit: 'cover',
+                  borderRadius: 8,
+                }}
+              />
               <RemoveBtn
                 onClick={() => setPhotos((p) => p.filter((_, j) => j !== i))}
               >
@@ -278,7 +321,7 @@ function ReviewEditPage() {
           ))}
           {photos.length < 5 && (
             <PhotoSlot
-              onClick={() => setPhotos((p) => [...p, true])}
+              onClick={() => fileInputRef.current?.click()}
               style={{ fontSize: 11 }}
             >
               <span style={{ fontSize: 20 }}>+</span>
