@@ -268,7 +268,8 @@ public class StatsService {
         // 환불이 아닌 건이 섞인다 → 환불 관리 화면과 동일 SSOT(refund 테이블)로 집계
         Long refundCount = refundRepository.sumBetween(start, end).get(0, Long.class);
         long cancel = refundCount == null ? 0L : refundCount;
-        long total = counts.values().stream().mapToLong(Long::longValue).sum();
+        // 전체 예약 = 확정(S)+이용완료(E). 결제대기(P)·거절(R)·취소(C)·환불 제외 → 카드 합과 일치
+        long total = confirmed + complete;
 
         List<MonthlyTrendResDto> trend = buildTrend(ym, months, (s, e)
                 -> statsRepositoryCustom.countRsvnByCreatedAtBetween(s, e));

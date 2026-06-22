@@ -135,6 +135,7 @@ function ProfileEditPage() {
 
   // 프로필 이미지: 선택 시 file (없으면 null → 이미지 유지)
   const [imageFile, setImageFile] = useState(null);
+  const [imageRemoved, setImageRemoved] = useState(false);
 
   // 이메일 변경 폼 (별도)
   const [newEmail, setNewEmail] = useState('');
@@ -148,15 +149,17 @@ function ProfileEditPage() {
     }
   }, [initial]);
 
-  const handleImageChange = (file) => {
+  const handleImageChange = (file, removed = false) => {
     setImageFile(file);
+    setImageRemoved(removed); // "사진 삭제" 클릭 시 true → 빈문자열로 제거 신호
   };
 
   const isDirty =
     initial &&
     (form.name !== initial.name ||
       form.phone !== initial.phone ||
-      imageFile !== null);
+      imageFile !== null ||
+      imageRemoved);
   const canSave = isDirty && !saving;
 
   const handleChange = (e) => {
@@ -186,10 +189,13 @@ function ProfileEditPage() {
 
     setSaving(true);
     try {
-      const result = await updateMyPage(
-        { name: form.name.trim(), phone: form.phone.replace(/-/g, '') },
-        imageFile
-      );
+      const dto = { name: form.name.trim(), phone: form.phone.replace(/-/g, '') };
+      // 새 파일 없이 "삭제"만 눌렀으면 빈문자열로 제거 신호 (null=유지, ""=제거)
+      if (!imageFile && imageRemoved) {
+        dto.imgUrl = '';
+      }
+
+      const result = await updateMyPage(dto, imageFile);
       dispatch(setProfileImage(result.imgUrl)); // 수정 직후 헤더 즉시 갱신 (사진 교체/제거 모두 반영)
       alert('저장되었습니다.');
       navigate('/user/profile');

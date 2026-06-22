@@ -133,7 +133,6 @@ export default function StatsOverview() {
           value={Number(summary?.netAmt ?? 0).toLocaleString()}
           unit="원"
           icon={<FaPiggyBank />}
-          highlight
         />
       </KPIGrid>
 

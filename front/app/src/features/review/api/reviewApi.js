@@ -21,8 +21,8 @@ export async function findOneReview(id) {
   return res.data;
 }
 
-export async function editReview(id, dto) {
-  await api.put(`/review/${id}`, dto);
+export async function editReview(id, formData) {
+  await api.put(`/review/${id}`, formData);
 }
 
 export async function deleteReview(id) {

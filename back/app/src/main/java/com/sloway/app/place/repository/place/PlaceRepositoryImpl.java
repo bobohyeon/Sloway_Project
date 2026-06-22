@@ -171,7 +171,15 @@ public class PlaceRepositoryImpl implements PlaceRepositoryCustom {
                 .from(subHp)
                 .where(subHp.placeEntity.eq(placeEntity));
 
-        // 2. STATION 리뷰 수
+        // 2. placeNo별 평균 리뷰 점수 (place_summary의 모든 행 평균)
+        JPQLQuery<Double> avgReviewScore = JPAExpressions
+                .select(placeSummary.avgScore.avg())
+                .from(placeSummary)
+                .where(placeSummary.placeNo.eq(placeEntity.no),
+                        placeSummary.avgScore.isNotNull(),  // NULL 제외
+                        placeSummary.avgScore.gt(0.0));
+
+        // 3. STATION 리뷰 수
         JPQLQuery<Long> stationReviewCount = JPAExpressions
                 .select(subReview.no.count())
                 .from(subReview)
@@ -179,7 +187,7 @@ public class PlaceRepositoryImpl implements PlaceRepositoryCustom {
                 .innerJoin(subStation).on(subRsvn.stationNo.eq(subStation))
                 .where(subStation.placeEntity.eq(placeEntity));
 
-        // 3. OFFICE 리뷰 수
+        // 4. OFFICE 리뷰 수
         JPQLQuery<Long> officeReviewCount = JPAExpressions
                 .select(subReview.no.count())
                 .from(subReview)
@@ -187,7 +195,7 @@ public class PlaceRepositoryImpl implements PlaceRepositoryCustom {
                 .innerJoin(subOffice).on(subRsvn.officeNo.eq(subOffice))
                 .where(subOffice.placeEntity.eq(placeEntity));
 
-        // 4. WORK_STAY 리뷰 수
+        // 5. WORK_STAY 리뷰 수
         JPQLQuery<Long> workStayReviewCount = JPAExpressions
                 .select(subReview.no.count())
                 .from(subReview)
@@ -195,7 +203,7 @@ public class PlaceRepositoryImpl implements PlaceRepositoryCustom {
                 .innerJoin(subWorkStay).on(subRsvn.workStayNo.eq(subWorkStay))
                 .where(subWorkStay.placeEntity.eq(placeEntity));
 
-        // 5. 리뷰 수 CASE 표현식
+        // 6. 리뷰 수 CASE 표현식
         NumberExpression<Long> reviewCountExpression = Expressions.numberTemplate(Long.class,
                 "CASE WHEN {0} = 'STATION' THEN ({1}) " +
                         "     WHEN {0} = 'OFFICE' THEN ({2}) " +
@@ -207,7 +215,7 @@ public class PlaceRepositoryImpl implements PlaceRepositoryCustom {
                 workStayReviewCount
         );
 
-        // 6. 가격 CASE 표현식
+        // 7. 가격 CASE 표현식
         NumberExpression<Integer> priceExpression = Expressions.numberTemplate(Integer.class,
                 "CASE WHEN {0} = 'WORK_STAY' THEN ({1}) " +
                         "     WHEN {0} = 'STATION' THEN ({2}) " +
@@ -226,26 +234,24 @@ public class PlaceRepositoryImpl implements PlaceRepositoryCustom {
                         hostPlaceEntity.status.stringValue(),
                         placeEntity.title,
                         placeEntity.address,
-                        placeSummary.avgScore.coalesce(0.0),
+                        Expressions.numberTemplate(Double.class,
+                                "COALESCE(({0}), 0.0)",
+                                avgReviewScore),  // ← 변경: place_summary 전체 평균
                         reviewCountExpression.intValue().coalesce(0),
                         placeSummary.rsvnCount.sum().intValue().coalesce(0),
                         priceExpression,
                         imgPlaceEntity.currentUrl.min()
                 ))
                 .from(placeEntity)
-                // HOST_PLACE 최신 이력 조인
                 .innerJoin(hostPlaceEntity).on(
                         hostPlaceEntity.placeEntity.eq(placeEntity)
                                 .and(hostPlaceEntity.no.eq(latestHostPlaceNo))
                 )
-                // HOST 테이블 조인
                 .innerJoin(hostEntity).on(hostPlaceEntity.hostEntity.eq(hostEntity))
-                // place_summary 조인
                 .leftJoin(placeSummary).on(
                         placeSummary.placeNo.eq(placeEntity.no)
                                 .and(placeSummary.type.eq(placeEntity.type))
                 )
-                // 이미지 조인
                 .leftJoin(imgPlaceEntity).on(
                         imgPlaceEntity.placeEntity.eq(placeEntity)
                                 .and(imgPlaceEntity.sort.eq(1))
@@ -254,13 +260,11 @@ public class PlaceRepositoryImpl implements PlaceRepositoryCustom {
                         placeEntity.delYn.eq("N"),
                         hostEntity.memberNo.eq(memberNo)
                 )
-                // GROUP BY 절 (reviewCountExpression과 priceExpression도 포함)
                 .groupBy(
                         placeEntity.no,
                         placeEntity.type,
                         placeSummary.placeNo,
                         placeSummary.type,
-                        placeSummary.avgScore,
                         hostPlaceEntity.no,
                         hostPlaceEntity.status,
                         placeEntity.title,
@@ -432,6 +436,10 @@ public class PlaceRepositoryImpl implements PlaceRepositoryCustom {
 
     @Override
     public List<PlaceCardDto> getTop4PlacesByType() {
+        NumberExpression<Double> avgReviewScoreExpr = Expressions.numberTemplate(Double.class,
+                "COALESCE(AVG(CASE WHEN {0} > 0 THEN {0} END), 0.0)",
+                placeSummary.avgScore);
+
         return queryFactory
                 .select(Projections.fields(PlaceCardDto.class,
                         placeSummary.placeNo.as("masterNo"),
@@ -443,7 +451,7 @@ public class PlaceRepositoryImpl implements PlaceRepositoryCustom {
                         placeSummary.price.min().as("price"),
                         placeSummary.finalScore.avg().castToNum(Integer.class).as("finalScore"),
                         placeSummary.rsvnCount.sum().as("totalReservations"),
-                        placeSummary.avgScore.avg().as("avgReviewScore"),
+                        avgReviewScoreExpr.as("avgReviewScore"),
                         placeSummary.status
                 ))
                 .from(placeSummary)

@@ -24,6 +24,9 @@ public class RsvnResDto {
     private String spaceType;
     private Integer count;
     private Integer amt;
+    private Integer finalAmt;   // PAY 최종 결제액 (포인트·쿠폰 적용 후)
+    private Integer usedPoint;  // PAY 사용 포인트
+    private Integer dcAmt;      // PAY 쿠폰 할인액
     private String special;
     private LocalDateTime checkIn;
     private LocalDateTime checkOut;
@@ -48,6 +51,13 @@ public class RsvnResDto {
     }
 
     public static RsvnResDto from(RsvnEntity entity, Long payNo,
+                                  boolean hasReview, boolean refunded){
+        return from(entity, payNo, null, null, null, hasReview, refunded);
+    }
+
+    // PAY 결제 정보(finalAmt/usedPoint/dcAmt)까지 매핑 — 결제 안 된 예약은 null
+    public static RsvnResDto from(RsvnEntity entity, Long payNo,
+                                  Integer finalAmt, Integer usedPoint, Integer dcAmt,
                                   boolean hasReview, boolean refunded){
         String spaceName = null;
         String spaceType = null;
@@ -95,6 +105,9 @@ public class RsvnResDto {
                 .thumbnailUrl(thumbnailUrl)
                 .count(entity.getCount())
                 .amt(entity.getAmt())
+                .finalAmt(finalAmt)
+                .usedPoint(usedPoint)
+                .dcAmt(dcAmt)
                 .special(entity.getSpecial())
                 .checkIn(entity.getCheckIn())
                 .checkOut(entity.getCheckOut())

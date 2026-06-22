@@ -76,7 +76,6 @@ export default function BookingStats() {
           value={Number(stats?.total ?? 0).toLocaleString()}
           unit="건"
           icon={<FaCalendarCheck />}
-          highlight
         />
         <StatCard
           label="확정"

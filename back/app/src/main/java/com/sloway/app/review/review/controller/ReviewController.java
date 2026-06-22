@@ -54,13 +54,15 @@ public class ReviewController {
         return ResponseEntity.ok(dto);
     }
 
+    // 수정도 작성과 동일하게 multipart 로 받는다 (dto = JSON + images = 새로 추가된 파일)
     @PutMapping("/{no}")
     public ResponseEntity<Void> editReview(
             @AuthenticationPrincipal CustomUserDetails userDetails,
             @PathVariable Long no,
-            @RequestBody ReviewEditReqDto dto
+            @RequestPart("dto") ReviewEditReqDto dto,
+            @RequestPart(value = "images", required = false) List<MultipartFile> images
     ){
-        reviewService.editReview(userDetails.getMemberNo(), no, dto);
+        reviewService.editReview(userDetails.getMemberNo(), no, dto, images);
         return ResponseEntity.status(HttpStatus.NO_CONTENT).build();
     }
 
