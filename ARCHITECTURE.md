@@ -243,11 +243,39 @@ PATCH 부분 수정 규칙 — `null = 유지`, `빈 문자열 = 제거`로 일�
 ### 8.3 예약 / 리뷰 / 지도 / 검색 — 김보현
 
 ```
-<!-- 담당자 작성 -->
-- 주요 엔티티:
-- 핵심 기능:
-- 핵심 로직(예약 생성·취소·동시성·리뷰·검색):
-- 미완성/이관:
+- 주요 엔티티 : 
+  RsvnEntity(RSVN), BlackOutEntity(BLACKOUT, 이용불가) — enum RsvnStatus(P/S/C/R/E),
+  BlackOutReasonType
+  ReviewEntity(REVIEW), ReviewImgEntity(REVIEW_IMG, 첨부사진), ReviewReplyEntity(REVIEW_COMMENT,
+  호스트 답글), ReviewReportEntity(REVIEW_COMPLAIN, 신고), HelpfulEntity(HELPFUL, 도움돼요)
+  RecentViewedEntity(RECENT_PLACE)
+
+- 핵심 기능 :
+  예약: 예약 생성/취소, 호스트 거절, 어드민 강제취소, 회원·호스트·어드민 3-뷰 목록·상세, 상태별 통계, 이용불가(블랙아웃) 등록·조회
+  리뷰: 작성/수정/삭제(소프트딜리트, S3 이미지), 공간별·내 리뷰 목록, 호스트 답글, 신고, 도움돼요, 호스트 평점 통계
+  검색: 지역·타입·날짜·인원·정렬 필터 + 서버사이드 페이지네이션(Page)
+  지도: SearchResDto에 latitude/longitude 제공 → 프론트 카카오맵 마커 렌더링(백엔드는 좌표 공급만)
+
+- 핵심 로직
+  예약 생성(RsvnService.save): ①공간 미선택·날짜 null/역순·인원 방어 → ②워크스테이/숙소는 공간
+  checkinTime 결합해 시간 박제(오피스는 입력 그대로) → ③블랙아웃 겹침 검증 → ④확정(S) 예약 기간 중복
+  검사(countOverlappingRsvn) → ⑤저장
+  RsvnEntity: 생성 시 P(결제대기) → confirm() S → cancel() C / reject() R / complete() E. 각
+  전이 전 상태 검증(이미 C·R·E면 차단)
+  동시성·정합성: 같은 공간·기간 확정 예약 중복 차단으로 더블부킹 방지, RsvnScheduler(매 정각) —
+  S+체크아웃 경과 → E 자동완료 / P+30분 경과 → 자동취소
+  취소 vs 환불: 결제 전 취소는 환불 없음, 결제 후 취소·거절은 RefundEntity 존재 여부로 판별해 환불 뱃지표시.
+  거절은 환불 먼저 처리 후 reject()를 마지막에 호출해 상태가 C로 덮이지 않게 함
+  리뷰: 본인 예약·완료(E) 상태·14일 이내·중복 작성(예약당 1건) 검증, 별점 1~5 범위 검사,
+  소프트딜리트(delYn)
+  검색: QueryDSL BooleanExpression optional 필터 + 스칼라 서브쿼리는 min()/LEAST().min() 집계로 단일행
+  보장(500 방지), PageImpl 페이지네이션
+  성능: 목록 조회 시 결제·환불·리뷰여부를 Set/Map 일괄 조회로 N+1 제거
+
+- 미완성/이관
+  최근 검색어(RECENT_SEARCH): 프론트에 키워드 입력 UI가 없어 기능 전체 삭제 (백엔드 5개 파일 제거)
+  환불 정산 로직: 4번 도메인(우영) RefundService에 위임 — 예약은 거절·취소 트리거만 호출
+  공간 마스터 데이터(place/office/station/workStay): 2번 도메인(현진) 소관 — 예약·검색은 조회만
 ```
 
 ### 8.4 워케이션 공간 (숙소 / 워크앤스테이 / 코워킹오피스) / 찜 — 서현진
